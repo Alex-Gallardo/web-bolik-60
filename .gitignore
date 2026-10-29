@@ -25,6 +25,9 @@ test-results/
 blob-report/
 .lighthouseci/
 
+# Certificados
+*.pem
+
 # Logs
 *.log
 npm-debug.log*
