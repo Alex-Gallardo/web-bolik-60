@@ -43,4 +43,6 @@ pnpm build    # build de producción
 pnpm lint
 ```
 
+`pnpm install` instala también los ganchos de git (Husky): antes de cada commit se corrigen y formatean los archivos preparados, el mensaje se valida con commitlint (Conventional Commits) y antes de cada push corre `typecheck` (y `test` cuando exista).
+
 El resto de comandos (`typecheck`, `test`, `test:e2e`, `db:*`…) se agregan con los tickets del sprint S0; la lista completa está en [CLAUDE.md](CLAUDE.md#comandos).
