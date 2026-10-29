@@ -31,7 +31,8 @@ La documentación completa está en `/docs`. Si una instrucción de este archivo
 pnpm dev              # desarrollo en http://localhost:3000
 pnpm build            # build de producción (output: standalone)
 pnpm start            # servir el build
-pnpm lint             # ESLint
+pnpm lint             # ESLint + prettier --check
+pnpm format           # Prettier --write (también lo aplica el hook de Claude Code al editar)
 pnpm typecheck        # tsc --noEmit
 pnpm test             # Vitest (unitarias)
 pnpm test:int         # Vitest (integración, BD de prueba)
@@ -70,6 +71,7 @@ Detalle en `docs/04-estructura-proyecto.md`.
 ## Reglas que no se negocian
 
 ### Rendimiento (lo más importante junto con SEO)
+
 - Todas las páginas públicas son **Server Components** y se generan estáticas (SSG) con revalidación por **tags**. `"use client"` solo en hojas interactivas pequeñas.
 - Presupuesto de JS inicial por página: **≤ 120 KB gzip** (home) y **≤ 100 KB** (resto). Mapa, buscador (Fuse), PDF, Motion y analítica se cargan con `dynamic()` o al interactuar.
 - LCP móvil **≤ 2.0 s**, INP **≤ 150 ms** (máximo 200), CLS **≤ 0.05**. Lighthouse móvil ≥ 95 en Rendimiento (≥ 90 en la home por el video) y 100 en SEO. Detalle en `docs/12`.
@@ -78,6 +80,7 @@ Detalle en `docs/04-estructura-proyecto.md`.
 - El video del hero nunca es el LCP: el **póster** es el LCP; el video carga después de `load`, solo con buena conexión y sin `Save-Data`.
 
 ### SEO
+
 - Cada página define `generateMetadata` o `metadata` con título único, descripción, `alternates.canonical` y Open Graph. Usa `buildMetadata()` de `src/features/seo`.
 - Un solo `<h1>` por página; jerarquía de encabezados sin saltos.
 - Datos estructurados JSON-LD con los helpers de `src/features/seo/jsonld.tsx`. No inventes campos (sin precios, sin reseñas).
@@ -85,18 +88,21 @@ Detalle en `docs/04-estructura-proyecto.md`.
 - Páginas de utilidad (`/buscar`, `/cotizacion`, `/cotizacion/enviada/*`, `/styleguide`, `/admin`) llevan `noindex`.
 
 ### Animación
+
 - Anima **solo `transform` y `opacity`** (y `clip-path`/`stroke-dashoffset` en SVG). Nunca `width`, `height`, `top`, `left` ni `box-shadow` en bucles.
 - Usa los tokens de `src/styles/motion.css` (`--dur-*`, `--ease-*`). Nada de duraciones inventadas.
 - Todo contenido es **visible sin JavaScript**. Las animaciones de entrada parten de un estado visible o se activan solo con la clase `js` en `<html>`.
 - Respeta `prefers-reduced-motion` en todo: sin desplazamientos, solo cambios de opacidad cortos.
 
 ### Interfaz y accesibilidad
+
 - Mobile first: diseña a 360 px y luego amplía. Objetivos táctiles ≥ 44 × 44 px.
 - Contraste AA mínimo. Foco visible en todo elemento interactivo.
 - Botones reales (`<button>`), enlaces reales (`<a>`/`<Link>`), etiquetas reales en formularios.
 - **Cada acción del usuario tiene respuesta amigable** (toast, diálogo o estado inline) según la matriz de `docs/08-styleguide.md#matriz-de-feedback`. Textos en `src/content/feedback.ts`, nunca escritos sueltos en el componente.
 
 ### Datos y seguridad
+
 - El navegador nunca habla con SAP ni con SMART-K66: todo pasa por `src/server/erp`.
 - Validación con Zod en servidor aunque ya se valide en cliente.
 - Formularios públicos: honeypot + tiempo mínimo de llenado + límite por IP.
