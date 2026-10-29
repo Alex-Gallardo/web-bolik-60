@@ -30,7 +30,8 @@ La documentación completa está en `/docs`. Si una instrucción de este archivo
 ```bash
 pnpm dev              # desarrollo en http://localhost:3000
 pnpm build            # build de producción (output: standalone)
-pnpm start            # servir el build
+pnpm start            # servir el build standalone (node .next/standalone/server.js)
+pnpm start:local      # copia public/ y .next/static al standalone y lo sirve (como en IIS)
 pnpm lint             # ESLint + prettier --check
 pnpm format           # Prettier --write (también lo aplica el hook de Claude Code al editar)
 pnpm typecheck        # tsc --noEmit
@@ -39,7 +40,7 @@ pnpm test:int         # Vitest (integración, BD de prueba)
 pnpm test:e2e         # Playwright
 pnpm test:visual      # regresión visual de /styleguide
 pnpm lhci             # Lighthouse CI contra el build local
-pnpm analyze          # tamaño del JS por ruta
+pnpm analyze          # analizador de bundles de Turbopack (next analyze), tamaño del JS por ruta
 pnpm check:redirects  # mapa de redirecciones de Joomla
 pnpm check:colors     # ningún color fuera de tokens.css
 pnpm db:migrate       # prisma migrate dev
