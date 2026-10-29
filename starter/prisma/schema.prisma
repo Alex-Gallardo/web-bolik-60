@@ -1,0 +1,609 @@
+// Bolik Digital · esquema de referencia para SQL Server
+// Notas SQL Server + Prisma:
+//  - No hay enum ni Json: se usan String validados con constantes (src/lib/constants.ts)
+//    y NVARCHAR(MAX) con JSON serializado cuando hace falta.
+//  - UNIQUE en SQL Server admite un solo NULL: no usar @unique en columnas opcionales.
+//  - Varias rutas de borrado en cascada hacia la misma tabla generan error:
+//    las relaciones secundarias usan onDelete: NoAction, onUpdate: NoAction.
+
+// Prisma 7+: la URL de conexión ya no va aquí. Está en prisma.config.ts (migraciones)
+// y el cliente se crea con el adaptador @prisma/adapter-mssql (src/server/db.ts).
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+// ─────────────────────────────── Administración ───────────────────────────────
+
+model AdminUser {
+  id             Int            @id @default(autoincrement())
+  email          String         @unique @db.NVarChar(160)
+  name           String         @db.NVarChar(120)
+  passwordHash   String         @db.VarChar(100)
+  role           String         @default("editor") @db.VarChar(20) // admin | editor | ventas
+  active         Boolean        @default(true)
+  failedLogins   Int            @default(0)
+  lockedUntil    DateTime?
+  lastLoginAt    DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  auditLogs      AuditLog[]
+  assignedQuotes QuoteRequest[] @relation("QuoteAssignee")
+  quoteNotes     QuoteNote[]
+  uploads        MediaAsset[]
+}
+
+model AuditLog {
+  id        Int        @id @default(autoincrement())
+  userId    Int?
+  user      AdminUser? @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  action    String     @db.VarChar(40) // create | update | delete | publish | login | sync
+  entity    String     @db.VarChar(40)
+  entityId  String     @db.VarChar(60)
+  diff      String?    @db.NVarChar(Max) // JSON con antes/después
+  ipHash    String?    @db.VarChar(64)
+  createdAt DateTime   @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+// ───────────────────────────────── Medios ─────────────────────────────────
+
+model MediaAsset {
+  id            Int             @id @default(autoincrement())
+  key           String          @unique @db.VarChar(200) // products/bolik-ultra-azul-main-a1b2c3
+  kind          String          @default("image") @db.VarChar(20) // image | video | poster | pdf
+  originalName  String          @db.NVarChar(200)
+  mime          String          @db.VarChar(60)
+  width         Int?
+  height        Int?
+  bytes         Int
+  blurDataUrl   String?         @db.VarChar(Max)
+  dominantColor String?         @db.VarChar(9)
+  defaultAlt    String?         @db.NVarChar(200)
+  uploadedById  Int?
+  uploadedBy    AdminUser?      @relation(fields: [uploadedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt     DateTime        @default(now())
+  productImages ProductImage[]
+  milestones    HistoryMilestone[]
+  activities    SchoolActivity[]
+  kits          Kit[]
+  categories    Category[]
+}
+
+// ───────────────────────────────── Catálogo ─────────────────────────────────
+
+model Category {
+  id             Int        @id @default(autoincrement())
+  slug           String     @unique @db.VarChar(80)
+  name           String     @db.NVarChar(120)
+  lineGroup      String     @db.VarChar(20) // escritura | escolar | arte | oficina
+  shortText      String     @db.NVarChar(200)
+  intro          String?    @db.NVarChar(Max) // texto SEO de la página de categoría
+  imageId        Int?
+  image          MediaAsset? @relation(fields: [imageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  seoTitle       String?    @db.NVarChar(70)
+  seoDescription String?    @db.NVarChar(170)
+  sortOrder      Int        @default(0)
+  published      Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  products       Product[]
+  faqs           Faq[]
+  quoteItems     QuoteItem[]
+}
+
+model Product {
+  id               Int                @id @default(autoincrement())
+  slug             String             @unique @db.VarChar(100)
+  name             String             @db.NVarChar(120)  // nombre comercial: "Bolik Ultra"
+  tagline          String?            @db.NVarChar(160)  // "El bolígrafo hexagonal de siempre"
+  shortDescription String             @db.NVarChar(300)
+  description      String?            @db.NVarChar(Max)
+  keyFacts         String?            @db.NVarChar(Max)  // JSON: ["Punta mediana 1.0 mm", ...]
+  safetyWarning    String?            @db.NVarChar(Max)
+  categoryId       Int
+  category         Category           @relation(fields: [categoryId], references: [id])
+  featured         Boolean            @default(false)
+  published        Boolean            @default(false)
+  sortOrder        Int                @default(0)
+  seoTitle         String?            @db.NVarChar(70)
+  seoDescription   String?            @db.NVarChar(170)
+  erpSyncedAt      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  variants         ProductVariant[]
+  specs            ProductSpec[]
+  dimensions       ProductDimension[]
+  packagings       Packaging[]
+  images           ProductImage[]
+  benefits         ProductBenefit[]
+  uses             ProductUse[]
+  relatedFrom      ProductRelation[]  @relation("RelatedFrom")
+  relatedTo        ProductRelation[]  @relation("RelatedTo")
+  faqs             Faq[]
+
+  @@index([categoryId, published, sortOrder])
+}
+
+model ProductVariant {
+  id          Int            @id @default(autoincrement())
+  productId   Int
+  product     Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku         String         @unique @db.VarChar(30)  // PT00058 (código SAP)
+  barcode     String?        @db.VarChar(20)          // UPC/EAN; índice NO único (ver notas)
+  erpName     String?        @db.NVarChar(200)        // nombre tal como viene de SAP
+  colorKey    String         @db.VarChar(30)          // azul | negro | rojo
+  colorName   String         @db.NVarChar(40)         // "Azul"
+  colorHex    String         @db.VarChar(9)           // #1D3FCE
+  isDefault   Boolean        @default(false)
+  erpActive   Boolean        @default(true)
+  published   Boolean        @default(true)
+  sortOrder   Int            @default(0)
+  updatedAt   DateTime       @updatedAt
+  images      ProductImage[]
+  quoteItems  QuoteItem[]
+  kitItems    KitItem[]
+  clicks      OutboundClick[]
+
+  @@unique([productId, colorKey])
+  @@index([barcode])
+}
+
+model ProductSpec {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  groupName String  @default("General") @db.NVarChar(60) // General | Tinta | Materiales
+  label     String  @db.NVarChar(80)                     // "Tipo de punta"
+  value     String  @db.NVarChar(300)                    // "Mediana 1.0 mm"
+  sortOrder Int     @default(0)
+
+  @@index([productId, sortOrder])
+}
+
+model ProductDimension {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  partKey   String  @db.VarChar(30)   // body | cap | tip_length | tip_diameter | box_h | box_w | box_d
+  label     String  @db.NVarChar(80)  // "Largo del cuerpo"
+  valueMm   Decimal @db.Decimal(8, 2) // 145.83
+  tolerance String? @db.VarChar(20)   // "±1"
+  sortOrder Int     @default(0)
+
+  @@unique([productId, partKey])
+}
+
+model Packaging {
+  id           Int      @id @default(autoincrement())
+  productId    Int
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  code         String   @db.VarChar(20)   // blister1 | blister3 | blister5 | cajilla12 | fardo
+  name         String   @db.NVarChar(80)  // "Cajilla de 12"
+  unitsPerPack Int                        // 12
+  innerPacks   Int?                       // fardo: 100 cajillas
+  lengthMm     Decimal? @db.Decimal(8, 2)
+  widthMm      Decimal? @db.Decimal(8, 2)
+  heightMm     Decimal? @db.Decimal(8, 2)
+  weightG      Decimal? @db.Decimal(8, 2)
+  barcode      String?  @db.VarChar(20)
+  isWholesale  Boolean  @default(false)
+  sortOrder    Int      @default(0)
+
+  @@unique([productId, code])
+}
+
+model ProductImage {
+  id        Int             @id @default(autoincrement())
+  productId Int
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId Int?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  mediaId   Int
+  media     MediaAsset      @relation(fields: [mediaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kind      String          @default("main") @db.VarChar(20) // main | detail | stroke | pack | lifestyle
+  alt       String          @db.NVarChar(200)
+  sortOrder Int             @default(0)
+
+  @@index([productId, variantId, sortOrder])
+}
+
+model ProductBenefit {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  iconKey   String  @db.VarChar(40)   // vented-cap | low-viscosity | water-resistant | new-tip
+  title     String  @db.NVarChar(80)
+  text      String? @db.NVarChar(200)
+  sortOrder Int     @default(0)
+}
+
+model UseTag {
+  id       Int          @id @default(autoincrement())
+  slug     String       @unique @db.VarChar(40) // escolar | oficina | manualidades
+  name     String       @db.NVarChar(60)
+  products ProductUse[]
+}
+
+model ProductUse {
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  useTagId  Int
+  useTag    UseTag  @relation(fields: [useTagId], references: [id], onDelete: Cascade)
+
+  @@id([productId, useTagId])
+}
+
+model ProductRelation {
+  fromId    Int
+  from      Product @relation("RelatedFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  toId      Int
+  to        Product @relation("RelatedTo", fields: [toId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sortOrder Int     @default(0)
+
+  @@id([fromId, toId])
+}
+
+model Faq {
+  id         Int       @id @default(autoincrement())
+  scope      String    @db.VarChar(20) // global | home | category | product | mayoreo | escuelas | empresas | tiendas
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  productId  Int?
+  product    Product?  @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  question   String    @db.NVarChar(200)
+  answer     String    @db.NVarChar(Max)
+  sortOrder  Int       @default(0)
+  published  Boolean   @default(true)
+  updatedAt  DateTime  @updatedAt
+
+  @@index([scope, published, sortOrder])
+}
+
+// ──────────────────────────── Tiendas y kits ────────────────────────────
+
+model Department {
+  id                 Int                    @id @default(autoincrement())
+  slug               String                 @unique @db.VarChar(40)  // quetzaltenango
+  name               String                 @db.NVarChar(60)         // Quetzaltenango
+  country            String                 @default("GT") @db.VarChar(2) // GT | SV
+  lat                Decimal                @db.Decimal(9, 6)
+  lng                Decimal                @db.Decimal(9, 6)
+  intro              String?                @db.NVarChar(Max)        // texto SEO local
+  stores             Store[]
+  quotes             QuoteRequest[]
+  schoolRequests     SchoolVisitRequest[]
+  distributorApps    DistributorApplication[]
+}
+
+model Store {
+  id            Int        @id @default(autoincrement())
+  slug          String     @unique @db.VarChar(100)
+  name          String     @db.NVarChar(120)
+  type          String     @db.VarChar(20) // cadena | libreria | distribuidor
+  departmentId  Int
+  department    Department @relation(fields: [departmentId], references: [id])
+  municipality  String?    @db.NVarChar(80)
+  address       String?    @db.NVarChar(250)
+  phone         String?    @db.VarChar(30)
+  websiteUrl    String?    @db.VarChar(300)
+  onlineShopUrl String?    @db.VarChar(300)  // walmart.com.gt/bolik
+  lat           Decimal?   @db.Decimal(9, 6)
+  lng           Decimal?   @db.Decimal(9, 6)
+  openingHours  String?    @db.NVarChar(200)
+  isVerified    Boolean    @default(false)   // dirección validada por Ventas
+  published     Boolean    @default(true)
+  sortOrder     Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  kits          KitStore[]
+  clicks        OutboundClick[]
+
+  @@index([departmentId, published])
+}
+
+model Kit {
+  id             Int        @id @default(autoincrement())
+  slug           String     @unique @db.VarChar(80)
+  name           String     @db.NVarChar(120)
+  level          String     @db.VarChar(30)  // preprimaria | primaria | basicos | diversificado
+  season         Int                          // 2027
+  description    String     @db.NVarChar(400)
+  suggestedPrice Decimal?   @db.Decimal(10, 2)
+  priceVisible   Boolean    @default(false)
+  imageId        Int?
+  image          MediaAsset? @relation(fields: [imageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  published      Boolean    @default(false)
+  sortOrder      Int        @default(0)
+  items          KitItem[]
+  stores         KitStore[]
+  quoteItems     QuoteItem[]
+}
+
+model KitItem {
+  id          Int             @id @default(autoincrement())
+  kitId       Int
+  kit         Kit             @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  variantId   Int?
+  variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  description String          @db.NVarChar(120) // "Crayones de cera x12"
+  quantity    Int             @default(1)
+  sortOrder   Int             @default(0)
+}
+
+model KitStore {
+  kitId   Int
+  kit     Kit   @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  storeId Int
+  store   Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@id([kitId, storeId])
+}
+
+// ──────────────────────────── Solicitudes ────────────────────────────
+
+model QuoteRequest {
+  id            Int         @id @default(autoincrement())
+  folio         String      @unique @db.VarChar(20)  // COT-2027-000123
+  status        String      @default("nueva") @db.VarChar(20) // nueva | en_proceso | cotizada | ganada | perdida | spam
+  customerType  String      @db.VarChar(20) // libreria | distribuidor | colegio | universidad | empresa | otro
+  organization  String      @db.NVarChar(160)
+  contactName   String      @db.NVarChar(120)
+  phone         String?     @db.VarChar(30)
+  email         String?     @db.NVarChar(160)
+  departmentId  Int?
+  department    Department? @relation(fields: [departmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  municipality  String?     @db.NVarChar(80)
+  notes         String?     @db.NVarChar(2000)
+  source        String      @default("web") @db.VarChar(20) // web | whatsapp | admin
+  utmSource     String?     @db.VarChar(80)
+  utmMedium     String?     @db.VarChar(80)
+  utmCampaign   String?     @db.VarChar(120)
+  landingPath   String?     @db.VarChar(300)
+  ipHash        String?     @db.VarChar(64)
+  assignedToId  Int?
+  assignedTo    AdminUser?  @relation("QuoteAssignee", fields: [assignedToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  erpStatus     String      @default("pendiente") @db.VarChar(20) // pendiente | enviada | error | omitida
+  erpRef        String?     @db.VarChar(40)
+  erpLastError  String?     @db.NVarChar(1000)
+  erpAttempts   Int         @default(0)
+  erpSentAt     DateTime?
+  emailSentAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  items         QuoteItem[]
+  internalNotes QuoteNote[]
+
+  @@index([status, createdAt])
+  @@index([erpStatus])
+}
+
+model QuoteItem {
+  id            Int             @id @default(autoincrement())
+  quoteId       Int
+  quote         QuoteRequest    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  itemType      String          @db.VarChar(20) // variante | kit | categoria | personalizado
+  variantId     Int?
+  variant       ProductVariant? @relation(fields: [variantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kitId         Int?
+  kit           Kit?            @relation(fields: [kitId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  categoryId    Int?
+  category      Category?       @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  packagingCode String?         @db.VarChar(20)
+  description   String          @db.NVarChar(250) // copia legible: "Bolik Ultra Azul PT00058 · Cajilla de 12"
+  quantity      Int
+  unitLabel     String          @db.NVarChar(30)  // cajillas | fardos | kits | unidades
+  sortOrder     Int             @default(0)
+}
+
+model QuoteNote {
+  id        Int          @id @default(autoincrement())
+  quoteId   Int
+  quote     QuoteRequest @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  authorId  Int
+  author    AdminUser    @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  text      String       @db.NVarChar(2000)
+  createdAt DateTime     @default(now())
+}
+
+model SchoolVisitRequest {
+  id            Int         @id @default(autoincrement())
+  folio         String      @unique @db.VarChar(20) // ESC-2027-000045
+  status        String      @default("nueva") @db.VarChar(20) // nueva | agendada | realizada | descartada | spam
+  schoolName    String      @db.NVarChar(160)
+  level         String      @db.VarChar(30)
+  studentsApprox Int?
+  departmentId  Int?
+  department    Department? @relation(fields: [departmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  municipality  String      @db.NVarChar(80)
+  contactName   String      @db.NVarChar(120)
+  phone         String?     @db.VarChar(30)
+  email         String?     @db.NVarChar(160)
+  preferredMonth String?    @db.VarChar(20)
+  notes         String?     @db.NVarChar(2000)
+  utmSource     String?     @db.VarChar(80)
+  ipHash        String?     @db.VarChar(64)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model DistributorApplication {
+  id            Int         @id @default(autoincrement())
+  folio         String      @unique @db.VarChar(20) // DIS-2027-000012
+  status        String      @default("nueva") @db.VarChar(20) // nueva | en_revision | aprobada | rechazada | spam
+  businessName  String      @db.NVarChar(160)
+  businessType  String      @db.VarChar(30) // libreria | distribuidora | supermercado | otro
+  branches      String      @db.VarChar(20) // "1" | "2-5" | "6-20" | "20+"
+  monthlyVolume String      @db.VarChar(40)
+  currentBrands String?     @db.NVarChar(300)
+  departmentId  Int?
+  department    Department? @relation(fields: [departmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  municipality  String      @db.NVarChar(80)
+  contactName   String      @db.NVarChar(120)
+  phone         String?     @db.VarChar(30)
+  email         String?     @db.NVarChar(160)
+  notes         String?     @db.NVarChar(2000)
+  ipHash        String?     @db.VarChar(64)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  status    String   @default("nuevo") @db.VarChar(20) // nuevo | respondido | spam
+  name      String   @db.NVarChar(120)
+  email     String?  @db.NVarChar(160)
+  phone     String?  @db.VarChar(30)
+  subject   String   @db.VarChar(30) // productos | mayoreo | escuelas | empresas | otro
+  message   String   @db.NVarChar(3000)
+  ipHash    String?  @db.VarChar(64)
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
+model FolioSequence {
+  prefix    String @db.VarChar(5) // COT | ESC | DIS
+  year      Int
+  lastValue Int    @default(0)
+
+  @@id([prefix, year])
+}
+
+// ──────────────────────────── Contenido editable ────────────────────────────
+
+model HeroChapter {
+  id             Int     @id @default(autoincrement())
+  key            String  @unique @db.VarChar(30) // planta | aula | oficina | libreria
+  label          String  @db.NVarChar(40)        // "Planta"
+  hint           String  @db.NVarChar(60)        // "Así nace un Bolik"
+  eyebrow        String  @db.NVarChar(80)
+  line           String  @db.NVarChar(220)
+  ctaLabel       String  @db.NVarChar(40)
+  ctaKind        String  @db.VarChar(10)         // link | quote
+  ctaHref        String? @db.VarChar(200)        // /kits-escolares
+  ctaQuoteType   String? @db.VarChar(20)         // empresa | libreria
+  videoDesktop   String? @db.VarChar(300)        // /media/video/planta-1080.mp4
+  videoMobile    String? @db.VarChar(300)
+  posterKey      String? @db.VarChar(200)        // clave de MediaAsset del póster
+  sortOrder      Int     @default(0)
+  published      Boolean @default(true)
+}
+
+model SiteStat {
+  id        Int     @id @default(autoincrement())
+  key       String  @unique @db.VarChar(30) // anios | productos | puntos_venta | departamentos
+  value     Int
+  prefix    String? @db.NVarChar(5)
+  suffix    String? @db.NVarChar(5)    // "+"
+  label     String  @db.NVarChar(80)
+  sourceNote String? @db.NVarChar(200) // de dónde sale la cifra (para validar)
+  sortOrder Int     @default(0)
+  published Boolean @default(true)
+}
+
+model HistoryMilestone {
+  id          Int         @id @default(autoincrement())
+  year        Int
+  title       String      @db.NVarChar(120)
+  description String      @db.NVarChar(400)
+  imageId     Int?
+  image       MediaAsset? @relation(fields: [imageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  isVerified  Boolean     @default(false)
+  sortOrder   Int         @default(0)
+  published   Boolean     @default(true)
+}
+
+model SchoolActivity {
+  id          Int         @id @default(autoincrement())
+  title       String      @db.NVarChar(120)
+  description String      @db.NVarChar(400)
+  colorKey    String      @db.VarChar(20) // coral | kblue | kgreen | paper
+  iconKey     String      @db.VarChar(40)
+  imageId     Int?
+  image       MediaAsset? @relation(fields: [imageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sortOrder   Int         @default(0)
+  published   Boolean     @default(true)
+}
+
+model SectionAppearance {
+  sectionKey       String   @id @db.VarChar(50) // home.hero | home.stats | home.solutions | escuelas.hero …
+  backgroundPreset String   @default("paper") @db.VarChar(20) // paper | soft | dots | grid | lines | ink | brand | navy | sun
+  tone             String   @default("light") @db.VarChar(10) // light | dark
+  updatedAt        DateTime @updatedAt
+}
+
+model SiteSetting {
+  key       String   @id @db.VarChar(60) // whatsapp_number | phone | address | social_facebook | quote_email_to | splash_enabled …
+  value     String   @db.NVarChar(Max)
+  updatedAt DateTime @updatedAt
+}
+
+// ──────────────────────────── SEO, analítica y procesos ────────────────────────────
+
+model Redirect {
+  id         Int       @id @default(autoincrement())
+  fromPath   String    @unique @db.VarChar(450) // ruta + query normalizada
+  toPath     String    @db.VarChar(450)
+  statusCode Int       @default(301)
+  hits       Int       @default(0)
+  lastHitAt  DateTime?
+  active     Boolean   @default(true)
+  note       String?   @db.NVarChar(200)
+  createdAt  DateTime  @default(now())
+}
+
+model NotFoundLog {
+  id         Int      @id @default(autoincrement())
+  path       String   @unique @db.VarChar(450)
+  hits       Int      @default(1)
+  referer    String?  @db.VarChar(450)
+  lastSeenAt DateTime @default(now())
+}
+
+model OutboundClick {
+  id         BigInt          @id @default(autoincrement())
+  kind       String          @db.VarChar(20) // whatsapp | retailer | maps | phone | pdf
+  target     String?         @db.VarChar(60) // walmart | latorre | google_maps
+  variantId  Int?
+  variant    ProductVariant? @relation(fields: [variantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  storeId    Int?
+  store      Store?          @relation(fields: [storeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  path       String          @db.VarChar(300)
+  deviceType String?         @db.VarChar(10) // mobile | desktop
+  createdAt  DateTime        @default(now())
+
+  @@index([kind, createdAt])
+}
+
+model SyncRun {
+  id           Int       @id @default(autoincrement())
+  kind         String    @db.VarChar(20) // catalog | erp_retry
+  status       String    @db.VarChar(20) // running | ok | partial | error
+  startedAt    DateTime  @default(now())
+  finishedAt   DateTime?
+  itemsRead    Int       @default(0)
+  itemsCreated Int       @default(0)
+  itemsUpdated Int       @default(0)
+  errors       String?   @db.NVarChar(Max)
+}
+
+model IndexNowSubmission {
+  id        Int       @id @default(autoincrement())
+  url       String    @db.VarChar(450)
+  status    String    @default("pendiente") @db.VarChar(20) // pendiente | enviada | error
+  createdAt DateTime  @default(now())
+  sentAt    DateTime?
+
+  @@index([status, createdAt])
+}

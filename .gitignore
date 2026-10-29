@@ -1,0 +1,41 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Next.js / build
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Variables de entorno: nunca se suben valores reales
+.env
+.env.*
+!.env.example
+
+# Medios locales y temporales
+.media/
+tmp/
+
+# Pruebas
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.lighthouseci/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Claude Code (ajustes personales)
+.claude/settings.local.json

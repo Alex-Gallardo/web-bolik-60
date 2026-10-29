@@ -1,0 +1,351 @@
+﻿ID,Épica,Nombre de épica,Título,Sprint,Días,Prioridad,Pista,Depende de,Docs,Descripción,Pasos,Criterios de aceptación,Núcleo (1 dev)
+BD-001,E0,Fundaciones del repositorio,Crear el proyecto Next.js 16 y el repositorio,S0,0.5,Must,A,,"01, 04","Proyecto base con TypeScript, Tailwind v4, App Router, carpeta src y pnpm.","1. `pnpm create next-app@latest bolik-digital --ts --tailwind --eslint --app --src-dir --import-alias ""@/*"" --use-pnpm`
+2. Agregar `.nvmrc` (Node LTS ≥ 20.9) y `.npmrc` con `save-exact=true`.
+3. Copiar `CLAUDE.md` a la raíz y `docs/` a `/docs`.
+4. Primer commit en la rama `master`; crear la rama `develop`.","- `pnpm dev` abre la página por defecto.
+- `pnpm build` termina sin errores.
+- `CLAUDE.md` y `docs/` están en el repo.",Sí
+BD-002,E0,Fundaciones del repositorio,"TypeScript estricto, ESLint y Prettier",S0,0.5,Must,A,BD-001,04,Reglas de calidad que Claude Code y el junior deben respetar desde el primer día.,"1. `tsconfig.json`: `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`.
+2. `eslint.config.mjs`: `next/core-web-vitals`, `next/typescript`, regla `no-restricted-imports` que prohíbe `framer-motion` y `motion/react` fuera de `src/components/motion`.
+3. Prettier + `prettier-plugin-tailwindcss`.
+4. Scripts `lint`, `typecheck` del doc 04 §5.","- `pnpm lint` y `pnpm typecheck` pasan.
+- Importar `motion/react` en una página da error de lint.",Sí
+BD-003,E0,Fundaciones del repositorio,"Ganchos de git: Husky, lint-staged y commits convencionales",S0,0.25,Should,A,BD-002,18,Evita subir código sin formato o con errores de tipos.,"1. Instalar `husky`, `lint-staged`, `@commitlint/cli`, `@commitlint/config-conventional`.
+2. pre-commit: lint-staged (eslint --fix + prettier en archivos cambiados).
+3. pre-push: `pnpm typecheck && pnpm test`.",- Un commit con mensaje `cambios` es rechazado; `feat(home): hero` se acepta.,No
+BD-004,E0,Fundaciones del repositorio,next.config.ts base,S0,0.5,Must,A,BD-001,"03, 15","Configuración de producción: Cache Components, salida standalone, loader de imágenes y cabeceras.","1. Copiar `starter/next.config.ts`.
+2. Verificar `cacheComponents: true`, `output: ""standalone""`, `images.loader: ""custom""`, `poweredByHeader: false`, `typedRoutes: true`.
+3. Dejar las cabeceras de seguridad en modo report-only hasta BD-142.","- `pnpm build` genera `.next/standalone/server.js`.
+- La respuesta no incluye `X-Powered-By`.",Sí
+BD-005,E0,Fundaciones del repositorio,Variables de entorno tipadas,S0,0.5,Must,B,BD-001,03 §9,"Si falta una variable, la app falla al arrancar con un mensaje claro.","1. Copiar `starter/src/env.ts` y `starter/.env.example`.
+2. Crear `.env.local` (no se sube a git).
+3. Prohibir `process.env` fuera de `src/env.ts` (regla de lint).","- Quitar `DATABASE_URL` hace fallar `pnpm dev` con el nombre de la variable.
+- `.env.local` está en `.gitignore`.",Sí
+BD-006,E0,Fundaciones del repositorio,Estructura de carpetas,S0,0.25,Must,A,BD-001,04 §1,Crear el árbol de carpetas acordado para que todo tenga un lugar.,"1. Crear las carpetas del doc 04 §1 con un `README.md` corto en `features/`, `server/` y `components/`.
+2. Crear los grupos de rutas `(site)` y `(admin)`.","- El árbol coincide con el doc 04.
+- `pnpm build` sigue pasando.",Sí
+BD-007,E0,Fundaciones del repositorio,"Tokens CSS, movimiento y fondos",S0,0.5,Must,A,BD-006,"02, 08, 09","Base visual: colores, tipos, espacios, duraciones, curvas y fondos.","1. Copiar `starter/src/styles/*` y `starter/src/app/globals.css`.
+2. Comprobar que las clases `bg-blue`, `text-ink`, `rounded-lg`, `shadow-md` funcionan.
+3. No crear colores fuera de los tokens.","- Una página de prueba usa los tokens y se ve igual que la demo HTML.
+- No hay variables CSS que se refieran a sí mismas.",Sí
+BD-008,E0,Fundaciones del repositorio,Fuentes con next/font,S0,0.25,Must,A,BD-007,"02, 12",Bricolage Grotesque y DM Sans en todo el sitio; Baloo 2 solo en `/escuelas`.,"1. `src/app/fonts.ts` con `next/font/google`, `display: ""swap""`, `subsets: [""latin""]`, variables `--font-bricolage`, `--font-dm-sans`, `--font-baloo`.
+2. Aplicar Baloo 2 solo en el layout de escuelas.","- La home descarga como máximo 4 archivos woff2.
+- Sin peticiones a fonts.googleapis.com en el navegador.",Sí
+BD-009,E0,Fundaciones del repositorio,Utilidades y constantes base,S0,0.5,Must,A,BD-006,"04, 05",Funciones puras reutilizables con sus pruebas.,"1. `lib/cn.ts`, `lib/format.ts` (es-GT), `lib/slugify.ts`, `lib/whatsapp.ts`.
+2. Copiar `lib/constants.ts` y `lib/cache-tags.ts` del starter.
+3. Pruebas unitarias de cada función (doc 13 §3).",- `pnpm test` pasa con cobertura ≥ 80 % en `src/lib`.,Sí
+BD-010,E0,Fundaciones del repositorio,Prisma 7 con SQL Server,S0,1,Must,B,BD-005,05 §4,Conexión a la BD con el adaptador oficial y el primer esquema.,"1. Levantar SQL Server local con Docker (doc 13 §2).
+2. Instalar `prisma`, `@prisma/client`, `@prisma/adapter-mssql`.
+3. Copiar `prisma.config.ts`, `prisma/schema.prisma` y `src/server/db.ts` del doc 05/starter.
+4. `pnpm db:migrate --name init` y `pnpm prisma generate`.","- Existe la migración inicial en `prisma/migrations`.
+- `pnpm db:studio` muestra todas las tablas.
+- `db` solo se importa desde `src/server/**` (`import ""server-only""`).",Sí
+BD-011,E0,Fundaciones del repositorio,Logs y manejo de errores,S0,0.5,Must,B,BD-005,"03, 15",Errores con contexto en el servidor y pantallas amigables para el visitante.,"1. `server/log.ts` con `pino` (JSON en producción, legible en desarrollo).
+2. `app/(site)/error.tsx`, `app/global-error.tsx` con el texto de `feedback.system`.
+3. Cada server action registra errores con un `requestId` que también se muestra al usuario.",- Un error forzado muestra la pantalla amigable y deja una línea de log con `requestId`.,Sí
+BD-012,E0,Fundaciones del repositorio,Configurar Vitest,S0,0.5,Must,A,BD-002,13 §2,Pruebas unitarias e integración listas para usar.,"1. Instalar `vitest`, `@vitejs/plugin-react`, `vite-tsconfig-paths`, `jsdom`, `@testing-library/react`.
+2. Crear `vitest.config.ts` y `vitest.integration.config.ts` del doc 13.",- `pnpm test` y `pnpm test:int` corren (aunque sea con una prueba de ejemplo).,Sí
+BD-013,E0,Fundaciones del repositorio,Configurar Playwright y axe,S0,0.5,Must,A,BD-001,13 §2,Pruebas de punta a punta en móvil y escritorio.,"1. `pnpm create playwright` y `@axe-core/playwright`.
+2. Copiar `playwright.config.ts` del doc 13.
+3. Helper `tests/e2e/helpers.ts` con `expectNoA11yViolations` y `skipSplash`.",- `pnpm test:e2e` corre una prueba de humo en los 2 proyectos.,Sí
+BD-014,E0,Fundaciones del repositorio,Integración continua,S0,1,Must,B,BD-012 BD-013,"13, 15",Cada PR se valida solo.,"1. Pipeline (GitHub Actions o Azure DevOps): install con caché de pnpm → typecheck → lint → test → build → test:e2e → lhci.
+2. Servicio SQL Server en el pipeline para integración/E2E.
+3. Publicar el `.next/standalone` como artefacto.
+4. Protección de rama: PR obligatorio + CI en verde.","- Un PR con un error de tipos queda en rojo.
+- El artefacto descargado arranca con `node server.js`.",Sí
+BD-015,E0,Fundaciones del repositorio,Lighthouse CI con presupuestos,S0,0.5,Must,B,BD-014,"12, 13 §7",Rendimiento y SEO vigilados en cada PR.,"1. Copiar `starter/tests/lighthouserc.json`.
+2. Agregar el paso `pnpm lhci` al pipeline.","- Un PR que agrega 200 KB de JS a la home falla.
+- El reporte queda adjunto al PR.",Sí
+BD-016,E0,Fundaciones del repositorio,Entorno de staging en IIS,S0,1,Must,B,BD-004 BD-014,15,Un lugar real donde probar desde la primera semana (con apoyo de TI).,"1. Sitio IIS `staging-bolik` (solo red interna o con IP permitida) con ARR + URL Rewrite hacia `localhost:3100`.
+2. Servicio Windows `BolikDigital-Staging` (NSSM o PM2) ejecutando `node server.js`.
+3. BD `BolikDigital_Stg`; carpeta `D:\bolik-stg\media`.
+4. Despliegue manual del artefacto de BD-014 siguiendo doc 15 §5.","- `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
+- `X-Robots-Tag: noindex` presente en staging.",Sí
+BD-020,E1,Sistema de diseño y /styleguide,Componente Section con fondos configurables,S1,0.5,Must,A,BD-007,08 §3,Toda sección del sitio usa `Section` con fondo y tono elegibles.,"1. `components/layout/section.tsx` y `container.tsx` (código en doc 08).
+2. Props: `bg` (9 presets), `tone`, `spacing`, `id`, `as`.
+3. Leer la apariencia por sección desde `SectionAppearance` cuando exista `appearanceKey`.","- Los 9 fondos se ven en `/styleguide`.
+- Cambiar el fondo en BD cambia la sección sin tocar código.",Sí
+BD-021,E1,Sistema de diseño y /styleguide,Botones,S1,0.5,Must,A,BD-007,08 §2,Botón único con variantes para todo el sitio.,"1. `components/ui/button.tsx` con `cva`: primary, secondary, outline, ghost, whatsapp, danger; tamaños sm, md, lg; `loading`; `asChild`.
+2. Clase `.press` (A-01) y foco visible.","- Contraste AA en todas las variantes.
+- `loading` deshabilita y anuncia ""Enviando…"" a lectores de pantalla.",Sí
+BD-022,E1,Sistema de diseño y /styleguide,Controles de formulario,S1,1,Must,A,BD-021,08 §2,Patrón único de formularios con React Hook Form y Zod.,"1. `Field` (label, ayuda, error con `aria-describedby`), `Input`, `Textarea`, `Select`, `RadioCards`, `Checkbox`, `PhoneInput` (+502, teclado numérico), `QuantityStepper`.
+2. Error con animación `.shake` (A-12) y foco al primer error.","- Navegable solo con teclado.
+- Errores en español desde `feedback.forms`.",Sí
+BD-023,E1,Sistema de diseño y /styleguide,"Tarjetas, badges, chips y skeletons",S1,1,Must,A,BD-021,08 §2,Piezas de catálogo y listas.,"1. `ProductCard`, `CategoryCard`, `AudienceCard`, `StoreCard`, `Badge`, `Chip`, `Skeleton`.
+2. Imágenes con proporción fija y `sizes` correctos.","- CLS 0 al cargar una grilla de 12 tarjetas.
+- Efecto `.lift` solo con hover real (`@media (hover:hover)`).",Sí
+BD-024,E1,Sistema de diseño y /styleguide,Alertas amigables: Toaster y FriendlyDialog,S1,1,Must,A,BD-021,08 §4,Toda acción del usuario tiene un mensaje claro y amable.,"1. `components/feedback/toaster.tsx` (sonner, abajo-centro en móvil).
+2. `FriendlyDialog` (Radix Dialog) con ilustración, título, texto, acción principal y secundaria.
+3. Hook `useFeedback()` que toma los textos de `content/feedback.ts`.
+4. Aviso de ""sin conexión"" y ""conexión recuperada"".","- Cada fila de la matriz del doc 08 §4 tiene un ejemplo en `/styleguide`.
+- Toasts anunciados con `aria-live`.",Sí
+BD-025,E1,Sistema de diseño y /styleguide,"Overlays: Sheet, Dialog, Tabs, Accordion",S1,0.5,Must,A,BD-021,"08, 09",Componentes de Radix/shadcn con nuestras animaciones.,"1. Agregar con `pnpm dlx shadcn@latest add dialog sheet tabs accordion popover`.
+2. Reemplazar sus animaciones por los presets del doc 09.","- Escape cierra; el foco vuelve al disparador.
+- Con `prefers-reduced-motion` aparecen sin desplazamiento.",Sí
+BD-026,E1,Sistema de diseño y /styleguide,Vista /styleguide,S1,1,Must,A,BD-020 BD-021 BD-022 BD-023 BD-024 BD-025,08 §6,Vitrina interna con todos los componentes reales.,"1. `app/(site)/styleguide/page.tsx` con las 13 secciones del doc 08 §6.
+2. `noindex`, fuera del sitemap, bloqueada en robots.
+3. En producción solo visible con sesión de admin.","- Todas las secciones renderizan sin errores de consola.
+- En producción sin sesión responde 404.",Sí
+BD-027,E1,Sistema de diseño y /styleguide,Logo e ilustraciones,S1,0.5,Must,A,BD-007,02,Logo como componente SVG y las ilustraciones de los diálogos.,"1. `components/brand/logo.tsx` con variantes `full`, `mark`, `mono`, `inverse`.
+2. Ilustraciones SVG en línea (éxito, error, vacío, sin conexión) optimizadas con SVGO.","- Cada SVG pesa < 4 KB.
+- El logo tiene `aria-label=""Bolik""`.",No
+BD-030,E2,"Datos, medios e integración base",Esquema completo y migraciones,S0,0.5,Must,B,BD-010,05,Todas las tablas del MVP.,"1. Usar `starter/prisma/schema.prisma` completo.
+2. `pnpm db:migrate --name schema_mvp`.
+3. Revisar índices del doc 05 §6.","- `prisma validate` OK.
+- La migración se aplica en una BD vacía y en staging.",Sí
+BD-031,E2,"Datos, medios e integración base",Seeds con datos reales,S1,1.5,Must,B,BD-030,"05 §7, 17",Datos reales para desarrollar y probar (nada de lorem).,"1. `prisma/seed/*.json`: categorías, productos (Bolik Ultra y su ficha), variantes y empaques, tiendas reales, departamentos, FAQs, contenido de la home, admin inicial.
+2. Perfiles `--profile dev` y `--profile e2e`.
+3. El seed es idempotente (`upsert`).","- `pnpm db:seed` dos veces seguidas no duplica datos.
+- El Bolik Ultra tiene PT00058/59/60 con sus códigos de barras.",Sí
+BD-032,E2,"Datos, medios e integración base",Capa de datos con Cache Components,S1,1.5,Must,B,BD-031,03 §5,Consultas de lectura cacheadas con tags.,"1. `server/data/{products,categories,stores,content,faqs,sitemap,llms,search}.ts`.
+2. Cada función con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`.
+3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.","- El build prerenderiza las páginas públicas sin consultar la BD en cada petición.
+- Pruebas de integración de las funciones.",Sí
+BD-033,E2,"Datos, medios e integración base",Folios consecutivos,S1,0.5,Must,B,BD-030,05 §5,COT/ESC/DIS-AAAA-NNNNNN sin duplicados.,"1. Copiar `starter/src/server/folio.ts`.
+2. Prueba de concurrencia: 20 envíos simultáneos.","- 20 folios distintos y consecutivos.
+- El 1 de enero reinicia el consecutivo.",Sí
+BD-034,E2,"Datos, medios e integración base",Procesamiento de imágenes,S1,1.5,Must,B,BD-030,03 §7,Imágenes rápidas: se procesan una sola vez al subir.,"1. `server/media/process-image.ts`: sharp → WebP en 320/480/640/960/1280/1920 + `blurDataURL` + hash.
+2. Guardar en `MEDIA_DIR` y registrar `MediaAsset`.
+3. `lib/image-loader.ts` (starter) y `images.loaderFile` en `next.config.ts`.
+4. Script `scripts/import-media.ts` para cargar en lote las fotos actuales.","- Una foto de 4 MB genera 6 archivos y la de 640 pesa < 60 KB.
+- `next/image` pide el ancho correcto según `sizes`.",Sí
+BD-035,E2,"Datos, medios e integración base",Gateway del ERP,S1,1,Must,B,BD-030,"03 §6, 05 §9",La web nunca depende de que SAP o SMART-K66 estén arriba.,"1. `server/erp/gateway.ts` (interfaz), `noop.ts`, `smartk66.ts` (fetch con timeout 8 s y 3 reintentos con backoff).
+2. Seleccionar por `ERP_MODE`.
+3. Mocks con MSW para pruebas.","- Con `ERP_MODE=noop` todo funciona.
+- Con la API simulada caída, la cotización se guarda con `erpStatus = pendiente`.",Sí
+BD-036,E2,"Datos, medios e integración base",Sincronización del catálogo con SAP,S4,1,Should,B,BD-035 BD-032,03 §6,"Códigos, nombres, códigos de barras y estado activo vienen de SAP.","1. `scripts/sync-catalog.ts`: lee `/api/web/articulos`, actualiza `ProductVariant`, nunca pisa campos editoriales.
+2. Registra `SyncRun` con conteos.
+3. Llama `revalidateTag(tag, 'max')` en lo que cambió.","- Un artículo inactivo en SAP se marca `inactivo` y sale del sitio.
+- El resultado aparece en `/admin/sincronizacion`.",No
+BD-040,E3,"Estructura global, splash y movimiento",Layout raíz del sitio,S1,0.5,Must,A,BD-008 BD-024,06 §2,"HTML base, metadatos raíz y proveedores mínimos.","1. `app/layout.tsx`: `<html lang=""es-GT"">`, fuentes, `rootMetadata`, enlace ""Saltar al contenido"".
+2. `app/(site)/layout.tsx`: Header, `<main id=""contenido"">`, Footer, Toaster, RevealObserver.
+3. Script del splash en `<head>`.","- Una sola etiqueta `<main>` por página.
+- JS compartido ≤ 90 KB gzip.",Sí
+BD-041,E3,"Estructura global, splash y movimiento",Header y menú móvil,S1,1,Must,A,BD-040 BD-025,06 §2,Navegación principal con acceso a buscar y a la cotización.,"1. Header fijo que se compacta al bajar (A-20) y se oculta/aparece por dirección de scroll en móvil.
+2. Badge de cotización con `badge-pop` (A-05).
+3. Menú móvil en `Sheet` con enlaces grandes y CTA de WhatsApp.","- Sin CLS al compactarse.
+- El menú se cierra al navegar y devuelve el foco.",Sí
+BD-042,E3,"Estructura global, splash y movimiento",Footer y botones flotantes,S1,0.5,Must,A,BD-040,06 §2,Pie con datos de la empresa y flotantes de WhatsApp y volver arriba.,"1. Footer con dirección, teléfono, redes, enlaces legales, razón social desde `SiteSetting`.
+2. Botón WhatsApp flotante (se oculta cuando el drawer o el teclado están abiertos).","- Teléfono con `tel:` y WhatsApp con mensaje prellenado.
+- Los flotantes no tapan el CTA principal en móvil.",Sí
+BD-043,E3,"Estructura global, splash y movimiento",Splash de 2 segundos,S1,0.5,Must,A,BD-040,09 §splash,"Animación del logo antes del hero, sin afectar SEO ni LCP.","1. Copiar `starter/src/components/layout/splash.tsx`.
+2. Inyectar el script en `<head>` y el SVG al inicio del `<body>`.
+3. Leer `splash_enabled` de `SiteSetting` en `data-splash-enabled`.","- Prueba E2E `splash.spec.ts` en verde.
+- Lighthouse no cambia el LCP con splash activo vs. inactivo (± 100 ms).",Sí
+BD-044,E3,"Estructura global, splash y movimiento","Revelado al hacer scroll, cifras y transiciones",S1,0.5,Must,A,BD-040,09,Movimiento suave hecho con CSS.,"1. Copiar `reveal-observer.tsx` y `count-up.tsx`.
+2. Transición de entrada de página con `.page-enter`.","- Sin JS el contenido se ve completo.
+- Con movimiento reducido no hay animaciones.",Sí
+BD-045,E3,"Estructura global, splash y movimiento",MotionProvider diferido,S1,0.25,Must,A,BD-040,09,Motion solo donde CSS no alcanza.,"1. `components/motion/provider.tsx` con `LazyMotion` + `domAnimation` (carga diferida) y presets.
+2. Solo `m.*` en componentes.",- Motion no aparece en el JS inicial de la home (bundle analyzer).,Sí
+BD-046,E3,"Estructura global, splash y movimiento",Páginas 404 y 500,S2,0.5,Must,B,BD-040 BD-032,"06 §3.19, 10 §6",Errores amables que ayudan a seguir navegando.,"1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías.
+2. `error.tsx` con WhatsApp y ""Reintentar"".","- Una URL vieja registrada en `Redirect` responde 301.
+- Las demás registran el 404 con contador.",Sí
+BD-050,E4,Inicio,Hero con video por capítulos,S2,1.5,Must,A,BD-032 BD-034 BD-044,"06 §3.1, 09","El hero de la demo, llevado a producción.","1. Copiar `starter/src/components/hero/video-hero.tsx`.
+2. Datos desde `HeroChapter` (título, texto, CTA, póster, video).
+3. Póster del capítulo 1 con `priority` (es el LCP).
+4. Video solo tras `load`, en ocioso y sin Save-Data/2g/3g/movimiento reducido.","- LCP de la home ≤ 2.0 s en Lighthouse móvil.
+- Capítulos navegables con flechas del teclado.
+- El video se pausa fuera de pantalla.",Sí
+BD-051,E4,Inicio,Soluciones por público y categorías,S2,0.5,Must,A,BD-023 BD-032,06 §3.1,Accesos rápidos a lo que busca cada visitante.,"1. ""Un Bolik para cada etapa"": 5 tarjetas (Colegios, Universidades, Empresas, Librerías, Distribuidores) y 8 categorías con buscador grande (doc 06 §3.1, secciones 3–4).
+2. Eventos `solution_click` y `category_click`.","- Las tarjetas enlazan a rutas reales.
+- Revelado escalonado (A-30).",Sí
+BD-052,E4,Inicio,Producto estrella y cifras,S2,0.5,Must,A,BD-051,06 §3.1,Bolik Ultra destacado y cifras de la empresa.,"1. Bloque del Ultra con colores, empaques y CTA ""Cotizar"" / ""Dónde comprar"".
+2. Cifras desde `SiteStat` con `CountUp`.","- El servidor renderiza los números finales (SEO).
+- Solo se muestran cifras con `isVerified = true`.",Sí
+BD-053,E4,Inicio,"Dónde comprar, escuelas e historia en la home",S2,0.5,Must,A,BD-051,06 §3.1,Resúmenes que llevan a las páginas internas.,"1. Resumen de puntos de venta con cadenas y compra en línea.
+2. Bloque de escuelas con estilo infantil.
+3. Bloque de historia (1966 → hoy).","- Los enlaces externos llevan `rel=""noopener""` y registran `retailer_click`.",Sí
+BD-054,E4,Inicio,"FAQ, CTA final y apariencia por sección",S2,0.5,Must,A,BD-051 BD-020,06 §3.1,Cierre de la home y fondos editables.,"1. Bloque de kits escolares (solo si hay kits publicados).
+2. 6 FAQs (scope `home`) con `FAQPage`.
+3. CTA final a cotización y WhatsApp.
+4. Cada sección lee su fondo desde `SectionAppearance`.",- Cambiar el fondo en el admin se refleja en la home tras guardar.,Sí
+BD-055,E4,Inicio,Ajuste de rendimiento de la home,S2,0.5,Must,A,BD-050 BD-054,12,La home cumple los presupuestos.,"1. Bundle analyzer; mover a carga diferida lo que no se ve arriba.
+2. Lighthouse móvil 3 corridas.","- JS inicial ≤ 120 KB gzip.
+- Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.",Sí
+BD-060,E5,"Catálogo, fichas y búsqueda",Catálogo /productos,S2,1,Must,A,BD-023 BD-032,06 §3.2,Todos los productos con filtros por uso.,"1. Server Component con la grilla completa.
+2. Isla cliente para filtros (uso, línea, color) que actualiza la URL (`?uso=oficina`) sin recargar.
+3. Estado vacío amigable.","- Filtrar no hace peticiones al servidor.
+- La URL con filtros se puede compartir.",Sí
+BD-061,E5,"Catálogo, fichas y búsqueda",Página de categoría,S2,0.5,Must,A,BD-060,"06 §3.3, 10","Página optimizada para búsquedas como ""crayones de cera Guatemala"".","1. Intro SEO desde `Category`, grilla, FAQs de la categoría, enlaces a categorías hermanas.
+2. `generateStaticParams` para las 8 categorías.","- Título y descripción únicos.
+- BreadcrumbList válido.",Sí
+BD-062,E5,"Catálogo, fichas y búsqueda",Ficha de producto: información y variantes,S2,2,Must,A,BD-061 BD-034,06 §3.4,La página más importante para SEO y cotización.,"1. Galería (A-40) con zoom en escritorio y deslizamiento en móvil.
+2. Selector de color → cambia imagen, SKU, código de barras y URL (`?color=`).
+3. Selector de empaque (blister 1/3/5, cajilla 12, fardo).
+4. Datos clave, especificaciones, beneficios, usos.
+5. Botones: Agregar a cotización, WhatsApp, Dónde comprar.","- Todo el contenido está en el HTML del servidor.
+- Cambiar color no recarga la página.
+- JSON-LD `ProductGroup` con variantes válido.",Sí
+BD-063,E5,"Catálogo, fichas y búsqueda","Ficha: medidas, relacionados y dónde comprar",S2,1,Should,A,BD-062,06 §3.4,Información de apoyo para decidir.,"1. Diagrama de medidas desde `ProductDimension` (evento `dimension_open`).
+2. Productos relacionados (`ProductRelation`).
+3. Bloque ""Dónde comprar este producto"" (cadenas + enlace al localizador).",- El diagrama es accesible (tabla alternativa).,No
+BD-064,E5,"Catálogo, fichas y búsqueda",PDF de ficha técnica,S4,1,Could,A,BD-062,06 §3.4,Descarga de la ficha técnica generada desde la BD.,"1. Route handler `/productos/[categoria]/[producto]/ficha.pdf` con `@react-pdf/renderer`.
+2. Cacheado con el tag del producto.","- El PDF refleja los datos actuales.
+- Evento `pdf_download`.",No
+BD-065,E5,"Catálogo, fichas y búsqueda",Acceso por QR /p/[codigo],S2,0.25,Must,B,BD-062,06 §3.5,El QR del empaque abre la ficha correcta.,1. `/p/[codigo]` busca la variante por SKU o código de barras y responde 301 a la ficha con `?color=`.,"- `/p/PT00058` → ficha del Ultra azul.
+- Código inexistente → 404 amigable.",Sí
+BD-066,E5,"Catálogo, fichas y búsqueda",Buscador,S2,1.5,Must,B,BD-032 BD-025,"06 §3.6, 07","Búsqueda instantánea por nombre, código o código de barras.","1. `/api/search-index` (JSON cacheado con tags).
+2. Overlay con atajo `/` y `Ctrl+K`; Fuse.js se carga al enfocar.
+3. Normalizar tildes; sinónimos (lapicero = bolígrafo).
+4. Página `/buscar?q=` (noindex) como respaldo sin JS.","- ""ultra"", ""pt00058"", ""759364663092"" y ""crayon"" encuentran resultados.
+- Sin resultados: sugerencias + WhatsApp.",Sí
+BD-067,E5,"Catálogo, fichas y búsqueda",WhatsApp contextual,S2,0.25,Must,A,BD-009,07,Mensajes prellenados según dónde esté el visitante.,"1. `lib/whatsapp.ts` con plantillas (producto, cotización, general) y número desde `SiteSetting`.","- El mensaje incluye producto, SKU, empaque y URL.
+- Evento `whatsapp_open`.",Sí
+BD-070,E6,Cotización y formularios,Estado de la cotización,S2,0.5,Must,A,BD-024,07 §2.3,Lista de productos a cotizar que se guarda en el navegador.,"1. Copiar `starter/src/features/quote/store.ts`.
+2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header.","- Recargar la página conserva la lista.
+- Pruebas unitarias del doc 13 §3.",Sí
+BD-071,E6,Cotización y formularios,Drawer de cotización,S2,1,Must,A,BD-070 BD-045,"06, 09",Ver y editar la cotización sin salir de la página.,"1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso.
+2. Editar cantidades, quitar con deshacer (toast), ir a enviar.","- Abrir el drawer no carga más de 30 KB adicionales.
+- Deshacer restaura la línea.",Sí
+BD-072,E6,Cotización y formularios,Página /cotizacion y formulario,S2,1,Must,A,BD-071 BD-022,06 §3.16,Formulario corto para pedir la cotización.,"1. Tipo de cliente (librería, empresa, institución, otro) que ajusta los campos.
+2. Borrador del formulario guardado en `sessionStorage`.
+3. Esquema Zod compartido cliente/servidor (`features/quote/schema.ts`).","- Formulario completo en ≤ 6 campos obligatorios.
+- Teclado numérico en teléfono.",Sí
+BD-073,E6,Cotización y formularios,Enviar cotización (server action),S2,1.5,Must,B,BD-072 BD-033 BD-035,03 §6,"Guardar, notificar y enviar a SAP sin hacer esperar al visitante.","1. `features/quote/actions.ts` → `submitQuote`: Zod, honeypot, tiempo mínimo, rate limit, folio, transacción.
+2. `after()` para correos y ERP (no bloquean la respuesta).
+3. Devolver `{ ok, folio }` o errores por campo.","- Respuesta en < 800 ms con SMTP y ERP lentos.
+- Pruebas de integración del doc 13 §4.",Sí
+BD-074,E6,Cotización y formularios,Correos de notificación,S2,1,Must,B,BD-073,17,Ventas recibe la cotización y el cliente un acuse.,"1. `server/mail/transport.ts` (nodemailer; `SMTP_MODE=file` en desarrollo).
+2. Plantillas HTML simples y compatibles con Outlook: interna y acuse.","- El correo interno incluye folio, cliente, líneas y enlace al admin.
+- El acuse no contiene datos internos.",Sí
+BD-075,E6,Cotización y formularios,Confirmación de envío,S3,0.5,Must,A,BD-073,06 §3.17,Cierre claro con folio y siguientes pasos.,"1. Diálogo de éxito con folio (ilustración + confeti ligero CSS, A-15).
+2. `/cotizacion/enviada/[folio]` (noindex, dinámica) con resumen y botón WhatsApp.","- El carrito queda vacío.
+- Evento `quote_submit`.",Sí
+BD-076,E6,Cotización y formularios,"Formularios de escuelas, distribuidores y contacto",S3,1,Must,B,BD-073,06,"Mismo patrón, distinto destino.","1. Server actions `submitSchoolVisit`, `submitDistributor`, `submitContact` reutilizando validación y anti-spam.
+2. Folios ESC y DIS; correo a la bandeja correspondiente.","- Cada formulario muestra su diálogo de éxito.
+- Registros visibles en el admin.",Sí
+BD-077,E6,Cotización y formularios,Anti-spam compartido,S3,0.5,Must,B,BD-073,03 §8,Proteger formularios sin captcha molesto.,"1. `server/rate-limit.ts`: 5 envíos/10 min por hash de IP (memoria + respaldo en BD).
+2. Honeypot y tiempo mínimo de 3 s.","- El sexto envío en 10 min recibe un mensaje amable.
+- Un bot que llena el honeypot recibe éxito falso y no se guarda.",Sí
+BD-080,E7,Dónde comprar,Dónde comprar: lista y filtros,S3,1,Must,A,BD-032 BD-023,06 §3.7,Encontrar una tienda cercana en segundos.,"1. Selector de departamento, lista de tiendas, cadenas con compra en línea.
+2. ""Cómo llegar"" abre Maps con coordenadas.","- Funciona sin JS (lista completa).
+- Eventos `store_filter`, `maps_click`, `retailer_click`.",Sí
+BD-081,E7,Dónde comprar,"Mapa y ""cerca de mí""",S3,1,Should,A,BD-080,06 §3.7,Mapa interactivo que no pesa en la carga inicial.,"1. `react-leaflet` cargado cuando el mapa entra en pantalla.
+2. Geolocalización opcional: ordena por distancia; si se niega, mensaje amable.","- El JS del mapa no está en la carga inicial.
+- Permiso denegado muestra el selector de departamento.",No
+BD-082,E7,Dónde comprar,Páginas por departamento,S3,0.5,Must,A,BD-080,"06 §3.8, 10",Una página por departamento con tiendas (SEO local).,"1. `/donde-comprar/[departamento]` con `generateStaticParams`.
+2. JSON-LD `ItemList` de `Store`.","- Solo se generan departamentos con al menos 1 tienda.
+- Títulos tipo ""Dónde comprar Bolik en Quetzaltenango"".",Sí
+BD-083,E7,Dónde comprar,Registro de clics salientes,S3,0.5,Must,A,BD-030,12 §4,Medir cuántas personas van a una tienda o cadena.,"1. `/api/beacon` (POST, `sendBeacon`) → `OutboundClick` con destino, producto, departamento.
+2. Sin datos personales; responde 204.","- Un clic a Walmart crea una fila.
+- El endpoint rechaza cuerpos > 2 KB.",Sí
+BD-090,E8,SEO técnico,Metadatos en todas las rutas,S2,1,Must,B,BD-032,10 §3,"Título, descripción, canonical y Open Graph correctos.","1. Copiar `features/seo/metadata.ts`; `generateMetadata` en cada página.
+2. `opengraph-image` por producto y categoría (imagen generada con el nombre y la foto).","- Títulos y descripciones únicos en todo el sitio (prueba `seo.spec.ts`).
+- Canonical absoluto con `www`.",Sí
+BD-091,E8,SEO técnico,Datos estructurados JSON-LD,S2,0.5,Must,B,BD-090,10 §4,Datos que Google y las IA entienden.,"1. Copiar `features/seo/jsonld.tsx` y usarlo en cada plantilla.
+2. Validar con la Prueba de resultados enriquecidos y validator.schema.org.","- 0 errores en las plantillas: home, categoría, ficha, FAQ, dónde comprar.
+- Capturas de la validación adjuntas al ticket.",Sí
+BD-092,E8,SEO técnico,sitemap.xml y robots.txt,S2,0.25,Must,B,BD-032,10 §5,Mapa del sitio con fechas reales y reglas para bots.,1. Copiar `app/sitemap.ts` y `app/robots.ts`.,"- El sitemap solo incluye páginas publicadas e indexables.
+- En staging robots bloquea todo.",Sí
+BD-093,E8,SEO técnico,Migas de pan y enlazado interno,S2,0.5,Must,B,BD-061,10 §7,Ayuda a usuarios y buscadores a entender la jerarquía.,"1. Componente `Breadcrumbs` visible + `BreadcrumbList`.
+2. Bloques de enlaces relacionados (categorías hermanas, productos relacionados, departamentos).",- Ninguna página pública queda a más de 3 clics de la home.,Sí
+BD-094,E8,SEO técnico,Redirecciones desde el sitio Joomla,S3,1,Must,B,BD-046,10 §6,No perder el posicionamiento ganado por el sitio actual.,"1. Rastrear el sitio actual (Screaming Frog o script) y exportar URLs con tráfico desde Search Console.
+2. Completar `features/seo/legacy-redirects.ts` y la tabla `Redirect`.
+3. `scripts/check-redirects.ts`: verifica 301 y destino 200.","- 100 % de las URLs con tráfico redirigen a una página equivalente.
+- `pnpm check:redirects` en verde.",Sí
+BD-095,E8,SEO técnico,Pruebas automáticas de SEO,S3,0.5,Must,A,BD-090 BD-013,13 §5,Que nadie rompa el SEO sin darse cuenta.,1. `seo.spec.ts` y `sin-js.spec.ts` del doc 13.,- Corren en CI y bloquean el PR si fallan.,Sí
+BD-096,E8,SEO técnico,Search Console y Bing Webmaster,S5,0.25,Must,A,BD-152,10 §8,Dar de alta y enviar el sitemap el día del lanzamiento.,"1. Verificar la propiedad por DNS (con TI).
+2. Enviar `sitemap.xml` en ambos.
+3. Cambio de dirección no aplica (mismo dominio).","- Sitemap procesado sin errores en ambos.
+- Inspección de URL de home y ficha: ""La URL está en Google"" o en cola.",Sí
+BD-097,E8,SEO técnico,SEO de imágenes,S2,0.25,Must,B,BD-034,10 §8,Imágenes que también posicionan.,"1. `alt` obligatorio en `ProductImage` (desde el admin).
+2. Nombre de archivo descriptivo (`bolik-ultra-azul-1.webp`).
+3. Imágenes de producto en el sitemap.",- Ninguna `<img>` sin `alt` (axe).,No
+BD-100,E9,IA y automatización de indexación,llms.txt y llms-full.txt,S3,0.5,Should,B,BD-032,11 §3,Resumen del sitio para asistentes de IA.,"1. Copiar `app/llms.txt/route.ts`; crear `app/llms-full.txt/route.ts`.
+2. Cachear con los mismos tags.","- Responden 200 con `text/markdown`.
+- Cambiar un producto actualiza el archivo.",No
+BD-101,E9,IA y automatización de indexación,Catálogo público en JSON,S3,0.5,Should,B,BD-032,11 §6,Datos de producto legibles por máquinas.,"1. `/api/public/catalog.json` sin precios ni datos internos.
+2. Enlazado desde `llms.txt`.","- El JSON valida contra el tipo `PublicCatalog`.
+- No expone campos internos (prueba).",No
+BD-102,E9,IA y automatización de indexación,IndexNow,S3,0.5,Should,B,BD-030,11 §7,Avisar a Bing y otros apenas cambie algo.,"1. Archivo de clave en `public/`.
+2. `features/seo/indexnow.ts` (starter) y `scripts/flush-indexnow.ts`.
+3. Llamar `enqueueIndexNow` desde las acciones del admin.","- Publicar un producto encola sus URLs.
+- El flush marca `enviada` con respuesta 200/202.",No
+BD-103,E9,IA y automatización de indexación,"Datos clave, anclas de FAQ y fechas visibles",S3,0.5,Must,A,BD-062,11 §4–5,Contenido fácil de citar.,"1. Bloque ""Datos clave"" desde `Product.keyFacts`.
+2. Cada FAQ con ancla propia.
+3. ""Actualizado el …"" en fichas y FAQs (desde `updatedAt`).",- Checklist IA del doc 11 §9 completo en ficha y categoría.,Sí
+BD-104,E9,IA y automatización de indexación,Canal de IA en analítica y bots en logs,S4,0.25,Could,B,BD-125,11 §8,Medir cuánto tráfico llega desde asistentes.,"1. Grupo de canales ""IA"" en GA4.
+2. Consulta de logs de IIS por user-agent de bots de IA (script).","- El canal aparece en GA4.
+- El script lista visitas de bots por semana.",No
+BD-105,E10,Páginas por público e institucionales,Bolik en tu escuela,S3,1,Must,A,BD-076 BD-020,06 §3.9,Página con estilo infantil y formulario de visita.,"1. Layout con Baloo 2 y subpaleta infantil.
+2. Actividades desde `SchoolActivity`.
+3. Formulario de visita (BD-076).","- Animaciones lúdicas (A-50…) solo con transform/opacity.
+- Lighthouse ≥ 95.",Sí
+BD-106,E10,Páginas por público e institucionales,Mayoreo y distribuidores,S3,0.5,Must,A,BD-076,06 §3.10,Información para librerías y solicitud de distribuidor.,"1. Empaques y ventajas, pasos para ser distribuidor, formulario.","- CTA a cotización con tipo ""librería"" preseleccionado.",Sí
+BD-107,E10,Páginas por público e institucionales,Empresas y universidades,S3,0.5,Must,A,BD-072,06 §3.11,Bolígrafos personalizados con logo.,"1. Proceso, pedido mínimo (`SiteSetting`), CTA a cotización tipo ""empresa"".",- El pedido mínimo se edita desde el admin.,Sí
+BD-108,E10,Páginas por público e institucionales,Kits escolares,S4,1,Should,A,BD-070,06 §3.12,Kits por grado que se agregan completos a la cotización.,"1. Lista de kits desde `Kit` + `KitItem`; precio solo si `priceVisible`.
+2. Sin kits publicados: ""Próximamente"" y `noindex`.
+3. ""Agregar kit"" agrega una línea tipo kit.",- Kits con `published = false` no aparecen ni en sitemap.,No
+BD-109,E10,Páginas por público e institucionales,Nuestra historia,S4,0.5,Should,A,BD-044,06 §3.13,Línea de tiempo desde 1966.,1. Hitos desde `HistoryMilestone`; solo los verificados muestran fecha exacta.,- Revelado por hito sin CLS.,No
+BD-110,E10,Páginas por público e institucionales,Preguntas frecuentes,S3,0.5,Must,A,BD-103,06 §3.14,Todas las FAQs agrupadas.,1. Acordeón por grupo con anclas; `FAQPage`.,- El contenido de las respuestas está en el HTML aunque el acordeón esté cerrado.,Sí
+BD-111,E10,Páginas por público e institucionales,Contacto,S3,0.5,Must,A,BD-076,06 §3.15,Datos de contacto y formulario.,"1. Mapa estático (imagen), horarios, teléfono, WhatsApp, formulario.",- Sin librerías de mapa en esta página.,Sí
+BD-112,E10,Páginas por público e institucionales,Páginas legales,S3,0.25,Must,A,BD-040,06 §3.18,"Privacidad, términos y cookies.",1. `/legal/[slug]` desde BD (texto entregado por Legal).,- Enlazadas desde el footer y los formularios.,Sí
+BD-114,E11,Panel administrativo,Acceso al admin (iron-session),S2,1,Must,B,BD-030,"03 §8, 01 ADR-08",Inicio de sesión seguro para el equipo interno.,"1. Copiar `starter/src/server/auth/*`.
+2. `/admin/login` con server action, bloqueo tras 5 intentos.
+3. `requireRole()` en cada página y acción; `proxy.ts` redirige sin cookie.
+4. Script `pnpm admin:create` para el primer usuario.","- Sin sesión, `/admin/*` redirige a login.
+- Rol `ventas` no puede editar productos (prueba).
+- Cookie `httpOnly`, `secure`, `sameSite=lax`.",Sí
+BD-115,E11,Panel administrativo,Layout del admin y dashboard,S3,1,Must,A,BD-114,"06 §4, 12 §6",Panel con indicadores principales.,"1. Menú lateral/inferior, encabezado con usuario.
+2. Tarjetas del doc 12 §6 (consultas directas, sin caché).",- Carga del dashboard < 1 s con datos de prueba.,Sí
+BD-116,E11,Panel administrativo,Editor de productos,S3,2.5,Must,B,BD-115 BD-034,06 §4,Crear y editar fichas completas sin tocar código.,"1. Tabs del doc 06 §4; SKU y código de barras solo lectura.
+2. Subir y ordenar imágenes con `alt` obligatorio.
+3. Guardar → `updateTag` + `enqueueIndexNow` + `AuditLog`.
+4. Vista previa de Google (título y descripción).","- Publicar un producto lo muestra en el sitio en < 1 min sin redeploy.
+- Toast en cada guardado; confirmación al despublicar.",Sí
+BD-117,E11,Panel administrativo,Categorías y FAQs,S3,0.5,Must,A,BD-115,06 §4,Textos SEO de categorías y preguntas frecuentes.,1. CRUD con orden por arrastre.,- Cambios invalidan los tags correctos.,No
+BD-118,E11,Panel administrativo,Tiendas,S4,1,Must,B,BD-115,06 §4,Mantener el localizador al día.,"1. CRUD, marcar verificada, elegir ubicación en mapa.
+2. Importar/exportar CSV.",- Importar 200 tiendas en < 10 s con reporte de errores por fila.,No
+BD-119,E11,Panel administrativo,Bandeja de cotizaciones,S3,1.5,Must,B,BD-115 BD-073,"06 §4, 07 §2.9",Ventas atiende cotizaciones desde un solo lugar.,"1. Tabla por estado con filtros; detalle con líneas; asignar, cambiar estado, notas.
+2. Reintentar envío a SAP; exportar CSV.","- Cambiar estado registra `AuditLog`.
+- Exportación con tildes correctas en Excel (UTF-8 con BOM).",Sí
+BD-120,E11,Panel administrativo,"Bandejas de escuelas, distribuidores y mensajes",S4,0.5,Must,B,BD-119,06 §4,Mismo patrón que cotizaciones.,1. Reutilizar la tabla y el detalle genéricos.,- Estados y exportación funcionan en las 3 bandejas.,No
+BD-121,E11,Panel administrativo,"Contenido, apariencia y ajustes",S4,1.5,Must,B,BD-115 BD-050,06 §4,"Hero, cifras, historia, actividades, fondos por sección y ajustes.","1. Formularios de contenido con ""Ver en el sitio"".
+2. Apariencia: fondo por sección con vista previa.
+3. Ajustes: WhatsApp, teléfonos, redes, correos, splash on/off, pedido mínimo.",- Apagar el splash desde ajustes lo desactiva en la siguiente visita.,No
+BD-122,E11,Panel administrativo,Biblioteca de medios,S4,0.5,Must,B,BD-034 BD-115,06 §4,Subir y reutilizar imágenes y videos.,1. Grilla con búsqueda; subida con progreso; validación de tipo y tamaño.,- Archivo inválido → mensaje amable; nunca se guarda.,No
+BD-123,E11,Panel administrativo,Redirecciones y 404,S4,0.5,Must,B,BD-046 BD-115,10 §6,Corregir enlaces rotos sin desplegar.,"1. CRUD de `Redirect`; lista de 404 frecuentes con ""Crear redirección"".",- Una redirección creada funciona de inmediato.,No
+BD-124,E11,Panel administrativo,"Usuarios, auditoría y sincronización",S4,0.5,Should,B,BD-114 BD-036,06 §4,Administración del propio panel.,"1. CRUD de usuarios y roles, desbloquear.
+2. Bitácora filtrable.
+3. Historial de `SyncRun` y ""Sincronizar ahora"".",- Solo el rol admin ve estas vistas.,No
+BD-125,E12,Analítica e integración SAP,"GA4, Clarity y función track()",S3,0.5,Must,A,BD-040,12 §4,Medición sin afectar la velocidad.,"1. `features/analytics/track.ts`; GA4 con `@next/third-parties`; Clarity con `lazyOnload`.
+2. Solo en producción (`APP_ENV`).","- Ningún script de analítica en el JS inicial bloqueante.
+- Eventos visibles en DebugView.",Sí
+BD-126,E12,Analítica e integración SAP,Web Vitals de usuarios reales,S3,0.25,Must,A,BD-125,12 §5,Saber cómo carga el sitio en teléfonos reales.,1. `web-vitals.tsx` con `useReportWebVitals` → evento `web_vital`.,"- LCP, INP, CLS y TTFB llegan a GA4 con la ruta.",No
+BD-127,E12,Analítica e integración SAP,Eventos de analítica en toda la interfaz,S4,0.5,Must,B,BD-125,12 §4,Completar la tabla de eventos.,"1. Agregar `track()` en cada punto del doc 12 §4.
+2. Prueba E2E que intercepta `track` y valida nombres.",- 25 eventos implementados sin datos personales.,Sí
+BD-128,E12,Analítica e integración SAP,Conexión real con SMART-K66,S4,1,Should,B,BD-035,05 §9,"Cuando TI publique la API, activar el modo real.","1. Probar contrato con TI en staging.
+2. `ERP_MODE=smartk66`; `scripts/retry-erp.ts` para pendientes.","- Una cotización de staging crea el prospecto en SAP de pruebas.
+- Si la API no está lista, queda en `noop` y el ticket pasa a Fase 1.1.",No
+BD-130,E13,Calidad y pruebas,Completar pruebas unitarias e integración,S4,1.5,Must,B,BD-073 BD-116,13 §3–4,Cobertura de lo que puede romperse.,1. Implementar las tablas del doc 13 §3 y §4 que falten.,"- Cobertura ≥ 80 % en `src/lib` y `src/features`.
+- Suite de integración < 3 min.",Sí
+BD-131,E13,Calidad y pruebas,Suite E2E de flujos críticos,S4,1.5,Must,A,BD-075 BD-080,13 §5,"Los flujos que generan negocio, probados en móvil y escritorio.",1. Todos los archivos de la tabla del doc 13 §5.,"- Todos los `@critico` en verde en Pixel 7, iPhone 14 y escritorio.",Sí
+BD-132,E13,Calidad y pruebas,Revisión de accesibilidad manual,S4,0.5,Must,A,BD-131,13 §6,Lo que axe no detecta.,1. Recorrido con teclado y lector de pantalla; zoom 200 %.,- Hallazgos corregidos o documentados con ticket.,Sí
+BD-133,E13,Calidad y pruebas,Regresión visual de /styleguide,S4,0.5,Should,A,BD-026,13 §8,Detectar cambios visuales no deseados.,1. `tests/visual/styleguide.spec.ts` con capturas por sección en móvil y escritorio.,- Corre en CI; un cambio de color en un token hace fallar la prueba.,No
+BD-134,E13,Calidad y pruebas,Auditoría final de rendimiento,S4,1,Must,A,BD-055 BD-121,12,Cumplir los presupuestos con contenido real.,"1. Lighthouse en staging con datos y medios reales.
+2. WebPageTest móvil desde Latinoamérica.",- Todas las páginas cumplen el doc 12 §1–2.,Sí
+BD-135,E13,Calidad y pruebas,QA manual en dispositivos,S4,1.5,Must,A,BD-131,13 §9,Probar como lo hará la gente.,"1. Checklist del doc 13 §9 en los dispositivos mínimos.
+2. Registrar y corregir hallazgos.",- Checklist firmado en el ticket; 0 errores bloqueantes.,Sí
+BD-140,E14,Despliegue y operación,Servidor de producción,S3,1,Must,B,BD-016,15 §2–4,IIS + Node listos para el tráfico real (con TI).,"1. Mismo esquema que staging: servicio `BolikDigital`, sitio IIS, TLS, HTTP/2, compresión, `/media` estático.
+2. Usuario de Windows con permisos mínimos.",- El servicio se reinicia solo tras un fallo y tras reiniciar Windows.,Sí
+BD-141,E14,Despliegue y operación,Pipeline de despliegue,S3,1,Must,B,BD-014 BD-140,15 §5,Desplegar con un solo comando y poder volver atrás.,"1. Agente de build dentro de la red interna (el build lee la BD); un build por entorno.
+2. Script `deploy.ps1`: copiar artefacto a `releases/<fecha>`, `prisma migrate deploy`, cambiar enlace `current`, reiniciar servicio, prueba de humo.
+3. Conservar las 5 últimas versiones; `rollback.ps1` (doc 15 §8).","- Despliegue a staging en < 5 min.
+- Volver a la versión anterior en < 2 min.",Sí
+BD-142,E14,Despliegue y operación,Cabeceras de seguridad y CSP,S3,0.5,Must,B,BD-004,15 §6,Proteger el sitio sin romper la analítica.,"1. Cabeceras y CSP del doc 15 §6 en `next.config.ts` (primero como Report-Only en staging).
+2. HSTS en IIS.
+3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.","- securityheaders.com: nota A.
+- Sin errores de CSP en consola.",Sí
+BD-143,E14,Despliegue y operación,Respaldos y prueba de restauración,S4,0.5,Must,B,BD-140,15 §7,Poder recuperar datos y medios.,"1. Respaldos de BD (DBA) y de `D:\bolik\media` (robocopy nocturno).
+2. Restaurar en staging y verificar.",- Restauración documentada con tiempos reales.,Sí
+BD-144,E14,Despliegue y operación,Monitoreo y alertas,S4,0.5,Must,B,BD-140,15 §9,Enterarse antes que los usuarios.,"1. `/api/health` (app + BD).
+2. Monitor de disponibilidad cada minuto con alerta por correo/Teams.
+3. Rotación de logs.",- Detener el servicio genera alerta en < 3 min.,Sí
+BD-145,E14,Despliegue y operación,Tareas programadas,S4,0.5,Must,B,BD-102 BD-036,15 §10,Procesos que corren solos.,"1. Programador de tareas de Windows: `flush:indexnow` (10 min), `sync:catalog` (diario 5:30), `retry:erp` (15 min), limpieza de logs.",- Cada tarea registra su resultado; fallas generan alerta.,No
+BD-150,E15,Lanzamiento e hipercuidado,Importar contenido final,S4,1,Must,B,BD-121,16,"Cargar textos, fotos y tiendas entregados por las otras áreas.","1. Importar por script o admin; verificar con checklist de datos (códigos, teléfonos, direcciones).","- 0 textos de ejemplo en producción (búsqueda de ""lorem"", ""ejemplo"", ""XXXX"").",Sí
+BD-151,E15,Lanzamiento e hipercuidado,Ensayo general del corte,S4,0.5,Must,B,BD-141 BD-094,16 §3–5,Practicar el lanzamiento completo en staging.,1. Seguir el runbook del doc 16 §5 cronometrando cada paso.,- Runbook ajustado con tiempos reales.,Sí
+BD-152,E15,Lanzamiento e hipercuidado,Lanzamiento,S5,0.5,Must,A,BD-151 BD-135 BD-143 BD-144,16,Poner el sitio nuevo en www.bolik66.com.,"1. Criterios go/no-go del doc 16 §4 (viernes 8).
+2. Runbook del doc 16 §5 (lunes 11 de enero, 6:00).",- Checklist post-lanzamiento del doc 16 §6 completo.,Sí
+BD-153,E15,Lanzamiento e hipercuidado,Hipercuidado (2 semanas),S5,2,Must,B,BD-152,16 §7,Vigilar y corregir rápido después del lanzamiento.,"1. Revisión diaria: errores, 404, Search Console, Web Vitals, cotizaciones, correos.","- Errores críticos resueltos en < 24 h.
+- Reporte de cierre al final de la semana 2.",Sí
+BD-154,E15,Lanzamiento e hipercuidado,Retrospectiva y backlog de Fase 2,S5,0.25,Should,A,BD-153,01,Aprender y ordenar lo que sigue.,1. Retrospectiva técnica; pasar Could y pendientes a Fase 2.,- Backlog de Fase 2 priorizado.,Sí

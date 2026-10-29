@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test:int *)",
+      "Bash(pnpm test:e2e *)",
+      "Bash(pnpm test:visual *)",
+      "Bash(pnpm build)",
+      "Bash(pnpm analyze)",
+      "Bash(pnpm lhci)",
+      "Bash(pnpm db:seed *)",
+      "Bash(pnpm prisma generate)",
+      "Bash(pnpm prisma validate)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Bash(rm -rf *)",
+      "Bash(git push *)",
+      "Bash(pnpm prisma migrate reset *)",
+      "Bash(pnpm db:deploy *)",
+      "Edit(./prisma/migrations/**)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "node scripts/hooks/format.mjs" }]
+      }
+    ]
+  }
+}
