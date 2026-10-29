@@ -34,4 +34,13 @@ Los tickets del sprint en curso están en los [Issues](../../issues) y [mileston
 
 ## Desarrollo local
 
-Las instrucciones de instalación y los comandos (`pnpm dev`, `pnpm test`, etc.) se agregan con los tickets del sprint S0 (BD-001 en adelante).
+Requisitos: Node.js 22 LTS (`.nvmrc`) y pnpm 10 (`corepack enable`).
+
+```bash
+pnpm install
+pnpm dev      # http://localhost:3000
+pnpm build    # build de producción
+pnpm lint
+```
+
+El resto de comandos (`typecheck`, `test`, `test:e2e`, `db:*`…) se agregan con los tickets del sprint S0; la lista completa está en [CLAUDE.md](CLAUDE.md#comandos).

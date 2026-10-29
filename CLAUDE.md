@@ -13,7 +13,7 @@ La documentación completa está en `/docs`. Si una instrucción de este archivo
 
 ## Stack
 
-- **Next.js 16** (App Router, `cacheComponents: true`, `output: "standalone"`) + **React 19** + **TypeScript** estricto. En Next 16 el middleware se llama `proxy.ts`; la caché se declara con `'use cache'` + `cacheLife` + `cacheTag`. Verifica en la documentación oficial cualquier API que recuerdes de versiones anteriores.
+- **Next.js 16** (App Router, `cacheComponents: true`, `output: "standalone"`) + **React 19** + **TypeScript** estricto. En Next 16 el middleware se llama `proxy.ts`; la caché se declara con `'use cache'` + `cacheLife` + `cacheTag`. Verifica en la documentación oficial cualquier API que recuerdes de versiones anteriores; la de la versión instalada está en `node_modules/next/dist/docs/` (ver `AGENTS.md`, que `next dev` regenera).
 - **Tailwind CSS v4** con tokens en `src/styles/tokens.css` (nunca colores sueltos en componentes).
 - **Radix UI** (vía shadcn/ui, código copiado en `src/components/ui`) para diálogos, tabs, acordeones, popovers.
 - **Motion** (`motion/react`) solo con `LazyMotion` + `m`, y solo donde CSS no alcanza (drawer, modales, listas que se reordenan).
