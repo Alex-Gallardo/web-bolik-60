@@ -7,13 +7,13 @@ Nuevo sitio público y panel administrativo de **Bolik** ([www.bolik66.com](http
 
 ## Documentación
 
-| Qué | Dónde |
-|---|---|
-| Reglas del repo (leer primero) | [CLAUDE.md](CLAUDE.md) |
-| Guía completa (docs 01–18) | [docs/README.md](docs/README.md) |
-| Plan de acción y tickets | [docs/14-plan-de-accion.md](docs/14-plan-de-accion.md) · [docs/tickets.csv](docs/tickets.csv) |
-| Demo de referencia del diseño | [docs/referencia/demo/index.html](docs/referencia/demo/index.html) (se abre directo en el navegador) |
-| Archivos base para los tickets | [starter/](starter/) (referencia; no forma parte del build) |
+| Qué                            | Dónde                                                                                                |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Reglas del repo (leer primero) | [CLAUDE.md](CLAUDE.md)                                                                               |
+| Guía completa (docs 01–18)     | [docs/README.md](docs/README.md)                                                                     |
+| Plan de acción y tickets       | [docs/14-plan-de-accion.md](docs/14-plan-de-accion.md) · [docs/tickets.csv](docs/tickets.csv)        |
+| Demo de referencia del diseño  | [docs/referencia/demo/index.html](docs/referencia/demo/index.html) (se abre directo en el navegador) |
+| Archivos base para los tickets | [starter/](starter/) (referencia; no forma parte del build)                                          |
 
 ## Flujo de trabajo
 

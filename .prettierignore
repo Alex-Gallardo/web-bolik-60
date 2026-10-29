@@ -1,0 +1,16 @@
+# Referencias: se copian y adaptan en cada ticket, se formatean al moverlas a src/
+docs/
+starter/
+
+# Generados
+.next/
+pnpm-lock.yaml
+next-env.d.ts
+AGENTS.md
+coverage/
+playwright-report/
+test-results/
+.lighthouseci/
+
+# Estáticos
+public/

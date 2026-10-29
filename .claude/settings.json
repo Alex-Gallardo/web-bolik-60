@@ -35,5 +35,13 @@
       "Bash(pnpm db:deploy *)",
       "Edit(./prisma/migrations/**)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "node scripts/hooks/format.mjs" }]
+      }
+    ]
   }
 }
