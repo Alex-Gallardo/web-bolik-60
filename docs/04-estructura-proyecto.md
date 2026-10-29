@@ -224,7 +224,7 @@ Reglas:
     "sync:catalog": "tsx scripts/sync-catalog.ts",
     "retry:erp": "tsx scripts/retry-erp.ts",
     "check:redirects": "tsx scripts/check-redirects.ts",
-    "analyze": "cross-env ANALYZE=true next build --webpack",
+    "analyze": "next analyze --output",
     "check:colors": "node scripts/check-colors.mjs",
     "admin:create": "tsx scripts/create-admin.ts"
   }
@@ -256,7 +256,7 @@ Reglas:
 | `@react-pdf/renderer` | PDF de ficha técnica | servidor |
 | `pino` | Logs | servidor |
 | `@next/third-parties` | GA4 | diferida |
-| `@next/bundle-analyzer`, `cross-env` | `pnpm analyze` | dev |
+| — (integrado en Next 16.1+: `next analyze`) | `pnpm analyze` | — |
 | `vitest`, `@testing-library/react`, `@playwright/test`, `@axe-core/playwright`, `@lhci/cli` | Pruebas | dev |
 | `tsx`, `eslint`, `prettier`, `prettier-plugin-tailwindcss`, `husky`, `lint-staged` | Herramientas | dev |
 
