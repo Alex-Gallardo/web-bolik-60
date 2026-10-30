@@ -1,26 +1,168 @@
 @import "tailwindcss";
+/* Capas (de menor a mayor prioridad): theme · base · components · utilities.
+   Todo lo propio va en una capa para que las utilidades de Tailwind (text-*, mt-*, rounded-*…)
+   siempre puedan sobrescribirlo. tokens.css va en base: sus valores (--ease-out, --tracking-tight…)
+   reemplazan a los homónimos del tema de Tailwind. */
+@import "../styles/tokens.css" layer(base);
+@import "../styles/motion.css" layer(components);
+@import "../styles/backgrounds.css" layer(components);
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* Tailwind v4
+   1) Colores: se mapean desde tokens.css con nombres distintos (sin referencias circulares).
+      Se quita la paleta por defecto de Tailwind: solo existen los colores de la marca.
+   2) Fuentes, radios y sombras: se definen AQUÍ (son el espacio de nombres de Tailwind);
+      Tailwind los publica también como variables CSS en :root. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-*: initial;
+  --color-white: var(--paper);
+  --color-black: var(--ink);
+  --color-blue: var(--blue);
+  --color-blue-700: var(--blue-700);
+  --color-blue-50: var(--blue-50);
+  --color-navy: var(--navy);
+  --color-navy-700: var(--navy-700);
+  --color-yellow: var(--yellow);
+  --color-yellow-600: var(--yellow-600);
+  --color-yellow-50: var(--yellow-50);
+  --color-red: var(--red);
+  --color-red-50: var(--red-50);
+  --color-green: var(--green);
+  --color-green-50: var(--green-50);
+  --color-whatsapp: var(--whatsapp);
+  --color-ink: var(--ink);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-soft: var(--soft);
+  --color-paper: var(--paper);
+  --color-on-dark: var(--on-dark);
+  --color-on-dark-muted: var(--on-dark-muted);
+  --color-sun: var(--sun);
+  --color-coral: var(--coral);
+  --color-kblue: var(--kblue);
+  --color-kgreen: var(--kgreen);
+  /* Semánticos (alertas y estados) */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-focus: var(--focus);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme static {
+  /* next/font inyecta --font-bricolage, --font-dmsans y --font-baloo en <html> (BD-008): deben
+     quedarse en <html>, porque estas variables se resuelven en :root. El respaldo dentro de var()
+     mantiene una fuente del sistema mientras no existan. */
+  --font-display: var(--font-bricolage, "Segoe UI"), "Segoe UI", system-ui, sans-serif;
+  --font-body: var(--font-dmsans, "Segoe UI"), "Segoe UI", system-ui, sans-serif;
+  --font-kids: var(--font-baloo, "Trebuchet MS"), "Trebuchet MS", system-ui, sans-serif;
+
+  --radius-sm: 0.625rem; /* 10 chips cuadrados, inputs pequeños */
+  --radius-md: 0.875rem; /* 14 botones, inputs */
+  --radius-lg: 1.375rem; /* 22 tarjetas */
+  --radius-xl: 1.75rem; /* 28 bloques grandes, modales */
+
+  --shadow-sm:
+    0 1px 2px color-mix(in srgb, var(--navy) 6%, transparent),
+    0 1px 1px color-mix(in srgb, var(--navy) 4%, transparent);
+  --shadow-md:
+    0 6px 16px color-mix(in srgb, var(--navy) 8%, transparent),
+    0 2px 4px color-mix(in srgb, var(--navy) 5%, transparent);
+  --shadow-lg:
+    0 18px 40px color-mix(in srgb, var(--navy) 14%, transparent),
+    0 4px 10px color-mix(in srgb, var(--navy) 6%, transparent);
+  --shadow-kids: 0 8px 0 color-mix(in srgb, var(--ink) 16%, transparent);
+}
+
+/* ── Base ── */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--paper);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    color: var(--ink);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--lh-heading);
+    text-wrap: balance;
+  }
+  h1 {
+    font-size: var(--fs-h1);
+    font-weight: 800;
+  }
+  h2 {
+    font-size: var(--fs-h2);
+    font-weight: 800;
+  }
+  h3 {
+    font-size: var(--fs-h3);
+    font-weight: 700;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a {
+    color: var(--blue);
+    text-underline-offset: 3px;
+  }
+  a:hover {
+    color: var(--blue-700);
+  }
+
+  /* Doble anillo: amarillo de marca + contorno tinta, visible sobre fondos claros y oscuros
+     (el amarillo solo no llega a 3:1 sobre blanco). Respeta la forma del elemento. */
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+  ::selection {
+    background: var(--yellow);
+    color: var(--ink);
+  }
+
+  /* Anclas no quedan debajo del header sticky */
+  [id] {
+    scroll-margin-top: calc(var(--header-h) + 1rem);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Utilidades propias (aceptan variantes: md:container-site, hover:…) ── */
+
+/* Contenedor estándar con margen lateral mínimo de 16 px */
+@utility container-site {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Etiqueta superior de sección */
+@utility eyebrow {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* Números alineados en tablas y cifras */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
 }
