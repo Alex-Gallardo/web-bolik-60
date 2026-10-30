@@ -35,7 +35,13 @@ const eslintConfig = defineConfig([
   // process.env solo en los módulos de entorno, la config de Next y los scripts (CLAUDE.md).
   {
     files: ["**/*.{ts,tsx,js,jsx,mjs}"],
-    ignores: ["src/env.ts", "src/env.public.ts", "src/env.schema.ts", "scripts/**", "*.config.*"],
+    ignores: [
+      "src/env.ts",
+      "src/env.public.ts",
+      "src/instrumentation.ts",
+      "scripts/**",
+      "*.config.*",
+    ],
     rules: {
       "no-restricted-properties": [
         "error",

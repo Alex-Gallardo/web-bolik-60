@@ -1,10 +1,11 @@
 import type { NextConfig } from "next";
-import { parseServerEnv } from "./src/env.schema";
+import { parseServerEnv, shouldSkipEnvValidation } from "./src/env.schema";
 import { MEDIA_WIDTHS } from "./src/lib/image-loader";
 
-// Next evalúa este archivo al arrancar dev, build y start (ya con .env.local cargado): validar aquí
-// hace que una variable faltante detenga el arranque con su nombre. SKIP_ENV_VALIDATION=true en CI.
-const env = process.env.SKIP_ENV_VALIDATION === "true" ? null : parseServerEnv(process.env);
+// Next evalúa este archivo al arrancar dev y build (ya con .env.local cargado): una variable
+// faltante detiene el arranque con su nombre. El servidor standalone valida en src/instrumentation.ts.
+const env = shouldSkipEnvValidation(process.env) ? null : parseServerEnv(process.env);
+// Las cabeceras quedan fijas en el build: cambiar CSP_ENFORCE requiere volver a compilar.
 const cspEnforced = (env?.CSP_ENFORCE ?? process.env.CSP_ENFORCE) === "true";
 
 // CSP: ver docs/15 §6 (por qué 'unsafe-inline' en scripts con páginas prerenderizadas).

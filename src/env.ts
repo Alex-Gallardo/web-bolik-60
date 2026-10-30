@@ -1,12 +1,12 @@
 import "server-only";
-import { parseServerEnv, type ServerEnv } from "./env.schema";
+import { parseServerEnv, shouldSkipEnvValidation, type ServerEnv } from "./env.schema";
 
 /**
  * Variables de entorno del SERVIDOR, validadas al cargar. Única puerta de entrada a process.env
  * en la app (regla de lint). Para el cliente usa src/env.public.ts (solo NEXT_PUBLIC_*).
- * SKIP_ENV_VALIDATION=true (solo CI sin secretos) omite la validación y los valores por defecto.
+ * Con SKIP_ENV_VALIDATION (solo CI) los valores llegan sin validar ni defaults: no confíes en sus
+ * tipos ahí; en staging y producción el skip se ignora.
  */
-export const env: ServerEnv =
-  process.env.SKIP_ENV_VALIDATION === "true"
-    ? (process.env as unknown as ServerEnv)
-    : parseServerEnv(process.env);
+export const env: ServerEnv = shouldSkipEnvValidation(process.env)
+  ? (process.env as unknown as ServerEnv)
+  : parseServerEnv(process.env);
