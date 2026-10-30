@@ -89,14 +89,14 @@ export default function TokensPage() {
 
       <section className="flex flex-col gap-6" aria-labelledby="tipografia">
         <h2 id="tipografia">Tipografía</h2>
-        <p className="font-display text-ink" style={{ fontSize: "var(--fs-hero)" }}>
+        <p className="font-display text-[length:var(--fs-hero)] font-extrabold text-ink">
           Hero · De la materia prima a tu primer trazo.
         </p>
         <p className="font-display text-[length:var(--fs-h1)] font-extrabold text-ink">
           H1 · Bolik Ultra
         </p>
         <h3>H3 · Todo lo que va en el estuche</h3>
-        <p style={{ fontSize: "var(--fs-lead)" }}>
+        <p className="text-[length:var(--fs-lead)]">
           Lead · Elige tu perfil y te llevamos directo a lo que necesitas.
         </p>
         <p>Cuerpo · Útiles para escribir la historia de Guatemala desde 1966.</p>

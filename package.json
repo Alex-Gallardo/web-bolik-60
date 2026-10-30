@@ -8,7 +8,7 @@
     "start": "node .next/standalone/server.js",
     "start:local": "node scripts/start-local.mjs",
     "analyze": "next analyze --output",
-    "lint": "eslint . && prettier --check .",
+    "lint": "eslint . && prettier --check . && node scripts/check-colors.mjs",
     "lint:fix": "eslint . --fix && prettier --write .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",

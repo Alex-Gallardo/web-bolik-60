@@ -1,13 +1,15 @@
-// Higiene de tokens (docs/02, docs/08 y CLAUDE.md). Falla si:
-//   1) aparece un color hex fuera de src/styles/tokens.css, o
-//   2) una variable CSS se refiere a sí misma (`--x: var(--x)`), que la deja sin valor.
-// Uso: pnpm check:colors   (en CI, después de lint)
+// Higiene de tokens (docs/02, docs/08 y CLAUDE.md). Falla si fuera de src/styles/tokens.css aparece:
+//   1) un color literal: hex (#1d3fce o %231d3fce en un data URI) o rgb()/rgba()/hsl() con números, o
+//   2) en cualquier archivo, una variable CSS que se refiere a sí misma (`--x: var(--x)`).
+// Excepción documentada: `check-colors-ignore` en la misma línea o en la anterior.
+// Uso: pnpm check:colors (también corre dentro de pnpm lint).
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = "src";
 const ALLOWED = new Set([join("src", "styles", "tokens.css")]);
-const HEX = /#[0-9a-fA-F]{3,8}\b/g;
+const LITERAL = /(?:#|%23)[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?)\(\s*\d/g;
+// Sobre el texto completo: una declaración partida en varias líneas también se detecta.
 const SELF_REF = /(--[\w-]+)\s*:[^;{}]*var\(\s*\1\s*[,)]/g;
 const EXT = /\.(tsx?|css|mjs)$/;
 const problems = [];
@@ -22,12 +24,17 @@ function walk(dir) {
 }
 
 function check(path, text) {
-  text.split("\n").forEach((line, i) => {
-    const at = `${path}:${i + 1}`;
-    for (const m of line.matchAll(SELF_REF)) problems.push(`${at}  ${m[1]} se refiere a sí misma`);
-    // p. ej. colores de marcas de terceros documentados: marcar la línea con check-colors-ignore
-    if (ALLOWED.has(path) || line.includes("check-colors-ignore")) return;
-    for (const m of line.matchAll(HEX)) problems.push(`${at}  ${m[0]} fuera de tokens.css`);
+  const lineAt = (index) => text.slice(0, index).split("\n").length;
+  for (const m of text.matchAll(SELF_REF))
+    problems.push(`${path}:${lineAt(m.index)}  ${m[1]} se refiere a sí misma`);
+
+  if (ALLOWED.has(path)) return;
+  const lines = text.split("\n");
+  lines.forEach((line, i) => {
+    if (line.includes("check-colors-ignore") || lines[i - 1]?.includes("check-colors-ignore"))
+      return;
+    for (const m of line.matchAll(LITERAL))
+      problems.push(`${path}:${i + 1}  ${m[0]}… fuera de tokens.css`);
   });
 }
 

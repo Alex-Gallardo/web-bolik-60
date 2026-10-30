@@ -9,6 +9,8 @@
   --dur-slow: 420ms; /* drawer, modales, reveal de sección */
   --dur-slower: 700ms; /* crossfade del hero, trazos */
   --dur-splash: 2000ms; /* splash completo */
+  --dur-shake: 360ms; /* error de campo */
+  --dur-shimmer: 1200ms; /* brillo del skeleton (bucle) */
 
   /* Curvas */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* entradas: rápido al inicio, suave al final */
@@ -138,9 +140,7 @@
   transform: scale(0.97);
 }
 .lift {
-  transition:
-    transform var(--dur-fast) var(--ease-out),
-    box-shadow var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 @media (hover: hover) {
   .lift:hover {
@@ -151,7 +151,7 @@
   animation: pop var(--dur-slow) var(--ease-spring);
 }
 .shake {
-  animation: shake 360ms var(--ease-in-out);
+  animation: shake var(--dur-shake) var(--ease-in-out);
 }
 
 /* ── Trazo de tinta (subrayados, logo) A-11 ── */
@@ -171,8 +171,13 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.7), transparent);
-  animation: shimmer 1.2s linear infinite;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--paper) 70%, transparent),
+    transparent
+  );
+  animation: shimmer var(--dur-shimmer) linear infinite;
 }
 
 /* ── Movimiento reducido: sin desplazamientos, solo opacidad breve ── */
@@ -183,10 +188,16 @@
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
   .js [data-reveal]:not([data-revealed]) {
     opacity: 1;
     transform: none;
+  }
+  /* El brillo correría 1 vez y quedaría congelado a la mitad: se oculta. */
+  .skeleton::after {
+    animation: none;
+    opacity: 0;
   }
 }

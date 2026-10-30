@@ -1,7 +1,11 @@
 @import "tailwindcss";
-@import "../styles/tokens.css";
-@import "../styles/motion.css";
-@import "../styles/backgrounds.css";
+/* Capas (de menor a mayor prioridad): theme · base · components · utilities.
+   Todo lo propio va en una capa para que las utilidades de Tailwind (text-*, mt-*, rounded-*…)
+   siempre puedan sobrescribirlo. tokens.css va en base: sus valores (--ease-out, --tracking-tight…)
+   reemplazan a los homónimos del tema de Tailwind. */
+@import "../styles/tokens.css" layer(base);
+@import "../styles/motion.css" layer(components);
+@import "../styles/backgrounds.css" layer(components);
 
 /* Tailwind v4
    1) Colores: se mapean desde tokens.css con nombres distintos (sin referencias circulares).
@@ -11,6 +15,7 @@
 @theme inline {
   --color-*: initial;
   --color-white: var(--paper);
+  --color-black: var(--ink);
   --color-blue: var(--blue);
   --color-blue-700: var(--blue-700);
   --color-blue-50: var(--blue-50);
@@ -32,15 +37,27 @@
   --color-soft: var(--soft);
   --color-paper: var(--paper);
   --color-on-dark: var(--on-dark);
+  --color-on-dark-muted: var(--on-dark-muted);
   --color-sun: var(--sun);
   --color-coral: var(--coral);
   --color-kblue: var(--kblue);
   --color-kgreen: var(--kgreen);
+  /* Semánticos (alertas y estados) */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-focus: var(--focus);
 }
 
 @theme static {
-  /* next/font inyecta --font-bricolage, --font-dmsans y --font-baloo en <html> (BD-008).
-     El respaldo dentro de var() mantiene una fuente del sistema mientras no existan. */
+  /* next/font inyecta --font-bricolage, --font-dmsans y --font-baloo en <html> (BD-008): deben
+     quedarse en <html>, porque estas variables se resuelven en :root. El respaldo dentro de var()
+     mantiene una fuente del sistema mientras no existan. */
   --font-display: var(--font-bricolage, "Segoe UI"), "Segoe UI", system-ui, sans-serif;
   --font-body: var(--font-dmsans, "Segoe UI"), "Segoe UI", system-ui, sans-serif;
   --font-kids: var(--font-baloo, "Trebuchet MS"), "Trebuchet MS", system-ui, sans-serif;
@@ -50,79 +67,87 @@
   --radius-lg: 1.375rem; /* 22 tarjetas */
   --radius-xl: 1.75rem; /* 28 bloques grandes, modales */
 
-  --shadow-sm: 0 1px 2px rgb(11 20 51 / 0.06), 0 1px 1px rgb(11 20 51 / 0.04);
-  --shadow-md: 0 6px 16px rgb(11 20 51 / 0.08), 0 2px 4px rgb(11 20 51 / 0.05);
-  --shadow-lg: 0 18px 40px rgb(11 20 51 / 0.14), 0 4px 10px rgb(11 20 51 / 0.06);
-  --shadow-kids: 0 8px 0 rgb(17 19 24 / 0.16);
+  --shadow-sm:
+    0 1px 2px color-mix(in srgb, var(--navy) 6%, transparent),
+    0 1px 1px color-mix(in srgb, var(--navy) 4%, transparent);
+  --shadow-md:
+    0 6px 16px color-mix(in srgb, var(--navy) 8%, transparent),
+    0 2px 4px color-mix(in srgb, var(--navy) 5%, transparent);
+  --shadow-lg:
+    0 18px 40px color-mix(in srgb, var(--navy) 14%, transparent),
+    0 4px 10px color-mix(in srgb, var(--navy) 6%, transparent);
+  --shadow-kids: 0 8px 0 color-mix(in srgb, var(--ink) 16%, transparent);
 }
 
 /* ── Base ── */
-html {
-  -webkit-text-size-adjust: 100%;
-  text-rendering: optimizeLegibility;
-}
-body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-  -webkit-font-smoothing: antialiased;
-}
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-display);
-  color: var(--ink);
-  letter-spacing: var(--tracking-tight);
-  line-height: var(--lh-heading);
-  text-wrap: balance;
-  margin: 0;
-}
-h1 {
-  font-size: var(--fs-h1);
-  font-weight: 800;
-}
-h2 {
-  font-size: var(--fs-h2);
-  font-weight: 800;
-}
-h3 {
-  font-size: var(--fs-h3);
-  font-weight: 700;
-}
-p {
-  margin: 0;
-  text-wrap: pretty;
-}
-img,
-video,
-svg {
-  max-width: 100%;
-  height: auto;
-}
-a {
-  color: var(--blue);
-  text-underline-offset: 3px;
-}
-a:hover {
-  color: var(--blue-700);
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--paper);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    color: var(--ink);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--lh-heading);
+    text-wrap: balance;
+  }
+  h1 {
+    font-size: var(--fs-h1);
+    font-weight: 800;
+  }
+  h2 {
+    font-size: var(--fs-h2);
+    font-weight: 800;
+  }
+  h3 {
+    font-size: var(--fs-h3);
+    font-weight: 700;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a {
+    color: var(--blue);
+    text-underline-offset: 3px;
+  }
+  a:hover {
+    color: var(--blue-700);
+  }
+
+  /* Doble anillo: amarillo de marca + contorno tinta, visible sobre fondos claros y oscuros
+     (el amarillo solo no llega a 3:1 sobre blanco). Respeta la forma del elemento. */
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+  ::selection {
+    background: var(--yellow);
+    color: var(--ink);
+  }
+
+  /* Anclas no quedan debajo del header sticky */
+  [id] {
+    scroll-margin-top: calc(var(--header-h) + 1rem);
+  }
 }
 
-:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-::selection {
-  background: var(--yellow);
-  color: var(--ink);
-}
+/* ── Utilidades propias (aceptan variantes: md:container-site, hover:…) ── */
 
 /* Contenedor estándar con margen lateral mínimo de 16 px */
-.container-site {
+@utility container-site {
   width: 100%;
   max-width: var(--container);
   margin-inline: auto;
@@ -130,7 +155,7 @@ a:hover {
 }
 
 /* Etiqueta superior de sección */
-.eyebrow {
+@utility eyebrow {
   font-size: var(--fs-micro);
   font-weight: 700;
   letter-spacing: var(--tracking-caps);
@@ -138,11 +163,6 @@ a:hover {
 }
 
 /* Números alineados en tablas y cifras */
-.tnum {
+@utility tnum {
   font-variant-numeric: tabular-nums;
-}
-
-/* Anclas no quedan debajo del header sticky */
-[id] {
-  scroll-margin-top: calc(var(--header-h) + 1rem);
 }

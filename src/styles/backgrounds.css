@@ -17,7 +17,10 @@
 /* Cuaderno punteado */
 [data-bg="dots"] {
   background-color: var(--soft);
-  background-image: radial-gradient(rgb(29 63 206 / 0.14) 1.2px, transparent 1.4px);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--blue) 14%, transparent) 1.2px,
+    transparent 1.4px
+  );
   background-size: 22px 22px;
 }
 
@@ -25,8 +28,8 @@
 [data-bg="grid"] {
   background-color: var(--paper);
   background-image:
-    linear-gradient(rgb(29 63 206 / 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(29 63 206 / 0.07) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--blue) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--blue) 7%, transparent) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
@@ -37,11 +40,14 @@
     linear-gradient(
       90deg,
       transparent 2.4rem,
-      rgb(212 42 34 / 0.25) 2.4rem,
-      rgb(212 42 34 / 0.25) calc(2.4rem + 1.5px),
+      color-mix(in srgb, var(--red) 25%, transparent) 2.4rem,
+      color-mix(in srgb, var(--red) 25%, transparent) calc(2.4rem + 1.5px),
       transparent calc(2.4rem + 1.5px)
     ),
-    repeating-linear-gradient(transparent 0 31px, rgb(29 63 206 / 0.12) 31px 32px);
+    repeating-linear-gradient(
+      transparent 0 31px,
+      color-mix(in srgb, var(--blue) 12%, transparent) 31px 32px
+    );
 }
 
 /* Trazo de tinta decorativo en una esquina (SVG inline como data URI, < 1 KB) */
@@ -56,6 +62,7 @@
   top: 24px;
   width: min(520px, 60vw);
   aspect-ratio: 520 / 140;
+  /* check-colors-ignore: un data URI no admite var(); %23FFC72C = --yellow */
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 520 140'%3E%3Cpath d='M10 110 C 120 30, 200 140, 300 80 S 460 20, 510 60' fill='none' stroke='%23FFC72C' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E")
     no-repeat center / contain;
   opacity: 0.55;
@@ -70,7 +77,10 @@
 [data-bg="navy"] {
   background-color: var(--navy);
   color: var(--paper);
-  background-image: radial-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1.4px);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--paper) 8%, transparent) 1px,
+    transparent 1.4px
+  );
   background-size: 22px 22px;
 }
 [data-bg="sun"] {
@@ -82,7 +92,7 @@
 [data-tone="dark"] {
   --text: var(--on-dark);
   --muted: var(--on-dark-muted);
-  --line: rgb(255 255 255 / 0.16);
+  --line: color-mix(in srgb, var(--paper) 16%, transparent);
 }
 [data-tone="dark"] :where(h1, h2, h3) {
   color: var(--paper);
