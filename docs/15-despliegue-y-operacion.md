@@ -34,7 +34,7 @@ flowchart LR
 - Certificado TLS para `www.bolik66.com` y `bolik66.com` (y staging).
 - Cuenta de servicio de Windows `svc-bolik` sin privilegios de administrador, con permisos de lectura en `D:\bolik\app` y escritura en `D:\bolik\media`, `D:\bolik\logs` y `D:\bolik\app\current\.next\cache`.
 - Usuarios SQL: `bolik_app` (lectura/escritura de datos) y `bolik_migrator` (DDL, solo para migraciones).
-- Salida HTTPS permitida hacia `smtp.office365.com:587`, `api.indexnow.org`, la API de SMART-K66 y `fonts.gstatic.com` **solo durante el build**.
+- Salida HTTPS permitida hacia `smtp.office365.com:587`, `api.indexnow.org`, la API de SMART-K66 y `fonts.googleapis.com` + `fonts.gstatic.com` **solo durante el build** (next/font, ver §5).
 
 ## 3. Estructura en disco
 

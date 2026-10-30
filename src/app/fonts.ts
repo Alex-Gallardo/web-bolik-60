@@ -20,7 +20,7 @@ export const bricolage = Bricolage_Grotesque({
 export const dmSans = DM_Sans({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-dmsans",
+  variable: "--font-dm-sans",
 });
 
 /**
