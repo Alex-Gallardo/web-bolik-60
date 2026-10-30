@@ -54,14 +54,19 @@
   --color-focus: var(--focus);
 }
 
-@theme static {
-  /* next/font inyecta --font-bricolage, --font-dmsans y --font-baloo en <html> (BD-008): deben
-     quedarse en <html>, porque estas variables se resuelven en :root. El respaldo dentro de var()
-     mantiene una fuente del sistema mientras no existan. */
+/* Fuentes (src/app/fonts.ts). inline: la utilidad font-* lleva el var() de next/font dentro, así
+   se resuelve en el propio elemento. Bricolage y DM Sans van en <html>; Baloo 2 solo en el
+   contenedor de la sección infantil, y font-kids la toma de ahí. static: también quedan las
+   variables en :root para la base (body, h1…). El respaldo del var() evita una fuente vacía.
+   Ojo: var(--font-kids) en CSS propio vale "Trebuchet MS" (se resolvió en :root, sin Baloo);
+   para la fuente infantil usa siempre la utilidad font-kids. */
+@theme inline static {
   --font-display: var(--font-bricolage, "Segoe UI"), "Segoe UI", system-ui, sans-serif;
-  --font-body: var(--font-dmsans, "Segoe UI"), "Segoe UI", system-ui, sans-serif;
+  --font-body: var(--font-dm-sans, "Segoe UI"), "Segoe UI", system-ui, sans-serif;
   --font-kids: var(--font-baloo, "Trebuchet MS"), "Trebuchet MS", system-ui, sans-serif;
+}
 
+@theme static {
   --radius-sm: 0.625rem; /* 10 chips cuadrados, inputs pequeños */
   --radius-md: 0.875rem; /* 14 botones, inputs */
   --radius-lg: 1.375rem; /* 22 tarjetas */
