@@ -2,9 +2,9 @@ import { z } from "zod";
 
 /**
  * Esquema de las variables de entorno del SERVIDOR (docs/03 §9). Sin "server-only" a propósito:
- * se valida al arrancar desde next.config.ts (dev y build) y desde src/instrumentation.ts (servidor
- * standalone en staging y producción, que no vuelve a evaluar next.config.ts). En el código de la
- * app se importa `env` desde src/env.ts, nunca este archivo.
+ * se valida al arrancar desde next.config.ts (dev y build) y desde src/instrumentation-node.ts
+ * (servidor standalone en staging y producción, que no vuelve a evaluar next.config.ts). En el
+ * código de la app se importa `env` desde src/env.ts, nunca este archivo.
  */
 
 /** Valor de ejemplo de .env.example: sirve en desarrollo, nunca en staging ni producción. */

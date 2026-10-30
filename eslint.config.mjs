@@ -39,6 +39,7 @@ const eslintConfig = defineConfig([
       "src/env.ts",
       "src/env.public.ts",
       "src/instrumentation.ts",
+      "src/instrumentation-node.ts",
       "scripts/**",
       "*.config.*",
     ],
