@@ -32,6 +32,21 @@ const eslintConfig = defineConfig([
     ignores: ["src/components/motion/**"],
     rules: { "no-restricted-imports": ["error", motionImports] },
   },
+  // process.env solo en los módulos de entorno, la config de Next y los scripts (CLAUDE.md).
+  {
+    files: ["**/*.{ts,tsx,js,jsx,mjs}"],
+    ignores: ["src/env.ts", "src/env.public.ts", "src/env.schema.ts", "scripts/**", "*.config.*"],
+    rules: {
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "process",
+          property: "env",
+          message: "Usa `env` de @/env (servidor) o `publicEnv` de @/env.public (cliente).",
+        },
+      ],
+    },
+  },
   prettier,
   // Override default ignores of eslint-config-next.
   globalIgnores([
