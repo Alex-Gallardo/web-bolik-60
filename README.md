@@ -38,10 +38,13 @@ Requisitos: Node.js 22 LTS (`.nvmrc`) y pnpm 10 (`corepack enable`).
 
 ```bash
 pnpm install
+cp .env.example .env.local   # y escribe ahí tus valores reales (nunca se sube a git)
 pnpm dev      # http://localhost:3000
 pnpm build    # build de producción
 pnpm lint
 ```
+
+Las variables se validan al arrancar `dev`, `build` y `start`: si falta una o tiene un formato inválido, el arranque se detiene con su nombre y el problema.
 
 `pnpm install` instala también los ganchos de git (Husky): antes de cada commit se corrigen y formatean los archivos preparados, el mensaje se valida con commitlint (Conventional Commits) y antes de cada push corre `typecheck` (y `test` cuando exista).
 

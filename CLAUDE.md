@@ -107,7 +107,7 @@ Detalle en `docs/04-estructura-proyecto.md`.
 - El navegador nunca habla con SAP ni con SMART-K66: todo pasa por `src/server/erp`.
 - Validación con Zod en servidor aunque ya se valide en cliente.
 - Formularios públicos: honeypot + tiempo mínimo de llenado + límite por IP.
-- Ningún secreto en el cliente. Variables tipadas en `src/env.ts` (servidor) y `src/env.public.ts` (solo `NEXT_PUBLIC_*`); `process.env` no se usa en ningún otro archivo.
+- Ningún secreto en el cliente. Variables tipadas en `src/env.ts` (servidor, esquema en `src/env.schema.ts`) y `src/env.public.ts` (solo `NEXT_PUBLIC_*`); `process.env` no se usa en ningún otro archivo salvo `src/instrumentation.ts`, los `*.config.*` de la raíz y `scripts/` (regla de lint). La validación corre al arrancar: `next.config.ts` (dev y build) y `src/instrumentation.ts` (servidor standalone). Variable nueva = esquema + `.env.example` en el mismo PR.
 - Admin: cada página y Server Action empieza con `requireRole(...)` de `src/server/auth/guards.ts`; `proxy.ts` solo comprueba la cookie.
 - SQL Server: no uses `@unique` en columnas opcionales (permite un solo NULL); no hay `enum` ni `Json` en Prisma para SQL Server: usa `String` validado con constantes de `src/lib/constants.ts`.
 
