@@ -1,0 +1,89 @@
+/* Bolik Digital · fondos configurables por sección
+   Uso: <section data-bg="dots" data-tone="light"> (componente <Section background="dots" />)
+   El valor sale de SectionAppearance en la BD. Todo es CSS: cero imágenes, cero peticiones. */
+
+[data-bg] {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-bg="paper"] {
+  background: var(--paper);
+}
+[data-bg="soft"] {
+  background: var(--soft);
+}
+
+/* Cuaderno punteado */
+[data-bg="dots"] {
+  background-color: var(--soft);
+  background-image: radial-gradient(rgb(29 63 206 / 0.14) 1.2px, transparent 1.4px);
+  background-size: 22px 22px;
+}
+
+/* Cuaderno cuadriculado */
+[data-bg="grid"] {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(rgb(29 63 206 / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(29 63 206 / 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Cuaderno de renglones con margen rojo */
+[data-bg="lines"] {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent 2.4rem,
+      rgb(212 42 34 / 0.25) 2.4rem,
+      rgb(212 42 34 / 0.25) calc(2.4rem + 1.5px),
+      transparent calc(2.4rem + 1.5px)
+    ),
+    repeating-linear-gradient(transparent 0 31px, rgb(29 63 206 / 0.12) 31px 32px);
+}
+
+/* Trazo de tinta decorativo en una esquina (SVG inline como data URI, < 1 KB) */
+[data-bg="ink"] {
+  background: var(--paper);
+}
+[data-bg="ink"]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -40px;
+  top: 24px;
+  width: min(520px, 60vw);
+  aspect-ratio: 520 / 140;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 520 140'%3E%3Cpath d='M10 110 C 120 30, 200 140, 300 80 S 460 20, 510 60' fill='none' stroke='%23FFC72C' stroke-width='14' stroke-linecap='round'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Bloques de color */
+[data-bg="brand"] {
+  background: var(--blue);
+  color: var(--paper);
+}
+[data-bg="navy"] {
+  background-color: var(--navy);
+  color: var(--paper);
+  background-image: radial-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+}
+[data-bg="sun"] {
+  background: var(--sun);
+  color: var(--ink);
+}
+
+/* Tono: ajusta textos y bordes para fondos oscuros */
+[data-tone="dark"] {
+  --text: var(--on-dark);
+  --muted: var(--on-dark-muted);
+  --line: rgb(255 255 255 / 0.16);
+}
+[data-tone="dark"] :where(h1, h2, h3) {
+  color: var(--paper);
+}

@@ -1,0 +1,109 @@
+/* Bolik Digital · tokens de diseño
+   Fuente única de colores, tipografía, espacios, radios, sombras y capas.
+   Tailwind v4 los expone como utilidades vía @theme (ver globals.css). */
+
+:root {
+  color-scheme: light;
+
+  /* ── Marca ── */
+  --blue: #1d3fce;
+  --blue-700: #142e9c;
+  --blue-50: #e8ecf6;
+  --navy: #0b1433;
+  --navy-700: #13235c;
+  --yellow: #ffc72c;
+  --yellow-600: #f2b500;
+  --yellow-50: #fff3cc;
+  --red: #d42a22;
+  --red-50: #fde8e6;
+  --green: #0e7c52;
+  --green-50: #e1f4eb;
+  --whatsapp: #0f7a43;
+
+  /* ── Neutros (con sesgo azul, no grises puros) ── */
+  --ink: #111318;
+  --text: #2a2d36;
+  --muted: #4b5368;
+  --line: #e3e7f0;
+  --line-strong: #d5dbe8;
+  --soft: #f4f6fb;
+  --paper: #ffffff;
+  --on-dark: #dce3ff;
+  --on-dark-muted: #aab6e6;
+
+  /* ── Sub-paleta escuelas (solo /escuelas y su sección en home) ── */
+  --sun: #ffd23f;
+  --coral: #ff5a4e;
+  --kblue: #2e5bff;
+  --kgreen: #22b573;
+
+  /* ── Semánticos ── */
+  --success: var(--green);
+  --success-bg: var(--green-50);
+  --warning: #9a6a00;
+  --warning-bg: var(--yellow-50);
+  --danger: var(--red);
+  --danger-bg: var(--red-50);
+  --info: var(--blue);
+  --info-bg: var(--blue-50);
+  --focus: var(--yellow);
+
+  /* ── Líneas de producto ── */
+  --line-escritura: var(--blue);
+  --line-escolar: var(--yellow);
+  --line-arte: var(--red);
+  --line-oficina: var(--green);
+
+  /* ── Tipografía: familias en globals.css (@theme); escala aquí ── */
+  --fs-hero: clamp(2.5rem, 1.6rem + 4.2vw, 4.625rem); /* 40 → 74 px */
+  --fs-h1: clamp(2.125rem, 1.6rem + 2.6vw, 3.5rem); /* 34 → 56 */
+  --fs-h2: clamp(1.75rem, 1.35rem + 2vw, 2.875rem); /* 28 → 46 */
+  --fs-h3: clamp(1.3125rem, 1.2rem + 0.5vw, 1.625rem); /* 21 → 26 */
+  --fs-lead: clamp(1.125rem, 1.08rem + 0.2vw, 1.25rem); /* 18 → 20 */
+  --fs-body: clamp(1rem, 0.98rem + 0.1vw, 1.0625rem); /* 16 → 17 */
+  --fs-small: 0.875rem; /* 14 */
+  --fs-micro: 0.75rem; /* 12 */
+
+  --lh-tight: 1.02;
+  --lh-heading: 1.1;
+  --lh-body: 1.6;
+  --tracking-tight: -0.02em;
+  --tracking-caps: 0.08em;
+
+  /* ── Espacios (base 4 px) ── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --section-y: clamp(4rem, 3rem + 4vw, 6.5rem); /* padding vertical de sección */
+  --gutter: clamp(1rem, 0.6rem + 1.6vw, 1.5rem); /* margen lateral, mínimo 16 px */
+  --container: 80rem; /* 1280 px */
+  --measure: 65ch;
+
+  /* ── Radios y sombras: definidos en globals.css (@theme) para que Tailwind
+        genere rounded-* y shadow-* y también existan como variables CSS ── */
+
+  /* ── Capas ── */
+  --z-base: 0;
+  --z-sticky: 30;
+  --z-header: 40;
+  --z-fab: 45;
+  --z-overlay: 80;
+  --z-drawer: 90;
+  --z-modal: 95;
+  --z-toast: 100;
+  --z-splash: 200;
+
+  /* ── Alturas fijas (evitan CLS) ── */
+  --header-h: 4.5rem; /* 72 */
+  --header-h-compact: 3.75rem; /* 60 */
+  --mobile-bar-h: 4.25rem; /* 68 */
+}

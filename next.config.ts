@@ -68,7 +68,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: securityHeaders },
       { source: "/admin/:path*", headers: noindex("noindex, nofollow") },
-      { source: "/styleguide", headers: noindex("noindex, nofollow") },
+      { source: "/styleguide/:path*", headers: noindex("noindex, nofollow") },
       { source: "/cotizacion/:path*", headers: noindex("noindex") },
     ];
   },

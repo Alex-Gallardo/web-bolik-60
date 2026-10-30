@@ -12,6 +12,7 @@
     "lint:fix": "eslint . --fix && prettier --write .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
+    "check:colors": "node scripts/check-colors.mjs",
     "prepare": "husky"
   },
   "dependencies": {
