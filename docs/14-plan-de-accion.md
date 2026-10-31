@@ -194,7 +194,7 @@ Evita subir código sin formato o con errores de tipos.
 
 1. Instalar `husky`, `lint-staged`, `@commitlint/cli`, `@commitlint/config-conventional`.
 2. pre-commit: lint-staged (eslint --fix + prettier en archivos cambiados).
-3. pre-push: `pnpm typecheck && pnpm test`.
+3. pre-push: `pnpm typecheck && pnpm test:coverage` (aplica el umbral de cobertura).
 
 **Criterios de aceptación**
 
@@ -342,8 +342,8 @@ Pruebas unitarias e integración listas para usar.
 
 **Pasos**
 
-1. Instalar `vitest`, `@vitejs/plugin-react`, `vite-tsconfig-paths`, `jsdom`, `@testing-library/react`.
-2. Crear `vitest.config.ts` y `vitest.integration.config.ts` del doc 13.
+1. Instalar `vitest`, `@vitest/coverage-v8`, `@vitejs/plugin-react`, `jsdom`, `@testing-library/react` (los alias de tsconfig son nativos de Vite: `resolve.tsconfigPaths`).
+2. Crear `vitest.config.mts` y `vitest.integration.config.mts` del doc 13.
 
 **Criterios de aceptación**
 

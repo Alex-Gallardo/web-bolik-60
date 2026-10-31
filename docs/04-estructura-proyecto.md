@@ -121,7 +121,7 @@ bolik-digital/
 │  └─ proxy.ts | middleware.ts  # redirecciones legadas + protección admin
 ├─ next.config.ts
 ├─ tailwind/postcss config
-├─ vitest.config.ts · playwright.config.ts
+├─ vitest.config.mts · vitest.integration.config.mts · playwright.config.ts
 └─ package.json
 ```
 
@@ -212,7 +212,7 @@ Reglas:
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:int": "vitest run --config vitest.integration.config.ts",
+    "test:int": "vitest run --config vitest.integration.config.mts",
     "test:visual": "playwright test tests/visual",
     "check:links": "tsx scripts/check-links.ts",
     "flush:indexnow": "tsx scripts/flush-indexnow.ts",

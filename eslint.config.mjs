@@ -62,6 +62,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Reportes generados por las pruebas.
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    ".lighthouseci/**",
     // Referencias del repo: se adaptan en cada ticket, no forman parte del build.
     "starter/**",
     "docs/**",
