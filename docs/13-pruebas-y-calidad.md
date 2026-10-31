@@ -99,7 +99,7 @@ El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` e
 | `features/seo/jsonld.tsx` | `productLd` incluye `hasVariant` con `sku` y `gtin12` solo si el código es válido; sin `offers`; `storesLd` omite `geo` si no está verificada |
 | `features/seo/metadata.ts` | canonical absoluto; título con plantilla; `noindex` respetado; descripción ≤ 160 caracteres |
 | `features/seo/legacy-redirects.ts` + `proxy.ts` | cada URL de la tabla del doc 10 §6 → destino esperado; conserva `utm_*`; decodifica `%20` y mayúsculas |
-| `lib/format.ts` | números y fechas `es-GT`; `formatPhone`; `slugify` con tildes y ñ |
+| `lib/format.ts` · `lib/slug.ts` | números y fechas `es-GT` (hora de Guatemala); teléfonos GT (`normalizeGtPhone`, `formatPhone`); `slugify` con tildes y ñ |
 | `lib/whatsapp.ts` | mensaje prellenado con producto, SKU, empaque y URL; codificación correcta |
 | `lib/image-loader.ts` | elige el ancho generado más cercano hacia arriba; nunca un ancho inexistente |
 | `content/feedback.ts` | todas las funciones devuelven título y texto no vacíos (prueba de humo) |
