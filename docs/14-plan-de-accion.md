@@ -291,7 +291,7 @@ Funciones puras reutilizables con sus pruebas.
 
 **Pasos**
 
-1. `lib/cn.ts`, `lib/format.ts` (es-GT), `lib/slugify.ts`, `lib/whatsapp.ts`.
+1. `lib/cn.ts`, `lib/format.ts` (es-GT), `lib/slug.ts` (`slugify`), `lib/whatsapp.ts`.
 2. Copiar `lib/constants.ts` y `lib/cache-tags.ts` del starter.
 3. Pruebas unitarias de cada función (doc 13 §3).
 

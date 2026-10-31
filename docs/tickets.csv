@@ -31,7 +31,7 @@ BD-007,E0,Fundaciones del repositorio,"Tokens CSS, movimiento y fondos",S0,0.5,M
 BD-008,E0,Fundaciones del repositorio,Fuentes con next/font,S0,0.25,Must,A,BD-007,"02, 12",Bricolage Grotesque y DM Sans en todo el sitio; Baloo 2 solo en `/escuelas`.,"1. `src/app/fonts.ts` con `next/font/google`, `display: ""swap""`, `subsets: [""latin""]`, variables `--font-bricolage`, `--font-dm-sans`, `--font-baloo`.
 2. Aplicar Baloo 2 solo en el layout de escuelas.","- La home descarga como máximo 4 archivos woff2.
 - Sin peticiones a fonts.googleapis.com en el navegador.",Sí
-BD-009,E0,Fundaciones del repositorio,Utilidades y constantes base,S0,0.5,Must,A,BD-006,"04, 05",Funciones puras reutilizables con sus pruebas.,"1. `lib/cn.ts`, `lib/format.ts` (es-GT), `lib/slugify.ts`, `lib/whatsapp.ts`.
+BD-009,E0,Fundaciones del repositorio,Utilidades y constantes base,S0,0.5,Must,A,BD-006,"04, 05",Funciones puras reutilizables con sus pruebas.,"1. `lib/cn.ts`, `lib/format.ts` (es-GT), `lib/slug.ts` (`slugify`), `lib/whatsapp.ts`.
 2. Copiar `lib/constants.ts` y `lib/cache-tags.ts` del starter.
 3. Pruebas unitarias de cada función (doc 13 §3).",- `pnpm test` pasa con cobertura ≥ 80 % en `src/lib`.,Sí
 BD-010,E0,Fundaciones del repositorio,Prisma 7 con SQL Server,S0,1,Must,B,BD-005,05 §4,Conexión a la BD con el adaptador oficial y el primer esquema.,"1. Levantar SQL Server local con Docker (doc 13 §2).

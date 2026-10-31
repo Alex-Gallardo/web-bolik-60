@@ -2,6 +2,10 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
+// En UTC como el servidor y la CI: comprueba que las fechas usan la hora de Guatemala de forma
+// explícita y no la del equipo de quien corre las pruebas.
+process.env.TZ = "UTC";
+
 /** Pruebas unitarias (docs/13 §2): funciones puras y componentes, sin BD ni red. */
 export default defineConfig({
   plugins: [react()],
