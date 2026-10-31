@@ -35,7 +35,7 @@ pnpm start:local      # copia public/ y .next/static al standalone y lo sirve (c
 pnpm lint             # ESLint + prettier --check
 pnpm format           # Prettier --write (también lo aplica el hook de Claude Code al editar)
 pnpm typecheck        # tsc --noEmit
-pnpm test             # Vitest (unitarias)
+pnpm test             # Vitest (unitarias; test:watch, test:coverage ≥ 80 % en lib y features)
 pnpm test:int         # Vitest (integración, BD de prueba)
 pnpm test:e2e         # Playwright
 pnpm test:visual      # regresión visual de /styleguide
