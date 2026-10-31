@@ -11,7 +11,13 @@ const twMerge = extendTailwindMerge({
   },
 });
 
-/** Une clases condicionales y resuelve conflictos de Tailwind (la última gana). */
+/**
+ * Une clases condicionales y resuelve conflictos de Tailwind (la última gana).
+ * - Tamaños arbitrarios siempre con la pista length: (`text-[length:var(--fs-h1)]`); sin ella se
+ *   toman como color y borran `text-ink`.
+ * - `eyebrow` y `container-site` son utilidades propias: cn no las combina con `text-*` / `px-*`
+ *   (gana la que quede después en el CSS, no la última del cn).
+ */
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }

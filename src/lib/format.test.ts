@@ -26,6 +26,10 @@ describe("formatDate", () => {
   it("acepta texto ISO y formato largo por defecto", () => {
     expect(formatDate("2027-01-11T15:00:00Z")).toBe("11 de enero de 2027");
   });
+
+  it("devuelve vacío con una fecha inválida en lugar de romper la página", () => {
+    expect(formatDate("no-es-fecha")).toBe("");
+  });
 });
 
 describe("normalizeGtPhone", () => {
@@ -36,11 +40,27 @@ describe("normalizeGtPhone", () => {
     ["(502) 6628-2600", "66282600"],
     ["00502 66282600", "66282600"],
     ["50266282600", "66282600"],
+    // Un número real que empieza con 502 no pierde dígitos.
+    ["5021 2345", "50212345"],
+    ["+502 5021-2345", "50212345"],
+    // Móviles (3, 4, 5) y fijos (2, 6, 7).
+    ["3123 4567", "31234567"],
+    ["2212 3456", "22123456"],
   ])("normaliza %s", (input, expected) => {
     expect(normalizeGtPhone(input)).toBe(expected);
   });
 
-  it.each(["", "6628 260", "6628 26001", "+1 555 123 4567", "teléfono"])("rechaza %j", (input) => {
+  it.each([
+    "",
+    "6628 260",
+    "6628 26001",
+    "+1 555 123 4567",
+    "+1 555 1234",
+    "0000 0000",
+    "1234 5678",
+    "8123 4567",
+    "teléfono",
+  ])("rechaza %j", (input) => {
     expect(normalizeGtPhone(input)).toBeNull();
   });
 });

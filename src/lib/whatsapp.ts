@@ -8,7 +8,8 @@ import { toInternationalPhone } from "./format";
 export function whatsappUrl(phone: string, message?: string): string | null {
   const number = toInternationalPhone(phone);
   if (!number) return null;
-  const text = message?.trim();
+  // toWellFormed: un emoji cortado al truncar el mensaje haría lanzar a encodeURIComponent.
+  const text = message?.trim().toWellFormed();
   return text
     ? `https://wa.me/${number}?text=${encodeURIComponent(text)}`
     : `https://wa.me/${number}`;

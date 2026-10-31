@@ -11,6 +11,10 @@ describe("slugify", () => {
     ["  Bolik Ultra / 60 años!  ", "bolik-ultra-60-anos"],
     ["Sacatepéquez", "sacatepequez"],
     ["--ya--con--guiones--", "ya-con-guiones"],
+    ["Kid's Art", "kids-art"],
+    ["D’Colores", "dcolores"],
+    ["Pingüino", "pinguino"],
+    ["Papel 75 g/m²", "papel-75-g-m2"],
   ])("%j → %j", (input, expected) => {
     expect(slugify(input)).toBe(expected);
   });
