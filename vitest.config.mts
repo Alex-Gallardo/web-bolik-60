@@ -18,7 +18,12 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     coverage: {
       provider: "v8",
-      include: ["src/lib/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}"],
+      // Alcance del 80 % según docs/13 §1: utilidades, esquemas Zod y SEO.
+      include: [
+        "src/lib/**/*.{ts,tsx}",
+        "src/features/*/{schema,schemas}.ts",
+        "src/features/seo/**/*.{ts,tsx}",
+      ],
       exclude: ["**/*.test.{ts,tsx}"],
       thresholds: { lines: 80 },
     },

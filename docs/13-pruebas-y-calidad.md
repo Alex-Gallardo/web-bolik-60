@@ -27,25 +27,36 @@ flowchart TB
 
 ## 2. Configuración
 
-### Vitest (`vitest.config.ts`)
+### Vitest (`vitest.config.mts`)
 
 ```ts
-import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [tsconfigPaths(), react()],
+  plugins: [react()],
+  resolve: {
+    tsconfigPaths: true, // alias @/ nativo de Vite (sin vite-tsconfig-paths)
+    alias: { "server-only": fileURLToPath(new URL("./tests/stubs/server-only.ts", import.meta.url)) },
+  },
   test: {
-    environment: "jsdom",
+    environment: "jsdom", // las pruebas puras declaran // @vitest-environment node (más rápidas)
     setupFiles: ["./tests/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
-    coverage: { provider: "v8", include: ["src/lib/**", "src/features/**"], thresholds: { lines: 80 } },
+    coverage: {
+      provider: "v8",
+      include: ["src/lib/**/*.{ts,tsx}", "src/features/*/{schema,schemas}.ts", "src/features/seo/**/*.{ts,tsx}"],
+      exclude: ["**/*.test.{ts,tsx}"],
+      thresholds: { lines: 80 },
+    },
   },
 });
 ```
 
-Integración en un proyecto aparte (`vitest.integration.config.ts`, `environment: "node"`, `include: ["tests/integration/**/*.test.ts"]`) con `DATABASE_URL` apuntando a una base `bolik_test` que se recrea con `prisma migrate reset --force` antes de la suite.
+`.mts` para que Node la cargue como ESM. El umbral se aplica en `pnpm test:coverage`, que corre en el `pre-push` y en CI.
+
+Integración en un proyecto aparte (`vitest.integration.config.mts`, `environment: "node"`, `include: ["tests/integration/**/*.test.ts"]`) con `DATABASE_URL` apuntando a una base `bolik_test` que se recrea con `prisma migrate reset --force` antes de la suite.
 
 SQL Server local para pruebas:
 

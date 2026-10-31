@@ -1,4 +1,4 @@
-// Configuración común de las pruebas unitarias (vitest.config.ts → setupFiles).
+// Configuración común de las pruebas unitarias (vitest.config.mts → setupFiles).
 import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
 
