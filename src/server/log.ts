@@ -2,34 +2,14 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import pino, { type DestinationStream, type Logger } from "pino";
 import pretty from "pino-pretty";
+import { redact } from "@/lib/redact";
 
 /**
  * Logs del servidor (docs/15 §9). En producción, una línea JSON por evento en stdout (NSSM la
  * guarda en D:\bolik\logs); en desarrollo, texto legible. Nunca se registran datos personales ni
- * secretos: las claves de REDACT_PATHS se reemplazan por "[oculto]".
+ * secretos: cada línea pasa por redact() (claves sensibles a cualquier profundidad, y correos y
+ * teléfonos dentro de los textos, incluidos los mensajes de error).
  */
-
-/** Claves sensibles, en la raíz y un nivel adentro (p. ej. `{ cliente: { correo } }`). */
-const SENSITIVE_KEYS = [
-  "password",
-  "contrasena",
-  "token",
-  "secret",
-  "authorization",
-  "cookie",
-  "email",
-  "correo",
-  "phone",
-  "telefono",
-  "nombre",
-  "nit",
-];
-export const REDACT_PATHS = [
-  ...SENSITIVE_KEYS,
-  ...SENSITIVE_KEYS.map((key) => `*.${key}`),
-  "headers.cookie",
-  "headers.authorization",
-];
 
 type LoggerOptions = { pretty?: boolean; level?: string; destination?: DestinationStream };
 
@@ -46,7 +26,7 @@ export function createLogger({
       level,
       base: { app: "bolik-digital" },
       timestamp: pino.stdTimeFunctions.isoTime,
-      redact: { paths: REDACT_PATHS, censor: "[oculto]" },
+      formatters: { log: (object) => redact(object) as Record<string, unknown> },
     },
     stream,
   );
@@ -63,7 +43,7 @@ export function newRequestId(): string {
 
 /**
  * Registra un error de una Server Action y devuelve su código de referencia para el mensaje al
- * visitante. `context` no debe llevar datos personales (igual se ocultan por REDACT_PATHS).
+ * visitante. El contexto se limpia igual que todo el log, pero no le pases datos personales.
  */
 export function logError(
   error: unknown,

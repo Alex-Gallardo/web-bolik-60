@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import { feedback } from "@/content/feedback";
 
 type ErrorScreenProps = {
@@ -13,16 +16,23 @@ export function errorReference(error: unknown): string | undefined {
   return digest || undefined;
 }
 
-/** Pantalla amigable de error (docs/17 §404 y 500). La usan error.tsx y global-error.tsx. */
+/**
+ * Pantalla amigable de error (docs/17 §404 y 500). La usan error.tsx y global-error.tsx.
+ * El foco pasa al título al aparecer: el elemento que lo tenía pudo desaparecer con el error, y el
+ * lector de pantalla anuncia el título en lugar de quedarse en <body>.
+ */
 export function ErrorScreen({ error, retry }: ErrorScreenProps) {
   const text = feedback.system.genericError;
   const reference = errorReference(error);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => titleRef.current?.focus(), []);
+
   return (
-    <section
-      role="alert"
-      className="container-site flex flex-1 flex-col items-start justify-center gap-4 py-16"
-    >
-      <h1>{text.title}</h1>
+    <section className="container-site flex flex-1 flex-col items-start justify-center gap-4 py-16">
+      <h1 ref={titleRef} tabIndex={-1} className="outline-none">
+        {text.title}
+      </h1>
       <p className="max-w-[var(--measure)] text-[length:var(--fs-lead)] text-muted">{text.body}</p>
       <button
         type="button"

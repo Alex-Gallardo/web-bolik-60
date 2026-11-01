@@ -13,19 +13,21 @@ export async function register() {
  * mismo que ve el visitante en la pantalla de error (components/feedback/error-screen.tsx).
  */
 export const onRequestError: Instrumentation.onRequestError = async (err, request, context) => {
-  if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  const { log, pathWithoutQuery } = await import("./server/log");
-  const digest =
-    typeof err === "object" && err !== null && "digest" in err ? String(err.digest) : undefined;
-  log.error(
-    {
-      requestId: digest,
-      path: pathWithoutQuery(request.path),
-      method: request.method,
-      routePath: context.routePath,
-      routeType: context.routeType,
-      err,
-    },
-    "error en petición",
-  );
+  // El import va dentro del if (patrón de Next): así pino y node:crypto nunca entran al bundle Edge.
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { log, pathWithoutQuery } = await import("./server/log");
+    const digest =
+      typeof err === "object" && err !== null && "digest" in err ? String(err.digest) : undefined;
+    log.error(
+      {
+        requestId: digest,
+        path: pathWithoutQuery(request.path),
+        method: request.method,
+        routePath: context.routePath,
+        routeType: context.routeType,
+        err,
+      },
+      "error en petición",
+    );
+  }
 };

@@ -39,6 +39,29 @@ describe("createLogger", () => {
   });
 });
 
+describe("createLogger con datos de una cotización", () => {
+  it("no deja pasar datos personales anidados, en arreglos ni en el error", () => {
+    const { logger, lines } = memoryLogger();
+    const err = Object.assign(new Error("Recipient rejected: ana@example.com"), {
+      meta: { email: "ana@example.com" },
+    });
+    logger.error(
+      {
+        quote: {
+          cliente: { contacto: { correo: "ana@example.com" } },
+          items: [{ phone: "55551234" }],
+        },
+        err,
+      },
+      "fallo",
+    );
+    const line = JSON.stringify(lines[0]);
+    expect(line).not.toContain("ana@example.com");
+    expect(line).not.toContain("55551234");
+    expect(line).toContain("Recipient rejected: [correo]");
+  });
+});
+
 describe("logError", () => {
   it("registra el error con un código y lo devuelve para el visitante", () => {
     const { logger, lines } = memoryLogger();
