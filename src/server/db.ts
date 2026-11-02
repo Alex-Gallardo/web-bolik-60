@@ -11,6 +11,8 @@ import { PrismaClient } from "@/generated/prisma/client";
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createClient(): PrismaClient {
+  // Con SKIP_ENV_VALIDATION (CI) la variable puede faltar: mejor un error claro que uno del driver.
+  if (!env.DATABASE_URL) throw new Error("DATABASE_URL no está definida: no hay conexión a la BD.");
   const adapter = new PrismaMssql(env.DATABASE_URL);
   return new PrismaClient({
     adapter,
@@ -18,7 +20,6 @@ function createClient(): PrismaClient {
   });
 }
 
-export const db = globalForPrisma.prisma ?? createClient();
-
-// En desarrollo, la recarga en caliente reutiliza el cliente en lugar de abrir otro pool.
-if (env.APP_ENV !== "production") globalForPrisma.prisma = db;
+// Guardado en globalThis también en producción: si el bundler carga este módulo más de una vez
+// (recarga en caliente, bundles distintos), se reutiliza el mismo pool en lugar de abrir otro.
+export const db = (globalForPrisma.prisma ??= createClient());

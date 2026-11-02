@@ -36,11 +36,25 @@ const dbImports = {
   ],
   patterns: [
     {
-      group: ["@/generated/*", "**/generated/prisma", "**/generated/prisma/*", "**/server/db"],
+      group: [
+        "@/generated/*",
+        "**/generated/prisma",
+        "**/generated/prisma/*",
+        "**/server/db",
+        "@prisma/*",
+      ],
       message: "Prisma solo se usa en src/server; aquí usa @/server/data.",
     },
   ],
 };
+// no-restricted-imports no revisa import() dinámicos: esta regla los cubre.
+const dbDynamicImport = [
+  "error",
+  {
+    selector: "ImportExpression[source.value=/(server\\/db|generated\\/prisma|^@prisma\\/)/]",
+    message: "Prisma solo se usa en src/server; aquí usa @/server/data.",
+  },
+];
 const DB_ALLOWED = ["src/server/**", "prisma/**", "scripts/**", "tests/integration/**"];
 const MOTION_ALLOWED = ["src/components/motion/**"];
 
@@ -59,7 +73,10 @@ const eslintConfig = defineConfig([
   {
     files: ["**/*.{ts,tsx,js,jsx,mjs}"],
     ignores: [...MOTION_ALLOWED, ...DB_ALLOWED],
-    rules: { "no-restricted-imports": restrictImports(motionImports, dbImports) },
+    rules: {
+      "no-restricted-imports": restrictImports(motionImports, dbImports),
+      "no-restricted-syntax": dbDynamicImport,
+    },
   },
   {
     files: DB_ALLOWED,
@@ -67,7 +84,10 @@ const eslintConfig = defineConfig([
   },
   {
     files: MOTION_ALLOWED,
-    rules: { "no-restricted-imports": restrictImports(dbImports) },
+    rules: {
+      "no-restricted-imports": restrictImports(dbImports),
+      "no-restricted-syntax": dbDynamicImport,
+    },
   },
   // process.env solo en los módulos de entorno, la config de Next y los scripts (CLAUDE.md).
   {
