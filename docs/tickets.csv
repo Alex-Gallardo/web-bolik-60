@@ -38,7 +38,7 @@ BD-010,E0,Fundaciones del repositorio,Prisma 7 con SQL Server,S0,1,Must,B,BD-005
 2. Instalar `prisma`, `@prisma/client`, `@prisma/adapter-mssql`.
 3. Copiar `prisma.config.ts`, `prisma/schema.prisma` y `src/server/db.ts` del doc 05/starter.
 4. `pnpm db:migrate --name init` y `pnpm prisma generate`.","- Existe la migración inicial en `prisma/migrations`.
-- `pnpm db:studio` muestra todas las tablas.
+- `pnpm db:status` dice que la base está al día y una prueba de integración lee y escribe (Prisma Studio 7 no soporta SQL Server).
 - `db` solo se importa desde `src/server/**` (`import ""server-only""`).",Sí
 BD-011,E0,Fundaciones del repositorio,Logs y manejo de errores,S0,0.5,Must,B,BD-005,"03, 15",Errores con contexto en el servidor y pantallas amigables para el visitante.,"1. `server/log.ts` con `pino` (JSON en producción, legible en desarrollo).
 2. `app/(site)/error.tsx`, `app/global-error.tsx` con el texto de `feedback.system`.

@@ -43,9 +43,12 @@ pnpm lhci             # Lighthouse CI contra el build local
 pnpm analyze          # analizador de bundles de Turbopack (next analyze), tamaño del JS por ruta
 pnpm check:redirects  # mapa de redirecciones de Joomla
 pnpm check:colors     # ningún color fuera de tokens.css
-pnpm db:migrate       # prisma migrate dev
+pnpm db:migrate       # prisma migrate dev (usa SHADOW_DATABASE_URL como base temporal)
+pnpm db:deploy        # aplica migraciones pendientes (despliegue)
+pnpm db:status        # ¿la base está al día con las migraciones?
+pnpm db:generate      # regenera el cliente (también corre en pnpm install)
+pnpm db:reset:test    # borra y recrea BolikDigital_Test (manual; nunca lo corre un agente)
 pnpm db:seed          # datos iniciales
-pnpm db:studio        # Prisma Studio
 pnpm sync:catalog     # sincroniza artículos desde SMART-K66
 ```
 

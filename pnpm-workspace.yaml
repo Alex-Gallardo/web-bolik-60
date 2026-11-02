@@ -1,3 +1,9 @@
+# Paquetes que pueden correr su script de instalación (pnpm 10 los bloquea por defecto).
+# prisma y @prisma/engines descargan el motor de migraciones (schema engine).
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - prisma
+
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

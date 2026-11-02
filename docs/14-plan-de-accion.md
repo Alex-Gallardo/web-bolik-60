@@ -315,7 +315,7 @@ Conexión a la BD con el adaptador oficial y el primer esquema.
 **Criterios de aceptación**
 
 - [ ] Existe la migración inicial en `prisma/migrations`.
-- [ ] `pnpm db:studio` muestra todas las tablas.
+- [ ] `pnpm db:status` dice que la base está al día y una prueba de integración lee y escribe. *(Prisma Studio 7 no soporta SQL Server: se verifica con `pnpm db:status` y la prueba de integración; para explorar la base, SSMS o la extensión SQL Server de VS Code.)*
 - [ ] `db` solo se importa desde `src/server/**` (`import "server-only"`).
 
 #### BD-011 · Logs y manejo de errores
@@ -2085,7 +2085,7 @@ El núcleo suma **71.25 días** (93 tickets): con dos desarrolladores es el plan
 | BD-104 | Canal de IA en analítica y bots en logs | — |
 | BD-108 | Kits escolares | — |
 | BD-109 | Nuestra historia | — |
-| BD-117 | Categorías y FAQs | categorías y FAQs se editan con seed/Prisma Studio |
+| BD-117 | Categorías y FAQs | categorías y FAQs se editan con seed/SSMS |
 | BD-118 | Tiendas | tiendas se cargan con script de importación CSV |
 | BD-120 | Bandejas de escuelas, distribuidores y mensajes | — |
 | BD-121 | Contenido, apariencia y ajustes | contenido de home y ajustes por seed; splash se apaga por variable |
