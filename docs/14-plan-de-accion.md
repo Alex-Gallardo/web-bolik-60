@@ -52,7 +52,7 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 
 | Sprint | Fechas | Objetivo | Días (A / B) |
 |---|---|---|---|
-| **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.25 (4.25 / 5) |
+| **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
 | **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 15.25 (9.25 / 6) |
 | **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 19.5 (11.25 / 8.25) |
 | **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 20.5 (10 / 10.5) |

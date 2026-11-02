@@ -34,11 +34,14 @@ Set-StrictMode -Version Latest
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $EnvLocal = Join-Path $RepoRoot ".env.local"
 $EnvExample = Join-Path $RepoRoot ".env.example"
-$Work = Join-Path $env:TEMP "bolik-sqlserver"
+# Ruta fija sin espacios: Start-Process en PowerShell 5.1 no entrecomilla los argumentos.
+$Work = Join-Path $env:SystemDrive "bolik-sql-setup"
 # Mismo instalador que el paquete oficial de winget Microsoft.SQLServer.2022.Express.
 $SseiUrl = "https://download.microsoft.com/download/29654887-7cde-4397-bba3-d7f087970845/SQL2022-SSEI-Expr.exe"
 $ServiceName = "MSSQL`$$InstanceName"
 $SqlRegistry = "HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server"
+
+$ProgressPreference = "SilentlyContinue"  # Invoke-WebRequest mucho más rápido en 5.1
 
 function Write-Step([string]$Text) { Write-Host "`n==> $Text" -ForegroundColor Cyan }
 
@@ -58,7 +61,7 @@ function New-Password([int]$Length = 32) {
 # Solo archivos firmados por Microsoft: evita ejecutar un instalador alterado.
 function Assert-MicrosoftSignature([string]$Path) {
   $signature = Get-AuthenticodeSignature $Path
-  if ($signature.Status -ne "Valid" -or $signature.SignerCertificate.Subject -notmatch "O=Microsoft Corporation") {
+  if ($signature.Status -ne "Valid" -or $signature.SignerCertificate.Subject -notmatch "^CN=Microsoft Corporation, O=Microsoft Corporation,") {
     throw "La firma de $Path no es una firma válida de Microsoft ($($signature.Status)). Se cancela."
   }
 }
@@ -76,14 +79,30 @@ function Invoke-Sql([string]$ConnectionString, [string]$Sql) {
   }
 }
 
-# Windows Authentication (memoria compartida): no necesita TCP ni contraseña.
-$AdminConnection = "Server=localhost\$InstanceName;Database=master;Integrated Security=True;TrustServerCertificate=True"
+# Windows Authentication por memoria compartida (lpc:): no necesita TCP, SQL Browser ni contraseña.
+$AdminConnection = "Server=lpc:localhost\$InstanceName;Database=master;Integrated Security=True;TrustServerCertificate=True"
+
+# Justo después de reiniciar el servicio la primera conexión puede fallar: reintenta unos segundos.
+function Wait-SqlReady {
+  for ($attempt = 1; $attempt -le 15; $attempt++) {
+    try { Invoke-Sql $AdminConnection "SELECT 1;" | Out-Null; return } catch { Start-Sleep -Seconds 2 }
+  }
+  throw "SQL Server no respondió después de reiniciar el servicio $ServiceName."
+}
+
+function Test-RebootPending {
+  (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending") -or
+  (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired")
+}
 
 # ── 1. Instalación ────────────────────────────────────────────────────────────────────────────
 Write-Step "1/5 SQL Server 2022 Express ($InstanceName)"
 if (Get-Service $ServiceName -ErrorAction SilentlyContinue) {
   Write-Host "Ya está instalado: se omite la instalación."
 } else {
+  if (Test-RebootPending) {
+    throw "Windows tiene un reinicio pendiente y el instalador lo rechaza. Reinicia y vuelve a correr el script."
+  }
   $freeGb = [math]::Round((Get-PSDrive C).Free / 1GB, 1)
   if ($freeGb -lt 6) { throw "Se necesitan al menos 6 GB libres en C: (hay $freeGb GB)." }
 
@@ -94,8 +113,9 @@ if (Get-Service $ServiceName -ErrorAction SilentlyContinue) {
   Assert-MicrosoftSignature $ssei
 
   Write-Host "Descargando SQL Server Express Core (unos 260 MB)..."
-  $download = Start-Process $ssei -ArgumentList "/ACTION=Download", "MEDIAPATH=$Work", "/MEDIATYPE=Core", "/QUIET" -Wait -PassThru
-  $package = Get-ChildItem $Work -Recurse -Filter "SQLEXPR*_x64_ENU.exe" | Select-Object -First 1
+  $download = Start-Process $ssei -ArgumentList "/ACTION=Download", "/MEDIAPATH=$Work", "/MEDIATYPE=Core", "/LANGUAGE=en-US", "/QUIET" -Wait -PassThru
+  # Cualquier idioma (ENU, ESN…): con Windows en español el instalador puede elegir otro paquete.
+  $package = Get-ChildItem $Work -Recurse -Filter "SQLEXPR*_x64_*.exe" | Select-Object -First 1
   if (-not $package) { throw "No se descargó el paquete (código $($download.ExitCode))." }
   Assert-MicrosoftSignature $package.FullName
 
@@ -107,13 +127,13 @@ if (Get-Service $ServiceName -ErrorAction SilentlyContinue) {
 
   Write-Host "Instalando (5 a 10 minutos)..."
   $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent().Name
-  # La contraseña de sa se descarta: sa queda desactivado en el paso 3.
-  $saPassword = New-Password
+  # Se instala solo con autenticación de Windows: sa queda desactivado y ninguna contraseña pasa por
+  # la línea de comandos. El paso 2 activa el modo mixto que necesita Prisma.
   $arguments = @(
     "/Q", "/ACTION=Install", "/IACCEPTSQLSERVERLICENSETERMS", "/ENU", "/UPDATEENABLED=False",
     "/FEATURES=SQLENGINE", "/INSTANCENAME=$InstanceName", "/INSTANCEID=$InstanceName",
     "/SQLSVCACCOUNT=`"NT Service\MSSQL`$$InstanceName`"", "/SQLSVCSTARTUPTYPE=Automatic",
-    "/SQLSYSADMINACCOUNTS=`"$currentUser`"", "/SECURITYMODE=SQL", "/SAPWD=`"$saPassword`"",
+    "/SQLSYSADMINACCOUNTS=`"$currentUser`"",
     "/TCPENABLED=1", "/NPENABLED=0", "/BROWSERSVCSTARTUPTYPE=Disabled"
   )
   $install = Start-Process $setup -ArgumentList $arguments -Wait -PassThru
@@ -126,19 +146,47 @@ if (Get-Service $ServiceName -ErrorAction SilentlyContinue) {
 
 # ── 2. Autenticación mixta y puerto fijo ──────────────────────────────────────────────────────
 Write-Step "2/5 Autenticación mixta y TCP en el puerto $Port"
-$instanceId = (Get-ItemProperty "$SqlRegistry\Instance Names\SQL").$InstanceName
+$names = Get-ItemProperty "$SqlRegistry\Instance Names\SQL" -ErrorAction SilentlyContinue
+if (-not $names -or -not ($names.PSObject.Properties.Name -contains $InstanceName)) {
+  throw "No se encontró la instancia $InstanceName en el registro: la instalación no terminó bien."
+}
+$instanceId = $names.$InstanceName
 $serverKey = "$SqlRegistry\$instanceId\MSSQLServer"
 $tcpKey = "$serverKey\SuperSocketNetLib\Tcp"
 
-$busy = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
-  Where-Object { (Get-Process -Id $_.OwningProcess).ProcessName -ne "sqlservr" }
-if ($busy) { throw "El puerto $Port lo usa otro programa ($((Get-Process -Id $busy[0].OwningProcess).ProcessName))." }
+# Si ya había una instancia con este nombre de otra versión u otra aplicación, no se toca.
+$version = (Get-ItemProperty "$SqlRegistry\$instanceId\Setup").Version
+if ($version -notmatch "^16\.") {
+  throw "La instancia $InstanceName ya existe y es la versión $version (no SQL Server 2022). Para no afectar a otra aplicación, corre el script con -InstanceName BOLIK."
+}
+
+# El puerto debe estar libre o en uso por ESTA instancia (no por otra de SQL Server).
+$servicePid = (Get-CimInstance Win32_Service -Filter "Name='$ServiceName'").ProcessId
+$busy = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue |
+    Where-Object { $_.OwningProcess -ne $servicePid })
+if ($busy.Count) {
+  throw "El puerto $Port lo usa otro programa ($((Get-Process -Id $busy[0].OwningProcess).ProcessName))."
+}
 
 Set-ItemProperty $serverKey -Name LoginMode -Value 2           # Windows + SQL Server
 Set-ItemProperty $tcpKey -Name Enabled -Value 1
-Set-ItemProperty "$tcpKey\IPAll" -Name TcpPort -Value "$Port"
-Set-ItemProperty "$tcpKey\IPAll" -Name TcpDynamicPorts -Value ""
+# Solo 127.0.0.1: aunque alguien abra el firewall, nadie de la red puede conectarse.
+$loopback = Get-ChildItem $tcpKey | Where-Object {
+  $properties = Get-ItemProperty $_.PSPath
+  ($properties.PSObject.Properties.Name -contains "IpAddress") -and $properties.IpAddress -eq "127.0.0.1"
+} | Select-Object -First 1
+if ($loopback) {
+  Set-ItemProperty $tcpKey -Name ListenOnAllIPs -Value 0
+  Set-ItemProperty $loopback.PSPath -Name Enabled -Value 1
+  Set-ItemProperty $loopback.PSPath -Name TcpPort -Value "$Port"
+  Set-ItemProperty $loopback.PSPath -Name TcpDynamicPorts -Value ""
+} else {
+  Write-Warning "No se encontró la entrada de 127.0.0.1: se escucha en todas las IP (el firewall sigue bloqueando la red)."
+  Set-ItemProperty "$tcpKey\IPAll" -Name TcpPort -Value "$Port"
+  Set-ItemProperty "$tcpKey\IPAll" -Name TcpDynamicPorts -Value ""
+}
 Restart-Service $ServiceName -Force
+Wait-SqlReady
 Write-Host "Servicio $ServiceName reiniciado."
 
 # ── 3. Bases, login de la app y sa ────────────────────────────────────────────────────────────
@@ -152,12 +200,14 @@ Invoke-Sql $AdminConnection @"
 IF SUSER_ID(N'$AppLogin') IS NULL
   CREATE LOGIN [$AppLogin] WITH PASSWORD = N'$appPassword', CHECK_POLICY = ON, DEFAULT_DATABASE = [$($Databases[0])];
 ELSE
-  ALTER LOGIN [$AppLogin] WITH PASSWORD = N'$appPassword';
+  ALTER LOGIN [$AppLogin] WITH PASSWORD = N'$appPassword' UNLOCK;  -- desbloquea si quedó bloqueado
+ALTER LOGIN [$AppLogin] ENABLE;
 "@ | Out-Null
 foreach ($database in $Databases) {
   Invoke-Sql $AdminConnection @"
 USE [$database];
 IF USER_ID(N'$AppLogin') IS NULL CREATE USER [$AppLogin] FOR LOGIN [$AppLogin];
+ELSE ALTER USER [$AppLogin] WITH LOGIN = [$AppLogin];  -- repara un usuario huérfano
 ALTER ROLE db_owner ADD MEMBER [$AppLogin];
 "@ | Out-Null
 }
