@@ -39,7 +39,7 @@ Plan para construir el MVP en **tickets pequeños**, cada uno con pasos, criteri
 
 ## 2. Equipo y capacidad
 
-La suma de todos los tickets es **86.75 días-persona** (Must 77 · Should 8.5 · Could 1.25). Entre el 28 de octubre y el 8 de enero hay **50 días hábiles** por persona (descontando feriados de fin de año).
+La suma de todos los tickets es **87.25 días-persona** (Must 77.5 · Should 8.5 · Could 1.25). Entre el 28 de octubre y el 8 de enero hay **50 días hábiles** por persona (descontando feriados de fin de año).
 
 | Escenario | Viable para el 11 de enero | Cómo |
 |---|---|---|
@@ -125,7 +125,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 
 | Épica | Nombre | Tickets | Días |
 |---|---|---|---|
-| E0 | Fundaciones del repositorio | 16 | 8.75 |
+| E0 | Fundaciones del repositorio | 17 | 9.25 |
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
 | E2 | Datos, medios e integración base | 7 | 7.5 |
 | E3 | Estructura global, splash y movimiento | 7 | 3.75 |
@@ -141,7 +141,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **117** | **86.75** |
+| | **Total** | **118** | **87.25** |
 
 ## 6. Tickets
 
@@ -416,6 +416,24 @@ Un lugar real donde probar desde la primera semana (con apoyo de TI).
 
 - [ ] `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
 - [ ] `X-Robots-Tag: noindex` presente en staging.
+
+#### BD-017 · Base de datos local de desarrollo (SQL Server 2022 Express)
+
+**Sprint** S0 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** — · **Docs** 05, 13 · *Ticket nuevo (1 nov 2026)*
+
+La conexión a la base real llega casi al final del proyecto y BD-010/BD-030 están en la ruta crítica: una base local con el mismo motor evita retrabajo (al final solo cambia `DATABASE_URL`).
+
+**Pasos**
+
+1. `scripts/dev/sqlserver-local.ps1` (PowerShell como administrador, una vez, idempotente): descarga e instala SQL Server 2022 Express Core firmado por Microsoft, autenticación mixta, TCP 1433 (sin abrir el firewall).
+2. Crea `BolikDigital_Dev`, `BolikDigital_Shadow` y `BolikDigital_Test`, el login `bolik_app` (db_owner) y desactiva `sa`.
+3. Escribe las tres cadenas en `.env.local` con una contraseña generada que no se muestra.
+
+**Criterios de aceptación**
+
+- [ ] El script se puede correr de nuevo sin romper nada.
+- [ ] Ningún secreto en el repo.
+- [ ] Sin privilegios, `localhost:1433` responde y `bolik_app` se conecta a las tres bases.
 
 ### E1 · Sistema de diseño y /styleguide
 

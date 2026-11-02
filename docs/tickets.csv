@@ -349,3 +349,8 @@ BD-152,E15,Lanzamiento e hipercuidado,Lanzamiento,S5,0.5,Must,A,BD-151 BD-135 BD
 BD-153,E15,Lanzamiento e hipercuidado,Hipercuidado (2 semanas),S5,2,Must,B,BD-152,16 §7,Vigilar y corregir rápido después del lanzamiento.,"1. Revisión diaria: errores, 404, Search Console, Web Vitals, cotizaciones, correos.","- Errores críticos resueltos en < 24 h.
 - Reporte de cierre al final de la semana 2.",Sí
 BD-154,E15,Lanzamiento e hipercuidado,Retrospectiva y backlog de Fase 2,S5,0.25,Should,A,BD-153,01,Aprender y ordenar lo que sigue.,1. Retrospectiva técnica; pasar Could y pendientes a Fase 2.,- Backlog de Fase 2 priorizado.,Sí
+BD-017,E0,Fundaciones del repositorio,Base de datos local de desarrollo (SQL Server 2022 Express),S0,0.5,Must,B,,"05, 13","Ticket nuevo: la base real llega al final del proyecto; base local con el mismo motor para no bloquear la ruta crítica.","1. `scripts/dev/sqlserver-local.ps1` (admin, una vez, idempotente): instala SQL Server 2022 Express, autenticación mixta, TCP 1433.
+2. Crea BolikDigital_Dev, _Shadow y _Test, el login bolik_app y desactiva sa.
+3. Escribe las cadenas en `.env.local` sin mostrar la contraseña.","- El script se puede correr de nuevo sin romper nada.
+- Ningún secreto en el repo.
+- `localhost:1433` responde y bolik_app se conecta a las tres bases.",Sí
