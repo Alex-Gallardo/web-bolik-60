@@ -54,7 +54,7 @@ SQL Server 2022 Express en tu máquina, una sola vez, desde PowerShell **como ad
 powershell -ExecutionPolicy Bypass -File scripts\dev\sqlserver-local.ps1
 ```
 
-Crea `BolikDigital_Dev`, `BolikDigital_Shadow` y `BolikDigital_Test` en `localhost:1433` con el login `bolik_app`, y escribe las cadenas en tu `.env.local` (la contraseña se genera y no se muestra). Se puede volver a correr sin problema; renueva la contraseña.
+Crea `BolikDigital_Dev`, `BolikDigital_Shadow` y `BolikDigital_Test` en `127.0.0.1:1433` (solo accesible desde tu máquina) con el login `bolik_app`, y escribe las cadenas en tu `.env.local` (la contraseña se genera y no se muestra). Se puede volver a correr sin problema; renueva la contraseña.
 
 `pnpm install` instala también los ganchos de git (Husky): antes de cada commit se corrigen y formatean los archivos preparados, el mensaje se valida con commitlint (Conventional Commits) y antes de cada push corren `typecheck` y las pruebas con cobertura.
 

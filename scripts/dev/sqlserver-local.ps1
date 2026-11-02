@@ -170,16 +170,19 @@ if ($busy.Count) {
 
 Set-ItemProperty $serverKey -Name LoginMode -Value 2           # Windows + SQL Server
 Set-ItemProperty $tcpKey -Name Enabled -Value 1
-# Solo 127.0.0.1: aunque alguien abra el firewall, nadie de la red puede conectarse.
-$loopback = Get-ChildItem $tcpKey | Where-Object {
-  $properties = Get-ItemProperty $_.PSPath
-  ($properties.PSObject.Properties.Name -contains "IpAddress") -and $properties.IpAddress -eq "127.0.0.1"
-} | Select-Object -First 1
-if ($loopback) {
+# Solo loopback (127.0.0.1 y ::1): aunque alguien abra el firewall, nadie de la red puede conectarse.
+# Las dos, porque Node y Windows resuelven "localhost" primero como ::1.
+$loopbacks = @(Get-ChildItem $tcpKey | Where-Object {
+    $properties = Get-ItemProperty $_.PSPath
+    ($properties.PSObject.Properties.Name -contains "IpAddress") -and $properties.IpAddress -in @("127.0.0.1", "::1")
+  })
+if ($loopbacks.Count) {
   Set-ItemProperty $tcpKey -Name ListenOnAllIPs -Value 0
-  Set-ItemProperty $loopback.PSPath -Name Enabled -Value 1
-  Set-ItemProperty $loopback.PSPath -Name TcpPort -Value "$Port"
-  Set-ItemProperty $loopback.PSPath -Name TcpDynamicPorts -Value ""
+  foreach ($loopback in $loopbacks) {
+    Set-ItemProperty $loopback.PSPath -Name Enabled -Value 1
+    Set-ItemProperty $loopback.PSPath -Name TcpPort -Value "$Port"
+    Set-ItemProperty $loopback.PSPath -Name TcpDynamicPorts -Value ""
+  }
 } else {
   Write-Warning "No se encontró la entrada de 127.0.0.1: se escucha en todas las IP (el firewall sigue bloqueando la red)."
   Set-ItemProperty "$tcpKey\IPAll" -Name TcpPort -Value "$Port"
@@ -221,7 +224,8 @@ if (-not (Test-Path $EnvLocal) -or (Get-Item $EnvLocal).Length -eq 0) {
   Write-Host "Se creó .env.local a partir de .env.example."
 }
 function Get-Url([string]$Database) {
-  "`"sqlserver://localhost:$Port;database=$Database;user=$AppLogin;password=$appPassword;encrypt=true;trustServerCertificate=true`""
+  # 127.0.0.1 y no "localhost": evita depender de cómo se resuelva (::1 o 127.0.0.1).
+  "`"sqlserver://127.0.0.1:$Port;database=$Database;user=$AppLogin;password=$appPassword;encrypt=true;trustServerCertificate=true`""
 }
 $values = [ordered]@{
   DATABASE_URL        = Get-Url $Databases[0]
@@ -248,5 +252,9 @@ foreach ($database in $Databases) {
   $name = Invoke-Sql $connection "SELECT DB_NAME();"
   Write-Host "OK  $name"
 }
+# "localhost" también debe funcionar (se resuelve primero como ::1).
+$viaLocalhost = "Server=tcp:localhost,$Port;Database=$($Databases[0]);User ID=$AppLogin;Password=$appPassword;Encrypt=True;TrustServerCertificate=True"
+Invoke-Sql $viaLocalhost "SELECT 1;" | Out-Null
+Write-Host "OK  también por localhost"
 $version = Invoke-Sql $AdminConnection "SELECT CAST(SERVERPROPERTY('ProductVersion') AS nvarchar(32)) + ' ' + CAST(SERVERPROPERTY('Edition') AS nvarchar(64));"
 Write-Host "`nListo: SQL Server $version en localhost:$Port." -ForegroundColor Green

@@ -58,7 +58,7 @@ export default defineConfig({
 
 Integración en un proyecto aparte (`vitest.integration.config.mts`, `environment: "node"`, `include: ["tests/integration/**/*.test.ts"]`) con `TEST_DATABASE_URL` apuntando a la base `BolikDigital_Test`, que se recrea con `prisma migrate reset --force` antes de la suite. Ojo: con `NODE_ENV=test`, `@next/env` no carga `.env.local`; la configuración de integración debe leer `TEST_DATABASE_URL` de forma explícita (por ejemplo, cargando `.env.local` con `loadEnvConfig` y pasando esa URL como `DATABASE_URL` a la suite).
 
-SQL Server local para desarrollo y pruebas (BD-017): **SQL Server 2022 Express** instalado con `scripts/dev/sqlserver-local.ps1`, que se corre una vez en PowerShell como administrador. Crea `BolikDigital_Dev`, `BolikDigital_Shadow` y `BolikDigital_Test` con el login `bolik_app` y escribe `DATABASE_URL`, `SHADOW_DATABASE_URL` y `TEST_DATABASE_URL` en `.env.local`. Intercalación por defecto (`SQL_Latin1_General_CP1_CI_AS`). Cuando exista la base real, solo cambia `DATABASE_URL`.
+SQL Server local para desarrollo y pruebas (BD-017): **SQL Server 2022 Express** instalado con `scripts/dev/sqlserver-local.ps1`, que se corre una vez en PowerShell como administrador. Crea `BolikDigital_Dev`, `BolikDigital_Shadow` y `BolikDigital_Test` con el login `bolik_app` y escribe `DATABASE_URL`, `SHADOW_DATABASE_URL` y `TEST_DATABASE_URL` en `.env.local`. Intercalación: la del Windows donde se instala (en español, `Modern_Spanish_CI_AS`: sin distinguir mayúsculas y con orden correcto de ñ y tildes); al conectar la base real, confirmar con TI que use la misma. Cuando exista la base real, solo cambia `DATABASE_URL`.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\dev\sqlserver-local.ps1
