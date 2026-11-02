@@ -46,6 +46,16 @@ pnpm lint
 
 Las variables se validan al arrancar `dev`, `build` y `start`: si falta una o tiene un formato inválido, el arranque se detiene con su nombre y el problema.
 
-`pnpm install` instala también los ganchos de git (Husky): antes de cada commit se corrigen y formatean los archivos preparados, el mensaje se valida con commitlint (Conventional Commits) y antes de cada push corre `typecheck` (y `test` cuando exista).
+### Base de datos local
+
+SQL Server 2022 Express en tu máquina, una sola vez, desde PowerShell **como administrador** (descarga ~260 MB del sitio de Microsoft y acepta su licencia):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\sqlserver-local.ps1
+```
+
+Crea `BolikDigital_Dev`, `BolikDigital_Shadow` y `BolikDigital_Test` en `127.0.0.1:1433` (solo accesible desde tu máquina) con el login `bolik_app`, y escribe las cadenas en tu `.env.local` (la contraseña se genera y no se muestra). Se puede volver a correr sin problema; renueva la contraseña.
+
+`pnpm install` instala también los ganchos de git (Husky): antes de cada commit se corrigen y formatean los archivos preparados, el mensaje se valida con commitlint (Conventional Commits) y antes de cada push corren `typecheck` y las pruebas con cobertura.
 
 El resto de comandos (`typecheck`, `test`, `test:e2e`, `db:*`…) se agregan con los tickets del sprint S0; la lista completa está en [CLAUDE.md](CLAUDE.md#comandos).
