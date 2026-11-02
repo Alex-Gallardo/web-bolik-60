@@ -252,9 +252,11 @@ foreach ($database in $Databases) {
   $name = Invoke-Sql $connection "SELECT DB_NAME();"
   Write-Host "OK  $name"
 }
-# "localhost" también debe funcionar (se resuelve primero como ::1).
-$viaLocalhost = "Server=tcp:localhost,$Port;Database=$($Databases[0]);User ID=$AppLogin;Password=$appPassword;Encrypt=True;TrustServerCertificate=True"
-Invoke-Sql $viaLocalhost "SELECT 1;" | Out-Null
-Write-Host "OK  también por localhost"
+# ::1 también debe funcionar: Node (y Prisma) resuelven "localhost" primero como ::1. Se prueba la
+# dirección directa porque System.Data.SqlClient convierte "localhost" en el nombre del equipo
+# (su IP de red, que está cerrada a propósito) y daría un falso error.
+$viaIpv6 = "Server=tcp:[::1],$Port;Database=$($Databases[0]);User ID=$AppLogin;Password=$appPassword;Encrypt=True;TrustServerCertificate=True"
+Invoke-Sql $viaIpv6 "SELECT 1;" | Out-Null
+Write-Host "OK  también por ::1 (localhost en Node)"
 $version = Invoke-Sql $AdminConnection "SELECT CAST(SERVERPROPERTY('ProductVersion') AS nvarchar(32)) + ' ' + CAST(SERVERPROPERTY('Edition') AS nvarchar(64));"
-Write-Host "`nListo: SQL Server $version en localhost:$Port." -ForegroundColor Green
+Write-Host "`nListo: SQL Server $version en 127.0.0.1:$Port (solo esta máquina)." -ForegroundColor Green
