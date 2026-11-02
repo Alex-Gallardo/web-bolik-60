@@ -24,13 +24,50 @@ const motionImports = {
   ],
 };
 
+// La BD solo se toca desde src/server (y migraciones, scripts y pruebas de integración): las
+// páginas y componentes leen a través de src/server/data (CLAUDE.md, docs/04).
+const dbImports = {
+  paths: [
+    { name: "@/server/db", message: "Lee datos con las funciones de @/server/data." },
+    {
+      name: "@prisma/client",
+      message: "El cliente generado vive en @/generated/prisma (solo src/server).",
+    },
+  ],
+  patterns: [
+    {
+      group: ["@/generated/*", "**/generated/prisma", "**/generated/prisma/*", "**/server/db"],
+      message: "Prisma solo se usa en src/server; aquí usa @/server/data.",
+    },
+  ],
+};
+const DB_ALLOWED = ["src/server/**", "prisma/**", "scripts/**", "tests/integration/**"];
+const MOTION_ALLOWED = ["src/components/motion/**"];
+
+/** Une las restricciones (ESLint no combina dos bloques con la misma regla: el último gana). */
+const restrictImports = (...configs) => [
+  "error",
+  {
+    paths: configs.flatMap((c) => c.paths),
+    patterns: configs.flatMap((c) => c.patterns),
+  },
+];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
     files: ["**/*.{ts,tsx,js,jsx,mjs}"],
-    ignores: ["src/components/motion/**"],
-    rules: { "no-restricted-imports": ["error", motionImports] },
+    ignores: [...MOTION_ALLOWED, ...DB_ALLOWED],
+    rules: { "no-restricted-imports": restrictImports(motionImports, dbImports) },
+  },
+  {
+    files: DB_ALLOWED,
+    rules: { "no-restricted-imports": restrictImports(motionImports) },
+  },
+  {
+    files: MOTION_ALLOWED,
+    rules: { "no-restricted-imports": restrictImports(dbImports) },
   },
   // process.env solo en los módulos de entorno, la config de Next y los scripts (CLAUDE.md).
   {
@@ -67,6 +104,8 @@ const eslintConfig = defineConfig([
     "playwright-report/**",
     "test-results/**",
     ".lighthouseci/**",
+    // Cliente de Prisma generado (pnpm install / prisma generate).
+    "src/generated/**",
     // Referencias del repo: se adaptan en cada ticket, no forman parte del build.
     "starter/**",
     "docs/**",

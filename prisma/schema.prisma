@@ -1,0 +1,24 @@
+// Bolik Digital · esquema de SQL Server (docs/05). BD-010 crea la base con la tabla de folios;
+// el esquema completo del MVP llega en BD-030 desde starter/prisma/schema.prisma.
+// Notas SQL Server + Prisma:
+//  - No hay enum ni Json: String validados con constantes (src/lib/constants.ts).
+//  - UNIQUE en SQL Server admite un solo NULL: no usar @unique en columnas opcionales.
+//  - La URL no va aquí (Prisma 7): está en prisma.config.ts y el cliente usa @prisma/adapter-mssql.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+/// Folios correlativos por año: COT-2027-000123 (docs/05 §4, src/server/folio.ts en BD-033).
+model FolioSequence {
+  prefix    String @db.VarChar(5) // COT | ESC | DIS
+  year      Int
+  lastValue Int    @default(0)
+
+  @@id([prefix, year])
+}
