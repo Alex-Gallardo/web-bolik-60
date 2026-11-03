@@ -7,6 +7,8 @@ import { MEDIA_WIDTHS } from "./src/lib/image-loader";
 const env = shouldSkipEnvValidation(process.env) ? null : parseServerEnv(process.env);
 // Las cabeceras quedan fijas en el build: cambiar CSP_ENFORCE requiere volver a compilar.
 const cspEnforced = (env?.CSP_ENFORCE ?? process.env.CSP_ENFORCE) === "true";
+// Staging nunca se indexa (BD-016): también queda fijo en el build de ese entorno.
+const isStaging = (env?.APP_ENV ?? process.env.APP_ENV?.trim()) === "staging";
 
 // CSP: ver docs/15 §6 (por qué 'unsafe-inline' en scripts con páginas prerenderizadas).
 const csp = [
@@ -70,6 +72,8 @@ const nextConfig: NextConfig = {
       { source: "/admin/:path*", headers: noindex("noindex, nofollow") },
       { source: "/styleguide/:path*", headers: noindex("noindex, nofollow") },
       { source: "/cotizacion/:path*", headers: noindex("noindex") },
+      // Va al final: si dos reglas fijan la misma cabecera, Next usa la última.
+      ...(isStaging ? [{ source: "/:path*", headers: noindex("noindex, nofollow") }] : []),
     ];
   },
 };
