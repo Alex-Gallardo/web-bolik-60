@@ -21,7 +21,8 @@ bolik-digital/
 │  ├─ sync-catalog.ts           # SMART-K66 → BD
 │  ├─ retry-erp.ts              # reintenta envíos fallidos
 │  ├─ build-search-index.ts     # índice JSON del buscador (también en runtime)
-│  └─ check-redirects.ts        # valida el mapa de redirecciones de Joomla
+│  ├─ check-redirects.ts        # valida el mapa de redirecciones de Joomla
+│  └─ deploy/staging-setup.ps1  # prepara el servidor de staging (BD-016, doc 15 §12)
 ├─ tests/
 │  ├─ e2e/                      # Playwright
 │  ├─ fixtures/

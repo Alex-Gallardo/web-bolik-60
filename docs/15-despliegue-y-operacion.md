@@ -29,10 +29,10 @@ flowchart LR
 
 - Windows Server 2019/2022, 4 vCPU, 8 GB RAM, 40 GB libres en `D:`.
 - IIS 10 con: **URL Rewrite 2.1**, **Application Request Routing 3.0**, **IIS Compression** (Brotli/gzip para estáticos).
-- **Node.js LTS** (≥ 20.9; usar la LTS vigente) instalado para todos los usuarios.
+- **Node.js 22 LTS** (≥ 22.12, el mínimo de `engines` en `package.json`) instalado para todos los usuarios.
 - **NSSM** (o PM2 con `pm2-installer`) para correr Node como servicio.
 - Certificado TLS para `www.bolik66.com` y `bolik66.com` (y staging).
-- Cuenta de servicio de Windows `svc-bolik` sin privilegios de administrador, con permisos de lectura en `D:\bolik\app` y escritura en `D:\bolik\media`, `D:\bolik\logs` y `D:\bolik\app\current\.next\cache`.
+- Cuenta de servicio de Windows `svc-bolik` sin privilegios de administrador, con permisos de lectura en `D:\bolik\app` y escritura en `D:\bolik\media`, `D:\bolik\logs` y `.next` de cada release (caché y páginas que se regeneran al editar en el admin).
 - Usuarios SQL: `bolik_app` (lectura/escritura de datos) y `bolik_migrator` (DDL, solo para migraciones).
 - Salida HTTPS permitida hacia `smtp.office365.com:587`, `api.indexnow.org`, la API de SMART-K66 y `fonts.googleapis.com` + `fonts.gstatic.com` **solo durante el build** (next/font, ver §5).
 
@@ -64,6 +64,7 @@ nssm set BolikDigital ObjectName ".\svc-bolik" "<contraseña>"
 nssm set BolikDigital AppStdout "D:\bolik\logs\app.log"
 nssm set BolikDigital AppStderr "D:\bolik\logs\app-error.log"
 nssm set BolikDigital AppRotateFiles 1
+nssm set BolikDigital AppRotateOnline 1
 nssm set BolikDigital AppRotateBytes 10485760
 nssm set BolikDigital AppExit Default Restart
 nssm set BolikDigital AppRestartDelay 3000
@@ -169,7 +170,7 @@ Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowe
 
 > Las URL viejas de Joomla (`/index.php…`) **no** se redirigen en IIS: las maneja `proxy.ts` (doc 10 §6) para que estén probadas en CI.
 
-Staging usa el mismo `web.config` con su dominio, puerto 3100 y además `X-Robots-Tag: noindex, nofollow`.
+Staging usa el mismo `web.config` con su dominio, puerto 3100 y además `X-Robots-Tag: noindex, nofollow`; lo escribe `scripts/deploy/staging-setup.ps1` (§12). La app también manda esa cabecera en todas las rutas cuando el build se hace con `APP_ENV=staging` (`next.config.ts`).
 
 ## 5. Build y despliegue
 
@@ -335,3 +336,85 @@ Ver la lista completa en doc 03 §9 y `starter/.env.example`. Diferencias:
 | `ERP_MODE` | `smartk66` contra SAP de pruebas (o `noop`) | `smartk66` (o `noop` hasta BD-128) |
 | `MAIL_SALES_TO` | correo del equipo de desarrollo | `ventas@bolik66.com` |
 | `INDEXNOW_KEY` | vacío (no se envía) | clave real |
+
+## 12. Staging: primera instalación y despliegue manual (BD-016)
+
+Hasta que exista el pipeline (BD-141), staging se prepara con un script y se despliega a mano. El script **solo sirve para staging**: su `web.config` lleva `noindex` y no tiene la regla de `www` (se niega a correr con el dominio de producción). Producción (BD-140) usa el `web.config` de §4.3 y `deploy.ps1`.
+
+### Lo que entrega TI antes de empezar
+
+- [ ] Servidor de §2 con IIS 10, URL Rewrite 2.1, ARR 3.0, Node.js 22 (≥ 22.12, el mínimo de `engines` en `package.json`) y NSSM en el `PATH`.
+- [ ] Cuenta de servicio (por ejemplo `.\svc-bolik` o `DOMINIO\svc-bolik`), sin privilegios de administrador, y su contraseña.
+- [ ] Base `BolikDigital_Stg` con dos usuarios: `bolik_app` (lectura y escritura) y `bolik_migrator` (DDL, solo migraciones).
+- [ ] DNS de `staging.bolik66.com` (o la URL interna) hacia el servidor y su certificado TLS en `LocalMachine\My`.
+- [ ] Acceso limitado a la red interna o a IP permitidas.
+- [ ] En la máquina donde se construye: salida HTTPS al registro de npm, `fonts.googleapis.com` y `fonts.gstatic.com` (§5), y acceso a `BolikDigital_Stg`.
+
+### 1. Preparar el servidor
+
+En PowerShell como administrador, desde una copia del repo en el servidor:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\deploy\staging-setup.ps1 `
+  -HostName staging.bolik66.com -ServiceAccount ".\svc-bolik" -CertThumbprint "<huella del certificado>"
+```
+
+Se puede volver a correr (por ejemplo, cuando llega o se renueva el certificado; `-ResetPassword` vuelve a pedir la contraseña de la cuenta). Hace lo siguiente:
+
+- Crea las carpetas de §3 en `D:\bolik-stg` con permisos explícitos: la cuenta de servicio lee la app y escribe en `media` y `logs`; IIS lee estáticos y medios.
+- Crea `D:\bolik-stg\config\staging.env` a partir de `.env.example`, ya con `APP_ENV=staging`, la URL `https://` y `MEDIA_DIR`. Solo lo leen la cuenta de servicio y los administradores.
+- Configura ARR a nivel de servidor y crea el sitio IIS `staging-bolik` con su `web.config`. Sin certificado el sitio queda en HTTP y sin redirección.
+- Crea el servicio `BolikDigital-Staging` (no lo inicia). La contraseña de la cuenta se asigna sin pasar por la línea de comandos.
+
+Después, TI completa `staging.env` con los valores de §11 (`DATABASE_URL` con `bolik_app`, `SESSION_SECRET` aleatorio, correo…). Con `APP_ENV=staging` la app no arranca si queda el `SESSION_SECRET` de ejemplo o el usuario `sa`. Esas variables nunca van al repo.
+
+### 2. Construir el paquete
+
+Desde un **clon limpio** del commit de `develop` que se va a desplegar (sin `.env.local`: `next build` también lo lee y completaría lo que falte con valores de desarrollo), en una máquina con acceso a `BolikDigital_Stg`. Las variables de staging van en el entorno del proceso o en un `.env.production.local` que no se sube a git:
+
+```powershell
+pnpm install --frozen-lockfile --config.node-linker=hoisted
+pnpm build
+bash scripts/ci/package.sh "bolik-$(git rev-parse --short HEAD).tar.gz"
+```
+
+El artefacto de la CI no sirve aquí: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` y no tiene `APP_ENV=staging`.
+
+### 3. Migrar la base
+
+Desde el mismo clon, con `APP_ENV=staging` y `MIGRATE_DATABASE_URL` (usuario `bolik_migrator`) **en el entorno del proceso** (`prisma.config.ts` no lee `.env.production.local`):
+
+```powershell
+$env:APP_ENV = "staging"
+$env:MIGRATE_DATABASE_URL = Read-Host "MIGRATE_DATABASE_URL"
+pnpm db:deploy
+Remove-Item Env:MIGRATE_DATABASE_URL
+```
+
+### 4. Desplegar
+
+En el servidor, como administrador. `$cuenta` es la misma que se pasó a `-ServiceAccount`:
+
+```powershell
+$cuenta = ".\svc-bolik"
+$commit = "<commit>"
+$rel = "D:\bolik-stg\app\releases\$(Get-Date -Format yyyy-MM-dd_HHmm)_$commit"
+New-Item -ItemType Directory $rel | Out-Null
+tar -xzf ".\bolik-$commit.tar.gz" -C $rel
+# Next escribe en .next la caché y las páginas que se regeneran al editar en el admin.
+icacls "$rel\.next" /grant "${cuenta}:(OI)(CI)M"
+Stop-Service BolikDigital-Staging -ErrorAction SilentlyContinue
+cmd /c rmdir "D:\bolik-stg\app\current"
+cmd /c mklink /J "D:\bolik-stg\app\current" "$rel"
+Start-Service BolikDigital-Staging
+```
+
+Para volver atrás, se apunta `current` a la carpeta del release anterior y se reinicia el servicio.
+
+### 5. Comprobar
+
+```powershell
+curl.exe -sI https://staging.bolik66.com/ | Select-String "HTTP/|X-Robots-Tag"
+```
+
+Debe responder `200` con `X-Robots-Tag: noindex, nofollow` (criterios de BD-016). La cabecera sale dos veces en las páginas, una de Next y otra de IIS, y es normal. Los errores quedan en `D:\bolik-stg\logs\app-error.log`.
