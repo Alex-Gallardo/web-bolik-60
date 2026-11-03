@@ -4,7 +4,8 @@
  * Con LHCI_BASE_URL (la CI, que prueba el artefacto) no se levanta servidor.
  *
  * Cada ticket que publica una página agrega aquí su URL; los presupuestos de "el resto" ya aplican.
- * La ficha de producto (docs/12 §2: 110 KB de JS) necesitará su propia entrada en assertMatrix.
+ * La ficha de producto (docs/12 §2: 155 KB de JS) necesitará su propia entrada en assertMatrix.
+ * Los KB de JS son transferidos (gzip + cabeceras): Next 16 + React 19 ya ocupan ~146 KB (docs/12 §2).
  */
 const PORT = "3100";
 const externalUrl = process.env.LHCI_BASE_URL;
@@ -49,25 +50,25 @@ module.exports = {
     assert: {
       assertMatrix: [
         {
-          // Home: ≥ 90 en rendimiento por el video, JS ≤ 120 KB.
+          // Home: ≥ 90 en rendimiento por el video, JS ≤ 165 KB.
           matchingUrlPattern: "^https?://[^/]+/$",
           assertions: {
             ...common,
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 2500 }],
             "total-blocking-time": ["error", { maxNumericValue: 200 }],
-            "resource-summary:script:size": ["error", { maxNumericValue: 120 * KB }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
           },
         },
         {
-          // El resto: ≥ 95 en rendimiento, LCP ≤ 2.0 s, JS ≤ 100 KB (CLAUDE.md).
+          // El resto: ≥ 95 en rendimiento, LCP ≤ 2.0 s, JS ≤ 150 KB (CLAUDE.md).
           matchingUrlPattern: "^https?://[^/]+/.+",
           assertions: {
             ...common,
             "categories:performance": ["error", { minScore: 0.95 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 2000 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
-            "resource-summary:script:size": ["error", { maxNumericValue: 100 * KB }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 150 * KB }],
           },
         },
       ],

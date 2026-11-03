@@ -185,7 +185,12 @@ test("@critico enviar cotización desde la ficha", async ({ page }) => {
 
 ## 7. Lighthouse CI
 
-`starter/tests/lighthouserc.json` (incluido): 5 URLs, 3 corridas cada una, preset móvil, aserciones del doc 12 y `budget.json`. En CI corre contra el build de producción con datos de seed. Un fallo en SEO (< 100) o en rendimiento (< 90 en home, < 95 en el resto) bloquea el PR.
+Implementado en BD-015 con `lighthouse.config.cjs` (raíz): preset móvil, 3 corridas por URL, puntajes y presupuestos del doc 12 (§1 y §2) como aserciones. Hoy solo se mide `/`; **cada ticket que publica una página agrega su URL** (la ficha necesita su propia entrada de 155 KB en `assertMatrix`).
+
+- Local: `pnpm build` y `pnpm lhci` (levanta `start:local` en `127.0.0.1:3100`, como Playwright; usa el Chrome instalado).
+- CI: trabajo **Lighthouse** contra el artefacto (`LHCI_BASE_URL`), obligatorio para fusionar. Los reportes HTML quedan en el artefacto `lighthouse` y un comentario en el PR (uno solo, se actualiza en cada push) resume puntajes, métricas y presupuestos que fallan (`scripts/ci/lhci-report.mjs`). Corre también cada noche sobre `develop`.
+- Cualquier presupuesto en rojo (SEO < 100, rendimiento < 90 en home o < 95 en el resto, JS, CSS, fuentes, peticiones, LCP, CLS, TBT) bloquea el PR.
+- Con datos de seed cuando BD-031 suba la BD a los trabajos Build y E2E.
 
 ## 8. Regresión visual
 
