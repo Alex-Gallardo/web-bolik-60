@@ -43,7 +43,7 @@ pnpm lhci             # Lighthouse CI contra el build local
 pnpm analyze          # analizador de bundles de Turbopack (next analyze), tamaño del JS por ruta
 pnpm check:redirects  # mapa de redirecciones de Joomla
 pnpm check:colors     # ningún color fuera de tokens.css
-pnpm db:migrate       # prisma migrate dev (usa SHADOW_DATABASE_URL como base temporal)
+pnpm db:migrate       # prisma migrate dev + generate (Prisma 7 ya no regenera solo; base temporal: SHADOW_DATABASE_URL)
 pnpm db:deploy        # aplica migraciones pendientes (despliegue)
 pnpm db:status        # ¿la base está al día con las migraciones?
 pnpm db:generate      # regenera el cliente (también corre en pnpm install)

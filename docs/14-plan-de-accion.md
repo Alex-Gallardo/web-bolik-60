@@ -600,6 +600,10 @@ Datos reales para desarrollar y probar (nada de lorem).
 2. Perfiles `--profile dev` y `--profile e2e`.
 3. El seed es idempotente (`upsert`).
 
+**Notas de la revisión de BD-030**
+
+- Sin clave natural única (no admiten `upsert`): `ProductSpec`, `ProductBenefit`, `ProductImage`, `KitItem`, `Faq`, `HistoryMilestone`, `SchoolActivity`. Agregar en este ticket una migración con, por ejemplo, `@@unique([productId, groupName, label])`, `@@unique([productId, iconKey])` y una columna `key` única en `Faq`, `HistoryMilestone` y `SchoolActivity`; si no, volver a sembrar duplica filas o pisa lo editado en el admin.
+
 **Criterios de aceptación**
 
 - [ ] `pnpm db:seed` dos veces seguidas no duplica datos.
@@ -1106,6 +1110,12 @@ Guardar, notificar y enviar a SAP sin hacer esperar al visitante.
 2. `after()` para correos y ERP (no bloquean la respuesta).
 3. Devolver `{ ok, folio }` o errores por campo.
 
+**Notas de la revisión de BD-030**
+
+- Índices para las claves foráneas que crecen: `QuoteItem.quoteId`, `QuoteNote.quoteId`, `QuoteRequest.assignedToId` (SQL Server no las indexa solo).
+- Recortar en Zod o en `src/server` lo que llega del navegador antes de insertar: `landingPath` (300), `utmSource`/`utmMedium` (80), `utmCampaign` (120); si no, el INSERT falla con *would be truncated*.
+- En SQL directo usar `SYSUTCDATETIME()`: el default `CURRENT_TIMESTAMP` es la hora local del servidor.
+
 **Criterios de aceptación**
 
 - [ ] Respuesta en < 800 ms con SMTP y ERP lentos.
@@ -1235,6 +1245,10 @@ Medir cuántas personas van a una tienda o cadena.
 
 1. `/api/beacon` (POST, `sendBeacon`) → `OutboundClick` con destino, producto, departamento.
 2. Sin datos personales; responde 204.
+
+**Notas de la revisión de BD-030**
+
+- El modelo `OutboundClick` no tiene `departmentId`: agregarlo en este ticket (migración) si se va a registrar el departamento. Índices para `OutboundClick.variantId` y `storeId`.
 
 **Criterios de aceptación**
 
@@ -1740,6 +1754,10 @@ Administración del propio panel.
 2. Bitácora filtrable.
 3. Historial de `SyncRun` y "Sincronizar ahora".
 
+**Notas de la revisión de BD-030**
+
+- Las reglas de borrado protegen el historial (`NoAction`): un admin con auditoría, notas o cotizaciones asignadas no se borra, se desactiva (`active = false`). Lo mismo aplica a categorías, tiendas, kits y productos con referencias: el admin despublica y, si alguien intenta borrar, captura `P2003` con un mensaje de `src/content/feedback.ts`.
+
 **Criterios de aceptación**
 
 - [ ] Solo el rol admin ve estas vistas.
@@ -1987,6 +2005,10 @@ Procesos que corren solos.
 **Pasos**
 
 1. Programador de tareas de Windows: `flush:indexnow` (10 min), `sync:catalog` (diario 5:30), `retry:erp` (15 min), limpieza de logs.
+
+**Notas de la revisión de BD-030**
+
+- Retención de 24 meses (docs/05): anonimizar `QuoteRequest`, `SchoolVisitRequest`, `DistributorApplication` y `ContactMessage` (nombre, teléfono, correo, organización, notas y mensaje). `contactName`/`name` son NOT NULL: se reemplazan por un texto, no por NULL. Agregar `anonymizedAt` y un índice por `createdAt` para la purga. `OutboundClick`: conservar 18 meses.
 
 **Criterios de aceptación**
 
