@@ -77,7 +77,7 @@ Detalle en `docs/04-estructura-proyecto.md`.
 ### Rendimiento (lo más importante junto con SEO)
 
 - Todas las páginas públicas son **Server Components** y se generan estáticas (SSG) con revalidación por **tags**. `"use client"` solo en hojas interactivas pequeñas.
-- Presupuesto de JS inicial por página: **≤ 120 KB gzip** (home) y **≤ 100 KB** (resto). Mapa, buscador (Fuse), PDF, Motion y analítica se cargan con `dynamic()` o al interactuar.
+- Presupuesto de JS inicial por página (transferido, gzip, como lo mide Lighthouse): **≤ 165 KB** (home), **≤ 155 KB** (ficha) y **≤ 150 KB** (resto). Next 16 + React 19 ya ocupan ~146 KB en una página sin código de cliente: el margen es lo que nos toca (docs/12 §2). Mapa, buscador (Fuse), PDF, Motion y analítica se cargan con `dynamic()` o al interactuar.
 - LCP móvil **≤ 2.0 s**, INP **≤ 150 ms** (máximo 200), CLS **≤ 0.05**. Lighthouse móvil ≥ 95 en Rendimiento (≥ 90 en la home por el video) y 100 en SEO. Detalle en `docs/12`.
 - Imágenes siempre con `next/image`, `sizes` correcto, `alt` real, dimensiones declaradas. `priority` **solo** en la imagen LCP.
 - Fuentes con `next/font` (autohospedadas, `display: swap`, subset latin). Máximo 2 familias por página (Baloo 2 solo en la sección escuelas).

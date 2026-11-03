@@ -16,13 +16,15 @@ Laboratorio (Lighthouse móvil, throttling por defecto) en CI: **Rendimiento ≥
 
 | Página | JS inicial (gzip) | CSS (gzip) | Imágenes arriba del pliegue | Fuentes | Peticiones iniciales |
 |---|---|---|---|---|---|
-| Inicio | ≤ 120 KB | ≤ 25 KB | Póster ≤ 120 KB | 2 familias, ≤ 4 archivos woff2 | ≤ 25 |
-| Catálogo / categoría | ≤ 100 KB | ≤ 25 KB | ≤ 6 tarjetas × 25 KB | 2 familias | ≤ 25 |
-| Ficha | ≤ 110 KB | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 25 |
-| Dónde comprar | ≤ 100 KB (+ mapa diferido ≤ 60 KB) | ≤ 25 KB (+ CSS de Leaflet diferido) | — | 2 familias | ≤ 25 |
-| Escuelas | ≤ 100 KB | ≤ 25 KB | ≤ 150 KB | 3 familias (incluye Baloo 2) | ≤ 28 |
+| Inicio | ≤ 165 KB | ≤ 25 KB | Póster ≤ 120 KB | 2 familias, ≤ 4 archivos woff2 | ≤ 25 |
+| Catálogo / categoría | ≤ 150 KB | ≤ 25 KB | ≤ 6 tarjetas × 25 KB | 2 familias | ≤ 25 |
+| Ficha | ≤ 155 KB | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 25 |
+| Dónde comprar | ≤ 150 KB (+ mapa diferido ≤ 60 KB) | ≤ 25 KB (+ CSS de Leaflet diferido) | — | 2 familias | ≤ 25 |
+| Escuelas | ≤ 150 KB | ≤ 25 KB | ≤ 150 KB | 3 familias (incluye Baloo 2) | ≤ 28 |
 
-Verificación: `pnpm analyze` (bundle analyzer) y Lighthouse CI con `budget.json` (ver `starter/tests/lighthouserc.json`).
+**Por qué estos números (BD-015, 3 nov 2026).** La guía original pedía 120 KB en la home y 100 KB en el resto, pensando en un runtime de Next de ~100 KB. Con Next 16.4.3 + React 19.3, una app **vacía** ya carga 132 KB gzip y nuestra home sin código de cliente, 146 KB transferidos (Lighthouse cuenta también las cabeceras). Se mantuvo el margen que daba la guía sobre el runtime: ~+20 KB en la home (hero, splash, drawer) y ~+10 KB en la ficha; en el resto la guía no dejaba margen y aquí queda una holgura mínima (+4 KB). JS inicial = todo script que se descarga mientras Lighthouse mide la carga, **incluidos** los chunks de `dynamic()` que cargan al montar o en ocioso (splash, drawer); solo queda fuera lo que se carga al interactuar (clic, scroll a la sección). Al actualizar Next o React, medir de nuevo el runtime (app vacía) y ajustar si cambia.
+
+Verificación: `pnpm analyze` (bundle analyzer) y `pnpm lhci` con las aserciones de `lighthouse.config.cjs` (JS, CSS, fuentes y peticiones de esta tabla).
 
 ## 3. Checklist de rendimiento
 

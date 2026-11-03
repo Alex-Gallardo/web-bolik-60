@@ -391,7 +391,7 @@ Rendimiento y SEO vigilados en cada PR.
 
 **Pasos**
 
-1. Copiar `starter/tests/lighthouserc.json`.
+1. Copiar `starter/tests/lighthouserc.json` (hecho como `lighthouse.config.cjs` en la raíz).
 2. Agregar el paso `pnpm lhci` al pipeline.
 
 **Criterios de aceptación**
@@ -828,7 +828,8 @@ El hero de la demo, llevado a producción.
 
 **Criterios de aceptación**
 
-- [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil.
+- [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil: bajar `largest-contentful-paint` de la home de 2500 a 2000 en `lighthouse.config.cjs` (hasta BD-050 tolera 2.5 s; el marcador actual mide ~2.05 s).
+- [ ] Lighthouse no simula `navigator.connection`: confirmar que el video no se pide durante la medición (contaría en `resource-summary:total:count ≤ 25` y en los bytes).
 - [ ] Capítulos navegables con flechas del teclado.
 - [ ] El video se pausa fuera de pantalla.
 
@@ -910,7 +911,7 @@ La home cumple los presupuestos.
 
 **Criterios de aceptación**
 
-- [ ] JS inicial ≤ 120 KB gzip.
+- [ ] JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
 - [ ] Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.
 
 ### E5 · Catálogo, fichas y búsqueda

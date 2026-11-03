@@ -21,7 +21,7 @@ flowchart TB
 | Integración | Vitest + SQL Server de prueba (Docker) | `tests/integration` | CI | Todas las server actions de formularios |
 | E2E | Playwright 1.64 | `tests/e2e` | CI (contra `pnpm build && pnpm start`) | 100 % de los flujos críticos |
 | Accesibilidad | `@axe-core/playwright` | dentro de E2E | CI | 0 violaciones serias/críticas |
-| Rendimiento/SEO | Lighthouse CI 0.15 | `tests/lighthouserc.json` | CI + nocturno | Doc 12 §1 |
+| Rendimiento/SEO | Lighthouse CI 0.15 | `lighthouse.config.cjs` | CI + nocturno | Doc 12 §1 y §2 |
 | Visual | Playwright `toHaveScreenshot` sobre `/styleguide` | `tests/visual` | CI | 0 diferencias no aprobadas |
 | Enlaces y redirecciones | `scripts/check-redirects.ts`, `scripts/check-links.ts` | — | CI + antes del corte | 0 rotos |
 
@@ -68,7 +68,7 @@ En la CI (BD-014) se usa un contenedor de SQL Server 2022 Express con la misma i
 
 ### CI (`.github/workflows/ci.yml`)
 
-Corre en cada PR y cada push a `develop` y `master`, en máquinas de GitHub (gratis en repo público). Un push nuevo al mismo PR cancela la corrida anterior; en `develop` y `master` cada corrida termina. La caché de navegadores de Playwright queda pendiente (hoy se descargan en cada corrida, ~1 min). Cinco trabajos, todos obligatorios para fusionar (protección de ramas):
+Corre en cada PR y cada push a `develop` y `master`, en máquinas de GitHub (gratis en repo público). Un push nuevo al mismo PR cancela la corrida anterior; en `develop` y `master` cada corrida termina. Cada noche (03:00 en Guatemala) corren solo Build y Lighthouse sobre `develop` (artefacto de 7 días). La caché de navegadores de Playwright queda pendiente (hoy se descargan en cada corrida, ~1 min). Seis trabajos, todos obligatorios para fusionar (protección de ramas):
 
 | Trabajo | Qué hace |
 |---|---|
@@ -76,6 +76,7 @@ Corre en cada PR y cada push a `develop` y `master`, en máquinas de GitHub (gra
 | **Integración** | SQL Server en contenedor + `pnpm test:int` (aplica migraciones con `migrate deploy`) |
 | **Build** | Instala con `--config.node-linker=hoisted` (`node_modules` plano, sin los enlaces de pnpm), `pnpm build` y el paquete de docs/15 §5 (`scripts/ci/package.sh`), publicado como artefacto `bolik-standalone` (tar.gz, 90 días) |
 | **Artefacto en Windows** | En una máquina Windows extrae el paquete con `tar` y lo arranca con `node server.js`: el servidor de producción es Windows |
+| **Lighthouse** | Corre `pnpm lhci` contra el artefacto y comenta el resumen en el PR (§7) |
 | **E2E** | Descarga el artefacto, lo arranca con `node server.js` en `127.0.0.1:3100` (`scripts/ci/serve-artifact.sh`) y corre `pnpm test:e2e` contra él; el reporte de Playwright queda como artefacto |
 
 Las variables son valores de prueba en el propio workflow (`APP_ENV=development`), sin `SKIP_ENV_VALIDATION`: la validación real también se prueba. Las acciones van fijadas por SHA.
@@ -185,7 +186,12 @@ test("@critico enviar cotización desde la ficha", async ({ page }) => {
 
 ## 7. Lighthouse CI
 
-`starter/tests/lighthouserc.json` (incluido): 5 URLs, 3 corridas cada una, preset móvil, aserciones del doc 12 y `budget.json`. En CI corre contra el build de producción con datos de seed. Un fallo en SEO (< 100) o en rendimiento (< 90 en home, < 95 en el resto) bloquea el PR.
+Implementado en BD-015 con `lighthouse.config.cjs` (raíz): preset móvil, 3 corridas por URL, puntajes y presupuestos del doc 12 (§1 y §2) como aserciones. Hoy solo se mide `/`; **cada ticket que publica una página agrega su URL** (la ficha necesita su propia entrada de 155 KB en `assertMatrix`).
+
+- Local: `pnpm build` y `pnpm lhci` (levanta `start:local` en `127.0.0.1:3100`, como Playwright; usa el Chrome instalado).
+- CI: trabajo **Lighthouse** contra el artefacto (`LHCI_BASE_URL`), obligatorio para fusionar. Las aserciones toman la mejor de las 3 corridas (default de LHCI): los tiempos varían entre corridas iguales (LCP de la home sin cambios: 1.9–2.7 s) y la mediana fallaría al azar; los tamaños no varían. El comentario del PR muestra la corrida mediana, así que puede verse un tiempo por encima del límite con el check en verde. Los reportes HTML quedan en el artefacto `lighthouse` y un comentario en el PR (uno solo, se actualiza en cada push) resume puntajes, métricas y presupuestos que fallan (`scripts/ci/lhci-report.mjs`). Corre también cada noche sobre `develop`.
+- Cualquier presupuesto en rojo (SEO < 100, rendimiento < 90 en home o < 95 en el resto, JS, CSS, fuentes, peticiones, LCP, CLS, TBT) bloquea el PR. La home tolera LCP 2.5 s hasta BD-050, que lo baja a 2.0 s.
+- Con datos de seed cuando BD-031 suba la BD a los trabajos Build y E2E.
 
 ## 8. Regresión visual
 
