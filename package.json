@@ -18,7 +18,7 @@
     "test:int": "vitest run --config vitest.integration.config.mts",
     "check:colors": "node scripts/check-colors.mjs",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev && prisma generate",
+    "db:migrate": "node scripts/db-migrate.mjs",
     "db:deploy": "prisma migrate deploy",
     "db:status": "prisma migrate status",
     "db:reset:test": "node scripts/db-reset-test.mjs",

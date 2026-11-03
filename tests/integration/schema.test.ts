@@ -1,13 +1,15 @@
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@/server/db";
 
 // Esquema del MVP (BD-030) contra BolikDigital_Test: relaciones del catálogo y la cotización, y
-// las reglas de borrado que SQL Server aplica. Cada prueba limpia lo que crea.
+// las reglas de borrado que SQL Server aplica. Limpia antes (por si una corrida se cortó) y después.
 const SLUG = "it-bd030";
+const QUOTE_FOLIO = "COT-IT-000001";
 
 async function cleanup() {
   await db.quoteRequest.deleteMany({ where: { folio: { startsWith: "COT-IT-" } } });
   await db.product.deleteMany({ where: { slug: { startsWith: SLUG } } });
+  await db.mediaAsset.deleteMany({ where: { key: { startsWith: SLUG } } });
   await db.category.deleteMany({ where: { slug: { startsWith: SLUG } } });
 }
 
@@ -41,6 +43,7 @@ async function createProduct(suffix: string) {
 }
 
 describe("esquema del MVP", () => {
+  beforeAll(cleanup);
   afterAll(async () => {
     await cleanup();
     await db.$disconnect();
@@ -53,13 +56,28 @@ describe("esquema del MVP", () => {
     expect(product.packagings[0]?.unitsPerPack).toBe(12);
   });
 
-  it("guarda tildes y ñ en los textos (NVARCHAR)", async () => {
-    const category = await db.category.findUniqueOrThrow({ where: { slug: `${SLUG}-boligrafos` } });
-    expect(category.name).toBe("Bolígrafos");
-    expect(category.shortText).toBe("Para escribir todos los días.");
+  it("los textos visibles son NVARCHAR y guardan cualquier carácter", async () => {
+    const columns = await db.$queryRaw<{ table: string; column: string; type: string }[]>`
+      SELECT TABLE_NAME AS [table], COLUMN_NAME AS [column], DATA_TYPE AS [type]
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE (TABLE_NAME = 'Category' AND COLUMN_NAME IN ('name', 'shortText'))
+         OR (TABLE_NAME = 'Product' AND COLUMN_NAME = 'name')
+         OR (TABLE_NAME = 'QuoteRequest' AND COLUMN_NAME IN ('organization', 'contactName'))`;
+    expect(columns).toHaveLength(5);
+    expect(columns.every((c) => c.type === "nvarchar")).toBe(true);
+
+    // "Ā" y "→" no existen en Latin-1: en una columna VARCHAR se convertirían en "?".
+    const text = "Año escolar · Pingüino → Ā";
+    const category = await db.category.update({
+      where: { slug: `${SLUG}-boligrafos` },
+      data: { shortText: text },
+    });
+    expect((await db.category.findUniqueOrThrow({ where: { id: category.id } })).shortText).toBe(
+      text,
+    );
   });
 
-  it("no permite dos variantes con el mismo SKU", async () => {
+  it("no permite dos variantes con el mismo SKU (P2002)", async () => {
     const product = await db.product.findUniqueOrThrow({ where: { slug: `${SLUG}-a` } });
     await expect(
       db.productVariant.create({
@@ -71,7 +89,7 @@ describe("esquema del MVP", () => {
           colorHex: "#d42a22",
         },
       }),
-    ).rejects.toThrow();
+    ).rejects.toMatchObject({ code: "P2002" });
   });
 
   it("crea una cotización con líneas que apuntan a variantes", async () => {
@@ -81,7 +99,7 @@ describe("esquema del MVP", () => {
     });
     const quote = await db.quoteRequest.create({
       data: {
-        folio: "COT-IT-000001",
+        folio: QUOTE_FOLIO,
         customerType: "libreria",
         organization: "Librería de prueba",
         contactName: "Persona de prueba",
@@ -103,20 +121,43 @@ describe("esquema del MVP", () => {
     expect(quote.erpStatus).toBe("pendiente");
   });
 
-  it("protege el historial: no borra un producto que aparece en una cotización", async () => {
-    await expect(db.product.delete({ where: { slug: `${SLUG}-a` } })).rejects.toThrow();
+  it("protege el historial: no borra un producto que aparece en una cotización (P2003)", async () => {
+    await expect(db.product.delete({ where: { slug: `${SLUG}-a` } })).rejects.toMatchObject({
+      code: "P2003",
+    });
+    expect(await db.product.count({ where: { slug: `${SLUG}-a` } })).toBe(1);
   });
 
   it("al borrar una cotización se borran sus líneas (cascada)", async () => {
-    const quote = await db.quoteRequest.findUniqueOrThrow({ where: { folio: "COT-IT-000001" } });
+    const quote = await db.quoteRequest.findUniqueOrThrow({ where: { folio: QUOTE_FOLIO } });
     await db.quoteRequest.delete({ where: { id: quote.id } });
     expect(await db.quoteItem.count({ where: { quoteId: quote.id } })).toBe(0);
   });
 
-  it("al borrar un producto sin cotizaciones se borran sus variantes y empaques (cascada)", async () => {
+  it("al borrar un producto se borran variantes, empaques e imágenes, aunque la imagen sea de una variante", async () => {
     const product = await createProduct("b");
+    const media = await db.mediaAsset.create({
+      data: {
+        key: `${SLUG}-ultra-azul`,
+        originalName: "ultra-azul.jpg",
+        mime: "image/jpeg",
+        bytes: 1,
+      },
+    });
+    await db.productImage.create({
+      data: {
+        productId: product.id,
+        variantId: product.variants[0]!.id,
+        mediaId: media.id,
+        alt: "Bolik Ultra azul",
+      },
+    });
+
     await db.product.delete({ where: { id: product.id } });
     expect(await db.productVariant.count({ where: { productId: product.id } })).toBe(0);
     expect(await db.packaging.count({ where: { productId: product.id } })).toBe(0);
+    expect(await db.productImage.count({ where: { productId: product.id } })).toBe(0);
+    // El archivo de la biblioteca de medios se conserva (puede usarse en otro lado).
+    expect(await db.mediaAsset.count({ where: { id: media.id } })).toBe(1);
   });
 });
