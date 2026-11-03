@@ -411,7 +411,7 @@ cmd /c mklink /J "D:\bolik-stg\app\current" "$rel"
 Start-Service BolikDigital-Staging
 ```
 
-Si `Start-Service` falla con el error 1069, la contraseña de la cuenta es incorrecta: se vuelve a correr `staging-setup.ps1 -ResetPassword`. Para volver atrás, se apunta `current` a la carpeta del release anterior y se reinicia el servicio.
+Si `Start-Service` falla con el error 1069, el registro del sistema dice la causa: el evento 7038 es una contraseña incorrecta (se vuelve a correr `staging-setup.ps1 -ResetPassword`) y el 7041 es que falta el derecho «Iniciar sesión como servicio», normalmente porque una GPO del dominio lo redefine (TI agrega la cuenta en esa GPO). Para volver atrás, se apunta `current` a la carpeta del release anterior y se reinicia el servicio.
 
 ### 5. Comprobar
 

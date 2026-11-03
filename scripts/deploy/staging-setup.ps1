@@ -30,7 +30,8 @@
 [CmdletBinding()]
 param(
   [string]$HostName = "staging.bolik66.com",
-  [string]$Base = "D:\bolik-stg",
+  # Sin espacios: PowerShell 5.1 no conserva comillas dentro de los argumentos que recibe NSSM.
+  [ValidatePattern('^\S+$')][string]$Base = "D:\bolik-stg",
   [int]$Port = 3100,
   [string]$ServiceName = "BolikDigital-Staging",
   [string]$SiteName = "staging-bolik",
@@ -121,6 +122,9 @@ Write-Host "Carpetas listas; $ServiceAccount lee la app y escribe en media y log
 Write-Step "2/5 Variables de entorno ($EnvFile)"
 if (Test-Path $EnvFile) {
   Write-Host "Ya existe: no se toca."
+  if (-not (Select-String -Path $EnvFile -Pattern "^NEXT_PUBLIC_SITE_URL=https://$([regex]::Escape($HostName))\s*$" -Quiet)) {
+    Write-Warning "NEXT_PUBLIC_SITE_URL de $EnvFile no es https://$HostName`: corrígelo si cambió el dominio."
+  }
 } else {
   # Con APP_ENV=staging la app valida como entorno desplegado: no arranca con el SESSION_SECRET de
   # ejemplo, sin https ni con el usuario sa (src/env.schema.ts).
@@ -243,7 +247,7 @@ if (-not ($http | Where-Object { $_.bindingInformation -eq "*:80:$HostName" })) 
   if ($http.Count) {
     Set-WebBinding -Name $SiteName -BindingInformation $http[0].bindingInformation -PropertyName HostHeader -Value $HostName
   } else {
-    New-WebBinding -Name $SiteName -Protocol http -Port 80 -HostHeader $HostName
+    New-WebBinding -Name $SiteName -Protocol http -Port 80 -HostHeader $HostName | Out-Null
   }
 }
 if ($Thumb) {
@@ -274,8 +278,12 @@ Write-Host "Sitio $SiteName apuntando a $IisRoot (proxy a 127.0.0.1:$Port)."
 Write-Warning "Staging es solo para la red interna: limita el acceso por IP (firewall o 'IP and Domain Restrictions')."
 
 Write-Step "5/5 Servicio $ServiceName"
-if (-not (Get-Service $ServiceName -ErrorAction SilentlyContinue)) { Invoke-Nssm install $ServiceName $Node }
-Invoke-Nssm set $ServiceName AppParameters "--env-file=`"$EnvFile`" server.js"
+if (-not (Get-Service $ServiceName -ErrorAction SilentlyContinue)) {
+  Invoke-Nssm install $ServiceName $Node
+  # nssm install lo deja como LocalSystem y automático: manual hasta asignar la cuenta (abajo).
+  Invoke-Nssm set $ServiceName Start SERVICE_DEMAND_START
+}
+Invoke-Nssm set $ServiceName AppParameters "--env-file=$EnvFile server.js"
 Invoke-Nssm set $ServiceName AppDirectory $Current
 # HOSTNAME=127.0.0.1: Node solo escucha localmente, nadie se salta IIS.
 Invoke-Nssm set $ServiceName AppEnvironmentExtra "NODE_ENV=production" "PORT=$Port" "HOSTNAME=127.0.0.1"
@@ -287,7 +295,6 @@ Invoke-Nssm set $ServiceName AppRotateOnline 1
 Invoke-Nssm set $ServiceName AppRotateBytes 10485760
 Invoke-Nssm set $ServiceName AppExit Default Restart
 Invoke-Nssm set $ServiceName AppRestartDelay 3000
-Invoke-Nssm set $ServiceName Start SERVICE_AUTO_START
 
 # La cuenta se asigna por CIM y no con 'nssm set ObjectName': así la contraseña no pasa por la línea
 # de comandos (registros de auditoría) ni puede salir en un mensaje de error. A diferencia de NSSM,
@@ -330,16 +337,21 @@ Write-Host "$ServiceAccount puede iniciar sesión como servicio."
 $service = Get-CimInstance Win32_Service -Filter "Name='$ServiceName'"
 if ($ResetPassword -or ($service.StartName -replace '^\.\\', '') -ne $account) {
   $credential = Get-Credential -UserName $ServiceAccount -Message "Contraseña de $ServiceAccount para el servicio $ServiceName"
-  if (-not $credential) { throw "Se canceló la contraseña: el servicio queda sin cuenta. Vuelve a correr el script." }
+  $notReady = "el servicio sigue sin la cuenta y en inicio manual. Vuelve a correr el script."
+  if (-not $credential) { throw "Se canceló la contraseña: $notReady" }
+  if (($credential.UserName -replace '^\.\\', '') -ne $account) { throw "El usuario debe ser ${ServiceAccount}: $notReady" }
+  if (-not $credential.GetNetworkCredential().Password) { throw "La contraseña está vacía: $notReady" }
   $result = Invoke-CimMethod -InputObject $service -MethodName Change -Arguments @{
     StartName     = $ServiceAccount
     StartPassword = $credential.GetNetworkCredential().Password
   }
-  if ($result.ReturnValue -ne 0) { throw "Windows no aceptó la cuenta del servicio (Win32_Service.Change = $($result.ReturnValue))." }
+  if ($result.ReturnValue -ne 0) { throw "Windows no aceptó la cuenta (Win32_Service.Change = $($result.ReturnValue)): $notReady" }
   Write-Host "Servicio configurado como $ServiceAccount."
 } else {
   Write-Host "El servicio ya corre como $ServiceAccount (usa -ResetPassword para cambiar la contraseña)."
 }
+# Automático solo cuando ya corre con la cuenta sin privilegios, nunca como LocalSystem.
+Invoke-Nssm set $ServiceName Start SERVICE_AUTO_START
 Write-Host "El servicio se inicia en el primer despliegue (docs/15 §12)."
 
 Write-Host "`nListo. Siguiente paso: completar $EnvFile y hacer el primer despliegue manual (docs/15 §12)." -ForegroundColor Green
