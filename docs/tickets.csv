@@ -59,7 +59,7 @@ BD-015,E0,Fundaciones del repositorio,Lighthouse CI con presupuestos,S0,0.5,Must
 BD-016,E0,Fundaciones del repositorio,Entorno de staging en IIS,S0,1,Must,B,BD-004 BD-014,15,Un lugar real donde probar desde la primera semana (con apoyo de TI).,"1. Sitio IIS `staging-bolik` (solo red interna o con IP permitida) con ARR + URL Rewrite hacia `localhost:3100`.
 2. Servicio Windows `BolikDigital-Staging` (NSSM o PM2) ejecutando `node server.js`.
 3. BD `BolikDigital_Stg`; carpeta `D:\bolik-stg\media`.
-4. Despliegue manual del artefacto de BD-014 siguiendo doc 15 §5.","- `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
+4. Build en el agente interno (o a mano) con las variables de staging, armado según doc 15 §5, y despliegue manual. El artefacto de la CI (BD-014) no sirve: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` fijo.","- `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
 - `X-Robots-Tag: noindex` presente en staging.",Sí
 BD-017,E0,Fundaciones del repositorio,Base de datos local de desarrollo (SQL Server 2022 Express),S0,0.5,Must,B,,"05, 13","Ticket nuevo: la base real llega al final del proyecto; base local con el mismo motor para no bloquear la ruta crítica.","1. `scripts/dev/sqlserver-local.ps1` (admin, una vez, idempotente): instala SQL Server 2022 Express, autenticación mixta, TCP 1433.
 2. Crea BolikDigital_Dev, _Shadow y _Test, el login bolik_app y desactiva sa.
@@ -100,6 +100,7 @@ BD-030,E2,"Datos, medios e integración base",Esquema completo y migraciones,S0,
 - La migración se aplica en una BD vacía y en staging.",Sí
 BD-031,E2,"Datos, medios e integración base",Seeds con datos reales,S1,1.5,Must,B,BD-030,"05 §7, 17",Datos reales para desarrollar y probar (nada de lorem).,"1. `prisma/seed/*.json`: categorías, productos (Bolik Ultra y su ficha), variantes y empaques, tiendas reales, departamentos, FAQs, contenido de la home, admin inicial.
 2. Perfiles `--profile dev` y `--profile e2e`.
+3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e` (con Cache Components el build prerenderiza leyendo la BD; hasta BD-014 ninguna página la lee).
 3. El seed es idempotente (`upsert`).","- `pnpm db:seed` dos veces seguidas no duplica datos.
 - El Bolik Ultra tiene PT00058/59/60 con sus códigos de barras.",Sí
 BD-032,E2,"Datos, medios e integración base",Capa de datos con Cache Components,S1,1.5,Must,B,BD-031,03 §5,Consultas de lectura cacheadas con tags.,"1. `server/data/{products,categories,stores,content,faqs,sitemap,llms,search}.ts`.

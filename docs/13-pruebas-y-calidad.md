@@ -64,7 +64,21 @@ SQL Server local para desarrollo y pruebas (BD-017): **SQL Server 2022 Express**
 powershell -ExecutionPolicy Bypass -File scripts\dev\sqlserver-local.ps1
 ```
 
-En la CI (BD-014) se usa un contenedor de SQL Server como servicio del pipeline.
+En la CI (BD-014) se usa un contenedor de SQL Server 2022 Express con la misma intercalación (`scripts/ci/sqlserver.sh`): crea `BolikDigital_Test` y el login `bolik_app` con contraseñas aleatorias en cada corrida, ocultas del log; el repo no guarda ningún secreto.
+
+### CI (`.github/workflows/ci.yml`)
+
+Corre en cada PR y cada push a `develop` y `master`, en máquinas de GitHub (gratis en repo público). Un push nuevo al mismo PR cancela la corrida anterior; en `develop` y `master` cada corrida termina. La caché de navegadores de Playwright queda pendiente (hoy se descargan en cada corrida, ~1 min). Cinco trabajos, todos obligatorios para fusionar (protección de ramas):
+
+| Trabajo | Qué hace |
+|---|---|
+| **Calidad** | `pnpm typecheck`, `pnpm lint`, `pnpm test:coverage` |
+| **Integración** | SQL Server en contenedor + `pnpm test:int` (aplica migraciones con `migrate deploy`) |
+| **Build** | Instala con `--config.node-linker=hoisted` (`node_modules` plano, sin los enlaces de pnpm), `pnpm build` y el paquete de docs/15 §5 (`scripts/ci/package.sh`), publicado como artefacto `bolik-standalone` (tar.gz, 90 días) |
+| **Artefacto en Windows** | En una máquina Windows extrae el paquete con `tar` y lo arranca con `node server.js`: el servidor de producción es Windows |
+| **E2E** | Descarga el artefacto, lo arranca con `node server.js` en `127.0.0.1:3100` (`scripts/ci/serve-artifact.sh`) y corre `pnpm test:e2e` contra él; el reporte de Playwright queda como artefacto |
+
+Las variables son valores de prueba en el propio workflow (`APP_ENV=development`), sin `SKIP_ENV_VALIDATION`: la validación real también se prueba. Las acciones van fijadas por SHA.
 
 ### Playwright (`playwright.config.ts`)
 
