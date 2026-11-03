@@ -16,7 +16,9 @@ if [ -d "${app}/node_modules/.pnpm" ]; then
   exit 1
 fi
 
+# Se reemplazan (no se mezclan) por si el standalone ya trae copias, p. ej. de pnpm start:local.
 mkdir -p "${app}/.next"
+rm -rf "${app}/.next/static" "${app}/public" "${app}/prisma"
 cp -R .next/static "${app}/.next/static"
 cp -R public "${app}/public"
 cp -R prisma "${app}/prisma"

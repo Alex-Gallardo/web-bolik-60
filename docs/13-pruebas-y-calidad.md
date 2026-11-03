@@ -68,7 +68,7 @@ En la CI (BD-014) se usa un contenedor de SQL Server 2022 Express con la misma i
 
 ### CI (`.github/workflows/ci.yml`)
 
-Corre en cada PR y cada push a `develop` y `master`, en máquinas de GitHub (gratis en repo público). Un push nuevo al mismo PR cancela la corrida anterior. Cinco trabajos, todos obligatorios para fusionar (protección de ramas):
+Corre en cada PR y cada push a `develop` y `master`, en máquinas de GitHub (gratis en repo público). Un push nuevo al mismo PR cancela la corrida anterior; en `develop` y `master` cada corrida termina. La caché de navegadores de Playwright queda pendiente (hoy se descargan en cada corrida, ~1 min). Cinco trabajos, todos obligatorios para fusionar (protección de ramas):
 
 | Trabajo | Qué hace |
 |---|---|

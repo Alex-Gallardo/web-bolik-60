@@ -410,7 +410,7 @@ Un lugar real donde probar desde la primera semana (con apoyo de TI).
 1. Sitio IIS `staging-bolik` (solo red interna o con IP permitida) con ARR + URL Rewrite hacia `localhost:3100`.
 2. Servicio Windows `BolikDigital-Staging` (NSSM o PM2) ejecutando `node server.js`.
 3. BD `BolikDigital_Stg`; carpeta `D:\bolik-stg\media`.
-4. Despliegue manual del artefacto de BD-014 siguiendo doc 15 §5.
+4. Build en el agente interno (o a mano) con las variables de staging, armado según doc 15 §5, y despliegue manual. El artefacto de la CI (BD-014) no sirve: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` fijo.
 
 **Criterios de aceptación**
 
@@ -598,6 +598,7 @@ Datos reales para desarrollar y probar (nada de lorem).
 
 1. `prisma/seed/*.json`: categorías, productos (Bolik Ultra y su ficha), variantes y empaques, tiendas reales, departamentos, FAQs, contenido de la home, admin inicial.
 2. Perfiles `--profile dev` y `--profile e2e`.
+3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e` (con Cache Components el build prerenderiza leyendo la BD; hasta BD-014 ninguna página la lee).
 3. El seed es idempotente (`upsert`).
 
 **Notas de la revisión de BD-030**

@@ -175,7 +175,8 @@ Staging usa el mismo `web.config` con su dominio, puerto 3100 y además `X-Robot
 
 ### Dónde se construye
 
-> **CI de los PR (BD-014) ≠ build de cada entorno.** La CI de `.github/workflows/ci.yml` corre en máquinas de GitHub con un SQL Server en contenedor y variables de prueba: valida el código y publica un artefacto (`bolik-standalone`, tar.gz) que la propia CI arranca con `node server.js` para las pruebas E2E. Ese artefacto **no** se despliega: el de staging y el de producción se construyen en el agente interno descrito abajo, con la BD y las `NEXT_PUBLIC_*` de su entorno (BD-016), con el mismo contenido de paquete que se describe abajo. **Importante para ese agente:** instalar con `pnpm install --frozen-lockfile --config.node-linker=hoisted` antes del build. Con la estructura normal de pnpm, `.next/standalone/node_modules` lleva enlaces simbólicos que Windows no crea sin permisos especiales (Modo de desarrollador o administrador) y que no se pueden copiar como archivos sin romper la resolución de módulos; la CI lo comprueba en el trabajo «Artefacto en Windows» (BD-014).
+> **CI de los PR (BD-014) ≠ build de cada entorno.** La CI de `.github/workflows/ci.yml` corre en máquinas de GitHub con un SQL Server en contenedor y variables de prueba: valida el código y publica un artefacto (`bolik-standalone`, tar.gz) que la propia CI arranca con `node server.js` para las pruebas E2E. Ese artefacto **no** se despliega: el de staging y el de producción se construyen en el agente interno descrito abajo, con la BD y las `NEXT_PUBLIC_*` de su entorno (agente: BD-141; primer despliegue manual: BD-016), con el mismo paquete que se describe abajo. **Importante para ese agente:** instalar con `pnpm install --frozen-lockfile --config.node-linker=hoisted` antes del build. Con la estructura normal de pnpm, `.next/standalone/node_modules` lleva enlaces simbólicos que Windows no crea sin permisos especiales (Modo de desarrollador o administrador) y que no se pueden copiar como archivos sin romper la resolución de módulos; la CI lo comprueba en el trabajo «Artefacto en Windows» (BD-014).
+
 Con Cache Components, `next build` **prerenderiza las páginas leyendo la BD** (catálogo, tiendas, contenido). Por eso el build se ejecuta en un **agente dentro de la red interna** (runner autohospedado de GitHub Actions o agente de Azure DevOps en el servidor de staging) con acceso de **solo lectura** a la BD del entorno de destino. Además, las variables `NEXT_PUBLIC_*` quedan fijas en el build: se hace **un build por entorno** a partir del mismo commit.
 
 > **Salida a internet del agente (confirmar con TI en BD-016).** Durante el build, `next/font/google` descarga Bricolage Grotesque, DM Sans y Baloo 2 de `fonts.googleapis.com` / `fonts.gstatic.com` (después se sirven desde el propio servidor; el navegador nunca va a Google). Si el agente interno no tiene salida HTTPS a esos dominios, el build falla: se cambia `src/app/fonts.ts` a `next/font/local` con los `.woff2` versionados en el repo. `pnpm install` también necesita el registro de npm (o un espejo interno).
@@ -189,27 +190,26 @@ flowchart LR
 ```
 
 ### Contenido del paquete
-`next build` con `output: "standalone"` genera `.next/standalone` pero **no** copia los estáticos. El pipeline arma el paquete así:
+`next build` con `output: "standalone"` genera `.next/standalone` pero **no** copia los estáticos. El pipeline arma el paquete con `scripts/ci/package.sh` (el mismo de la CI; en Windows corre con Git Bash): copia `.next/static`, `public/` y `prisma/` (migraciones para el deploy) dentro de `.next/standalone` y lo empaca en **tar.gz**, que el `tar.exe` de Windows extrae sin herramientas extra:
 
 ```powershell
+pnpm install --frozen-lockfile --config.node-linker=hoisted   # sin los enlaces de pnpm (BD-014)
 pnpm build
-Copy-Item -Recurse .next\static .next\standalone\.next\static
-Copy-Item -Recurse public .next\standalone\public
-Copy-Item -Recurse prisma .next\standalone\prisma   # migraciones para el deploy
-Compress-Archive .next\standalone\* bolik-$env:BUILD_ID.zip
+bash scripts/ci/package.sh "bolik-$env:BUILD_ID.tar.gz"
 ```
 
 ### `scripts/deploy.ps1` (resumen)
 
 ```powershell
-param([string]$Zip, [string]$Env = "production")
+param([string]$Pkg, [string]$Env = "production")
 $ErrorActionPreference = "Stop"
 $base = if ($Env -eq "production") { "D:\bolik" } else { "D:\bolik-stg" }
 $svc  = if ($Env -eq "production") { "BolikDigital" } else { "BolikDigital-Staging" }
 $port = if ($Env -eq "production") { 3000 } else { 3100 }
 $rel  = Join-Path "$base\app\releases" (Get-Date -Format "yyyy-MM-dd_HHmm")
 
-Expand-Archive $Zip $rel
+New-Item -ItemType Directory $rel | Out-Null
+tar -xzf $Pkg -C $rel
 # 1. Migraciones (usuario bolik_migrator, variable MIGRATE_DATABASE_URL)
 Push-Location $rel; npx prisma migrate deploy; Pop-Location
 # 2. Cambiar 'current' y reiniciar

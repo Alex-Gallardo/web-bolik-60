@@ -10,10 +10,17 @@ log="${RUNNER_TEMP:-/tmp}/server.log"
 
 rm -rf "${dir}" && mkdir -p "${dir}"
 tar -xzf "${pkg}" -C "${dir}"
-(cd "${dir}" && PORT=3100 HOSTNAME=127.0.0.1 nohup node server.js >"${log}" 2>&1 &)
+cd "${dir}"
+PORT=3100 HOSTNAME=127.0.0.1 nohup node server.js >"${log}" 2>&1 &
+pid=$!
 
 for _ in $(seq 1 60); do
-  if curl -fsS -o /dev/null http://127.0.0.1:3100/; then
+  if ! kill -0 "${pid}" 2>/dev/null; then
+    echo "El servidor se detuvo al arrancar:" >&2
+    cat "${log}" >&2
+    exit 1
+  fi
+  if curl -fs --max-time 5 -o /dev/null http://127.0.0.1:3100/; then
     echo "El artefacto responde en http://127.0.0.1:3100"
     exit 0
   fi

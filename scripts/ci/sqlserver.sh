@@ -5,11 +5,15 @@
 # en este runner: el repo no guarda ningún secreto. Exporta TEST_DATABASE_URL a $GITHUB_ENV.
 set -euo pipefail
 
-IMAGE="mcr.microsoft.com/mssql/server:2022-latest"
+# Fijada como las acciones del workflow; al subir de CU, cambiar aquí.
+IMAGE="mcr.microsoft.com/mssql/server:2022-CU27-ubuntu-22.04"
 SA_PASSWORD="Sa1-$(openssl rand -hex 16)"
 APP_PASSWORD="App1-$(openssl rand -hex 16)"
 echo "::add-mask::${SA_PASSWORD}"
 echo "::add-mask::${APP_PASSWORD}"
+
+# Si algo falla, el log del contenedor dice por qué (contraseña rechazada, memoria…).
+trap 'docker logs mssql >&2 || true' ERR
 
 docker run -d --name mssql \
   -e ACCEPT_EULA=Y \
