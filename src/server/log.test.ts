@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { Writable } from "node:stream";
 import { describe, expect, it } from "vitest";
+import { maskText } from "@/lib/redact";
 import { createLogger, logError, newRequestId, pathWithoutQuery } from "./log";
 
 /** Logger que escribe en memoria para leer las líneas JSON. */
@@ -69,6 +70,27 @@ describe("logError", () => {
     expect(id).toMatch(/^[0-9A-F]{8}$/);
     expect(lines[0]).toMatchObject({ level: 50, requestId: id, action: "submitQuote" });
     expect(JSON.stringify(lines[0])).toContain("fallo SMTP");
+  });
+
+  it("el código nunca se confunde con un teléfono ni se oculta del log", () => {
+    // 8 dígitos seguidos coinciden con el filtro de teléfonos de redact().
+    for (let i = 0; i < 5000; i++) {
+      const id = newRequestId();
+      expect(id).toMatch(/^[0-9A-F]{8}$/);
+      expect(maskText(id)).toBe(id);
+    }
+  });
+
+  it("el código sale intacto en la línea del log", () => {
+    const { logger, lines } = memoryLogger();
+    const ids = Array.from({ length: 500 }, () => logError(new Error("fallo"), {}, logger));
+    expect(lines.map((line) => line.requestId)).toEqual(ids);
+  });
+
+  it("conserva en el log un digest de Next de 8 dígitos", () => {
+    const { logger, lines } = memoryLogger();
+    logger.error({ requestId: "12345678" }, "error en petición");
+    expect(lines[0]?.requestId).toBe("12345678");
   });
 
   it("genera códigos distintos", () => {
