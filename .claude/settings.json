@@ -18,7 +18,10 @@
       "Bash(pnpm prisma validate)",
       "Bash(git status)",
       "Bash(git diff *)",
-      "Bash(git log *)"
+      "Bash(git log *)",
+      "Bash(pnpm db:status)",
+      "Bash(pnpm db:generate)",
+      "Bash(pnpm test:int)"
     ],
     "deny": [
       "Read(./.env)",
@@ -33,7 +36,22 @@
       "Bash(git push origin master)",
       "Bash(pnpm prisma migrate reset *)",
       "Bash(pnpm db:deploy *)",
-      "Edit(./prisma/migrations/**)"
+      "Edit(./prisma/migrations/**)",
+      "Bash(pnpm db:reset:test*)",
+      "Bash(node scripts/db-reset-test.mjs*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/hooks/format.mjs"
+          }
+        ]
+      }
     ]
   }
 }

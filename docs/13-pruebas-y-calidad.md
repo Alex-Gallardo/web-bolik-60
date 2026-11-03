@@ -21,63 +21,85 @@ flowchart TB
 | Integración | Vitest + SQL Server de prueba (Docker) | `tests/integration` | CI | Todas las server actions de formularios |
 | E2E | Playwright 1.64 | `tests/e2e` | CI (contra `pnpm build && pnpm start`) | 100 % de los flujos críticos |
 | Accesibilidad | `@axe-core/playwright` | dentro de E2E | CI | 0 violaciones serias/críticas |
-| Rendimiento/SEO | Lighthouse CI 0.15 | `tests/lighthouserc.json` | CI + nocturno | Doc 12 §1 |
+| Rendimiento/SEO | Lighthouse CI 0.15 | `lighthouse.config.cjs` | CI + nocturno | Doc 12 §1 y §2 |
 | Visual | Playwright `toHaveScreenshot` sobre `/styleguide` | `tests/visual` | CI | 0 diferencias no aprobadas |
 | Enlaces y redirecciones | `scripts/check-redirects.ts`, `scripts/check-links.ts` | — | CI + antes del corte | 0 rotos |
 
 ## 2. Configuración
 
-### Vitest (`vitest.config.ts`)
+### Vitest (`vitest.config.mts`)
 
 ```ts
-import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [tsconfigPaths(), react()],
+  plugins: [react()],
+  resolve: {
+    tsconfigPaths: true, // alias @/ nativo de Vite (sin vite-tsconfig-paths)
+    alias: { "server-only": fileURLToPath(new URL("./tests/stubs/server-only.ts", import.meta.url)) },
+  },
   test: {
-    environment: "jsdom",
+    environment: "jsdom", // las pruebas puras declaran // @vitest-environment node (más rápidas)
     setupFiles: ["./tests/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
-    coverage: { provider: "v8", include: ["src/lib/**", "src/features/**"], thresholds: { lines: 80 } },
+    coverage: {
+      provider: "v8",
+      include: ["src/lib/**/*.{ts,tsx}", "src/features/*/{schema,schemas}.ts", "src/features/seo/**/*.{ts,tsx}"],
+      exclude: ["**/*.test.{ts,tsx}"],
+      thresholds: { lines: 80 },
+    },
   },
 });
 ```
 
-Integración en un proyecto aparte (`vitest.integration.config.ts`, `environment: "node"`, `include: ["tests/integration/**/*.test.ts"]`) con `DATABASE_URL` apuntando a una base `bolik_test` que se recrea con `prisma migrate reset --force` antes de la suite.
+`.mts` para que Node la cargue como ESM. El umbral se aplica en `pnpm test:coverage`, que corre en el `pre-push` y en CI.
 
-SQL Server local para pruebas:
+Integración en un proyecto aparte (`vitest.integration.config.mts`, `environment: "node"`, `include: ["tests/integration/**/*.test.ts"]`) con `TEST_DATABASE_URL` apuntando a la base `BolikDigital_Test`, a la que `tests/integration/global-setup.ts` aplica las migraciones pendientes (`prisma migrate deploy`, nunca borra) antes de la suite; cada prueba limpia los datos que crea. Para dejarla en cero, una persona corre `pnpm db:reset:test` (se niega si la base no termina en `_Test`); Prisma bloquea `migrate reset` cuando lo lanza un agente de IA. Ojo: con `NODE_ENV=test`, `@next/env` no carga `.env.local`; la configuración de integración debe leer `TEST_DATABASE_URL` de forma explícita (por ejemplo, cargando `.env.local` con `loadEnvConfig` y pasando esa URL como `DATABASE_URL` a la suite).
 
-```bash
-docker run -d --name bolik-sql -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='Bolik_Test_2026!' \
-  -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
+SQL Server local para desarrollo y pruebas (BD-017): **SQL Server 2022 Express** instalado con `scripts/dev/sqlserver-local.ps1`, que se corre una vez en PowerShell como administrador. Crea `BolikDigital_Dev`, `BolikDigital_Shadow` y `BolikDigital_Test` con el login `bolik_app` y escribe `DATABASE_URL`, `SHADOW_DATABASE_URL` y `TEST_DATABASE_URL` en `.env.local`. Intercalación: la del Windows donde se instala (en español, `Modern_Spanish_CI_AS`: sin distinguir mayúsculas y con orden correcto de ñ y tildes); al conectar la base real, confirmar con TI que use la misma. Cuando exista la base real, solo cambia `DATABASE_URL`.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\sqlserver-local.ps1
 ```
+
+En la CI (BD-014) se usa un contenedor de SQL Server 2022 Express con la misma intercalación (`scripts/ci/sqlserver.sh`): crea `BolikDigital_Test` y el login `bolik_app` con contraseñas aleatorias en cada corrida, ocultas del log; el repo no guarda ningún secreto.
+
+### CI (`.github/workflows/ci.yml`)
+
+Corre en cada PR y cada push a `develop` y `master`, en máquinas de GitHub (gratis en repo público). Un push nuevo al mismo PR cancela la corrida anterior; en `develop` y `master` cada corrida termina. Cada noche (03:00 en Guatemala) corren solo Build y Lighthouse sobre `develop` (artefacto de 7 días). La caché de navegadores de Playwright queda pendiente (hoy se descargan en cada corrida, ~1 min). Seis trabajos, todos obligatorios para fusionar (protección de ramas):
+
+| Trabajo | Qué hace |
+|---|---|
+| **Calidad** | `pnpm typecheck`, `pnpm lint`, `pnpm test:coverage` |
+| **Integración** | SQL Server en contenedor + `pnpm test:int` (aplica migraciones con `migrate deploy`) |
+| **Build** | Instala con `--config.node-linker=hoisted` (`node_modules` plano, sin los enlaces de pnpm), `pnpm build` y el paquete de docs/15 §5 (`scripts/ci/package.sh`), publicado como artefacto `bolik-standalone` (tar.gz, 90 días) |
+| **Artefacto en Windows** | En una máquina Windows extrae el paquete con `tar` y lo arranca con `node server.js`: el servidor de producción es Windows |
+| **Lighthouse** | Corre `pnpm lhci` contra el artefacto y comenta el resumen en el PR (§7) |
+| **E2E** | Descarga el artefacto, lo arranca con `node server.js` en `127.0.0.1:3100` (`scripts/ci/serve-artifact.sh`) y corre `pnpm test:e2e` contra él; el reporte de Playwright queda como artefacto |
+
+Las variables son valores de prueba en el propio workflow (`APP_ENV=development`), sin `SKIP_ENV_VALIDATION`: la validación real también se prueba. Las acciones van fijadas por SHA.
 
 ### Playwright (`playwright.config.ts`)
 
-```ts
-import { defineConfig, devices } from "@playwright/test";
+Implementado en BD-013. Puntos clave del archivo de la raíz:
 
-export default defineConfig({
-  testDir: "./tests",
-  testMatch: ["e2e/**/*.spec.ts", "visual/**/*.spec.ts"],
-  fullyParallel: true,
-  retries: process.env.CI ? 2 : 0,
-  reporter: [["html", { open: "never" }], ["list"]],
-  use: { baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000", trace: "on-first-retry" },
-  projects: [
-    { name: "movil", use: { ...devices["Pixel 7"] } },        // primero: el sitio es mobile first
-    { name: "escritorio", use: { ...devices["Desktop Chrome"] } },
-    { name: "iphone", use: { ...devices["iPhone 14"] }, grep: /@critico/ },
-  ],
-  webServer: { command: "pnpm start", url: "http://localhost:3000", reuseExistingServer: !process.env.CI },
-});
-```
+- Proyectos `movil` (Pixel 7, primero: el sitio es mobile first), `escritorio` (Desktop Chrome) e `iphone` (iPhone 14, WebKit), este último solo con las pruebas marcadas `@critico`.
+- Navegadores, una vez por máquina: `pnpm exec playwright install chromium webkit` (en la CI, con `--with-deps`).
+- Corre contra el **build de producción**: local, `pnpm build` y luego `pnpm test:e2e`; Playwright levanta siempre un `pnpm start:local` nuevo en `127.0.0.1:3100` (el puerto debe estar libre; no usa el 3000 para no confundirse con `pnpm dev`). `start:local` carga los `.env*` del proyecto, como lo haría el servicio en IIS, pero Playwright fuerza `ERP_MODE=noop` y `SMTP_MODE=file`. Ojo: `APP_ENV` sigue siendo el de tu `.env.local` (`development`), así que lo que dependa de él (analítica, robots) no se comporta como en producción.
+- Con `E2E_BASE_URL` no se levanta servidor: la CI (BD-014) arranca el artefacto con `node server.js` y prueba contra esa dirección.
+- En CI: `retries: 2`, `forbidOnly` y traza en el primer reintento.
+
+Helpers en `tests/e2e/helpers.ts` (las specs importan `test` y `expect` de ahí, no de `@playwright/test`):
+
+- `test`: salta el splash en todas las pruebas; la del splash usa `test.use({ showSplash: true })`.
+- `expectNoA11yViolations(page)`: axe con WCAG 2.0/2.1 A y AA; adjunta el resultado y falla con violaciones serias o críticas.
+- `collectConsoleErrors(page)`: errores de consola y excepciones, sin los avisos conocidos de `KNOWN_CONSOLE_ERRORS` (cada uno dice en qué ticket se quita).
 
 Datos E2E: `pnpm db:seed --profile e2e` carga categorías, 6 productos (incluye Bolik Ultra con sus 3 variantes), 2 departamentos con 4 tiendas, 1 kit y FAQs. `ERP_MODE=noop` y `SMTP_MODE=file` (los correos se escriben en `tmp/mails/*.eml` para poder verificarlos).
 
-El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` en un `addInitScript` global, salvo en su prueba específica.
+El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` en un `addInitScript` (fixture `page` de `tests/e2e/helpers.ts`), salvo en su prueba específica.
 
 ## 3. Pruebas unitarias (qué probar)
 
@@ -88,7 +110,7 @@ El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` e
 | `features/seo/jsonld.tsx` | `productLd` incluye `hasVariant` con `sku` y `gtin12` solo si el código es válido; sin `offers`; `storesLd` omite `geo` si no está verificada |
 | `features/seo/metadata.ts` | canonical absoluto; título con plantilla; `noindex` respetado; descripción ≤ 160 caracteres |
 | `features/seo/legacy-redirects.ts` + `proxy.ts` | cada URL de la tabla del doc 10 §6 → destino esperado; conserva `utm_*`; decodifica `%20` y mayúsculas |
-| `lib/format.ts` | números y fechas `es-GT`; `formatPhone`; `slugify` con tildes y ñ |
+| `lib/format.ts` · `lib/slug.ts` | números y fechas `es-GT` (hora de Guatemala); teléfonos GT (`normalizeGtPhone`, `formatPhone`); `slugify` con tildes y ñ |
 | `lib/whatsapp.ts` | mensaje prellenado con producto, SKU, empaque y URL; codificación correcta |
 | `lib/image-loader.ts` | elige el ancho generado más cercano hacia arriba; nunca un ancho inexistente |
 | `content/feedback.ts` | todas las funciones devuelven título y texto no vacíos (prueba de humo) |
@@ -131,8 +153,7 @@ Ejemplo:
 
 ```ts
 // tests/e2e/cotizacion.spec.ts
-import { test, expect } from "@playwright/test";
-import AxeBuilder from "@axe-core/playwright";
+import { expect, expectNoA11yViolations, test } from "./helpers";
 
 test("@critico enviar cotización desde la ficha", async ({ page }) => {
   await page.goto("/productos/boligrafos/bolik-ultra");
@@ -151,8 +172,7 @@ test("@critico enviar cotización desde la ficha", async ({ page }) => {
 
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText(/COT-\d{4}-\d{6}/);
-  const a11y = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  expect(a11y.violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""))).toEqual([]);
+  await expectNoA11yViolations(page);
 });
 ```
 
@@ -166,7 +186,12 @@ test("@critico enviar cotización desde la ficha", async ({ page }) => {
 
 ## 7. Lighthouse CI
 
-`starter/tests/lighthouserc.json` (incluido): 5 URLs, 3 corridas cada una, preset móvil, aserciones del doc 12 y `budget.json`. En CI corre contra el build de producción con datos de seed. Un fallo en SEO (< 100) o en rendimiento (< 90 en home, < 95 en el resto) bloquea el PR.
+Implementado en BD-015 con `lighthouse.config.cjs` (raíz): preset móvil, 3 corridas por URL, puntajes y presupuestos del doc 12 (§1 y §2) como aserciones. Hoy solo se mide `/`; **cada ticket que publica una página agrega su URL** (la ficha necesita su propia entrada de 155 KB en `assertMatrix`).
+
+- Local: `pnpm build` y `pnpm lhci` (levanta `start:local` en `127.0.0.1:3100`, como Playwright; usa el Chrome instalado).
+- CI: trabajo **Lighthouse** contra el artefacto (`LHCI_BASE_URL`), obligatorio para fusionar. Las aserciones toman la mejor de las 3 corridas (default de LHCI): los tiempos varían entre corridas iguales (LCP de la home sin cambios: 1.9–2.7 s) y la mediana fallaría al azar; los tamaños no varían. El comentario del PR muestra la corrida mediana, así que puede verse un tiempo por encima del límite con el check en verde. Los reportes HTML quedan en el artefacto `lighthouse` y un comentario en el PR (uno solo, se actualiza en cada push) resume puntajes, métricas y presupuestos que fallan (`scripts/ci/lhci-report.mjs`). Corre también cada noche sobre `develop`.
+- Cualquier presupuesto en rojo (SEO < 100, rendimiento < 90 en home o < 95 en el resto, JS, CSS, fuentes, peticiones, LCP, CLS, TBT) bloquea el PR. La home tolera LCP 2.5 s hasta BD-050, que lo baja a 2.0 s.
+- Con datos de seed cuando BD-031 suba la BD a los trabajos Build y E2E.
 
 ## 8. Regresión visual
 

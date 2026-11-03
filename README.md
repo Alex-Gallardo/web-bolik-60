@@ -7,13 +7,13 @@ Nuevo sitio público y panel administrativo de **Bolik** ([www.bolik66.com](http
 
 ## Documentación
 
-| Qué | Dónde |
-|---|---|
-| Reglas del repo (leer primero) | [CLAUDE.md](CLAUDE.md) |
-| Guía completa (docs 01–18) | [docs/README.md](docs/README.md) |
-| Plan de acción y tickets | [docs/14-plan-de-accion.md](docs/14-plan-de-accion.md) · [docs/tickets.csv](docs/tickets.csv) |
-| Demo de referencia del diseño | [docs/referencia/demo/index.html](docs/referencia/demo/index.html) (se abre directo en el navegador) |
-| Archivos base para los tickets | [starter/](starter/) (referencia; no forma parte del build) |
+| Qué                            | Dónde                                                                                                |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Reglas del repo (leer primero) | [CLAUDE.md](CLAUDE.md)                                                                               |
+| Guía completa (docs 01–18)     | [docs/README.md](docs/README.md)                                                                     |
+| Plan de acción y tickets       | [docs/14-plan-de-accion.md](docs/14-plan-de-accion.md) · [docs/tickets.csv](docs/tickets.csv)        |
+| Demo de referencia del diseño  | [docs/referencia/demo/index.html](docs/referencia/demo/index.html) (se abre directo en el navegador) |
+| Archivos base para los tickets | [starter/](starter/) (referencia; no forma parte del build)                                          |
 
 ## Flujo de trabajo
 
@@ -34,4 +34,28 @@ Los tickets del sprint en curso están en los [Issues](../../issues) y [mileston
 
 ## Desarrollo local
 
-Las instrucciones de instalación y los comandos (`pnpm dev`, `pnpm test`, etc.) se agregan con los tickets del sprint S0 (BD-001 en adelante).
+Requisitos: Node.js 22 LTS (`.nvmrc`) y pnpm 10 (`corepack enable`).
+
+```bash
+pnpm install
+cp .env.example .env.local   # y escribe ahí tus valores reales (nunca se sube a git)
+pnpm dev      # http://localhost:3000
+pnpm build    # build de producción
+pnpm lint
+```
+
+Las variables se validan al arrancar `dev`, `build` y `start`: si falta una o tiene un formato inválido, el arranque se detiene con su nombre y el problema.
+
+### Base de datos local
+
+SQL Server 2022 Express en tu máquina, una sola vez, desde PowerShell **como administrador** (descarga ~260 MB del sitio de Microsoft y acepta su licencia):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\dev\sqlserver-local.ps1
+```
+
+Crea `BolikDigital_Dev`, `BolikDigital_Shadow` y `BolikDigital_Test` en `127.0.0.1:1433` (solo accesible desde tu máquina) con el login `bolik_app`, y escribe las cadenas en tu `.env.local` (la contraseña se genera y no se muestra). Se puede volver a correr sin problema; renueva la contraseña.
+
+`pnpm install` instala también los ganchos de git (Husky): antes de cada commit se corrigen y formatean los archivos preparados, el mensaje se valida con commitlint (Conventional Commits) y antes de cada push corren `typecheck` y las pruebas con cobertura.
+
+El resto de comandos (`typecheck`, `test`, `test:e2e`, `db:*`…) se agregan con los tickets del sprint S0; la lista completa está en [CLAUDE.md](CLAUDE.md#comandos).

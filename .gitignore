@@ -25,6 +25,9 @@ test-results/
 blob-report/
 .lighthouseci/
 
+# Certificados
+*.pem
+
 # Logs
 *.log
 npm-debug.log*
@@ -39,3 +42,6 @@ Thumbs.db
 
 # Claude Code (ajustes personales)
 .claude/settings.local.json
+
+# Cliente de Prisma generado (pnpm install / pnpm db:generate)
+src/generated/

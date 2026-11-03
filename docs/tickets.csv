@@ -31,14 +31,14 @@ BD-007,E0,Fundaciones del repositorio,"Tokens CSS, movimiento y fondos",S0,0.5,M
 BD-008,E0,Fundaciones del repositorio,Fuentes con next/font,S0,0.25,Must,A,BD-007,"02, 12",Bricolage Grotesque y DM Sans en todo el sitio; Baloo 2 solo en `/escuelas`.,"1. `src/app/fonts.ts` con `next/font/google`, `display: ""swap""`, `subsets: [""latin""]`, variables `--font-bricolage`, `--font-dm-sans`, `--font-baloo`.
 2. Aplicar Baloo 2 solo en el layout de escuelas.","- La home descarga como máximo 4 archivos woff2.
 - Sin peticiones a fonts.googleapis.com en el navegador.",Sí
-BD-009,E0,Fundaciones del repositorio,Utilidades y constantes base,S0,0.5,Must,A,BD-006,"04, 05",Funciones puras reutilizables con sus pruebas.,"1. `lib/cn.ts`, `lib/format.ts` (es-GT), `lib/slugify.ts`, `lib/whatsapp.ts`.
+BD-009,E0,Fundaciones del repositorio,Utilidades y constantes base,S0,0.5,Must,A,BD-006,"04, 05",Funciones puras reutilizables con sus pruebas.,"1. `lib/cn.ts`, `lib/format.ts` (es-GT), `lib/slug.ts` (`slugify`), `lib/whatsapp.ts`.
 2. Copiar `lib/constants.ts` y `lib/cache-tags.ts` del starter.
 3. Pruebas unitarias de cada función (doc 13 §3).",- `pnpm test` pasa con cobertura ≥ 80 % en `src/lib`.,Sí
 BD-010,E0,Fundaciones del repositorio,Prisma 7 con SQL Server,S0,1,Must,B,BD-005,05 §4,Conexión a la BD con el adaptador oficial y el primer esquema.,"1. Levantar SQL Server local con Docker (doc 13 §2).
 2. Instalar `prisma`, `@prisma/client`, `@prisma/adapter-mssql`.
 3. Copiar `prisma.config.ts`, `prisma/schema.prisma` y `src/server/db.ts` del doc 05/starter.
 4. `pnpm db:migrate --name init` y `pnpm prisma generate`.","- Existe la migración inicial en `prisma/migrations`.
-- `pnpm db:studio` muestra todas las tablas.
+- `pnpm db:status` dice que la base está al día y una prueba de integración lee y escribe (Prisma Studio 7 no soporta SQL Server).
 - `db` solo se importa desde `src/server/**` (`import ""server-only""`).",Sí
 BD-011,E0,Fundaciones del repositorio,Logs y manejo de errores,S0,0.5,Must,B,BD-005,"03, 15",Errores con contexto en el servidor y pantallas amigables para el visitante.,"1. `server/log.ts` con `pino` (JSON en producción, legible en desarrollo).
 2. `app/(site)/error.tsx`, `app/global-error.tsx` con el texto de `feedback.system`.
@@ -53,14 +53,19 @@ BD-014,E0,Fundaciones del repositorio,Integración continua,S0,1,Must,B,BD-012 B
 3. Publicar el `.next/standalone` como artefacto.
 4. Protección de rama: PR obligatorio + CI en verde.","- Un PR con un error de tipos queda en rojo.
 - El artefacto descargado arranca con `node server.js`.",Sí
-BD-015,E0,Fundaciones del repositorio,Lighthouse CI con presupuestos,S0,0.5,Must,B,BD-014,"12, 13 §7",Rendimiento y SEO vigilados en cada PR.,"1. Copiar `starter/tests/lighthouserc.json`.
+BD-015,E0,Fundaciones del repositorio,Lighthouse CI con presupuestos,S0,0.5,Must,B,BD-014,"12, 13 §7",Rendimiento y SEO vigilados en cada PR.,"1. Copiar `starter/tests/lighthouserc.json` (hecho como `lighthouse.config.cjs` en la raíz).
 2. Agregar el paso `pnpm lhci` al pipeline.","- Un PR que agrega 200 KB de JS a la home falla.
 - El reporte queda adjunto al PR.",Sí
 BD-016,E0,Fundaciones del repositorio,Entorno de staging en IIS,S0,1,Must,B,BD-004 BD-014,15,Un lugar real donde probar desde la primera semana (con apoyo de TI).,"1. Sitio IIS `staging-bolik` (solo red interna o con IP permitida) con ARR + URL Rewrite hacia `localhost:3100`.
 2. Servicio Windows `BolikDigital-Staging` (NSSM o PM2) ejecutando `node server.js`.
 3. BD `BolikDigital_Stg`; carpeta `D:\bolik-stg\media`.
-4. Despliegue manual del artefacto de BD-014 siguiendo doc 15 §5.","- `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
+4. Build en el agente interno (o a mano) con las variables de staging, armado según doc 15 §5, y despliegue manual. El artefacto de la CI (BD-014) no sirve: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` fijo.","- `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
 - `X-Robots-Tag: noindex` presente en staging.",Sí
+BD-017,E0,Fundaciones del repositorio,Base de datos local de desarrollo (SQL Server 2022 Express),S0,0.5,Must,B,,"05, 13","Ticket nuevo: la base real llega al final del proyecto; base local con el mismo motor para no bloquear la ruta crítica.","1. `scripts/dev/sqlserver-local.ps1` (admin, una vez, idempotente): instala SQL Server 2022 Express, autenticación mixta, TCP 1433.
+2. Crea BolikDigital_Dev, _Shadow y _Test, el login bolik_app y desactiva sa.
+3. Escribe las cadenas en `.env.local` sin mostrar la contraseña.","- El script se puede correr de nuevo sin romper nada.
+- Ningún secreto en el repo.
+- `localhost:1433` responde y bolik_app se conecta a las tres bases.",Sí
 BD-020,E1,Sistema de diseño y /styleguide,Componente Section con fondos configurables,S1,0.5,Must,A,BD-007,08 §3,Toda sección del sitio usa `Section` con fondo y tono elegibles.,"1. `components/layout/section.tsx` y `container.tsx` (código en doc 08).
 2. Props: `bg` (9 presets), `tone`, `spacing`, `id`, `as`.
 3. Leer la apariencia por sección desde `SectionAppearance` cuando exista `appearanceKey`.","- Los 9 fondos se ven en `/styleguide`.
@@ -95,7 +100,8 @@ BD-030,E2,"Datos, medios e integración base",Esquema completo y migraciones,S0,
 - La migración se aplica en una BD vacía y en staging.",Sí
 BD-031,E2,"Datos, medios e integración base",Seeds con datos reales,S1,1.5,Must,B,BD-030,"05 §7, 17",Datos reales para desarrollar y probar (nada de lorem).,"1. `prisma/seed/*.json`: categorías, productos (Bolik Ultra y su ficha), variantes y empaques, tiendas reales, departamentos, FAQs, contenido de la home, admin inicial.
 2. Perfiles `--profile dev` y `--profile e2e`.
-3. El seed es idempotente (`upsert`).","- `pnpm db:seed` dos veces seguidas no duplica datos.
+3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e` (con Cache Components el build prerenderiza leyendo la BD; hoy ninguna página la lee).
+4. El seed es idempotente (`upsert`).","- `pnpm db:seed` dos veces seguidas no duplica datos.
 - El Bolik Ultra tiene PT00058/59/60 con sus códigos de barras.",Sí
 BD-032,E2,"Datos, medios e integración base",Capa de datos con Cache Components,S1,1.5,Must,B,BD-031,03 §5,Consultas de lectura cacheadas con tags.,"1. `server/data/{products,categories,stores,content,faqs,sitemap,llms,search}.ts`.
 2. Cada función con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`.
@@ -160,7 +166,7 @@ BD-054,E4,Inicio,"FAQ, CTA final y apariencia por sección",S2,0.5,Must,A,BD-051
 3. CTA final a cotización y WhatsApp.
 4. Cada sección lee su fondo desde `SectionAppearance`.",- Cambiar el fondo en el admin se refleja en la home tras guardar.,Sí
 BD-055,E4,Inicio,Ajuste de rendimiento de la home,S2,0.5,Must,A,BD-050 BD-054,12,La home cumple los presupuestos.,"1. Bundle analyzer; mover a carga diferida lo que no se ve arriba.
-2. Lighthouse móvil 3 corridas.","- JS inicial ≤ 120 KB gzip.
+2. Lighthouse móvil 3 corridas.","- JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
 - Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.",Sí
 BD-060,E5,"Catálogo, fichas y búsqueda",Catálogo /productos,S2,1,Must,A,BD-023 BD-032,06 §3.2,Todos los productos con filtros por uso.,"1. Server Component con la grilla completa.
 2. Isla cliente para filtros (uso, línea, color) que actualiza la URL (`?uso=oficina`) sin recargar.
@@ -334,7 +340,8 @@ BD-141,E14,Despliegue y operación,Pipeline de despliegue,S3,1,Must,B,BD-014 BD-
 - Volver a la versión anterior en < 2 min.",Sí
 BD-142,E14,Despliegue y operación,Cabeceras de seguridad y CSP,S3,0.5,Must,B,BD-004,15 §6,Proteger el sitio sin romper la analítica.,"1. Cabeceras y CSP del doc 15 §6 en `next.config.ts` (primero como Report-Only en staging).
 2. HSTS en IIS.
-3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.","- securityheaders.com: nota A.
+3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.
+4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).","- securityheaders.com: nota A.
 - Sin errores de CSP en consola.",Sí
 BD-143,E14,Despliegue y operación,Respaldos y prueba de restauración,S4,0.5,Must,B,BD-140,15 §7,Poder recuperar datos y medios.,"1. Respaldos de BD (DBA) y de `D:\bolik\media` (robocopy nocturno).
 2. Restaurar en staging y verificar.",- Restauración documentada con tiempos reales.,Sí

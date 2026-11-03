@@ -39,7 +39,7 @@ Plan para construir el MVP en **tickets pequeños**, cada uno con pasos, criteri
 
 ## 2. Equipo y capacidad
 
-La suma de todos los tickets es **86.75 días-persona** (Must 77 · Should 8.5 · Could 1.25). Entre el 28 de octubre y el 8 de enero hay **50 días hábiles** por persona (descontando feriados de fin de año).
+La suma de todos los tickets es **87.25 días-persona** (Must 77.5 · Should 8.5 · Could 1.25). Entre el 28 de octubre y el 8 de enero hay **50 días hábiles** por persona (descontando feriados de fin de año).
 
 | Escenario | Viable para el 11 de enero | Cómo |
 |---|---|---|
@@ -52,7 +52,7 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 
 | Sprint | Fechas | Objetivo | Días (A / B) |
 |---|---|---|---|
-| **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.25 (4.25 / 5) |
+| **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
 | **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 15.25 (9.25 / 6) |
 | **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 19.5 (11.25 / 8.25) |
 | **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 20.5 (10 / 10.5) |
@@ -125,7 +125,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 
 | Épica | Nombre | Tickets | Días |
 |---|---|---|---|
-| E0 | Fundaciones del repositorio | 16 | 8.75 |
+| E0 | Fundaciones del repositorio | 17 | 9.25 |
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
 | E2 | Datos, medios e integración base | 7 | 7.5 |
 | E3 | Estructura global, splash y movimiento | 7 | 3.75 |
@@ -141,7 +141,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **117** | **86.75** |
+| | **Total** | **118** | **87.25** |
 
 ## 6. Tickets
 
@@ -194,7 +194,7 @@ Evita subir código sin formato o con errores de tipos.
 
 1. Instalar `husky`, `lint-staged`, `@commitlint/cli`, `@commitlint/config-conventional`.
 2. pre-commit: lint-staged (eslint --fix + prettier en archivos cambiados).
-3. pre-push: `pnpm typecheck && pnpm test`.
+3. pre-push: `pnpm typecheck && pnpm test:coverage` (aplica el umbral de cobertura).
 
 **Criterios de aceptación**
 
@@ -291,7 +291,7 @@ Funciones puras reutilizables con sus pruebas.
 
 **Pasos**
 
-1. `lib/cn.ts`, `lib/format.ts` (es-GT), `lib/slugify.ts`, `lib/whatsapp.ts`.
+1. `lib/cn.ts`, `lib/format.ts` (es-GT), `lib/slug.ts` (`slugify`), `lib/whatsapp.ts`.
 2. Copiar `lib/constants.ts` y `lib/cache-tags.ts` del starter.
 3. Pruebas unitarias de cada función (doc 13 §3).
 
@@ -315,7 +315,7 @@ Conexión a la BD con el adaptador oficial y el primer esquema.
 **Criterios de aceptación**
 
 - [ ] Existe la migración inicial en `prisma/migrations`.
-- [ ] `pnpm db:studio` muestra todas las tablas.
+- [ ] `pnpm db:status` dice que la base está al día y una prueba de integración lee y escribe. *(Prisma Studio 7 no soporta SQL Server: se verifica con `pnpm db:status` y la prueba de integración; para explorar la base, SSMS o la extensión SQL Server de VS Code.)*
 - [ ] `db` solo se importa desde `src/server/**` (`import "server-only"`).
 
 #### BD-011 · Logs y manejo de errores
@@ -342,8 +342,8 @@ Pruebas unitarias e integración listas para usar.
 
 **Pasos**
 
-1. Instalar `vitest`, `@vitejs/plugin-react`, `vite-tsconfig-paths`, `jsdom`, `@testing-library/react`.
-2. Crear `vitest.config.ts` y `vitest.integration.config.ts` del doc 13.
+1. Instalar `vitest`, `@vitest/coverage-v8`, `@vitejs/plugin-react`, `jsdom`, `@testing-library/react` (los alias de tsconfig son nativos de Vite: `resolve.tsconfigPaths`).
+2. Crear `vitest.config.mts` y `vitest.integration.config.mts` del doc 13.
 
 **Criterios de aceptación**
 
@@ -391,7 +391,7 @@ Rendimiento y SEO vigilados en cada PR.
 
 **Pasos**
 
-1. Copiar `starter/tests/lighthouserc.json`.
+1. Copiar `starter/tests/lighthouserc.json` (hecho como `lighthouse.config.cjs` en la raíz).
 2. Agregar el paso `pnpm lhci` al pipeline.
 
 **Criterios de aceptación**
@@ -410,12 +410,30 @@ Un lugar real donde probar desde la primera semana (con apoyo de TI).
 1. Sitio IIS `staging-bolik` (solo red interna o con IP permitida) con ARR + URL Rewrite hacia `localhost:3100`.
 2. Servicio Windows `BolikDigital-Staging` (NSSM o PM2) ejecutando `node server.js`.
 3. BD `BolikDigital_Stg`; carpeta `D:\bolik-stg\media`.
-4. Despliegue manual del artefacto de BD-014 siguiendo doc 15 §5.
+4. Build en el agente interno (o a mano) con las variables de staging, armado según doc 15 §5, y despliegue manual. El artefacto de la CI (BD-014) no sirve: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` fijo.
 
 **Criterios de aceptación**
 
 - [ ] `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
 - [ ] `X-Robots-Tag: noindex` presente en staging.
+
+#### BD-017 · Base de datos local de desarrollo (SQL Server 2022 Express)
+
+**Sprint** S0 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** — · **Docs** 05, 13 · *Ticket nuevo (1 nov 2026)*
+
+La conexión a la base real llega casi al final del proyecto y BD-010/BD-030 están en la ruta crítica: una base local con el mismo motor evita retrabajo (al final solo cambia `DATABASE_URL`).
+
+**Pasos**
+
+1. `scripts/dev/sqlserver-local.ps1` (PowerShell como administrador, una vez, idempotente): descarga e instala SQL Server 2022 Express Core firmado por Microsoft, autenticación mixta, TCP 1433 (sin abrir el firewall).
+2. Crea `BolikDigital_Dev`, `BolikDigital_Shadow` y `BolikDigital_Test`, el login `bolik_app` (db_owner) y desactiva `sa`.
+3. Escribe las tres cadenas en `.env.local` con una contraseña generada que no se muestra.
+
+**Criterios de aceptación**
+
+- [ ] El script se puede correr de nuevo sin romper nada.
+- [ ] Ningún secreto en el repo.
+- [ ] Sin privilegios, `localhost:1433` responde y `bolik_app` se conecta a las tres bases.
 
 ### E1 · Sistema de diseño y /styleguide
 
@@ -580,7 +598,12 @@ Datos reales para desarrollar y probar (nada de lorem).
 
 1. `prisma/seed/*.json`: categorías, productos (Bolik Ultra y su ficha), variantes y empaques, tiendas reales, departamentos, FAQs, contenido de la home, admin inicial.
 2. Perfiles `--profile dev` y `--profile e2e`.
-3. El seed es idempotente (`upsert`).
+3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e` (con Cache Components el build prerenderiza leyendo la BD; hoy ninguna página la lee).
+4. El seed es idempotente (`upsert`).
+
+**Notas de la revisión de BD-030**
+
+- Sin clave natural única (no admiten `upsert`): `ProductSpec`, `ProductBenefit`, `ProductImage`, `KitItem`, `Faq`, `HistoryMilestone`, `SchoolActivity`. Agregar en este ticket una migración con, por ejemplo, `@@unique([productId, groupName, label])`, `@@unique([productId, iconKey])` y una columna `key` única en `Faq`, `HistoryMilestone` y `SchoolActivity`; si no, volver a sembrar duplica filas o pisa lo editado en el admin.
 
 **Criterios de aceptación**
 
@@ -805,7 +828,8 @@ El hero de la demo, llevado a producción.
 
 **Criterios de aceptación**
 
-- [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil.
+- [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil: bajar `largest-contentful-paint` de la home de 2500 a 2000 en `lighthouse.config.cjs` (hasta BD-050 tolera 2.5 s; el marcador actual mide ~2.05 s).
+- [ ] Lighthouse no simula `navigator.connection`: confirmar que el video no se pide durante la medición (contaría en `resource-summary:total:count ≤ 25` y en los bytes).
 - [ ] Capítulos navegables con flechas del teclado.
 - [ ] El video se pausa fuera de pantalla.
 
@@ -887,7 +911,7 @@ La home cumple los presupuestos.
 
 **Criterios de aceptación**
 
-- [ ] JS inicial ≤ 120 KB gzip.
+- [ ] JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
 - [ ] Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.
 
 ### E5 · Catálogo, fichas y búsqueda
@@ -1088,6 +1112,12 @@ Guardar, notificar y enviar a SAP sin hacer esperar al visitante.
 2. `after()` para correos y ERP (no bloquean la respuesta).
 3. Devolver `{ ok, folio }` o errores por campo.
 
+**Notas de la revisión de BD-030**
+
+- Índices para las claves foráneas que crecen: `QuoteItem.quoteId`, `QuoteNote.quoteId`, `QuoteRequest.assignedToId` (SQL Server no las indexa solo).
+- Recortar en Zod o en `src/server` lo que llega del navegador antes de insertar: `landingPath` (300), `utmSource`/`utmMedium` (80), `utmCampaign` (120); si no, el INSERT falla con *would be truncated*.
+- En SQL directo usar `SYSUTCDATETIME()`: el default `CURRENT_TIMESTAMP` es la hora local del servidor.
+
 **Criterios de aceptación**
 
 - [ ] Respuesta en < 800 ms con SMTP y ERP lentos.
@@ -1217,6 +1247,10 @@ Medir cuántas personas van a una tienda o cadena.
 
 1. `/api/beacon` (POST, `sendBeacon`) → `OutboundClick` con destino, producto, departamento.
 2. Sin datos personales; responde 204.
+
+**Notas de la revisión de BD-030**
+
+- El modelo `OutboundClick` no tiene `departmentId`: agregarlo en este ticket (migración) si se va a registrar el departamento. Índices para `OutboundClick.variantId` y `storeId`.
 
 **Criterios de aceptación**
 
@@ -1722,6 +1756,10 @@ Administración del propio panel.
 2. Bitácora filtrable.
 3. Historial de `SyncRun` y "Sincronizar ahora".
 
+**Notas de la revisión de BD-030**
+
+- Las reglas de borrado protegen el historial (`NoAction`): un admin con auditoría, notas o cotizaciones asignadas no se borra, se desactiva (`active = false`). Lo mismo aplica a categorías, tiendas, kits y productos con referencias: el admin despublica y, si alguien intenta borrar, captura `P2003` con un mensaje de `src/content/feedback.ts`.
+
 **Criterios de aceptación**
 
 - [ ] Solo el rol admin ve estas vistas.
@@ -1923,6 +1961,7 @@ Proteger el sitio sin romper la analítica.
 1. Cabeceras y CSP del doc 15 §6 en `next.config.ts` (primero como Report-Only en staging).
 2. HSTS en IIS.
 3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.
+4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).
 
 **Criterios de aceptación**
 
@@ -1969,6 +2008,10 @@ Procesos que corren solos.
 **Pasos**
 
 1. Programador de tareas de Windows: `flush:indexnow` (10 min), `sync:catalog` (diario 5:30), `retry:erp` (15 min), limpieza de logs.
+
+**Notas de la revisión de BD-030**
+
+- Retención de 24 meses (docs/05): anonimizar `QuoteRequest`, `SchoolVisitRequest`, `DistributorApplication` y `ContactMessage` (nombre, teléfono, correo, organización, notas y mensaje). `contactName`/`name` son NOT NULL: se reemplazan por un texto, no por NULL. Agregar `anonymizedAt` y un índice por `createdAt` para la purga. `OutboundClick`: conservar 18 meses.
 
 **Criterios de aceptación**
 
@@ -2067,7 +2110,7 @@ El núcleo suma **71.25 días** (93 tickets): con dos desarrolladores es el plan
 | BD-104 | Canal de IA en analítica y bots en logs | — |
 | BD-108 | Kits escolares | — |
 | BD-109 | Nuestra historia | — |
-| BD-117 | Categorías y FAQs | categorías y FAQs se editan con seed/Prisma Studio |
+| BD-117 | Categorías y FAQs | categorías y FAQs se editan con seed/SSMS |
 | BD-118 | Tiendas | tiendas se cargan con script de importación CSV |
 | BD-120 | Bandejas de escuelas, distribuidores y mensajes | — |
 | BD-121 | Contenido, apariencia y ajustes | contenido de home y ajustes por seed; splash se apaga por variable |

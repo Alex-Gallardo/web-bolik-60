@@ -21,11 +21,12 @@ bolik-digital/
 │  ├─ sync-catalog.ts           # SMART-K66 → BD
 │  ├─ retry-erp.ts              # reintenta envíos fallidos
 │  ├─ build-search-index.ts     # índice JSON del buscador (también en runtime)
-│  └─ check-redirects.ts        # valida el mapa de redirecciones de Joomla
+│  ├─ check-redirects.ts        # valida el mapa de redirecciones de Joomla
+│  └─ deploy/staging-setup.ps1  # prepara el servidor de staging (BD-016, doc 15 §12)
 ├─ tests/
 │  ├─ e2e/                      # Playwright
 │  ├─ fixtures/
-│  └─ lighthouserc.json
+│  └─ integration/              # Vitest contra BolikDigital_Test
 ├─ src/
 │  ├─ app/
 │  │  ├─ layout.tsx             # raíz: html es-GT, fuentes, splash, toaster
@@ -121,7 +122,7 @@ bolik-digital/
 │  └─ proxy.ts | middleware.ts  # redirecciones legadas + protección admin
 ├─ next.config.ts
 ├─ tailwind/postcss config
-├─ vitest.config.ts · playwright.config.ts
+├─ vitest.config.mts · vitest.integration.config.mts · playwright.config.ts
 └─ package.json
 ```
 
@@ -212,19 +213,21 @@ Reglas:
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:int": "vitest run --config vitest.integration.config.ts",
+    "test:int": "vitest run --config vitest.integration.config.mts",
     "test:visual": "playwright test tests/visual",
     "check:links": "tsx scripts/check-links.ts",
     "flush:indexnow": "tsx scripts/flush-indexnow.ts",
-    "lhci": "lhci autorun --config=tests/lighthouserc.json",
+    "lhci": "lhci autorun --config=lighthouse.config.cjs",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed/seed.ts",
-    "db:studio": "prisma studio",
+    "db:status": "prisma migrate status",
+    "db:generate": "prisma generate",
+    "db:reset:test": "node scripts/db-reset-test.mjs",
     "sync:catalog": "tsx scripts/sync-catalog.ts",
     "retry:erp": "tsx scripts/retry-erp.ts",
     "check:redirects": "tsx scripts/check-redirects.ts",
-    "analyze": "cross-env ANALYZE=true next build --webpack",
+    "analyze": "next analyze --output",
     "check:colors": "node scripts/check-colors.mjs",
     "admin:create": "tsx scripts/create-admin.ts"
   }
@@ -256,7 +259,7 @@ Reglas:
 | `@react-pdf/renderer` | PDF de ficha técnica | servidor |
 | `pino` | Logs | servidor |
 | `@next/third-parties` | GA4 | diferida |
-| `@next/bundle-analyzer`, `cross-env` | `pnpm analyze` | dev |
+| — (integrado en Next 16.1+: `next analyze`) | `pnpm analyze` | — |
 | `vitest`, `@testing-library/react`, `@playwright/test`, `@axe-core/playwright`, `@lhci/cli` | Pruebas | dev |
 | `tsx`, `eslint`, `prettier`, `prettier-plugin-tailwindcss`, `husky`, `lint-staged` | Herramientas | dev |
 

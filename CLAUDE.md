@@ -13,8 +13,8 @@ La documentación completa está en `/docs`. Si una instrucción de este archivo
 
 ## Stack
 
-- **Next.js 16** (App Router, `cacheComponents: true`, `output: "standalone"`) + **React 19** + **TypeScript** estricto. En Next 16 el middleware se llama `proxy.ts`; la caché se declara con `'use cache'` + `cacheLife` + `cacheTag`. Verifica en la documentación oficial cualquier API que recuerdes de versiones anteriores.
-- **Tailwind CSS v4** con tokens en `src/styles/tokens.css` (nunca colores sueltos en componentes).
+- **Next.js 16** (App Router, `cacheComponents: true`, `output: "standalone"`) + **React 19** + **TypeScript** estricto. En Next 16 el middleware se llama `proxy.ts`; la caché se declara con `'use cache'` + `cacheLife` + `cacheTag`. Verifica en la documentación oficial cualquier API que recuerdes de versiones anteriores; la de la versión instalada está en `node_modules/next/dist/docs/` (ver `AGENTS.md`, que `next dev` regenera).
+- **Tailwind CSS v4** con tokens en `src/styles/tokens.css` (nunca colores sueltos en componentes). La paleta por defecto de Tailwind está desactivada: solo existen los colores de marca (`bg-blue`, `text-ink`…); `pnpm check:colors` vigila hex sueltos y variables autorreferentes.
 - **Radix UI** (vía shadcn/ui, código copiado en `src/components/ui`) para diálogos, tabs, acordeones, popovers.
 - **Motion** (`motion/react`) solo con `LazyMotion` + `m`, y solo donde CSS no alcanza (drawer, modales, listas que se reordenan).
 - **Prisma** + **SQL Server** (BD `BolikDigital`).
@@ -30,20 +30,25 @@ La documentación completa está en `/docs`. Si una instrucción de este archivo
 ```bash
 pnpm dev              # desarrollo en http://localhost:3000
 pnpm build            # build de producción (output: standalone)
-pnpm start            # servir el build
-pnpm lint             # ESLint
-pnpm typecheck        # tsc --noEmit
-pnpm test             # Vitest (unitarias)
+pnpm start            # servir el build standalone (node .next/standalone/server.js)
+pnpm start:local      # copia public/ y .next/static al standalone y lo sirve con los .env* del proyecto (como en IIS)
+pnpm lint             # ESLint + prettier --check
+pnpm format           # Prettier --write (también lo aplica el hook de Claude Code al editar)
+pnpm typecheck        # next typegen (tipos de rutas) + tsc --noEmit
+pnpm test             # Vitest (unitarias; test:watch, test:coverage ≥ 80 % en lib y features)
 pnpm test:int         # Vitest (integración, BD de prueba)
-pnpm test:e2e         # Playwright
+pnpm test:e2e         # Playwright; requiere pnpm build antes, levanta el servidor en 127.0.0.1:3100
 pnpm test:visual      # regresión visual de /styleguide
 pnpm lhci             # Lighthouse CI contra el build local
-pnpm analyze          # tamaño del JS por ruta
+pnpm analyze          # analizador de bundles de Turbopack (next analyze), tamaño del JS por ruta
 pnpm check:redirects  # mapa de redirecciones de Joomla
 pnpm check:colors     # ningún color fuera de tokens.css
-pnpm db:migrate       # prisma migrate dev
+pnpm db:migrate       # prisma migrate dev + generate (Prisma 7 ya no regenera solo; base temporal: SHADOW_DATABASE_URL)
+pnpm db:deploy        # aplica migraciones pendientes (despliegue)
+pnpm db:status        # ¿la base está al día con las migraciones?
+pnpm db:generate      # regenera el cliente (también corre en pnpm install)
+pnpm db:reset:test    # borra y recrea BolikDigital_Test (manual; nunca lo corre un agente)
 pnpm db:seed          # datos iniciales
-pnpm db:studio        # Prisma Studio
 pnpm sync:catalog     # sincroniza artículos desde SMART-K66
 ```
 
@@ -70,14 +75,16 @@ Detalle en `docs/04-estructura-proyecto.md`.
 ## Reglas que no se negocian
 
 ### Rendimiento (lo más importante junto con SEO)
+
 - Todas las páginas públicas son **Server Components** y se generan estáticas (SSG) con revalidación por **tags**. `"use client"` solo en hojas interactivas pequeñas.
-- Presupuesto de JS inicial por página: **≤ 120 KB gzip** (home) y **≤ 100 KB** (resto). Mapa, buscador (Fuse), PDF, Motion y analítica se cargan con `dynamic()` o al interactuar.
+- Presupuesto de JS inicial por página (transferido, gzip, como lo mide Lighthouse): **≤ 165 KB** (home), **≤ 155 KB** (ficha) y **≤ 150 KB** (resto). Next 16 + React 19 ya ocupan ~146 KB en una página sin código de cliente: el margen es lo que nos toca (docs/12 §2). Mapa, buscador (Fuse), PDF, Motion y analítica se cargan con `dynamic()` o al interactuar.
 - LCP móvil **≤ 2.0 s**, INP **≤ 150 ms** (máximo 200), CLS **≤ 0.05**. Lighthouse móvil ≥ 95 en Rendimiento (≥ 90 en la home por el video) y 100 en SEO. Detalle en `docs/12`.
 - Imágenes siempre con `next/image`, `sizes` correcto, `alt` real, dimensiones declaradas. `priority` **solo** en la imagen LCP.
 - Fuentes con `next/font` (autohospedadas, `display: swap`, subset latin). Máximo 2 familias por página (Baloo 2 solo en la sección escuelas).
 - El video del hero nunca es el LCP: el **póster** es el LCP; el video carga después de `load`, solo con buena conexión y sin `Save-Data`.
 
 ### SEO
+
 - Cada página define `generateMetadata` o `metadata` con título único, descripción, `alternates.canonical` y Open Graph. Usa `buildMetadata()` de `src/features/seo`.
 - Un solo `<h1>` por página; jerarquía de encabezados sin saltos.
 - Datos estructurados JSON-LD con los helpers de `src/features/seo/jsonld.tsx`. No inventes campos (sin precios, sin reseñas).
@@ -85,22 +92,25 @@ Detalle en `docs/04-estructura-proyecto.md`.
 - Páginas de utilidad (`/buscar`, `/cotizacion`, `/cotizacion/enviada/*`, `/styleguide`, `/admin`) llevan `noindex`.
 
 ### Animación
+
 - Anima **solo `transform` y `opacity`** (y `clip-path`/`stroke-dashoffset` en SVG). Nunca `width`, `height`, `top`, `left` ni `box-shadow` en bucles.
 - Usa los tokens de `src/styles/motion.css` (`--dur-*`, `--ease-*`). Nada de duraciones inventadas.
 - Todo contenido es **visible sin JavaScript**. Las animaciones de entrada parten de un estado visible o se activan solo con la clase `js` en `<html>`.
 - Respeta `prefers-reduced-motion` en todo: sin desplazamientos, solo cambios de opacidad cortos.
 
 ### Interfaz y accesibilidad
+
 - Mobile first: diseña a 360 px y luego amplía. Objetivos táctiles ≥ 44 × 44 px.
 - Contraste AA mínimo. Foco visible en todo elemento interactivo.
 - Botones reales (`<button>`), enlaces reales (`<a>`/`<Link>`), etiquetas reales en formularios.
 - **Cada acción del usuario tiene respuesta amigable** (toast, diálogo o estado inline) según la matriz de `docs/08-styleguide.md#matriz-de-feedback`. Textos en `src/content/feedback.ts`, nunca escritos sueltos en el componente.
 
 ### Datos y seguridad
+
 - El navegador nunca habla con SAP ni con SMART-K66: todo pasa por `src/server/erp`.
 - Validación con Zod en servidor aunque ya se valide en cliente.
 - Formularios públicos: honeypot + tiempo mínimo de llenado + límite por IP.
-- Ningún secreto en el cliente. Variables tipadas en `src/env.ts` (servidor) y `src/env.public.ts` (solo `NEXT_PUBLIC_*`); `process.env` no se usa en ningún otro archivo.
+- Ningún secreto en el cliente. Variables tipadas en `src/env.ts` (servidor, esquema en `src/env.schema.ts`) y `src/env.public.ts` (solo `NEXT_PUBLIC_*`); `process.env` no se usa en ningún otro archivo salvo `src/instrumentation*.ts`, los `*.config.*` de la raíz y `scripts/` (regla de lint). La validación corre al arrancar: `next.config.ts` (dev y build) y `src/instrumentation.ts` (servidor standalone). Variable nueva = esquema + `.env.example` en el mismo PR.
 - Admin: cada página y Server Action empieza con `requireRole(...)` de `src/server/auth/guards.ts`; `proxy.ts` solo comprueba la cookie.
 - SQL Server: no uses `@unique` en columnas opcionales (permite un solo NULL); no hay `enum` ni `Json` en Prisma para SQL Server: usa `String` validado con constantes de `src/lib/constants.ts`.
 
