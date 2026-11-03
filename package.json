@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:int": "vitest run --config vitest.integration.config.mts",
+    "test:e2e": "playwright test",
     "check:colors": "node scripts/check-colors.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "node scripts/db-migrate.mjs",
@@ -39,9 +40,11 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@commitlint/cli": "21.2.4",
     "@commitlint/config-conventional": "21.2.4",
     "@next/env": "16.4.3",
+    "@playwright/test": "1.64.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",

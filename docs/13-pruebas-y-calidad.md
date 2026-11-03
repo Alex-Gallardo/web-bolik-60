@@ -68,28 +68,23 @@ En la CI (BD-014) se usa un contenedor de SQL Server como servicio del pipeline.
 
 ### Playwright (`playwright.config.ts`)
 
-```ts
-import { defineConfig, devices } from "@playwright/test";
+Implementado en BD-013. Puntos clave del archivo de la raíz:
 
-export default defineConfig({
-  testDir: "./tests",
-  testMatch: ["e2e/**/*.spec.ts", "visual/**/*.spec.ts"],
-  fullyParallel: true,
-  retries: process.env.CI ? 2 : 0,
-  reporter: [["html", { open: "never" }], ["list"]],
-  use: { baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000", trace: "on-first-retry" },
-  projects: [
-    { name: "movil", use: { ...devices["Pixel 7"] } },        // primero: el sitio es mobile first
-    { name: "escritorio", use: { ...devices["Desktop Chrome"] } },
-    { name: "iphone", use: { ...devices["iPhone 14"] }, grep: /@critico/ },
-  ],
-  webServer: { command: "pnpm start", url: "http://localhost:3000", reuseExistingServer: !process.env.CI },
-});
-```
+- Proyectos `movil` (Pixel 7, primero: el sitio es mobile first), `escritorio` (Desktop Chrome) e `iphone` (iPhone 14, WebKit), este último solo con las pruebas marcadas `@critico`.
+- Navegadores, una vez por máquina: `pnpm exec playwright install chromium webkit` (en la CI, con `--with-deps`).
+- Corre contra el **build de producción**: local, `pnpm build` y luego `pnpm test:e2e`; Playwright levanta siempre un `pnpm start:local` nuevo en `127.0.0.1:3100` (el puerto debe estar libre; no usa el 3000 para no confundirse con `pnpm dev`). `start:local` carga los `.env*` del proyecto, como lo haría el servicio en IIS, pero Playwright fuerza `ERP_MODE=noop` y `SMTP_MODE=file`. Ojo: `APP_ENV` sigue siendo el de tu `.env.local` (`development`), así que lo que dependa de él (analítica, robots) no se comporta como en producción.
+- Con `E2E_BASE_URL` no se levanta servidor: la CI (BD-014) arranca el artefacto con `node server.js` y prueba contra esa dirección.
+- En CI: `retries: 2`, `forbidOnly` y traza en el primer reintento.
+
+Helpers en `tests/e2e/helpers.ts` (las specs importan `test` y `expect` de ahí, no de `@playwright/test`):
+
+- `test`: salta el splash en todas las pruebas; la del splash usa `test.use({ showSplash: true })`.
+- `expectNoA11yViolations(page)`: axe con WCAG 2.0/2.1 A y AA; adjunta el resultado y falla con violaciones serias o críticas.
+- `collectConsoleErrors(page)`: errores de consola y excepciones, sin los avisos conocidos de `KNOWN_CONSOLE_ERRORS` (cada uno dice en qué ticket se quita).
 
 Datos E2E: `pnpm db:seed --profile e2e` carga categorías, 6 productos (incluye Bolik Ultra con sus 3 variantes), 2 departamentos con 4 tiendas, 1 kit y FAQs. `ERP_MODE=noop` y `SMTP_MODE=file` (los correos se escriben en `tmp/mails/*.eml` para poder verificarlos).
 
-El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` en un `addInitScript` global, salvo en su prueba específica.
+El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` en un `addInitScript` (fixture `page` de `tests/e2e/helpers.ts`), salvo en su prueba específica.
 
 ## 3. Pruebas unitarias (qué probar)
 
@@ -143,8 +138,7 @@ Ejemplo:
 
 ```ts
 // tests/e2e/cotizacion.spec.ts
-import { test, expect } from "@playwright/test";
-import AxeBuilder from "@axe-core/playwright";
+import { expect, expectNoA11yViolations, test } from "./helpers";
 
 test("@critico enviar cotización desde la ficha", async ({ page }) => {
   await page.goto("/productos/boligrafos/bolik-ultra");
@@ -163,8 +157,7 @@ test("@critico enviar cotización desde la ficha", async ({ page }) => {
 
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText(/COT-\d{4}-\d{6}/);
-  const a11y = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
-  expect(a11y.violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""))).toEqual([]);
+  await expectNoA11yViolations(page);
 });
 ```
 

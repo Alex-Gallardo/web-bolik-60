@@ -1959,6 +1959,7 @@ Proteger el sitio sin romper la analítica.
 1. Cabeceras y CSP del doc 15 §6 en `next.config.ts` (primero como Report-Only en staging).
 2. HSTS en IIS.
 3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.
+4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).
 
 **Criterios de aceptación**
 

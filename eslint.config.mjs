@@ -111,6 +111,11 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // Fixtures de Playwright: su `use(...)` no es el hook de React.
+  {
+    files: ["tests/e2e/**", "tests/visual/**"],
+    rules: { "react-hooks/rules-of-hooks": "off" },
+  },
   prettier,
   // Override default ignores of eslint-config-next.
   globalIgnores([

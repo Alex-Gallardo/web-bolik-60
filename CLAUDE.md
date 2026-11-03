@@ -31,13 +31,13 @@ La documentación completa está en `/docs`. Si una instrucción de este archivo
 pnpm dev              # desarrollo en http://localhost:3000
 pnpm build            # build de producción (output: standalone)
 pnpm start            # servir el build standalone (node .next/standalone/server.js)
-pnpm start:local      # copia public/ y .next/static al standalone y lo sirve (como en IIS)
+pnpm start:local      # copia public/ y .next/static al standalone y lo sirve con los .env* del proyecto (como en IIS)
 pnpm lint             # ESLint + prettier --check
 pnpm format           # Prettier --write (también lo aplica el hook de Claude Code al editar)
 pnpm typecheck        # tsc --noEmit
 pnpm test             # Vitest (unitarias; test:watch, test:coverage ≥ 80 % en lib y features)
 pnpm test:int         # Vitest (integración, BD de prueba)
-pnpm test:e2e         # Playwright
+pnpm test:e2e         # Playwright; requiere pnpm build antes, levanta el servidor en 127.0.0.1:3100
 pnpm test:visual      # regresión visual de /styleguide
 pnpm lhci             # Lighthouse CI contra el build local
 pnpm analyze          # analizador de bundles de Turbopack (next analyze), tamaño del JS por ruta
