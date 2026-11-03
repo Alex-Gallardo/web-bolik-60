@@ -36,9 +36,15 @@ export function createLogger({
 const isDev = process.env.NODE_ENV === "development";
 export const log = createLogger({ pretty: isDev, level: isDev ? "debug" : "info" });
 
-/** Código corto para mostrar al visitante y buscar en el log: "4F9A1C2B". */
+/**
+ * Código corto para mostrar al visitante y buscar en el log: "4F9A1C2B". Siempre lleva al menos
+ * una letra: 8 dígitos parecen un teléfono y redact() los ocultaría del log (1 de cada 43).
+ */
 export function newRequestId(): string {
-  return randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase();
+  let id: string;
+  do id = randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase();
+  while (!/[A-F]/.test(id));
+  return id;
 }
 
 /**
