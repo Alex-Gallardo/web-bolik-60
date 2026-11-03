@@ -339,7 +339,8 @@ BD-141,E14,Despliegue y operación,Pipeline de despliegue,S3,1,Must,B,BD-014 BD-
 - Volver a la versión anterior en < 2 min.",Sí
 BD-142,E14,Despliegue y operación,Cabeceras de seguridad y CSP,S3,0.5,Must,B,BD-004,15 §6,Proteger el sitio sin romper la analítica.,"1. Cabeceras y CSP del doc 15 §6 en `next.config.ts` (primero como Report-Only en staging).
 2. HSTS en IIS.
-3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.","- securityheaders.com: nota A.
+3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.
+4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).","- securityheaders.com: nota A.
 - Sin errores de CSP en consola.",Sí
 BD-143,E14,Despliegue y operación,Respaldos y prueba de restauración,S4,0.5,Must,B,BD-140,15 §7,Poder recuperar datos y medios.,"1. Respaldos de BD (DBA) y de `D:\bolik\media` (robocopy nocturno).
 2. Restaurar en staging y verificar.",- Restauración documentada con tiempos reales.,Sí
