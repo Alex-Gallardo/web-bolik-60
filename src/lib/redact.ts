@@ -15,6 +15,12 @@ const EMAIL = /[^\s@"'<>(),;:]+@[^\s@"'<>(),;:]+\.[a-z]{2,}/gi;
 /** 8 dígitos de Guatemala, con o sin +502 y separador; no toca números más largos (folios, EAN). */
 const PHONE = /(?<![\d+])(?:\+?502[\s-]?)?\d{4}[\s-]?\d{4}(?!\d)/g;
 
+/**
+ * Claves cuyo texto se deja tal cual: el código de referencia que ve el visitante. El digest de Next
+ * es solo dígitos y, con 8 cifras, el filtro de teléfonos lo borraría del log.
+ */
+const VERBATIM_KEYS = new Set(["requestId"]);
+
 const MAX_DEPTH = 8;
 
 export function isSensitiveKey(key: string): boolean {
@@ -45,6 +51,10 @@ export function redact(value: unknown, depth = 0): unknown {
 
   const out: Record<string, unknown> = {};
   for (const [key, item] of Object.entries(source))
-    out[key] = isSensitiveKey(key) ? CENSOR : redact(item, depth + 1);
+    out[key] = isSensitiveKey(key)
+      ? CENSOR
+      : VERBATIM_KEYS.has(key) && typeof item === "string"
+        ? item
+        : redact(item, depth + 1);
   return out;
 }

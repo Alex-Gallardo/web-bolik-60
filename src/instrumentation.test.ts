@@ -42,6 +42,12 @@ describe("onRequestError", () => {
     expect(message).toBe("error en petición");
   });
 
+  it("pasa al log un digest de 8 dígitos sin cambios", async () => {
+    vi.stubEnv("NEXT_RUNTIME", "nodejs");
+    await onRequestError(Object.assign(new Error("fallo"), { digest: 12345678 }), request, context);
+    expect(error.mock.calls[0]![0]).toMatchObject({ requestId: "12345678" });
+  });
+
   it("no hace nada fuera del runtime de Node", async () => {
     vi.stubEnv("NEXT_RUNTIME", "edge");
     await onRequestError(new Error("x"), request, context);

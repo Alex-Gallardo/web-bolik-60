@@ -92,6 +92,16 @@ describe("redact", () => {
     expect(out.cause.message).toBe("SMTP 550 [correo]");
   });
 
+  it("deja intacto el código de referencia aunque parezca un teléfono", () => {
+    expect(redact({ requestId: "12345678", nota: "12345678" })).toEqual({
+      requestId: "12345678",
+      nota: "[teléfono]",
+    });
+    expect(redact({ requestId: { correo: "ana@example.com" } })).toEqual({
+      requestId: { correo: CENSOR },
+    });
+  });
+
   it("deja igual números, booleanos y null, y corta estructuras muy profundas", () => {
     expect(redact({ n: 1, ok: true, nada: null })).toEqual({ n: 1, ok: true, nada: null });
     let deep: Record<string, unknown> = { fin: 1 };
