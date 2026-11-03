@@ -36,9 +36,9 @@ describe("cabeceras de next.config", () => {
     expect(robotsOf(last)).toBe("noindex, nofollow");
   });
 
-  it("sin validación (CI), toma APP_ENV del entorno", async () => {
-    vi.stubEnv("APP_ENV", "staging");
-    expect(robotsOf((await loadHeaders()).at(-1)!)).toBe("noindex, nofollow");
+  it("sin validación (CI), no agrega noindex global", async () => {
+    const rules = await loadHeaders();
+    expect(rules.some((rule) => rule.source === "/:path*" && robotsOf(rule))).toBe(false);
   });
 
   it.each(["development", "production"])(

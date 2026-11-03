@@ -74,6 +74,8 @@ nssm start BolikDigital
 
 `HOSTNAME=127.0.0.1` hace que Node **solo** escuche localmente: nadie puede saltarse IIS.
 
+> Pendiente para BD-140: `nssm set … ObjectName` deja la contraseña en la línea de comandos (registros de auditoría). Staging ya la asigna por CIM y concede el derecho de servicio aparte (`scripts/deploy/staging-setup.ps1`); producción debe hacer lo mismo.
+
 ### 4.2 ARR (a nivel de servidor)
 
 ```powershell
@@ -364,9 +366,9 @@ Se puede volver a correr (por ejemplo, cuando llega o se renueva el certificado;
 - Crea las carpetas de §3 en `D:\bolik-stg` con permisos explícitos: la cuenta de servicio lee la app y escribe en `media` y `logs`; IIS lee estáticos y medios.
 - Crea `D:\bolik-stg\config\staging.env` a partir de `.env.example`, ya con `APP_ENV=staging`, la URL `https://` y `MEDIA_DIR`. Solo lo leen la cuenta de servicio y los administradores.
 - Configura ARR a nivel de servidor y crea el sitio IIS `staging-bolik` con su `web.config`. Sin certificado el sitio queda en HTTP y sin redirección.
-- Crea el servicio `BolikDigital-Staging` (no lo inicia). La contraseña de la cuenta se asigna sin pasar por la línea de comandos.
+- Crea el servicio `BolikDigital-Staging` (no lo inicia) y le da a la cuenta el derecho «Iniciar sesión como servicio». La contraseña se asigna sin pasar por la línea de comandos.
 
-Después, TI completa `staging.env` con los valores de §11 (`DATABASE_URL` con `bolik_app`, `SESSION_SECRET` aleatorio, correo…). Con `APP_ENV=staging` la app no arranca si queda el `SESSION_SECRET` de ejemplo o el usuario `sa`. Esas variables nunca van al repo.
+Después, TI completa `staging.env` con los valores de §11 (`DATABASE_URL` con `bolik_app`, `SESSION_SECRET` aleatorio, correo…). Con `APP_ENV=staging` la app no arranca si queda el `SESSION_SECRET` de ejemplo o el usuario `sa`. `SMTP_MODE` pasa a `smtp` cuando exista la cuenta de correo (BD-074): en modo `file` la app escribiría dentro del release, donde la cuenta no tiene permiso. Esas variables nunca van al repo.
 
 ### 2. Construir el paquete
 
@@ -386,7 +388,7 @@ Desde el mismo clon, con `APP_ENV=staging` y `MIGRATE_DATABASE_URL` (usuario `bo
 
 ```powershell
 $env:APP_ENV = "staging"
-$env:MIGRATE_DATABASE_URL = Read-Host "MIGRATE_DATABASE_URL"
+$env:MIGRATE_DATABASE_URL = [Net.NetworkCredential]::new("", (Read-Host "MIGRATE_DATABASE_URL" -AsSecureString)).Password
 pnpm db:deploy
 Remove-Item Env:MIGRATE_DATABASE_URL
 ```
@@ -409,7 +411,7 @@ cmd /c mklink /J "D:\bolik-stg\app\current" "$rel"
 Start-Service BolikDigital-Staging
 ```
 
-Para volver atrás, se apunta `current` a la carpeta del release anterior y se reinicia el servicio.
+Si `Start-Service` falla con el error 1069, la contraseña de la cuenta es incorrecta: se vuelve a correr `staging-setup.ps1 -ResetPassword`. Para volver atrás, se apunta `current` a la carpeta del release anterior y se reinicia el servicio.
 
 ### 5. Comprobar
 

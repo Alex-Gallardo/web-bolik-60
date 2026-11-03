@@ -93,7 +93,9 @@ $Thumb = ($CertThumbprint -replace '[^0-9A-Fa-f]', '').ToUpper()
 if ($Thumb -and -not (Test-Path "Cert:\LocalMachine\My\$Thumb")) {
   throw "No está el certificado $Thumb en LocalMachine\My."
 }
-Write-Host "Node $(& $Node --version), NSSM, URL Rewrite y ARR presentes."
+$nodeVersion = [version]((& $Node --version).TrimStart("v"))
+if ($nodeVersion -lt [version]"22.12.0") { throw "Node $nodeVersion es muy viejo: se necesita 22.12 o más (engines de package.json)." }
+Write-Host "Node $nodeVersion, NSSM, URL Rewrite y ARR presentes."
 
 Write-Step "1/5 Carpetas en $Base"
 foreach ($dir in @($Releases, $Placeholder, $Config, $Media, $Logs, $IisRoot)) {
@@ -138,7 +140,7 @@ Set-WebConfigurationProperty -pspath $apphost -filter "system.webServer/proxy" -
 Set-WebConfigurationProperty -pspath $apphost -filter "system.webServer/proxy" -name "reverseRewriteHostInResponseHeaders" -value "False"
 # 0 = sin búfer: el streaming de React (Suspense) llega al navegador sin esperar.
 Set-WebConfigurationProperty -pspath $apphost -filter "system.webServer/proxy" -name "responseBufferLimit" -value 0
-$allowed = @(Get-WebConfigurationProperty -pspath $apphost -filter "system.webServer/rewrite/allowedServerVariables" -name "Collection" | ForEach-Object { $_.name })
+$allowed = @(Get-WebConfigurationProperty -pspath $apphost -filter "system.webServer/rewrite/allowedServerVariables" -name "Collection" | Where-Object { $_ } | ForEach-Object { $_.name })
 foreach ($variable in @("HTTP_X_FORWARDED_PROTO", "HTTP_X_FORWARDED_HOST")) {
   if ($allowed -notcontains $variable) {
     Add-WebConfigurationProperty -pspath $apphost -filter "system.webServer/rewrite/allowedServerVariables" -name "." -value @{ name = $variable }
@@ -235,6 +237,15 @@ if (-not (Test-Path "IIS:\Sites\$SiteName")) {
   New-Website -Name $SiteName -Id $id -PhysicalPath $IisRoot -ApplicationPool $SiteName -HostHeader $HostName -Port 80 | Out-Null
 }
 Set-ItemProperty "IIS:\Sites\$SiteName" -Name physicalPath -Value $IisRoot
+# Si cambió -HostName (URL interna → dominio definitivo), el enlace HTTP pasa al nuevo nombre.
+$http = @(Get-WebBinding -Name $SiteName -Protocol http)
+if (-not ($http | Where-Object { $_.bindingInformation -eq "*:80:$HostName" })) {
+  if ($http.Count) {
+    Set-WebBinding -Name $SiteName -BindingInformation $http[0].bindingInformation -PropertyName HostHeader -Value $HostName
+  } else {
+    New-WebBinding -Name $SiteName -Protocol http -Port 80 -HostHeader $HostName
+  }
+}
 if ($Thumb) {
   if (-not (Get-WebBinding -Name $SiteName -Protocol https -HostHeader $HostName)) {
     New-WebBinding -Name $SiteName -Protocol https -Port 443 -HostHeader $HostName -SslFlags 1  # SNI
@@ -264,7 +275,7 @@ Write-Warning "Staging es solo para la red interna: limita el acceso por IP (fir
 
 Write-Step "5/5 Servicio $ServiceName"
 if (-not (Get-Service $ServiceName -ErrorAction SilentlyContinue)) { Invoke-Nssm install $ServiceName $Node }
-Invoke-Nssm set $ServiceName AppParameters "--env-file=$EnvFile server.js"
+Invoke-Nssm set $ServiceName AppParameters "--env-file=`"$EnvFile`" server.js"
 Invoke-Nssm set $ServiceName AppDirectory $Current
 # HOSTNAME=127.0.0.1: Node solo escucha localmente, nadie se salta IIS.
 Invoke-Nssm set $ServiceName AppEnvironmentExtra "NODE_ENV=production" "PORT=$Port" "HOSTNAME=127.0.0.1"
@@ -279,11 +290,47 @@ Invoke-Nssm set $ServiceName AppRestartDelay 3000
 Invoke-Nssm set $ServiceName Start SERVICE_AUTO_START
 
 # La cuenta se asigna por CIM y no con 'nssm set ObjectName': así la contraseña no pasa por la línea
-# de comandos (registros de auditoría) ni puede salir en un mensaje de error.
-$service = Get-CimInstance Win32_Service -Filter "Name='$ServiceName'"
+# de comandos (registros de auditoría) ni puede salir en un mensaje de error. A diferencia de NSSM,
+# Win32_Service.Change no concede "Iniciar sesión como servicio": se concede aquí (LSA).
 $account = $ServiceAccount -replace '^\.\\', ''
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public static class BolikLsa {
+  [StructLayout(LayoutKind.Sequential)]
+  struct LsaUnicodeString { public ushort Length; public ushort MaximumLength; public IntPtr Buffer; }
+  [StructLayout(LayoutKind.Sequential)]
+  struct LsaObjectAttributes { public int Length; public IntPtr RootDirectory; public IntPtr ObjectName; public int Attributes; public IntPtr SecurityDescriptor; public IntPtr SecurityQualityOfService; }
+  [DllImport("advapi32.dll")] static extern uint LsaOpenPolicy(IntPtr systemName, ref LsaObjectAttributes attributes, int access, out IntPtr policy);
+  [DllImport("advapi32.dll")] static extern uint LsaAddAccountRights(IntPtr policy, byte[] sid, LsaUnicodeString[] rights, int count);
+  [DllImport("advapi32.dll")] static extern uint LsaClose(IntPtr policy);
+  [DllImport("advapi32.dll")] static extern int LsaNtStatusToWinError(uint status);
+  // Devuelve un código de error de Windows (0 = bien). Conceder un derecho que ya tiene no falla.
+  public static int AddRight(byte[] sid, string right) {
+    var attributes = new LsaObjectAttributes();
+    IntPtr policy;
+    uint status = LsaOpenPolicy(IntPtr.Zero, ref attributes, 0x810, out policy); // CREATE_ACCOUNT | LOOKUP_NAMES
+    if (status != 0) return LsaNtStatusToWinError(status);
+    var name = new LsaUnicodeString();
+    name.Buffer = Marshal.StringToHGlobalUni(right);
+    name.Length = (ushort)(right.Length * 2);
+    name.MaximumLength = (ushort)(name.Length + 2);
+    try { return LsaNtStatusToWinError(LsaAddAccountRights(policy, sid, new[] { name }, 1)); }
+    finally { Marshal.FreeHGlobal(name.Buffer); LsaClose(policy); }
+  }
+}
+"@
+$sid = (New-Object Security.Principal.NTAccount $account).Translate([Security.Principal.SecurityIdentifier])
+$sidBytes = New-Object byte[] $sid.BinaryLength
+$sid.GetBinaryForm($sidBytes, 0)
+$code = [BolikLsa]::AddRight($sidBytes, "SeServiceLogonRight")
+if ($code -ne 0) { throw "No se pudo dar a $ServiceAccount el derecho 'Iniciar sesión como servicio' (error $code)." }
+Write-Host "$ServiceAccount puede iniciar sesión como servicio."
+
+$service = Get-CimInstance Win32_Service -Filter "Name='$ServiceName'"
 if ($ResetPassword -or ($service.StartName -replace '^\.\\', '') -ne $account) {
   $credential = Get-Credential -UserName $ServiceAccount -Message "Contraseña de $ServiceAccount para el servicio $ServiceName"
+  if (-not $credential) { throw "Se canceló la contraseña: el servicio queda sin cuenta. Vuelve a correr el script." }
   $result = Invoke-CimMethod -InputObject $service -MethodName Change -Arguments @{
     StartName     = $ServiceAccount
     StartPassword = $credential.GetNetworkCredential().Password
