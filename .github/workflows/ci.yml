@@ -36,6 +36,7 @@ env:
 jobs:
   calidad:
     name: Calidad
+    if: github.event_name != 'schedule' # de noche solo Build y Lighthouse
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -54,6 +55,7 @@ jobs:
 
   integracion:
     name: Integración
+    if: github.event_name != 'schedule' # de noche solo Build y Lighthouse
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -94,10 +96,12 @@ jobs:
           name: bolik-standalone
           path: bolik-*.tar.gz
           if-no-files-found: error
-          retention-days: 90
+          # El de cada noche solo sirve para medir: se guarda menos.
+          retention-days: ${{ github.event_name == 'schedule' && 7 || 90 }}
 
   artefacto-windows:
     name: Artefacto en Windows
+    if: github.event_name != 'schedule' # de noche solo Build y Lighthouse
     needs: build
     runs-on: windows-latest
     timeout-minutes: 10
@@ -144,6 +148,7 @@ jobs:
 
   e2e:
     name: E2E
+    if: github.event_name != 'schedule' # de noche solo Build y Lighthouse
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20

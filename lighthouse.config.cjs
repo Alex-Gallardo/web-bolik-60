@@ -3,6 +3,11 @@
  * producción. Local: `pnpm build` y después `pnpm lhci` (levanta `start:local` en 127.0.0.1:3100).
  * Con LHCI_BASE_URL (la CI, que prueba el artefacto) no se levanta servidor.
  *
+ * Las aserciones usan el default de LHCI ("optimistic"): la mejor de las 3 corridas. Los tiempos
+ * (LCP, TBT, puntaje de rendimiento) varían entre corridas iguales (LCP de la home: 1.9–2.7 s) y la
+ * mediana fallaría al azar; los tamaños (JS, CSS, peticiones) no varían. El reporte del PR muestra
+ * la corrida mediana.
+ *
  * Cada ticket que publica una página agrega aquí su URL; los presupuestos de "el resto" ya aplican.
  * La ficha de producto (docs/12 §2: 155 KB de JS) necesitará su propia entrada en assertMatrix.
  * Los KB de JS son transferidos (gzip + cabeceras): Next 16 + React 19 ya ocupan ~146 KB (docs/12 §2).
@@ -39,7 +44,8 @@ module.exports = {
     collect: {
       ...(externalUrl
         ? {}
-        : { startServerCommand: "pnpm start:local", startServerReadyPattern: "Ready" }),
+        : // start:local copia public/ antes de arrancar: con imágenes y video tarda más de 10 s.
+          { startServerCommand: "pnpm start:local", startServerReadyTimeout: 60_000 }),
       url: [`${base}/`],
       numberOfRuns: 3,
       settings: {
@@ -50,7 +56,7 @@ module.exports = {
     assert: {
       assertMatrix: [
         {
-          // Home: ≥ 90 en rendimiento por el video, JS ≤ 165 KB.
+          // Home: ≥ 90 en rendimiento por el video, JS ≤ 165 KB. LCP 2.5 s hasta BD-050 (luego 2.0 s).
           matchingUrlPattern: "^https?://[^/]+/$",
           assertions: {
             ...common,

@@ -25,7 +25,7 @@ bolik-digital/
 ├─ tests/
 │  ├─ e2e/                      # Playwright
 │  ├─ fixtures/
-│  └─ lighthouserc.json
+│  └─ integration/              # Vitest contra BolikDigital_Test
 ├─ src/
 │  ├─ app/
 │  │  ├─ layout.tsx             # raíz: html es-GT, fuentes, splash, toaster
@@ -216,7 +216,7 @@ Reglas:
     "test:visual": "playwright test tests/visual",
     "check:links": "tsx scripts/check-links.ts",
     "flush:indexnow": "tsx scripts/flush-indexnow.ts",
-    "lhci": "lhci autorun --config=tests/lighthouserc.json",
+    "lhci": "lhci autorun --config=lighthouse.config.cjs",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed/seed.ts",
