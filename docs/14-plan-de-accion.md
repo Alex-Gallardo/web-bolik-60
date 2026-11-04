@@ -518,6 +518,10 @@ Toda acción del usuario tiene un mensaje claro y amable.
 **Criterios de aceptación**
 
 - [ ] Cada fila de la matriz del doc 08 §4 tiene un ejemplo en `/styleguide`.
+
+**Notas de BD-027**
+
+- `components/brand/illustration.tsx` tiene éxito, error/404 (lapicero), vacío, sin resultados y sin conexión. Doc 08 §4 pide además para `FriendlyDialog` una nube con gota roja (error) y un signo de pregunta amarillo (confirmación): agregarlas aquí si el diálogo las usa.
 - [ ] Toasts anunciados con `aria-live`.
 
 #### BD-025 · Overlays: Sheet, Dialog, Tabs, Accordion
@@ -561,12 +565,12 @@ Logo como componente SVG y las ilustraciones de los diálogos.
 
 **Pasos**
 
-1. `components/brand/logo.tsx` con variantes `full`, `mark`, `mono`, `inverse`.
-2. Ilustraciones SVG en línea (éxito, error, vacío, sin conexión) optimizadas con SVGO.
+1. `components/brand/logo.tsx` con el logo oficial de Mercadeo: variantes `full`, `inverse` y `wordmark` (BOLIK® en un color; el logo no tiene isotipo, así que no hay `mark`). Archivos optimizados con SVGO en `public/brand`.
+2. Ilustraciones SVG en línea (éxito, error, vacío, sin resultados, sin conexión).
 
 **Criterios de aceptación**
 
-- [ ] Cada SVG pesa < 4 KB.
+- [ ] Cada ilustración y el wordmark pesan < 4 KB; el archivo del logo completo, ≤ 25 KB (7 KB gzip: el trazo de crayón oficial no baja más sin perder detalle).
 - [ ] El logo tiene `aria-label="Bolik"`.
 
 ### E2 · Datos, medios e integración base

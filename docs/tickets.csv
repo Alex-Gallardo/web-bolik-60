@@ -91,8 +91,8 @@ BD-026,E1,Sistema de diseño y /styleguide,Vista /styleguide,S1,1,Must,A,BD-020 
 2. `noindex`, fuera del sitemap, bloqueada en robots.
 3. En producción solo visible con sesión de admin.","- Todas las secciones renderizan sin errores de consola.
 - En producción sin sesión responde 404.",Sí
-BD-027,E1,Sistema de diseño y /styleguide,Logo e ilustraciones,S1,0.5,Must,A,BD-007,02,Logo como componente SVG y las ilustraciones de los diálogos.,"1. `components/brand/logo.tsx` con variantes `full`, `mark`, `mono`, `inverse`.
-2. Ilustraciones SVG en línea (éxito, error, vacío, sin conexión) optimizadas con SVGO.","- Cada SVG pesa < 4 KB.
+BD-027,E1,Sistema de diseño y /styleguide,Logo e ilustraciones,S1,0.5,Must,A,BD-007,02,Logo como componente SVG y las ilustraciones de los diálogos.,"1. `components/brand/logo.tsx` con el logo oficial de Mercadeo: variantes `full`, `inverse` y `wordmark` (BOLIK® en un color; el logo no tiene isotipo, así que no hay `mark`). Archivos optimizados con SVGO en `public/brand`.
+2. Ilustraciones SVG en línea (éxito, error, vacío, sin resultados, sin conexión).","- Cada ilustración y el wordmark pesan < 4 KB; el archivo del logo completo, ≤ 25 KB (7 KB gzip: el trazo de crayón oficial no baja más sin perder detalle).
 - El logo tiene `aria-label=""Bolik""`.",No
 BD-030,E2,"Datos, medios e integración base",Esquema completo y migraciones,S0,0.5,Must,B,BD-010,05,Todas las tablas del MVP.,"1. Usar `starter/prisma/schema.prisma` completo.
 2. `pnpm db:migrate --name schema_mvp`.

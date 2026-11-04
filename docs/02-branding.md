@@ -27,12 +27,11 @@ Este documento traduce la identidad de Bolik a **especificaciones para desarroll
 
 ## 2. Logotipo
 
-- Usa **siempre el archivo oficial** que entregue Mercadeo, en SVG (`public/brand/bolik-logo.svg` y versión en negativo `bolik-logo-white.svg`).
-- Hasta tenerlo, usa el marcador provisional de la demo: cuadro azul con trazo de tinta + palabra "bolik" en Bricolage Grotesque 800. Debe estar en un solo componente `<Logo />` para cambiarlo en un lugar.
+- Usa **siempre el archivo oficial** de Mercadeo (BOLIK®, «Expresa tu talento.» y el trazo de crayón), optimizado en `public/brand/bolik-logo.svg` y en negativo `bolik-logo-white.svg`; el original y cómo se optimizó están en `docs/referencia/marca`. Todo pasa por el componente `<Logo />` (`full`, `inverse` y `wordmark`: solo BOLIK® en un color, para tamaños chicos donde el lema no se lee).
 - **Área libre:** igual a la altura de la letra "b" alrededor del logo.
 - **Tamaño mínimo:** 96 px de ancho en pantalla.
 - **Fondos permitidos:** blanco, `--paper`, `--navy` (versión negativa), `--blue` (versión negativa). Nunca sobre fotografía sin capa oscura.
-- **Favicon y app icon:** marca sola (cuadro azul + trazo) en 32, 180 (Apple), 192 y 512 px; `site.webmanifest` con `theme_color` `#1D3FCE`.
+- **Favicon y app icon:** el logo oficial no tiene isotipo. Mientras Mercadeo entrega uno, se usa la «B» del logo (propuesta por validar) en 32, 180 (Apple), 192 y 512 px; `site.webmanifest` con `theme_color` `#1D3FCE` (BD-040).
 
 ## 3. Color
 
