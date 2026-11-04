@@ -45,6 +45,7 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 | A-50 | Línea de tiempo | Historia | Línea con `scaleX`/`scaleY` desde el origen + hitos con A-21 | 700 ms out | Estático |
 | A-60 | Éxito | Diálogo de envío | Check SVG que se dibuja + círculo con `scale` spring; escuelas: confeti ligero (12 piezas CSS) | 600 ms | Check estático |
 | A-70 | Skeleton | Carga en cliente | Brillo `translateX` | 1.2 s loop | Sin brillo |
+| A-71 | Spinner | Botón cargando (BD-021) | Giro `rotate` del arco (`.spin`, `--dur-spin`) | 800 ms loop | Quieto; el texto «Enviando…» anuncia la carga |
 
 \* `grid-template-rows` no es `transform`, pero solo afecta al contenido del acordeón abierto (un elemento) y es la técnica estándar; está permitido **solo** en el acordeón.
 

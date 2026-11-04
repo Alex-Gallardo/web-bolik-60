@@ -11,6 +11,7 @@
   --dur-splash: 2000ms; /* splash completo */
   --dur-shake: 360ms; /* error de campo */
   --dur-shimmer: 1200ms; /* brillo del skeleton (bucle) */
+  --dur-spin: 800ms; /* una vuelta del spinner (bucle) */
 
   /* Curvas */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* entradas: rápido al inicio, suave al final */
@@ -25,6 +26,12 @@
 }
 
 /* ── Keyframes base ── */
+/* "spinner" y no "spin": no choca con animate-spin de Tailwind (1 s, fuera de los tokens). */
+@keyframes spinner {
+  to {
+    transform: rotate(1turn);
+  }
+}
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -132,6 +139,11 @@
   transition-delay: calc(var(--i, 0) * var(--stagger));
 }
 
+/* ── Spinner de carga (botones, BD-021) ── */
+.spin {
+  animation: spinner var(--dur-spin) linear infinite;
+}
+
 /* ── Interacciones ── */
 .press {
   transition: transform var(--dur-instant) var(--ease-out);
@@ -194,6 +206,10 @@
   .js [data-reveal]:not([data-revealed]) {
     opacity: 1;
     transform: none;
+  }
+  /* Sin giro: el spinner queda quieto y el texto anuncia la carga. */
+  .spin {
+    animation: none;
   }
   /* El brillo correría 1 vez y quedaría congelado a la mitad: se oculta. */
   .skeleton::after {

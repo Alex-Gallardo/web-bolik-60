@@ -111,9 +111,10 @@ bolik-digital/
 │  │  ├─ folio.ts · rate-limit.ts · audit.ts
 │  ├─ lib/                      # utilidades puras
 │  │  ├─ constants.ts           # estados, tipos, presets (reemplazan enums)
-│  │  ├─ cache-tags.ts · slug.ts · format.ts · cn.ts · image-loader.ts
+│  │  ├─ cache-tags.ts · slug.ts · format.ts · cn.ts · image-loader.ts · contrast.ts
 │  ├─ content/                  # textos de interfaz
 │  │  ├─ feedback.ts            # todos los mensajes de toasts y diálogos
+│  │  ├─ ui.ts                  # textos de interfaz que no son feedback (Enviando…, Guardando…)
 │  │  ├─ navigation.ts          # menú y pie
 │  │  └─ legal/*.md
 │  ├─ styles/

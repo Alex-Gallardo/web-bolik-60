@@ -462,8 +462,8 @@ Botón único con variantes para todo el sitio.
 
 **Pasos**
 
-1. `components/ui/button.tsx` con `cva`: primary, secondary, outline, ghost, whatsapp, danger; tamaños sm, md, lg; `loading`; `asChild`.
-2. Clase `.press` (A-01) y foco visible.
+1. `components/ui/button.tsx` con `cva` y las variantes de doc 08 §2 (primary, accent, dark, outline, ghost-light, whatsapp, link) más `danger` para el admin; tamaños sm, md, lg; `block`; íconos; `loading`; `asChild`.
+2. Clase `.press` (A-03) y foco visible.
 
 **Criterios de aceptación**
 

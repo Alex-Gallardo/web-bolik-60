@@ -70,8 +70,8 @@ BD-020,E1,Sistema de diseño y /styleguide,Componente Section con fondos configu
 2. Props: `bg` (9 presets), `tone`, `spacing`, `id`, `as`.
 3. Leer la apariencia por sección desde `SectionAppearance` cuando exista `appearanceKey`.","- Los 9 fondos se ven en `/styleguide`.
 - Cambiar el fondo en BD cambia la sección sin tocar código.",Sí
-BD-021,E1,Sistema de diseño y /styleguide,Botones,S1,0.5,Must,A,BD-007,08 §2,Botón único con variantes para todo el sitio.,"1. `components/ui/button.tsx` con `cva`: primary, secondary, outline, ghost, whatsapp, danger; tamaños sm, md, lg; `loading`; `asChild`.
-2. Clase `.press` (A-01) y foco visible.","- Contraste AA en todas las variantes.
+BD-021,E1,Sistema de diseño y /styleguide,Botones,S1,0.5,Must,A,BD-007,08 §2,Botón único con variantes para todo el sitio.,"1. `components/ui/button.tsx` con `cva` y las variantes de doc 08 §2 (primary, accent, dark, outline, ghost-light, whatsapp, link) más `danger` para el admin; tamaños sm, md, lg; `block`; íconos; `loading`; `asChild`.
+2. Clase `.press` (A-03) y foco visible.","- Contraste AA en todas las variantes.
 - `loading` deshabilita y anuncia ""Enviando…"" a lectores de pantalla.",Sí
 BD-022,E1,Sistema de diseño y /styleguide,Controles de formulario,S1,1,Must,A,BD-021,08 §2,Patrón único de formularios con React Hook Form y Zod.,"1. `Field` (label, ayuda, error con `aria-describedby`), `Input`, `Textarea`, `Select`, `RadioCards`, `Checkbox`, `PhoneInput` (+502, teclado numérico), `QuantityStepper`.
 2. Error con animación `.shake` (A-12) y foco al primer error.","- Navegable solo con teclado.
