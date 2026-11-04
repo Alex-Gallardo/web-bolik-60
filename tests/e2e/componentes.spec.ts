@@ -83,6 +83,20 @@ test.describe("componentes", () => {
     expect(overflow).toBe(0);
   });
 
+  test("la marca muestra el logo en sus versiones y carga sus archivos", async ({ page }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto("/styleguide/componentes");
+    const marca = page.locator("section", { has: page.getByRole("heading", { name: "Marca" }) });
+    const logos = marca.getByRole("img", { name: "Bolik" });
+    await expect(logos).toHaveCount(6);
+    // Los archivos SVG cargan con su tamaño (al menos el mínimo de marca, 96 px).
+    const loaded = await marca
+      .locator("img[alt='Bolik']")
+      .evaluateAll((imgs) => imgs.map((img) => (img as HTMLImageElement).naturalWidth >= 96));
+    expect(loaded).toEqual([true, true, true]);
+    expect(errors, "errores en la consola").toEqual([]);
+  });
+
   test("con movimiento reducido el spinner no gira", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/styleguide/componentes");
