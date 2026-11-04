@@ -16,9 +16,11 @@
   --yellow-50: #fff3cc;
   --red: #d42a22;
   --red-50: #fde8e6;
+  --red-700: #b0231c; /* hover de botones danger */
   --green: #0e7c52;
   --green-50: #e1f4eb;
   --whatsapp: #0f7a43;
+  --whatsapp-700: #0b5f34; /* hover de botones de WhatsApp */
 
   /* ── Neutros (con sesgo azul, no grises puros) ── */
   --ink: #111318;

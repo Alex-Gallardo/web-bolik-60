@@ -26,9 +26,11 @@
   --color-yellow-50: var(--yellow-50);
   --color-red: var(--red);
   --color-red-50: var(--red-50);
+  --color-red-700: var(--red-700);
   --color-green: var(--green);
   --color-green-50: var(--green-50);
   --color-whatsapp: var(--whatsapp);
+  --color-whatsapp-700: var(--whatsapp-700);
   --color-ink: var(--ink);
   --color-text: var(--text);
   --color-muted: var(--muted);
