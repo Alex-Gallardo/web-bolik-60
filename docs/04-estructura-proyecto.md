@@ -11,7 +11,7 @@ bolik-digital/
 ├─ prisma/
 │  ├─ schema.prisma
 │  ├─ migrations/
-│  └─ seed/                     # seed.ts + datos JSON (productos, tiendas, contenido)
+│  └─ seed/                     # datos JSON + schema.ts (Zod); los lee DATA_SOURCE=fixtures y los carga seed.ts
 ├─ public/
 │  ├─ brand/                    # logo SVG, favicon, íconos de app
 │  ├─ og/                       # imagen OG por defecto
@@ -103,7 +103,7 @@ bolik-digital/
 │  │  └─ seo/      (metadata.ts, jsonld.ts, indexnow.ts, llms.ts)
 │  ├─ server/                   # solo servidor ("server-only")
 │  │  ├─ db.ts                  # PrismaClient singleton
-│  │  ├─ data/                  # consultas con caché + tags
+│  │  ├─ data/                  # funciones con caché + tags, tipos de vista y fuente (fixtures | db, BD-037)
 │  │  ├─ erp/                   # gateway.ts, smartk66.ts, noop.ts
 │  │  ├─ mail/                  # transport.ts, templates/
 │  │  ├─ auth/                  # session.ts (iron-session), password.ts, guards.ts (requireRole)

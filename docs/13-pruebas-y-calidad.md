@@ -113,6 +113,7 @@ El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` e
 | `lib/format.ts` · `lib/slug.ts` | números y fechas `es-GT` (hora de Guatemala); teléfonos GT (`normalizeGtPhone`, `formatPhone`); `slugify` con tildes y ñ |
 | `lib/whatsapp.ts` | mensaje prellenado con producto, SKU, empaque y URL; codificación correcta |
 | `lib/image-loader.ts` | elige el ancho generado más cercano hacia arriba; nunca un ancho inexistente |
+| `server/data/fixtures/*` | los JSON de `prisma/seed` pasan su esquema (slugs y SKU únicos, relaciones válidas, ejemplos con `EJ-…`); batería de contrato de datos |
 | `content/feedback.ts` | todas las funciones devuelven título y texto no vacíos (prueba de humo) |
 | `components/motion/count-up.tsx` | con `prefers-reduced-motion` muestra el valor final sin animar |
 
@@ -123,7 +124,7 @@ El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` e
 | `submitQuote` | crea `QuoteRequest` + `QuoteItem`; folio `COT-2026-000001` y consecutivo; dos envíos simultáneos no duplican folio (`Promise.all` de 20); envía correo interno y acuse; con `ERP_MODE=smartk66` y API caída deja `erpStatus = "pendiente"` sin fallar al usuario |
 | `submitSchoolVisit`, `submitDistributor`, `submitContact` | validación servidor; folio `ESC`/`DIS`; límite de 5 envíos por IP en 10 min |
 | `server/folio.ts` | cambio de año reinicia el consecutivo |
-| `server/data/*` | solo devuelve `published = true`; orden; relaciones |
+| `server/data/*` | la batería de contrato (`server/data/contract.ts`) contra Prisma sobre la base sembrada: la misma que pasa la fuente de ejemplo en las unitarias (BD-037); solo `published = true`; orden; relaciones |
 | Acciones del admin | sin sesión → error; rol `ventas` no edita productos; guarda `AuditLog`; llama `updateTag` (mock) y `enqueueIndexNow` |
 | `scripts/sync-catalog.ts` | con API simulada (MSW): crea, actualiza, desactiva variantes; registra `SyncRun`; no pisa campos editoriales |
 | Subida de medios | genera 6 anchos + blur; rechaza > 10 MB y tipos no permitidos |

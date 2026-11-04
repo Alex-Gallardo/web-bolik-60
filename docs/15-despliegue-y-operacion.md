@@ -333,6 +333,7 @@ Ver la lista completa en doc 03 §9 y `starter/.env.example`. Diferencias:
 | Variable | Staging | Producción |
 |---|---|---|
 | `APP_ENV` | `staging` | `production` |
+| `DATA_SOURCE` | `fixtures` (datos de ejemplo, sin base) o `db`; cambiarla exige un build nuevo | `db` (la app no arranca con otro valor) |
 | `NEXT_PUBLIC_SITE_URL` | `https://staging.bolik66.com` | `https://www.bolik66.com` |
 | `NEXT_PUBLIC_GA_ID` / `CLARITY_ID` | vacío | IDs reales |
 | `ERP_MODE` | `smartk66` contra SAP de pruebas (o `noop`) | `smartk66` (o `noop` hasta BD-128) |

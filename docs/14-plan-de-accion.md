@@ -39,7 +39,7 @@ Plan para construir el MVP en **tickets pequeños**, cada uno con pasos, criteri
 
 ## 2. Equipo y capacidad
 
-La suma de todos los tickets es **87.25 días-persona** (Must 77.5 · Should 8.5 · Could 1.25). Entre el 28 de octubre y el 8 de enero hay **50 días hábiles** por persona (descontando feriados de fin de año).
+La suma de todos los tickets es **88.25 días-persona** (Must 78.5 · Should 8.5 · Could 1.25). Entre el 28 de octubre y el 8 de enero hay **50 días hábiles** por persona (descontando feriados de fin de año).
 
 | Escenario | Viable para el 11 de enero | Cómo |
 |---|---|---|
@@ -53,7 +53,7 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 | Sprint | Fechas | Objetivo | Días (A / B) |
 |---|---|---|---|
 | **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
-| **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 15.25 (9.25 / 6) |
+| **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 16.25 (9.25 / 7) |
 | **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 19.5 (11.25 / 8.25) |
 | **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 20.5 (10 / 10.5) |
 | **S4** | lun 21 dic – vie 8 ene 2027 | Estabilización, pruebas, contenido, producción · feriados 24-25 dic y 31 dic-1 ene · **código congelado el 6 ene** | 19.25 (7.5 / 11.75) |
@@ -127,7 +127,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 |---|---|---|---|
 | E0 | Fundaciones del repositorio | 17 | 9.25 |
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
-| E2 | Datos, medios e integración base | 7 | 7.5 |
+| E2 | Datos, medios e integración base | 8 | 8.5 |
 | E3 | Estructura global, splash y movimiento | 7 | 3.75 |
 | E4 | Inicio | 6 | 4 |
 | E5 | Catálogo, fichas y búsqueda | 8 | 7.5 |
@@ -141,7 +141,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **118** | **87.25** |
+| | **Total** | **119** | **88.25** |
 
 ## 6. Tickets
 
@@ -590,20 +590,21 @@ Todas las tablas del MVP.
 
 #### BD-031 · Seeds con datos reales
 
-**Sprint** S1 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 05 §7, 17
+**Sprint** S1 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-030, BD-037 · **Docs** 05 §7, 17
 
 Datos reales para desarrollar y probar (nada de lorem).
 
 **Pasos**
 
-1. `prisma/seed/*.json`: categorías, productos (Bolik Ultra y su ficha), variantes y empaques, tiendas reales, departamentos, FAQs, contenido de la home, admin inicial.
+1. Cargar en la base los `prisma/seed/*.json` de BD-037 (categorías, productos, variantes y empaques, tiendas, departamentos, FAQs, contenido de la home) más el admin inicial. Lo marcado `sample` no se carga en producción.
 2. Perfiles `--profile dev` y `--profile e2e`.
-3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e` (con Cache Components el build prerenderiza leyendo la BD; hoy ninguna página la lee).
+3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e`, cuando la CI construya con `DATA_SOURCE=db` (con Cache Components el build prerenderiza leyendo la BD; con la fuente de ejemplo de BD-037 no la necesita).
 4. El seed es idempotente (`upsert`).
 
 **Notas de la revisión de BD-030**
 
 - Sin clave natural única (no admiten `upsert`): `ProductSpec`, `ProductBenefit`, `ProductImage`, `KitItem`, `Faq`, `HistoryMilestone`, `SchoolActivity`. Agregar en este ticket una migración con, por ejemplo, `@@unique([productId, groupName, label])`, `@@unique([productId, iconKey])` y una columna `key` única en `Faq`, `HistoryMilestone` y `SchoolActivity`; si no, volver a sembrar duplica filas o pisa lo editado en el admin.
+- Columna `sample` (o `isSample`, `Boolean @default(false)`) en `Product`, `SchoolActivity` y `Kit`, igual que en los JSON de BD-037: el perfil de producción no carga lo marcado y omite las relaciones (`ProductRelation`, `related`) hacia productos de ejemplo. Sin ella, la fuente `db` no puede distinguir los ejemplos.
 
 **Criterios de aceptación**
 
@@ -612,15 +613,16 @@ Datos reales para desarrollar y probar (nada de lorem).
 
 #### BD-032 · Capa de datos con Cache Components
 
-**Sprint** S1 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-031 · **Docs** 03 §5
+**Sprint** S1 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-031, BD-037 · **Docs** 03 §5
 
 Consultas de lectura cacheadas con tags.
 
 **Pasos**
 
-1. `server/data/{products,categories,stores,content,faqs,sitemap,llms,search}.ts`.
+1. La interfaz, los tipos de vista y las funciones cacheadas de `server/data/` ya existen (BD-037): este ticket agrega la fuente `db` con Prisma y las funciones que falten (`sitemap`, `llms`, `search`).
 2. Cada función con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`.
 3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.
+4. La batería de contrato de BD-037 pasa contra `BolikDigital_Test`.
 
 **Criterios de aceptación**
 
@@ -694,6 +696,26 @@ Códigos, nombres, códigos de barras y estado activo vienen de SAP.
 
 - [ ] Un artículo inactivo en SAP se marca `inactivo` y sale del sitio.
 - [ ] El resultado aparece en `/admin/sincronizacion`.
+
+#### BD-037 · Fuente de datos de ejemplo
+
+**Sprint** S1 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 03, 05 §6, 17 · *Ticket nuevo (3 nov 2026)*
+
+El frontend avanza sin esperar la base: las páginas leen de `src/server/data`, que hoy sirve datos de ejemplo y después SQL Server, sin cambiar ninguna página.
+
+**Pasos**
+
+1. `DATA_SOURCE=fixtures|db` en `src/env.schema.ts` y `.env.example`: `fixtures` por defecto; `db` exige `DATABASE_URL`; en producción solo se permite `db`.
+2. Tipos de vista en `src/server/data/types.ts` (`ProductView`, `ProductCardView`, `CategoryView`, `StoreView`, `DepartmentView`, `FaqView`, contenido de la home y ajustes), nunca modelos de Prisma.
+3. Datos en `prisma/seed/*.json` con el formato del seed (BD-031), validados con Zod: el Bolik Ultra completo (doc 05 §6 y doc 17), categorías, departamentos, tiendas, FAQs, hero, cifras, historia, actividades, kits y ajustes. Lo que no está en doc 17 sale de la demo (`docs/referencia/demo`) y queda marcado `sample` o `isVerified = false`.
+4. Funciones de lectura en `src/server/data/` con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`, que delegan en la fuente elegida.
+5. Pruebas de contrato: la misma batería corre contra la fuente de ejemplo (unitarias) y, en BD-032, contra Prisma (integración).
+
+**Criterios de aceptación**
+
+- [ ] Con `DATA_SOURCE=fixtures`, `pnpm build` y las páginas funcionan sin SQL Server.
+- [ ] `APP_ENV=production` con `DATA_SOURCE=fixtures` no arranca.
+- [ ] La batería de contrato pasa con la fuente de ejemplo.
 
 ### E3 · Estructura global, splash y movimiento
 
@@ -797,7 +819,7 @@ Motion solo donde CSS no alcanza.
 
 #### BD-046 · Páginas 404 y 500
 
-**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-040, BD-032 · **Docs** 06 §3.19, 10 §6
+**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-040, BD-037 · **Docs** 06 §3.19, 10 §6
 
 Errores amables que ayudan a seguir navegando.
 
@@ -815,7 +837,7 @@ Errores amables que ayudan a seguir navegando.
 
 #### BD-050 · Hero con video por capítulos
 
-**Sprint** S2 · **Días** 1.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-032, BD-034, BD-044 · **Docs** 06 §3.1, 09
+**Sprint** S2 · **Días** 1.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-037, BD-034, BD-044 · **Docs** 06 §3.1, 09
 
 El hero de la demo, llevado a producción.
 
@@ -826,6 +848,10 @@ El hero de la demo, llevado a producción.
 3. Póster del capítulo 1 con `priority` (es el LCP).
 4. Video solo tras `load`, en ocioso y sin Save-Data/2g/3g/movimiento reducido.
 
+**Notas de BD-037**
+
+- Doc 17 §2 define un CTA secundario por capítulo («Nuestra historia», «Bolik en tu escuela»…) que ni `HeroChapter` ni `HeroChapterView` tienen: agregar el campo en el modelo, en `content.json` y en la vista en este ticket. Los `hint` y `eyebrow` de `content.json` vienen de la demo y están por validar.
+
 **Criterios de aceptación**
 
 - [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil: bajar `largest-contentful-paint` de la home de 2500 a 2000 en `lighthouse.config.cjs` (hasta BD-050 tolera 2.5 s; el marcador actual mide ~2.05 s).
@@ -835,7 +861,7 @@ El hero de la demo, llevado a producción.
 
 #### BD-051 · Soluciones por público y categorías
 
-**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-023, BD-032 · **Docs** 06 §3.1
+**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-023, BD-037 · **Docs** 06 §3.1
 
 Accesos rápidos a lo que busca cada visitante.
 
@@ -859,6 +885,10 @@ Bolik Ultra destacado y cifras de la empresa.
 
 1. Bloque del Ultra con colores, empaques y CTA "Cotizar" / "Dónde comprar".
 2. Cifras desde `SiteStat` con `CountUp`.
+
+**Notas de BD-037**
+
+- Los beneficios del Ultra en `products.json` siguen doc 05 §6; doc 17 §2 lista otros (incluye «Cuerpo hexagonal que no rueda»). Conciliar con Mercadeo antes de mostrarlos en la home.
 
 **Criterios de aceptación**
 
@@ -918,7 +948,7 @@ La home cumple los presupuestos.
 
 #### BD-060 · Catálogo /productos
 
-**Sprint** S2 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-023, BD-032 · **Docs** 06 §3.2
+**Sprint** S2 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-023, BD-037 · **Docs** 06 §3.2
 
 Todos los productos con filtros por uso.
 
@@ -1191,7 +1221,7 @@ Proteger formularios sin captcha molesto.
 
 #### BD-080 · Dónde comprar: lista y filtros
 
-**Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-032, BD-023 · **Docs** 06 §3.7
+**Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-037, BD-023 · **Docs** 06 §3.7
 
 Encontrar una tienda cercana en segundos.
 
@@ -1261,7 +1291,7 @@ Medir cuántas personas van a una tienda o cadena.
 
 #### BD-090 · Metadatos en todas las rutas
 
-**Sprint** S2 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-032 · **Docs** 10 §3
+**Sprint** S2 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-037 · **Docs** 10 §3
 
 Título, descripción, canonical y Open Graph correctos.
 
@@ -2093,7 +2123,7 @@ Aprender y ordenar lo que sigue.
 
 ## 7. Escenario de un solo desarrollador: el núcleo
 
-El núcleo suma **71.25 días** (93 tickets): con dos desarrolladores es el plan de contingencia si algo se atrasa; con uno solo es el alcance mínimo para lanzar. Se posponen a las semanas 2–4 después del lanzamiento:
+El núcleo suma **72.75 días** (95 tickets): con dos desarrolladores es el plan de contingencia si algo se atrasa; con uno solo es el alcance mínimo para lanzar. Se posponen a las semanas 2–4 después del lanzamiento:
 
 | Ticket | Qué se pospone | Mientras tanto |
 |---|---|---|
