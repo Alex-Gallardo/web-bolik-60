@@ -115,6 +115,24 @@ test.describe("componentes", () => {
     await expectNoA11yViolations(page);
   });
 
+  test("formulario: corregir el teléfono borra el aviso de los dos campos", async ({ page }) => {
+    await page.goto("/styleguide/componentes");
+    const form = page.locator("form");
+    const phone = form.getByRole("textbox", { name: "Teléfono" });
+    const email = form.getByRole("textbox", { name: "Correo" });
+    // Antes de enviar, salir del teléfono vacío no marca el correo.
+    await phone.focus();
+    await page.keyboard.press("Tab");
+    await expect(email).not.toHaveAttribute("aria-invalid", "true");
+
+    await form.getByRole("button", { name: "Enviar cotización" }).click();
+    await expect(form.getByText("Déjanos al menos un teléfono o un correo")).toHaveCount(2);
+    await phone.fill("55551234");
+    await phone.blur();
+    await expect(form.getByText("Déjanos al menos un teléfono o un correo")).toHaveCount(0);
+    await expect(email).not.toHaveAttribute("aria-invalid", "true");
+  });
+
   test("formulario: se llena y se envía solo con el teclado", async ({ page }) => {
     const errors = collectConsoleErrors(page);
     await page.goto("/styleguide/componentes");

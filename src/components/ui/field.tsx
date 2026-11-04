@@ -19,7 +19,9 @@ type FieldProps = {
   required?: boolean;
   /**
    * Contador de envíos con error (submitCount de React Hook Form): cada vez que cambia y hay error,
-   * el campo hace el shake sutil (A-04) sin volver a montarse. Sin él no hay animación.
+   * el campo hace el shake sutil (A-04) sin volver a montarse. Sin él no hay animación. Después
+   * del primer envío, un error que aparece al revalidar también hace el shake (Field no guarda
+   * estado para servir en Server Components).
    */
   shakeKey?: number;
   className?: string;

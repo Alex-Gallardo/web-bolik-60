@@ -91,7 +91,9 @@ export function requirePhoneOrEmail<T extends { phone?: string; email?: string }
  * campos tengan error (when): así el visitante ve todos los problemas en el primer envío. Zod 4,
  * por defecto, salta las reglas del objeto si algún campo ya falló. Solo si llegó un objeto:
  * una petición mal formada (null, texto) recibe el error de tipo, no una excepción.
- * En el formulario, registra phone y email con deps mutuas para que el aviso se borre de los dos.
+ * En el formulario, registra phone y email con deps mutuas solo después del primer envío
+ * (deps: submitCount > 0 ? ["email"] : []): el aviso se borra de los dos al corregir uno, sin
+ * marcar antes de tiempo el campo que la persona todavía no visita.
  */
 export function withPhoneOrEmail<S extends z.ZodType<{ phone?: string; email?: string }>>(
   schema: S,

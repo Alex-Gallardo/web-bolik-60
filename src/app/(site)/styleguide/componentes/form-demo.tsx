@@ -103,9 +103,10 @@ export function FormDemo({ departments }: FormDemoProps) {
         <Input autoComplete="name" maxLength={NAME_MAX} {...register("name")} />
       </Field>
       <div className="grid gap-6 md:grid-cols-2">
-        {/* deps: el aviso «al menos uno» se borra de los dos campos al corregir cualquiera. */}
+        {/* deps después del primer envío: el aviso «al menos uno» se borra de los dos campos al
+            corregir cualquiera, sin marcar antes de tiempo un campo que aún no se visita. */}
         <Field id="telefono" label="Teléfono" error={errors.phone?.message} shakeKey={submitCount}>
-          <PhoneInput {...register("phone", { deps: ["email"] })} />
+          <PhoneInput {...register("phone", { deps: submitCount > 0 ? ["email"] : [] })} />
         </Field>
         <Field id="correo" label="Correo" error={errors.email?.message} shakeKey={submitCount}>
           <Input
@@ -113,7 +114,7 @@ export function FormDemo({ departments }: FormDemoProps) {
             autoComplete="email"
             inputMode="email"
             maxLength={160}
-            {...register("email", { deps: ["phone"] })}
+            {...register("email", { deps: submitCount > 0 ? ["phone"] : [] })}
           />
         </Field>
       </div>

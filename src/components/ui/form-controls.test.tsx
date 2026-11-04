@@ -117,6 +117,22 @@ describe("Checkbox y RadioCards", () => {
     expect(box.getAttribute("aria-describedby")).toBe("acepto-error");
   });
 
+  it("defaultValue marca su opción", () => {
+    render(
+      <RadioCards
+        id="t"
+        name="t"
+        legend="Tipo"
+        defaultValue="empresa"
+        options={[
+          { value: "libreria", label: "Librería" },
+          { value: "empresa", label: "Empresa" },
+        ]}
+      />,
+    );
+    expect(screen.getByRole("radio", { name: "Empresa" })).toHaveProperty("checked", true);
+  });
+
   it("las tarjetas son radios de un mismo grupo con leyenda y error", () => {
     const onChange = vi.fn();
     render(
@@ -217,6 +233,25 @@ describe("QuantityStepper", () => {
     fireEvent.change(input, { target: { value: "" } });
     fireEvent.blur(input);
     expect(input.value).toBe("1");
+  });
+
+  it("por encima del máximo no anuncia un valor fuera de rango y bloquea «+»", () => {
+    render(<Stepper max={50} />);
+    const input = screen.getByRole("spinbutton") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "60" } });
+    expect(input.hasAttribute("aria-valuenow")).toBe(false);
+    expect(input.getAttribute("aria-valuetext")).toBe("60");
+    expect(
+      screen.getByRole("button", { name: ui.quantity.increase }).getAttribute("aria-disabled"),
+    ).toBe("true");
+  });
+
+  it("al salir del campo quita los ceros a la izquierda", () => {
+    render(<Stepper />);
+    const input = screen.getByRole("spinbutton") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "0003" } });
+    fireEvent.blur(input);
+    expect(input.value).toBe("3");
   });
 
   it("flechas, Inicio y Fin desde el teclado", () => {

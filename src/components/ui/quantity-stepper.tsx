@@ -31,6 +31,7 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
  * Los botones y las flechas se quedan entre min y max (1 a 9,999, QUOTE_LIMITS). Lo que se escribe
  * no se recorta: si pasa del máximo, el esquema (quantity) muestra «Para más de 9,999,
  * escríbenos por WhatsApp». Inicio y Fin van al mínimo y al máximo. Úsalo dentro de Field.
+ * Con React Hook Form, la cantidad necesita un defaultValue numérico (por ejemplo 1).
  */
 export function QuantityStepper({
   value: rawValue,
@@ -75,11 +76,13 @@ export function QuantityStepper({
     }
   }
 
+  // aria-valuenow solo con un número dentro del rango; si no, se anuncia lo escrito.
+  const inRange = draft !== "" && value >= min && value <= max;
   // aria-disabled y no disabled: un botón que se deshabilita con el foco lo manda a <body>.
   const atMin = value <= min;
   const atMax = value >= max;
   const buttonClasses =
-    "press flex size-13 shrink-0 items-center justify-center rounded-md border-2 border-line-control bg-paper text-xl font-bold text-ink hover:bg-soft disabled:cursor-not-allowed disabled:opacity-40 aria-disabled:cursor-not-allowed aria-disabled:opacity-40";
+    "press flex size-13 shrink-0 items-center justify-center rounded-md border-2 border-line-control bg-paper text-xl font-bold text-ink hover:bg-soft disabled:cursor-not-allowed disabled:opacity-40 aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:active:scale-100";
 
   return (
     <div className={cx("flex items-center gap-2", className)}>
@@ -103,7 +106,10 @@ export function QuantityStepper({
         autoComplete="off"
         aria-valuemin={min}
         aria-valuemax={max}
-        aria-valuenow={value}
+        aria-valuenow={inRange ? value : undefined}
+        aria-valuetext={inRange ? undefined : draft}
+        // Una cifra más que el máximo: deja escribir 10000 para que salga el aviso de WhatsApp.
+        maxLength={String(max).length + 1}
         disabled={disabled}
         value={draft}
         onChange={(event) => {
@@ -112,7 +118,9 @@ export function QuantityStepper({
           if (text !== "") onChange(Number(text));
         }}
         onBlur={() => {
+          // Vacío vuelve al mínimo; "0003" se muestra como 3.
           if (draft === "") step(min);
+          else setDraft(String(value));
           onBlur?.();
         }}
         onKeyDown={handleKeyDown}

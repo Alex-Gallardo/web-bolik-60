@@ -16,7 +16,7 @@ type RadioCardsProps = Omit<
   options: RadioCardOption[];
   hint?: ReactNode;
   error?: string;
-  /** Opción marcada al inicio. */
+  /** Opción marcada al inicio. Con React Hook Form usa defaultValues de useForm, no los dos. */
   defaultValue?: string;
   /** Columnas desde md (en móvil siempre una). */
   columns?: 1 | 2 | 3;
@@ -73,7 +73,7 @@ export function RadioCards({
               key={option.value}
               htmlFor={optionId}
               className={cx(
-                "flex min-h-11 cursor-pointer items-start gap-3 rounded-md border-2 bg-paper p-4 has-checked:border-blue has-checked:bg-blue-50 has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus",
+                "flex min-h-11 cursor-pointer items-start gap-3 rounded-md border-2 bg-paper p-4 has-checked:border-blue has-checked:bg-blue-50 has-focus-visible:shadow-[0_0_0_2px_var(--ink)] has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus",
                 // Un solo color de borde por estado (sin tailwind-merge no se pisan entre sí).
                 error ? "border-danger" : "border-line-control",
               )}
