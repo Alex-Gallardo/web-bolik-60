@@ -1,0 +1,79 @@
+[
+  {
+    "slug": "alta-verapaz",
+    "name": "Alta Verapaz",
+    "country": "GT",
+    "lat": 15.4703,
+    "lng": -90.3708
+  },
+  {
+    "slug": "baja-verapaz",
+    "name": "Baja Verapaz",
+    "country": "GT",
+    "lat": 15.1028,
+    "lng": -90.3156
+  },
+  {
+    "slug": "chimaltenango",
+    "name": "Chimaltenango",
+    "country": "GT",
+    "lat": 14.6614,
+    "lng": -90.8197
+  },
+  { "slug": "chiquimula", "name": "Chiquimula", "country": "GT", "lat": 14.8, "lng": -89.545 },
+  {
+    "slug": "el-progreso",
+    "name": "El Progreso",
+    "country": "GT",
+    "lat": 14.8539,
+    "lng": -90.0686
+  },
+  { "slug": "escuintla", "name": "Escuintla", "country": "GT", "lat": 14.305, "lng": -90.785 },
+  { "slug": "guatemala", "name": "Guatemala", "country": "GT", "lat": 14.6349, "lng": -90.5069 },
+  {
+    "slug": "huehuetenango",
+    "name": "Huehuetenango",
+    "country": "GT",
+    "lat": 15.3197,
+    "lng": -91.4708
+  },
+  { "slug": "izabal", "name": "Izabal", "country": "GT", "lat": 15.7278, "lng": -88.5944 },
+  { "slug": "jalapa", "name": "Jalapa", "country": "GT", "lat": 14.6339, "lng": -89.9892 },
+  { "slug": "jutiapa", "name": "Jutiapa", "country": "GT", "lat": 14.2917, "lng": -89.8958 },
+  { "slug": "peten", "name": "Petén", "country": "GT", "lat": 16.9264, "lng": -89.8925 },
+  {
+    "slug": "quetzaltenango",
+    "name": "Quetzaltenango",
+    "country": "GT",
+    "lat": 14.8347,
+    "lng": -91.5181
+  },
+  { "slug": "quiche", "name": "Quiché", "country": "GT", "lat": 15.0306, "lng": -91.1489 },
+  { "slug": "retalhuleu", "name": "Retalhuleu", "country": "GT", "lat": 14.5364, "lng": -91.6772 },
+  {
+    "slug": "sacatepequez",
+    "name": "Sacatepéquez",
+    "country": "GT",
+    "lat": 14.5586,
+    "lng": -90.7295
+  },
+  { "slug": "san-marcos", "name": "San Marcos", "country": "GT", "lat": 14.9639, "lng": -91.7944 },
+  { "slug": "santa-rosa", "name": "Santa Rosa", "country": "GT", "lat": 14.2792, "lng": -90.2986 },
+  { "slug": "solola", "name": "Sololá", "country": "GT", "lat": 14.7728, "lng": -91.1831 },
+  {
+    "slug": "suchitepequez",
+    "name": "Suchitepéquez",
+    "country": "GT",
+    "lat": 14.5342,
+    "lng": -91.5033
+  },
+  {
+    "slug": "totonicapan",
+    "name": "Totonicapán",
+    "country": "GT",
+    "lat": 14.9117,
+    "lng": -91.3608
+  },
+  { "slug": "zacapa", "name": "Zacapa", "country": "GT", "lat": 14.9722, "lng": -89.5306 },
+  { "slug": "el-salvador", "name": "El Salvador", "country": "SV", "lat": 13.6929, "lng": -89.2182 }
+]

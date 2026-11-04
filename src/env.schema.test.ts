@@ -17,6 +17,7 @@ const deployed = (appEnv: "staging" | "production") => ({
   ...base,
   APP_ENV: appEnv,
   NEXT_PUBLIC_SITE_URL: "https://www.example.com",
+  DATA_SOURCE: "db",
   DATABASE_URL: "sqlserver://db:1433;database=app;user=app_user;password=x",
   SESSION_SECRET: "x".repeat(40),
   SMTP_MODE: "smtp",
@@ -36,6 +37,39 @@ function errorOf(source: Record<string, string | undefined>): string {
   }
 }
 
+describe("DATA_SOURCE", () => {
+  it("usa los datos de ejemplo por defecto y entonces no exige DATABASE_URL", () => {
+    const env = parseServerEnv({ ...base, DATABASE_URL: undefined });
+    expect(env.DATA_SOURCE).toBe("fixtures");
+    expect(env.DATABASE_URL).toBeUndefined();
+  });
+
+  it("con db exige DATABASE_URL", () => {
+    expect(errorOf({ ...base, DATA_SOURCE: "db", DATABASE_URL: undefined })).toContain(
+      "• DATABASE_URL: DATA_SOURCE=db requiere DATABASE_URL",
+    );
+  });
+
+  it("producción no arranca con los datos de ejemplo", () => {
+    expect(errorOf({ ...production, DATA_SOURCE: "fixtures" })).toContain(
+      "• DATA_SOURCE: en producción debe ser db",
+    );
+    expect(errorOf({ ...production, DATA_SOURCE: undefined })).toContain(
+      "en producción debe ser db",
+    );
+  });
+
+  it("staging puede usar los datos de ejemplo", () => {
+    expect(
+      errorOf({ ...deployed("staging"), DATA_SOURCE: "fixtures", DATABASE_URL: undefined }),
+    ).toBe("");
+  });
+
+  it("rechaza valores desconocidos", () => {
+    expect(errorOf({ ...base, DATA_SOURCE: "memoria" })).toContain("DATA_SOURCE");
+  });
+});
+
 describe("parseServerEnv", () => {
   it("acepta un entorno de desarrollo mínimo y aplica valores por defecto", () => {
     const env = parseServerEnv(base);
@@ -51,8 +85,8 @@ describe("parseServerEnv", () => {
   });
 
   it("nombra cada variable que falta", () => {
-    const message = errorOf({ ...base, DATABASE_URL: undefined, APP_ENV: undefined });
-    expect(message).toContain("• DATABASE_URL: falta");
+    const message = errorOf({ ...base, MAIL_SALES_TO: undefined, APP_ENV: undefined });
+    expect(message).toContain("• MAIL_SALES_TO: falta");
     expect(message).toContain("• APP_ENV: falta");
   });
 

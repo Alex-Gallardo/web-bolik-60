@@ -1,0 +1,144 @@
+{
+  "heroChapters": [
+    {
+      "key": "planta",
+      "label": "Planta",
+      "hint": "Así nace un Bolik",
+      "eyebrow": "Planta · Así nace un Bolik",
+      "line": "En Villa Nueva fabricamos cada bolígrafo, crayón y marcador que llega a tus manos. Desde 1966.",
+      "ctaLabel": "Ver productos",
+      "ctaKind": "link",
+      "ctaHref": "/productos"
+    },
+    {
+      "key": "aula",
+      "label": "Aula",
+      "hint": "Primeros trazos",
+      "eyebrow": "Aula · Primeros trazos",
+      "line": "Útiles que aguantan todo el ciclo escolar: desde el primer garabato hasta el último examen.",
+      "ctaLabel": "Kits escolares",
+      "ctaKind": "link",
+      "ctaHref": "/kits-escolares"
+    },
+    {
+      "key": "oficina",
+      "label": "Oficina",
+      "hint": "Firmas que cuentan",
+      "eyebrow": "Oficina · Firmas que cuentan",
+      "line": "Bolígrafos que escriben parejo, firma tras firma, en la oficina y en el campo.",
+      "ctaLabel": "Ver bolígrafos",
+      "ctaKind": "link",
+      "ctaHref": "/productos/boligrafos"
+    },
+    {
+      "key": "libreria",
+      "label": "Librería",
+      "hint": "Para tu mostrador",
+      "eyebrow": "Librería · Para tu mostrador",
+      "line": "¿Vendes útiles? Compra directo de fábrica, por cajilla o por fardo.",
+      "ctaLabel": "Cotizar por mayor",
+      "ctaKind": "quote",
+      "ctaQuoteType": "libreria"
+    }
+  ],
+  "stats": [
+    {
+      "key": "anios",
+      "value": 60,
+      "label": "años escribiendo con Guatemala",
+      "sourceNote": "1966–2026 (verificada)"
+    },
+    {
+      "key": "productos",
+      "value": 150,
+      "suffix": "+",
+      "label": "productos",
+      "sourceNote": "Por validar con Mercadeo (doc 17)",
+      "published": false
+    },
+    {
+      "key": "puntos_venta",
+      "value": 1800,
+      "suffix": "+",
+      "label": "puntos de venta",
+      "sourceNote": "Por validar con Ventas (doc 17)",
+      "published": false
+    },
+    {
+      "key": "departamentos",
+      "value": 22,
+      "label": "departamentos con Bolik",
+      "sourceNote": "Por validar con Ventas (doc 17)",
+      "published": false
+    }
+  ],
+  "milestones": [
+    {
+      "key": "nace-k66",
+      "year": 1966,
+      "title": "Nace la Fábrica de Bolígrafos K-66",
+      "description": "Junio de 1966: comienza la historia de Bolik.",
+      "isVerified": true
+    },
+    {
+      "key": "llega-bolik-ultra",
+      "year": 1978,
+      "title": "Llega el Bolik Ultra",
+      "description": "El bolígrafo hexagonal que se volvió clásico en las aulas."
+    },
+    {
+      "key": "planta-villa-nueva",
+      "year": 1995,
+      "title": "Planta en Villa Nueva",
+      "description": "Ampliamos la producción en San José Villa Nueva."
+    },
+    {
+      "key": "linea-escolar",
+      "year": 2010,
+      "title": "Línea escolar completa",
+      "description": "Lápices, crayones, marcadores y más para el estuche."
+    },
+    {
+      "key": "sesenta-anios",
+      "year": 2026,
+      "title": "60 años de Bolik",
+      "description": "Celebramos con quienes escriben con nosotros.",
+      "isVerified": true
+    }
+  ],
+  "activities": [
+    {
+      "key": "mi-primera-letra",
+      "title": "Taller «Mi primera letra»",
+      "description": "Juegos de trazo y caligrafía para preprimaria y primero primaria.",
+      "colorKey": "coral",
+      "iconKey": "letter",
+      "sample": true
+    },
+    {
+      "key": "dibuja-tu-guatemala",
+      "title": "Concurso «Dibuja tu Guatemala»",
+      "description": "Los dibujos ganadores ilustran nuestros empaques de temporada.",
+      "colorKey": "kblue",
+      "iconKey": "star",
+      "sample": true
+    },
+    {
+      "key": "visita-la-planta",
+      "title": "Visita la planta",
+      "description": "Recorridos guiados para ver cómo nace un bolígrafo.",
+      "colorKey": "kgreen",
+      "iconKey": "factory",
+      "sample": true
+    },
+    {
+      "key": "utiles-que-suman",
+      "title": "Útiles que suman",
+      "description": "Donamos útiles a escuelas rurales al inicio de cada ciclo.",
+      "colorKey": "paper",
+      "iconKey": "heart",
+      "sample": true
+    }
+  ],
+  "appearance": []
+}

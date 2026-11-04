@@ -257,7 +257,7 @@ const quote = await db.$transaction(async (tx) => {
 
 ## 6. Datos iniciales (seeds)
 
-`prisma/seed/` contiene JSON por entidad y `seed.ts` los inserta de forma **idempotente** (`upsert` por `slug`/`sku`/`key`):
+`prisma/seed/` contiene JSON por entidad, validados con `prisma/seed/schema.ts` (Zod), y `seed.ts` los inserta de forma **idempotente** (`upsert` por `slug`/`sku`/`key`). Los mismos archivos son la fuente de datos de ejemplo de la web (`DATA_SOURCE=fixtures`, BD-037; doc 03 §3). El orden de cada arreglo es el `sortOrder`. Lo marcado `"sample": true` (productos de ejemplo con códigos `EJ-…`, tomados de la demo) no existe en el catálogo real y **nunca se carga en producción**; los textos que no vienen de doc 17 quedan marcados `sample`, `isVerified = false` o `published = false` hasta que los valide su área, salvo textos auxiliares publicados que la tabla anota (el `hint`/`eyebrow` del hero y las descripciones de los hitos, por validar en BD-050 y en `/nuestra-historia`):
 
 | Archivo | Contenido inicial | Fuente |
 |---|---|---|
@@ -265,8 +265,9 @@ const quote = await db.$transaction(async (tx) => {
 | `categories.json` | Bolígrafos, Lápices y lápices de colores, Crayones de cera, Marcadores, Pegamentos y silicón, Borradores y sacapuntas, Tijeras/reglas/geometría, Artículos publicitarios | Catálogo actual de bolik66.com |
 | `products.json` | **Bolik Ultra** con 3 variantes reales: PT00058 azul (UPC 759364663092), PT00059 negro (UPC 759364663108), PT00060 rojo (UPC **por confirmar**: la ficha técnica repite el del negro). Especificaciones, medidas y empaques de la ficha técnica | Fichas técnicas de Mercadeo |
 | `stores.json` | Walmart, La Torre, Unimarck, Econosuper, La Barata, Librerías Progreso, Fátima, Platino, Marlon, Paper Distribuciones, almacenes Ariana, Baluc, Gala (Guatemala); Tulán, San Bartolomé, Victoria, Nueva Esperanza, San Miguel (Quetzaltenango); Cano Recinos (Huehuetenango); Milita (Chiquimula); Xocomil, Rayo de Luz (Sololá); A y M, Tulán (Mazatenango); Cervantes (San Salvador). `isVerified = false` hasta que Ventas valide direcciones | Página "Dónde comprar" actual |
-| `content.json` | Capítulos del hero, cifras (con `sourceNote`), hitos (1966 y 2026 verificados; intermedios `isVerified = false`), actividades escolares, FAQs, apariencia por sección, ajustes | `docs/17-copys.md` |
-| `kits.json` | 3 kits 2027 (`published = false` hasta aprobación) | `docs/17-copys.md` |
+| `content.json` | Capítulos del hero, cifras (con `sourceNote`), hitos (1966 y 2026 verificados; intermedios `isVerified = false`), actividades escolares, apariencia por sección | `docs/17-copys.md`; de la demo (`docs/referencia/demo`, por validar): `hint` y `eyebrow` del hero, la descripción de los hitos, los hitos intermedios y las actividades (`sample`) |
+| `kits.json` | 3 kits 2027 (`published = false`, `sample` hasta que Mercadeo defina su contenido; sin precios) | Demo (`docs/referencia/demo`); doc 17 no los define |
+| `faqs.json` · `settings.json` | FAQs con respuesta de doc 17 §7 (las **(validar)** no se cargan) y ajustes de `SiteSetting` (teléfono, dirección, horario, interruptores; sin WhatsApp hasta tener el número) | `docs/17-copys.md`, doc 16 |
 | `admin.json` | Usuario admin inicial (contraseña desde variable `SEED_ADMIN_PASSWORD`) | — |
 
 ### Datos técnicos del Bolik Ultra (de las fichas)

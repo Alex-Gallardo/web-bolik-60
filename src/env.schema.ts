@@ -20,7 +20,9 @@ export const serverEnvSchema = z
     NEXT_PUBLIC_SITE_URL: z
       .url({ protocol: /^https?$/ })
       .refine((url) => !url.endsWith("/"), "sin barra final (se usa en los canonical)"),
-    DATABASE_URL: z.string().startsWith("sqlserver://"),
+    // fixtures: datos de ejemplo de prisma/seed (sin SQL Server) · db: SQL Server con Prisma (BD-037).
+    DATA_SOURCE: z.enum(["fixtures", "db"]).default("fixtures"),
+    DATABASE_URL: z.string().startsWith("sqlserver://").optional(),
     SESSION_SECRET: z.string().min(32, "debe tener al menos 32 caracteres"),
     ERP_MODE: z.enum(["noop", "smartk66"]).default("noop"),
     ERP_BASE_URL: z.url().optional(),
@@ -47,6 +49,11 @@ export const serverEnvSchema = z
       ctx.addIssue({ code: "custom", path: [path], message });
     const deployed = v.APP_ENV !== "development";
 
+    if (v.DATA_SOURCE === "db" && !v.DATABASE_URL)
+      fail("DATABASE_URL", "DATA_SOURCE=db requiere DATABASE_URL");
+    // Los datos de ejemplo nunca llegan al sitio público.
+    if (v.APP_ENV === "production" && v.DATA_SOURCE !== "db")
+      fail("DATA_SOURCE", "en producción debe ser db");
     if (v.ERP_MODE === "smartk66" && (!v.ERP_BASE_URL || !v.ERP_API_KEY))
       fail("ERP_MODE", "smartk66 requiere ERP_BASE_URL y ERP_API_KEY");
     if (v.SMTP_MODE === "smtp" && (!v.SMTP_HOST || !v.SMTP_USER || !v.SMTP_PASSWORD))
@@ -58,7 +65,7 @@ export const serverEnvSchema = z
     if (deployed && v.SESSION_SECRET === SESSION_SECRET_PLACEHOLDER)
       fail("SESSION_SECRET", "usa un valor aleatorio propio (openssl rand -base64 32)");
     // La web usa un login propio con permisos solo sobre su BD (docs/05), nunca el administrador.
-    if (deployed && SA_USER.test(v.DATABASE_URL))
+    if (deployed && v.DATABASE_URL && SA_USER.test(v.DATABASE_URL))
       fail("DATABASE_URL", "no uses el usuario sa fuera de desarrollo");
   });
 

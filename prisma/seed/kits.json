@@ -1,0 +1,80 @@
+[
+  {
+    "slug": "kit-mis-primeros-trazos",
+    "name": "Kit Mis Primeros Trazos",
+    "sample": true,
+    "level": "preprimaria",
+    "season": 2027,
+    "description": "Para preprimaria: crayones jumbo, tijera de punta roma, goma y borrador.",
+    "items": [
+      {
+        "description": "Crayones de cera Jumbo x12",
+        "quantity": 1
+      },
+      {
+        "description": "Tijera escolar punta roma",
+        "quantity": 1
+      },
+      {
+        "description": "Goma escolar",
+        "quantity": 1
+      },
+      {
+        "description": "Borrador",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "slug": "kit-primaria-completa",
+    "name": "Kit Primaria Completa",
+    "sample": true,
+    "level": "primaria",
+    "season": 2027,
+    "description": "Para primaria: bolígrafos, lápices, colores y lo básico del estuche.",
+    "items": [
+      {
+        "description": "Bolik Ultra",
+        "quantity": 4
+      },
+      {
+        "description": "Lápices de grafito",
+        "quantity": 3
+      },
+      {
+        "description": "Lápices de colores x12",
+        "quantity": 1
+      },
+      {
+        "description": "Sacapuntas, borrador y regla de 30 cm",
+        "quantity": 1
+      }
+    ]
+  },
+  {
+    "slug": "kit-tres-tintas",
+    "name": "Kit Tres Tintas",
+    "sample": true,
+    "level": "basicos",
+    "season": 2027,
+    "description": "Para básicos y diversificado: las tres tintas del Bolik Ultra, marcadores y geometría.",
+    "items": [
+      {
+        "description": "Bolik Ultra azul, negro y rojo",
+        "quantity": 1
+      },
+      {
+        "description": "Marcadores fluorescentes x3",
+        "quantity": 1
+      },
+      {
+        "description": "Juego de geometría",
+        "quantity": 1
+      },
+      {
+        "description": "Estuche conmemorativo 60 años",
+        "quantity": 1
+      }
+    ]
+  }
+]

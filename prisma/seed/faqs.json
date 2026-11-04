@@ -1,0 +1,72 @@
+[
+  {
+    "key": "donde-se-fabrican",
+    "scope": "home",
+    "question": "¿Dónde se fabrican los productos Bolik?",
+    "answer": "En Guatemala. Bolik fabrica y empaca sus productos en su planta de San José Villa Nueva desde 1966."
+  },
+  {
+    "key": "donde-compro",
+    "scope": "home",
+    "question": "¿Dónde compro productos Bolik?",
+    "answer": "En librerías, supermercados y cadenas de Guatemala; en línea, en Walmart Guatemala y La Torre. Busca tu departamento en la página Dónde comprar."
+  },
+  {
+    "key": "comprar-directo-de-fabrica",
+    "scope": "home",
+    "question": "¿Puedo comprar directo de fábrica?",
+    "answer": "Sí, para compras por mayor. Arma tu cotización en el sitio y un ejecutivo te enviará precio y disponibilidad en un día hábil."
+  },
+  {
+    "key": "visita-escuelas",
+    "scope": "home",
+    "question": "¿Bolik visita escuelas?",
+    "answer": "Sí. Bolik en tu escuela lleva talleres de escritura y creatividad a colegios; solicita la visita desde la página Escuelas."
+  },
+  {
+    "key": "vende-en-linea",
+    "scope": "home",
+    "question": "¿El sitio vende en línea?",
+    "answer": "No. En el sitio puedes ver el catálogo, encontrar dónde comprar y pedir cotizaciones por mayor; para comprar en línea, usa Walmart Guatemala o La Torre."
+  },
+  {
+    "key": "desde-cuando-existe",
+    "scope": "home",
+    "question": "¿Desde cuándo existe Bolik?",
+    "answer": "Desde junio de 1966, cuando nació en Guatemala la Fábrica de Bolígrafos K-66, hoy parte de Grupo K-66."
+  },
+  {
+    "key": "punta-bolik-ultra",
+    "scope": "product",
+    "productSlug": "bolik-ultra",
+    "question": "¿Qué punta tiene el Bolik Ultra?",
+    "answer": "Punta mediana de 1.0 mm. Es de níquel con bola de carburo de tungsteno, y su tinta de baja viscosidad resiste el agua y la luz."
+  },
+  {
+    "key": "colores-bolik-ultra",
+    "scope": "product",
+    "productSlug": "bolik-ultra",
+    "question": "¿En qué colores viene el Bolik Ultra?",
+    "answer": "Azul (código PT00058), negro (PT00059) y rojo (PT00060)."
+  },
+  {
+    "key": "unidades-por-cajilla",
+    "scope": "product",
+    "productSlug": "bolik-ultra",
+    "question": "¿Cuántos bolígrafos trae una cajilla?",
+    "answer": "12 unidades. Un fardo trae 100 cajillas, es decir, 1,200 bolígrafos."
+  },
+  {
+    "key": "como-ser-distribuidor",
+    "scope": "mayoreo",
+    "question": "¿Cómo me hago distribuidor de Bolik?",
+    "answer": "Llena la solicitud en la página Mayoreo. Te responderemos en un máximo de 5 días hábiles."
+  },
+  {
+    "key": "lapiceros-personalizados",
+    "scope": "empresas",
+    "question": "¿Hacen lapiceros personalizados con logo?",
+    "answer": "Sí. Personalizamos bolígrafos para empresas, universidades y eventos; el pedido mínimo es de {pedidoMinimo} unidades.",
+    "published": false
+  }
+]

@@ -119,7 +119,7 @@ Detalle en `docs/04-estructura-proyecto.md`.
 - Archivos y carpetas en `kebab-case`; componentes exportan `PascalCase`.
 - Un componente por archivo. Props tipadas con `type`, no `interface`, salvo extensión.
 - Server Actions en `features/<dominio>/actions.ts`, con `"use server"` y retorno `{ ok: true, data } | { ok: false, error }`.
-- Consultas de BD solo en `src/server/data/*`, envueltas en caché con tags (`TAGS` en `src/lib/cache-tags.ts`).
+- Consultas de BD solo en `src/server/data/*`, envueltas en caché con tags (`TAGS` en `src/lib/cache-tags.ts`). Las páginas leen solo de ahí y reciben tipos de vista; la fuente la elige `DATA_SOURCE` (`fixtures` = `prisma/seed/*.json` sin base; `db` = SQL Server, obligatorio en producción). Datos nuevos de ejemplo van en esos JSON, nunca escritos en un componente.
 - Mutaciones del admin: `requireRole`, validan con Zod, escriben, registran en `AuditLog`, llaman `updateTag(...)` con los tags de `lib/cache-tags.ts` y encolan IndexNow. Scripts y route handlers usan `revalidateTag(tag, "max")`.
 - Commits con Conventional Commits en español y el ID del ticket: `feat(catalogo): filtros por línea [BD-060]`.
 - Textos visibles en español con tildes correctas. Nada de "Lorem ipsum": usa `docs/17-copys.md`.

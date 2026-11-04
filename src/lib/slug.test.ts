@@ -1,6 +1,28 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { slugify } from "./slug";
+import { safeSlug, slugify } from "./slug";
+
+describe("safeSlug", () => {
+  it("deja pasar slugs válidos", () => {
+    expect(safeSlug("boligrafos")).toBe("boligrafos");
+    expect(safeSlug("bolik-ultra")).toBe("bolik-ultra");
+  });
+
+  it("rechaza lo que no podría ser un slug", () => {
+    for (const value of [
+      undefined,
+      "",
+      "Bolik",
+      "bolik_ultra",
+      "-x",
+      "x-",
+      "a--b",
+      "ñu",
+      "a".repeat(101),
+    ])
+      expect(safeSlug(value), String(value)).toBeUndefined();
+  });
+});
 
 describe("slugify", () => {
   it.each([

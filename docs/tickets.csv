@@ -98,14 +98,15 @@ BD-030,E2,"Datos, medios e integración base",Esquema completo y migraciones,S0,
 2. `pnpm db:migrate --name schema_mvp`.
 3. Revisar índices del doc 05 §6.","- `prisma validate` OK.
 - La migración se aplica en una BD vacía y en staging.",Sí
-BD-031,E2,"Datos, medios e integración base",Seeds con datos reales,S1,1.5,Must,B,BD-030,"05 §7, 17",Datos reales para desarrollar y probar (nada de lorem).,"1. `prisma/seed/*.json`: categorías, productos (Bolik Ultra y su ficha), variantes y empaques, tiendas reales, departamentos, FAQs, contenido de la home, admin inicial.
-2. Perfiles `--profile dev` y `--profile e2e`.
-3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e` (con Cache Components el build prerenderiza leyendo la BD; hoy ninguna página la lee).
+BD-031,E2,"Datos, medios e integración base",Seeds con datos reales,S1,1.5,Must,B,BD-030 BD-037,"05 §7, 17",Datos reales para desarrollar y probar (nada de lorem).,"1. Cargar en la base los `prisma/seed/*.json` de BD-037 (categorías, productos, variantes y empaques, tiendas, departamentos, FAQs, contenido de la home) más el admin inicial. Lo marcado `sample` no se carga en producción.
+2. Perfiles `--profile dev` y `--profile e2e` (cargan también lo `sample`) y `--profile prod` (staging con base y producción: sin lo `sample` ni relaciones hacia ello).
+3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e`, cuando la CI construya con `DATA_SOURCE=db` (con Cache Components el build prerenderiza leyendo la BD; con la fuente de ejemplo de BD-037 no la necesita).
 4. El seed es idempotente (`upsert`).","- `pnpm db:seed` dos veces seguidas no duplica datos.
 - El Bolik Ultra tiene PT00058/59/60 con sus códigos de barras.",Sí
-BD-032,E2,"Datos, medios e integración base",Capa de datos con Cache Components,S1,1.5,Must,B,BD-031,03 §5,Consultas de lectura cacheadas con tags.,"1. `server/data/{products,categories,stores,content,faqs,sitemap,llms,search}.ts`.
+BD-032,E2,"Datos, medios e integración base",Capa de datos con Cache Components,S1,1.5,Must,B,BD-031 BD-037,03 §5,Consultas de lectura cacheadas con tags.,"1. La interfaz, los tipos de vista y las funciones cacheadas de `server/data/` ya existen (BD-037): este ticket agrega la fuente `db` con Prisma y las funciones que falten (`sitemap`, `llms`, `search`).
 2. Cada función con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`.
-3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.","- El build prerenderiza las páginas públicas sin consultar la BD en cada petición.
+3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.
+4. La batería de contrato de BD-037 pasa contra `BolikDigital_Test`.","- El build prerenderiza las páginas públicas sin consultar la BD en cada petición.
 - Pruebas de integración de las funciones.",Sí
 BD-033,E2,"Datos, medios e integración base",Folios consecutivos,S1,0.5,Must,B,BD-030,05 §5,COT/ESC/DIS-AAAA-NNNNNN sin duplicados.,"1. Copiar `starter/src/server/folio.ts`.
 2. Prueba de concurrencia: 20 envíos simultáneos.","- 20 folios distintos y consecutivos.
@@ -123,6 +124,13 @@ BD-036,E2,"Datos, medios e integración base",Sincronización del catálogo con 
 2. Registra `SyncRun` con conteos.
 3. Llama `revalidateTag(tag, 'max')` en lo que cambió.","- Un artículo inactivo en SAP se marca `inactivo` y sale del sitio.
 - El resultado aparece en `/admin/sincronizacion`.",No
+BD-037,E2,"Datos, medios e integración base",Fuente de datos de ejemplo,S1,1,Must,B,BD-030,"03, 05 §6, 17","Ticket nuevo: el frontend avanza sin esperar la base; las páginas leen de src/server/data, que hoy sirve datos de ejemplo y después SQL Server.","1. `DATA_SOURCE=fixtures|db` en el esquema de entorno; en producción solo `db`.
+2. Tipos de vista en `src/server/data/types.ts`.
+3. Datos en `prisma/seed/*.json` (formato del seed de BD-031), validados con Zod; lo que no está en doc 17 sale de la demo y queda marcado `sample` o `isVerified = false`.
+4. Funciones de lectura cacheadas que delegan en la fuente elegida.
+5. Pruebas de contrato para la fuente de ejemplo y, en BD-032, para Prisma.","- Con `DATA_SOURCE=fixtures`, `pnpm build` y las páginas funcionan sin SQL Server.
+- `APP_ENV=production` con `DATA_SOURCE=fixtures` no arranca.
+- La batería de contrato pasa con la fuente de ejemplo.",Sí
 BD-040,E3,"Estructura global, splash y movimiento",Layout raíz del sitio,S1,0.5,Must,A,BD-008 BD-024,06 §2,"HTML base, metadatos raíz y proveedores mínimos.","1. `app/layout.tsx`: `<html lang=""es-GT"">`, fuentes, `rootMetadata`, enlace ""Saltar al contenido"".
 2. `app/(site)/layout.tsx`: Header, `<main id=""contenido"">`, Footer, Toaster, RevealObserver.
 3. Script del splash en `<head>`.","- Una sola etiqueta `<main>` por página.
@@ -143,16 +151,16 @@ BD-044,E3,"Estructura global, splash y movimiento","Revelado al hacer scroll, ci
 - Con movimiento reducido no hay animaciones.",Sí
 BD-045,E3,"Estructura global, splash y movimiento",MotionProvider diferido,S1,0.25,Must,A,BD-040,09,Motion solo donde CSS no alcanza.,"1. `components/motion/provider.tsx` con `LazyMotion` + `domAnimation` (carga diferida) y presets.
 2. Solo `m.*` en componentes.",- Motion no aparece en el JS inicial de la home (bundle analyzer).,Sí
-BD-046,E3,"Estructura global, splash y movimiento",Páginas 404 y 500,S2,0.5,Must,B,BD-040 BD-032,"06 §3.19, 10 §6",Errores amables que ayudan a seguir navegando.,"1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías.
+BD-046,E3,"Estructura global, splash y movimiento",Páginas 404 y 500,S2,0.5,Must,B,BD-040 BD-037,"06 §3.19, 10 §6",Errores amables que ayudan a seguir navegando.,"1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías.
 2. `error.tsx` con WhatsApp y ""Reintentar"".","- Una URL vieja registrada en `Redirect` responde 301.
 - Las demás registran el 404 con contador.",Sí
-BD-050,E4,Inicio,Hero con video por capítulos,S2,1.5,Must,A,BD-032 BD-034 BD-044,"06 §3.1, 09","El hero de la demo, llevado a producción.","1. Copiar `starter/src/components/hero/video-hero.tsx`.
+BD-050,E4,Inicio,Hero con video por capítulos,S2,1.5,Must,A,BD-037 BD-034 BD-044,"06 §3.1, 09","El hero de la demo, llevado a producción.","1. Copiar `starter/src/components/hero/video-hero.tsx`.
 2. Datos desde `HeroChapter` (título, texto, CTA, póster, video).
 3. Póster del capítulo 1 con `priority` (es el LCP).
 4. Video solo tras `load`, en ocioso y sin Save-Data/2g/3g/movimiento reducido.","- LCP de la home ≤ 2.0 s en Lighthouse móvil.
 - Capítulos navegables con flechas del teclado.
 - El video se pausa fuera de pantalla.",Sí
-BD-051,E4,Inicio,Soluciones por público y categorías,S2,0.5,Must,A,BD-023 BD-032,06 §3.1,Accesos rápidos a lo que busca cada visitante.,"1. ""Un Bolik para cada etapa"": 5 tarjetas (Colegios, Universidades, Empresas, Librerías, Distribuidores) y 8 categorías con buscador grande (doc 06 §3.1, secciones 3–4).
+BD-051,E4,Inicio,Soluciones por público y categorías,S2,0.5,Must,A,BD-023 BD-037,06 §3.1,Accesos rápidos a lo que busca cada visitante.,"1. ""Un Bolik para cada etapa"": 5 tarjetas (Colegios, Universidades, Empresas, Librerías, Distribuidores) y 8 categorías con buscador grande (doc 06 §3.1, secciones 3–4).
 2. Eventos `solution_click` y `category_click`.","- Las tarjetas enlazan a rutas reales.
 - Revelado escalonado (A-30).",Sí
 BD-052,E4,Inicio,Producto estrella y cifras,S2,0.5,Must,A,BD-051,06 §3.1,Bolik Ultra destacado y cifras de la empresa.,"1. Bloque del Ultra con colores, empaques y CTA ""Cotizar"" / ""Dónde comprar"".
@@ -168,7 +176,7 @@ BD-054,E4,Inicio,"FAQ, CTA final y apariencia por sección",S2,0.5,Must,A,BD-051
 BD-055,E4,Inicio,Ajuste de rendimiento de la home,S2,0.5,Must,A,BD-050 BD-054,12,La home cumple los presupuestos.,"1. Bundle analyzer; mover a carga diferida lo que no se ve arriba.
 2. Lighthouse móvil 3 corridas.","- JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
 - Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.",Sí
-BD-060,E5,"Catálogo, fichas y búsqueda",Catálogo /productos,S2,1,Must,A,BD-023 BD-032,06 §3.2,Todos los productos con filtros por uso.,"1. Server Component con la grilla completa.
+BD-060,E5,"Catálogo, fichas y búsqueda",Catálogo /productos,S2,1,Must,A,BD-023 BD-037,06 §3.2,Todos los productos con filtros por uso.,"1. Server Component con la grilla completa.
 2. Isla cliente para filtros (uso, línea, color) que actualiza la URL (`?uso=oficina`) sin recargar.
 3. Estado vacío amigable.","- Filtrar no hace peticiones al servidor.
 - La URL con filtros se puede compartir.",Sí
@@ -223,7 +231,7 @@ BD-076,E6,Cotización y formularios,"Formularios de escuelas, distribuidores y c
 BD-077,E6,Cotización y formularios,Anti-spam compartido,S3,0.5,Must,B,BD-073,03 §8,Proteger formularios sin captcha molesto.,"1. `server/rate-limit.ts`: 5 envíos/10 min por hash de IP (memoria + respaldo en BD).
 2. Honeypot y tiempo mínimo de 3 s.","- El sexto envío en 10 min recibe un mensaje amable.
 - Un bot que llena el honeypot recibe éxito falso y no se guarda.",Sí
-BD-080,E7,Dónde comprar,Dónde comprar: lista y filtros,S3,1,Must,A,BD-032 BD-023,06 §3.7,Encontrar una tienda cercana en segundos.,"1. Selector de departamento, lista de tiendas, cadenas con compra en línea.
+BD-080,E7,Dónde comprar,Dónde comprar: lista y filtros,S3,1,Must,A,BD-037 BD-023,06 §3.7,Encontrar una tienda cercana en segundos.,"1. Selector de departamento, lista de tiendas, cadenas con compra en línea.
 2. ""Cómo llegar"" abre Maps con coordenadas.","- Funciona sin JS (lista completa).
 - Eventos `store_filter`, `maps_click`, `retailer_click`.",Sí
 BD-081,E7,Dónde comprar,"Mapa y ""cerca de mí""",S3,1,Should,A,BD-080,06 §3.7,Mapa interactivo que no pesa en la carga inicial.,"1. `react-leaflet` cargado cuando el mapa entra en pantalla.
@@ -235,7 +243,7 @@ BD-082,E7,Dónde comprar,Páginas por departamento,S3,0.5,Must,A,BD-080,"06 §3.
 BD-083,E7,Dónde comprar,Registro de clics salientes,S3,0.5,Must,A,BD-030,12 §4,Medir cuántas personas van a una tienda o cadena.,"1. `/api/beacon` (POST, `sendBeacon`) → `OutboundClick` con destino, producto, departamento.
 2. Sin datos personales; responde 204.","- Un clic a Walmart crea una fila.
 - El endpoint rechaza cuerpos > 2 KB.",Sí
-BD-090,E8,SEO técnico,Metadatos en todas las rutas,S2,1,Must,B,BD-032,10 §3,"Título, descripción, canonical y Open Graph correctos.","1. Copiar `features/seo/metadata.ts`; `generateMetadata` en cada página.
+BD-090,E8,SEO técnico,Metadatos en todas las rutas,S2,1,Must,B,BD-037,10 §3,"Título, descripción, canonical y Open Graph correctos.","1. Copiar `features/seo/metadata.ts`; `generateMetadata` en cada página.
 2. `opengraph-image` por producto y categoría (imagen generada con el nombre y la foto).","- Títulos y descripciones únicos en todo el sitio (prueba `seo.spec.ts`).
 - Canonical absoluto con `www`.",Sí
 BD-091,E8,SEO técnico,Datos estructurados JSON-LD,S2,0.5,Must,B,BD-090,10 §4,Datos que Google y las IA entienden.,"1. Copiar `features/seo/jsonld.tsx` y usarlo en cada plantilla.

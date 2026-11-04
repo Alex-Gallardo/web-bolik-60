@@ -96,6 +96,17 @@ flowchart TB
   D1 --> DB
 ```
 
+### Fuente de datos (`DATA_SOURCE`)
+
+Las páginas leen solo de `server/data` (funciones con `'use cache'` y tags) y reciben **tipos de vista** (`ProductView`, `StoreView`…), nunca modelos de Prisma. Detrás hay una fuente intercambiable, igual que `ERP_MODE` y `SMTP_MODE`:
+
+| `DATA_SOURCE` | De dónde lee | Cuándo |
+|---|---|---|
+| `fixtures` (por defecto) | `prisma/seed/*.json`, validados con Zod | Desarrollo, CI y staging mientras no haya base (BD-037) |
+| `db` | SQL Server con Prisma (BD-032) | Producción (obligatorio) y staging con base |
+
+Las dos fuentes cumplen la misma batería de contrato (`server/data/contract.ts`), así que cambiar la variable no toca ninguna página. Producción no arranca con `fixtures`. Cambiar `DATA_SOURCE` exige un **build nuevo**: las páginas se prerenderizan con los datos de la fuente que había al construir.
+
 Regla de dependencias: `app → features → server → prisma`. `lib/` (funciones puras) puede usarse en cualquier capa. **`components/` nunca importa de `server/`.**
 
 ## 4. Estrategia de renderizado por ruta
@@ -229,7 +240,10 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXX
 NEXT_PUBLIC_CLARITY_ID=xxxxxxx
 APP_ENV=production            # development | staging | production
 
-# Base de datos
+# Datos: fixtures (ejemplo, sin base) | db (SQL Server). Producción solo db.
+DATA_SOURCE=db
+
+# Base de datos (obligatoria con DATA_SOURCE=db)
 DATABASE_URL="sqlserver://HOST:1433;database=BolikDigital;user=bolik_app;password=***;encrypt=true;trustServerCertificate=true"
 
 # Sesión del admin (iron-session)
