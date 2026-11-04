@@ -64,7 +64,7 @@ SQL Server local para desarrollo y pruebas (BD-017): **SQL Server 2022 Express**
 powershell -ExecutionPolicy Bypass -File scripts\dev\sqlserver-local.ps1
 ```
 
-En la CI (BD-014) se usa un contenedor de SQL Server 2022 Express con la misma intercalación (`scripts/ci/sqlserver.sh`): crea `BolikDigital_Test` y el login `bolik_app` con contraseñas aleatorias en cada corrida, ocultas del log; el repo no guarda ningún secreto. Cada intento de conexión tiene su límite (`timeout 15` en `docker exec`, `-l 5` en `sqlcmd`) y la espera total, 120 s (`SQLSERVER_WAIT_SECONDS`); si el contenedor se detiene, falla en el acto. En todos los casos muestra el log del contenedor, y el paso tiene `timeout-minutes: 5` como red de seguridad.
+En la CI (BD-014) se usa un contenedor de SQL Server 2022 Express con la misma intercalación (`scripts/ci/sqlserver.sh`): crea `BolikDigital_Test` y el login `bolik_app` con contraseñas aleatorias en cada corrida, ocultas del log; el repo no guarda ningún secreto. Cada intento de conexión tiene su límite (`timeout 15` en `docker exec`, `-l 5` en `sqlcmd`; el resto de las llamadas, 180 s, porque crear la primera base en un servidor recién arrancado tarda) y la espera total, 120 s (`SQLSERVER_WAIT_SECONDS`); si el contenedor se detiene, falla en el acto. En todos los casos muestra el log del contenedor, y el paso tiene `timeout-minutes: 5` como red de seguridad.
 
 ### CI (`.github/workflows/ci.yml`)
 

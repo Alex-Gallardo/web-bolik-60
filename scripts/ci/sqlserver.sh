@@ -30,16 +30,17 @@ fail() {
   exit 1
 }
 
-# Cada llamada lleva su propio límite (docker exec 15 s, conexión de sqlcmd 5 s): un contenedor
-# colgado no deja la espera bloqueada hasta que GitHub cancela el trabajo.
+# Cada llamada lleva su propio límite (conexión de sqlcmd 5 s): un contenedor colgado no deja el
+# script bloqueado hasta que GitHub cancela el trabajo. SQL_TIMEOUT: 15 s para cada intento de la
+# espera; 180 s para el resto (crear la primera base en un SQL Server recién arrancado tarda más).
 sql() {
-  timeout 15 docker exec mssql /opt/mssql-tools18/bin/sqlcmd -C -b -l 5 -S localhost -U sa -P "${SA_PASSWORD}" "$@"
+  timeout "${SQL_TIMEOUT:-180}" docker exec mssql /opt/mssql-tools18/bin/sqlcmd -C -b -l 5 -S localhost -U sa -P "${SA_PASSWORD}" "$@"
 }
 
 # Espera con fecha límite real (SQLSERVER_WAIT_SECONDS, 120 por defecto) aunque los intentos tarden;
 # si el contenedor se detiene, falla en el acto.
 deadline=$((SECONDS + ${SQLSERVER_WAIT_SECONDS:-120}))
-until sql -Q "SELECT 1" >/dev/null 2>&1; do
+until SQL_TIMEOUT=15 sql -Q "SELECT 1" >/dev/null 2>&1; do
   running=$(timeout 15 docker inspect -f '{{.State.Running}}' mssql 2>/dev/null || echo false)
   [ "${running}" = "true" ] || fail "El contenedor de SQL Server se detuvo."
   [ "${SECONDS}" -lt "${deadline}" ] || fail "SQL Server no respondió a tiempo."
