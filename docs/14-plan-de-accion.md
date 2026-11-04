@@ -479,7 +479,7 @@ Patrón único de formularios con React Hook Form y Zod.
 **Pasos**
 
 1. `Field` (label, ayuda, error con `aria-describedby`), `Input`, `Textarea`, `Select`, `RadioCards`, `Checkbox`, `PhoneInput` (+502, teclado numérico), `QuantityStepper`.
-2. Error con animación `.shake` (A-12) y foco al primer error.
+2. Error con animación `.shake` (A-04) y foco al primer error.
 
 **Criterios de aceptación**
 
@@ -1128,6 +1128,10 @@ Formulario corto para pedir la cotización.
 1. Tipo de cliente (librería, empresa, institución, otro) que ajusta los campos.
 2. Borrador del formulario guardado en `sessionStorage`.
 3. Esquema Zod compartido cliente/servidor (`features/quote/schema.ts`).
+
+**Notas de BD-022 (peso)**
+
+- Medido en `/styleguide/componentes`: React Hook Form + resolver + Zod completo suman **53 KB gzip** en el navegador (Zod es la mayor parte). Sobre la base de ~146 KB, una página con formulario quedaría cerca de 200 KB, por encima del presupuesto de 150 KB (CLAUDE.md, docs/12 §2). Antes de construir este formulario, decidir y medir con `pnpm lhci`: (a) cargar la isla del formulario con `dynamic()` al interactuar o al hacerse visible, (b) pasar las piezas de `lib/form-schemas.ts` a `zod/mini` en el cliente, o (c) validar en el cliente con las reglas de React Hook Form y dejar Zod solo en el servidor. Aplica igual a BD-076 (escuelas, distribuidores, contacto).
 
 **Criterios de aceptación**
 

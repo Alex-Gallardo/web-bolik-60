@@ -33,7 +33,7 @@ Se diseña y prueba primero a **360 px**. Ninguna página hace scroll horizontal
 | Tarjeta infantil | color kids | ninguno | 28 | `--shadow-kids` + rotación ±1.5° |
 | Bloque destacado | `--soft` | ninguno | `xl` | ninguna |
 | Modal / drawer | `--paper` | ninguno | `xl` (arriba en bottom sheet) | `lg` |
-| Input | `--paper` | 2 px `--line-strong` → `--blue` al foco | `md` | ninguna |
+| Input | `--paper` | 2 px `--line-control` (3:1 sobre blanco, WCAG 1.4.11) → `--blue` al foco | `md` | ninguna |
 
 Regla: el borde, la sombra y el radio grande se usan para separar **un** objeto; no todo lleva sombra.
 
@@ -92,7 +92,8 @@ Ayuda opcional (14 px, --muted)
 ⚠ Error (14 px, --danger, ícono + texto) → aria-live
 ```
 
-- Validación con Zod compartida cliente/servidor (`features/*/schemas.ts`).
+- Validación con Zod compartida cliente/servidor (`features/*/schemas.ts`), armada con las piezas de `lib/form-schemas.ts` (teléfono GT, correo, NIT, cantidad y `withPhoneOrEmail`). Los mensajes salen de `feedback.forms.errors`.
+- Componentes (`components/ui`): `Field` (etiqueta, ayuda y error, une `aria-describedby` y `aria-invalid` con su hijo), `Input`, `Textarea`, `Select` nativo, `Checkbox`, `RadioCards` (radios nativos en tarjetas), `PhoneInput` (+502) y `QuantityStepper`. El hijo directo de `Field` debe ser el control: con un `Controller` de React Hook Form, `Field` va dentro de su `render`.
 - Valida al salir del campo y al enviar. En error: borde rojo + mensaje + `shake` sutil del campo (A-04) solo al enviar.
 - Botón de envío nunca deshabilitado por "formulario inválido": se deja enviar y se muestran los errores (más claro para el usuario).
 - Honeypot: campo `website` oculto con CSS (no `display:none` en el input directamente; dentro de un contenedor fuera de pantalla), `tabIndex={-1}`, `autoComplete="off"`.

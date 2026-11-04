@@ -28,6 +28,7 @@
   --muted: #4b5368;
   --line: #e3e7f0;
   --line-strong: #d5dbe8;
+  --line-control: #848ca0; /* borde de campos de formulario: 3:1 sobre paper y soft (WCAG 1.4.11) */
   --soft: #f4f6fb;
   --paper: #ffffff;
   --on-dark: #dce3ff;

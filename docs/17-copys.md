@@ -224,6 +224,9 @@ La fuente única de toasts y diálogos es `src/content/feedback.ts` (starter). E
 | Cantidad mínima | La cantidad mínima es 1 |
 | Cantidad máxima | Para más de 9,999, escríbenos por WhatsApp |
 | NIT | Escribe tu NIT o "CF" |
+| Texto muy largo | Usa como máximo {max} caracteres |
+| Cantidad, botones (lector de pantalla) | Quitar uno · Agregar uno |
+| Teléfono, prefijo (lector de pantalla) | Código de país +502, Guatemala |
 | Sin JavaScript (formularios) | Para enviar este formulario activa JavaScript o escríbenos por WhatsApp al {numero}. |
 | Buscador vacío | Escribe al menos 2 letras |
 | Buscador, sugerencias | Prueba con: Bolik Ultra · crayones · marcador de pizarra |

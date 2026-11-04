@@ -74,7 +74,7 @@ BD-021,E1,Sistema de diseño y /styleguide,Botones,S1,0.5,Must,A,BD-007,08 §2,B
 2. Clase `.press` (A-03) y foco visible.","- Contraste AA en todas las variantes.
 - `loading` deshabilita y anuncia ""Enviando…"" a lectores de pantalla.",Sí
 BD-022,E1,Sistema de diseño y /styleguide,Controles de formulario,S1,1,Must,A,BD-021,08 §2,Patrón único de formularios con React Hook Form y Zod.,"1. `Field` (label, ayuda, error con `aria-describedby`), `Input`, `Textarea`, `Select`, `RadioCards`, `Checkbox`, `PhoneInput` (+502, teclado numérico), `QuantityStepper`.
-2. Error con animación `.shake` (A-12) y foco al primer error.","- Navegable solo con teclado.
+2. Error con animación `.shake` (A-04) y foco al primer error.","- Navegable solo con teclado.
 - Errores en español desde `feedback.forms`.",Sí
 BD-023,E1,Sistema de diseño y /styleguide,"Tarjetas, badges, chips y skeletons",S1,1,Must,A,BD-021,08 §2,Piezas de catálogo y listas.,"1. `ProductCard`, `CategoryCard`, `AudienceCard`, `StoreCard`, `Badge`, `Chip`, `Skeleton`.
 2. Imágenes con proporción fija y `sizes` correctos.","- CLS 0 al cargar una grilla de 12 tarjetas.

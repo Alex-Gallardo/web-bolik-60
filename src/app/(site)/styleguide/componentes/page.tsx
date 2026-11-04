@@ -6,6 +6,8 @@ import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
 import { Button } from "@/components/ui/button";
 import { BACKGROUND_PRESETS, type BackgroundPreset } from "@/lib/constants";
+import { listDepartments } from "@/server/data/stores";
+import { FormDemo } from "./form-demo";
 import { LoadingDemo } from "./loading-demo";
 
 /**
@@ -54,7 +56,8 @@ const BACKGROUND_USES: Record<BackgroundPreset, string> = {
   sun: "Amarillo infantil: escuelas.",
 };
 
-export default function ComponentesPage() {
+export default async function ComponentesPage() {
+  const departments = await listDepartments();
   return (
     <>
       <div className="container-site flex flex-col gap-16 py-16">
@@ -185,6 +188,14 @@ export default function ComponentesPage() {
               Enviar cotización
             </Button>
           </div>
+        </section>
+        <section className="flex flex-col gap-8" aria-labelledby="formularios">
+          <h2 id="formularios">Formularios</h2>
+          <p className="text-muted">
+            Patrón único: etiqueta visible, ayuda y error en español. Envíalo vacío para ver los
+            errores; con el teclado se llena de principio a fin.
+          </p>
+          <FormDemo departments={departments.map(({ slug, name }) => ({ slug, name }))} />
         </section>
       </div>
 
