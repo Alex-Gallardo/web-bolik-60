@@ -207,7 +207,7 @@
     opacity: 1;
     transform: none;
   }
-  /* El spinner quedaría girado a medias tras una vuelta: se deja quieto (el texto anuncia la carga). */
+  /* Sin giro: el spinner queda quieto y el texto anuncia la carga. */
   .spin {
     animation: none;
   }

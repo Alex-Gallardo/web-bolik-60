@@ -13,8 +13,12 @@ test.describe("componentes", () => {
     const cotizar = page.getByRole("button", { name: "Cotizar", exact: true });
     await cotizar.focus();
     await expect(cotizar).toBeFocused();
-    const outline = await cotizar.evaluate((el) => getComputedStyle(el).outlineStyle);
-    expect(outline).not.toBe("none");
+    // El anillo de globals.css (3 px), no el del navegador.
+    const outline = await cotizar.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { style: style.outlineStyle, width: style.outlineWidth };
+    });
+    expect(outline).toEqual({ style: "solid", width: "3px" });
     expect(errors, "errores en la consola").toEqual([]);
   });
 

@@ -14,7 +14,10 @@ import { Spinner } from "./spinner";
  * Las clases se unen con cx (clsx) y no con cn: tailwind-merge pesa ~9 KB gzip en el navegador
  * cuando el botón vive en un componente cliente. Por eso ninguna variante choca con otra (los
  * tamaños solo se aplican a las variantes con caja, el estado de carga usa variantes de CSS) y
- * `className` es para agregar (margen, ancho), no para cambiar alto ni padding.
+ * `className` es para agregar (margen, ancho, posición). No sobrescribe lo que ya fija el botón,
+ * porque gana la clase que va después en el CSS y no la última escrita: display (`hidden
+ * md:inline-flex` no oculta), radio, peso de letra, alto, padding ni white-space. Para eso, envuelve
+ * el botón en un contenedor (`<div className="hidden md:block">`) o usa el sufijo `!` (`hidden!`).
  */
 /** Variantes con fondo o borde (todas menos link): llevan alto y padding por tamaño. */
 const BOXED = [
@@ -29,7 +32,9 @@ const BOXED = [
 
 export const buttonVariants = cva(
   // Cargando (aria-busy) también lleva aria-disabled, pero se ve con su color normal.
-  "press relative inline-flex items-center justify-center gap-2 rounded-md border-2 font-bold disabled:cursor-not-allowed disabled:opacity-60 aria-busy:cursor-progress aria-disabled:pointer-events-none aria-disabled:not-aria-busy:opacity-60 [&_svg]:shrink-0",
+  // Sin "relative" en la base: así `fixed`/`absolute` en className funcionan (botón flotante).
+  // Cargando sigue recibiendo el puntero (cursor de espera); handleClick bloquea el clic.
+  "press inline-flex items-center justify-center gap-2 rounded-md border-2 font-bold disabled:cursor-not-allowed disabled:opacity-60 aria-busy:cursor-progress aria-disabled:not-aria-busy:pointer-events-none aria-disabled:not-aria-busy:opacity-60 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -86,10 +91,12 @@ type ButtonProps = ComponentProps<"button"> &
      * anuncia a lectores de pantalla. No usa `disabled` para que el foco no se pierda. Un botón que
      * va a cargar debe recibir `loading={false}` desde el inicio: así su región de aviso ya existe
      * cuando cambia, y los lectores la anuncian. Sin la prop no se dibuja ninguna región.
-     * Solo en componentes cliente: el estado de carga vive en el navegador.
+     * Solo en componentes cliente: el estado de carga vive en el navegador. La región va como
+     * hermana del botón: no ocupa espacio, pero cuenta para `space-x-*`, `divide-*` y `last:`.
      */
     loading?: boolean;
     /** Lo que se anuncia mientras carga (por defecto "Enviando…"). */
+    /* Con asChild, el onClick va en Button y no en el hijo: Radix llama primero al del hijo. */
     loadingText?: string;
     startIcon?: ReactNode;
     endIcon?: ReactNode;
@@ -114,10 +121,15 @@ export function Button({
   const Comp = asChild ? Slot : "button";
   const busy = loading === true;
   const iconBox = size === "sm" ? "size-4" : "size-5";
+  // Dónde va el spinner si no hay ícono inicial que reemplazar: junto al texto sin ocupar espacio,
+  // en el margen interno (asChild, el texto vive en el hijo) o en el flujo (link: no tiene margen).
+  const spinner =
+    !busy || startIcon ? null : variant === "link" ? "inline" : asChild ? "padding" : "beside-text";
 
   function handleClick(event: MouseEvent<HTMLButtonElement>) {
-    // Cargando: ni el clic ni el envío del formulario (Enter en un campo también llega aquí).
-    if (busy) {
+    // Cargando: ni el clic ni el envío del formulario (Enter en un campo también llega aquí). Un
+    // enlace deshabilitado (asChild) tampoco: un lector de pantalla todavía puede activarlo.
+    if (busy || (asChild && disabled)) {
       event.preventDefault();
       return;
     }
@@ -127,7 +139,7 @@ export function Button({
   // Al cargar, el spinner reemplaza al ícono inicial en una caja de su mismo tamaño.
   const leading = startIcon ? (
     busy ? (
-      <span className={cx("inline-flex items-center justify-center", iconBox)}>
+      <span className={cx("inline-flex shrink-0 items-center justify-center", iconBox)}>
         <Spinner />
       </span>
     ) : (
@@ -138,12 +150,19 @@ export function Button({
   return (
     <>
       <Comp
-        className={buttonVariants({ variant, size, block, className })}
+        className={buttonVariants({
+          variant,
+          size,
+          block,
+          // El spinner en el margen interno (asChild) se posiciona respecto del botón.
+          className: cx(spinner === "padding" && "relative", className),
+        })}
         {...(asChild
           ? // Un <a> no tiene disabled: aria-disabled y fuera del orden de tabulación.
             {
               "aria-disabled": disabled || busy || undefined,
-              tabIndex: disabled || busy ? -1 : undefined,
+              // Cargando conserva su lugar en el orden de tabulación (el foco no se pierde).
+              tabIndex: disabled ? -1 : undefined,
             }
           : { type: type ?? "button", disabled, "aria-disabled": busy || undefined })}
         aria-busy={busy || undefined}
@@ -154,16 +173,17 @@ export function Button({
       >
         {leading}
         {/* Slottable debe ser hijo directo de Slot: nada de fragmentos aquí. */}
-        {asChild && busy && !startIcon ? (
+        {spinner === "padding" ? (
           <Spinner className={cx("absolute", SPINNER_OFFSET[size ?? "md"])} />
         ) : null}
+        {spinner === "inline" ? <Spinner /> : null}
         {asChild ? (
           <Slottable>{children}</Slottable>
         ) : (
           // El spinner se pega a la izquierda del texto sin ocupar espacio: el ancho no cambia,
           // tampoco en un botón de ancho completo.
           <span className="relative">
-            {busy && !startIcon ? (
+            {spinner === "beside-text" ? (
               <Spinner className="absolute inset-y-0 right-full my-auto mr-2" />
             ) : null}
             {children}

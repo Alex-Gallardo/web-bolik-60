@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fireEvent, render, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ui } from "@/content/ui";
 import { contrastRatio } from "@/lib/contrast";
@@ -101,10 +102,48 @@ describe("Button", () => {
     );
     const link = screen.getByRole("link", { name: "Ver catálogo" });
     expect(link.getAttribute("aria-busy")).toBe("true");
-    const [first, , last] = [...link.childNodes];
-    expect((first as Element).classList.contains("spin")).toBe(true);
-    expect(last).toBe(screen.getByTestId("fin"));
+    expect(link.firstElementChild?.classList.contains("spin")).toBe(true);
+    expect(link.lastElementChild).toBe(screen.getByTestId("fin"));
     expect(link.textContent).toBe("Ver catálogo");
+    // Cargando conserva su lugar al tabular y el clic no navega.
+    expect(link.getAttribute("tabindex")).toBeNull();
+    expect(fireEvent.click(link)).toBe(false);
+  });
+
+  it("un enlace deshabilitado no ejecuta el onClick", () => {
+    const onClick = vi.fn();
+    render(
+      <Button asChild disabled onClick={onClick}>
+        <a href="/productos">Ver catálogo</a>
+      </Button>,
+    );
+    fireEvent.click(screen.getByRole("link", { name: "Ver catálogo" }));
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("sin onClick ni loading no pasa manejadores (sirve en Server Components)", () => {
+    const element = Button({ children: "Ver productos" }) as ReactElement<{
+      children: ReactElement<{ onClick?: unknown }>[];
+    }>;
+    const [comp] = element.props.children;
+    expect(comp!.props.onClick).toBeUndefined();
+  });
+
+  it("className puede posicionar el botón (botón flotante)", () => {
+    render(<Button className="fixed right-4 bottom-4">WhatsApp</Button>);
+    const classes = screen.getByRole("button").className.split(" ");
+    expect(classes).toContain("fixed");
+    expect(classes).not.toContain("relative");
+  });
+
+  it("la variante link carga con el spinner en el flujo (no tiene margen interno)", () => {
+    render(
+      <Button variant="link" loading>
+        Ver más
+      </Button>,
+    );
+    const spinner = screen.getByRole("button").querySelector("svg.spin");
+    expect(spinner?.getAttribute("class")).not.toContain("absolute");
   });
 
   it("un enlace deshabilitado sale del orden de tabulación", () => {
