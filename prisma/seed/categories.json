@@ -1,0 +1,58 @@
+[
+  {
+    "slug": "boligrafos",
+    "name": "Bolígrafos",
+    "lineGroup": "escritura",
+    "shortText": "Bolígrafos y lapiceros de punta mediana y fina, hechos en Guatemala.",
+    "intro": "Bolígrafos y lapiceros Bolik de punta mediana y fina, fabricados en Guatemala. Para la escuela, la oficina y para personalizar con tu logo."
+  },
+  {
+    "slug": "lapices-y-lapices-de-colores",
+    "name": "Lápices y lápices de colores",
+    "lineGroup": "escolar",
+    "shortText": "Lápices de grafito y de colores para dibujar, colorear y escribir.",
+    "intro": "Lápices de grafito y de colores para dibujar, colorear y escribir desde preprimaria."
+  },
+  {
+    "slug": "crayones-de-cera",
+    "name": "Crayones de cera",
+    "lineGroup": "arte",
+    "shortText": "Crayones de cera de colores intensos para manos pequeñas.",
+    "intro": "Crayones de cera de colores intensos, pensados para manos pequeñas."
+  },
+  {
+    "slug": "marcadores",
+    "name": "Marcadores",
+    "lineGroup": "oficina",
+    "shortText": "Marcadores de pizarra, permanentes y fluorescentes.",
+    "intro": "Marcadores de pizarra, permanentes y fluorescentes para el aula y la oficina."
+  },
+  {
+    "slug": "pegamentos-y-silicon",
+    "name": "Pegamentos y silicón",
+    "lineGroup": "arte",
+    "shortText": "Pegamento y silicón para tareas y manualidades.",
+    "intro": "Pegamento y silicón para tareas, manualidades y proyectos escolares."
+  },
+  {
+    "slug": "borradores-y-sacapuntas",
+    "name": "Borradores y sacapuntas",
+    "lineGroup": "escolar",
+    "shortText": "Borradores y sacapuntas para todo el ciclo escolar.",
+    "intro": "Borradores y sacapuntas que acompañan todo el ciclo escolar."
+  },
+  {
+    "slug": "tijeras-reglas-y-geometria",
+    "name": "Tijeras, reglas y geometría",
+    "lineGroup": "escolar",
+    "shortText": "Tijeras escolares, reglas y juegos de geometría.",
+    "intro": "Tijeras escolares, reglas y juegos de geometría para clase."
+  },
+  {
+    "slug": "articulos-publicitarios",
+    "name": "Artículos publicitarios",
+    "lineGroup": "oficina",
+    "shortText": "Bolígrafos y artículos con el logo de tu empresa.",
+    "intro": "Bolígrafos y artículos con el logo de tu empresa o institución."
+  }
+]
