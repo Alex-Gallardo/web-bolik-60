@@ -11,7 +11,7 @@ export function normalizeCode(code: string): string {
   return code.replace(/[\s-]/g, "").toUpperCase();
 }
 
-/** Un SKU (letras y números) o un código de barras de 8 a 14 dígitos; lo demás ni se busca. */
+/** Forma de un SKU o un código de barras (3 a 30 letras o dígitos, ya normalizado); lo demás ni se busca. */
 export function isSearchableCode(normalized: string): boolean {
   return /^[A-Z0-9]{3,30}$/.test(normalized);
 }

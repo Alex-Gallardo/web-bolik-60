@@ -68,6 +68,12 @@ describe("datos de prisma/seed", () => {
     expect(issuesOf(data).length).toBeGreaterThan(0);
   });
 
+  it("las rutas del hero son internas, nunca //otro-dominio", () => {
+    const data = clone();
+    data.content.heroChapters[0]!.ctaHref = "//evil.example.com";
+    expect(issuesOf(data)).toContain("ruta interna que empieza con una sola /");
+  });
+
   it("rechaza una clave de ajuste desconocida", () => {
     const data = clone();
     (data.settings as Record<string, string>).color_favorito = "azul";

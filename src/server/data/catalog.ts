@@ -1,7 +1,8 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { TAGS } from "@/lib/cache-tags";
-import { dataSource, safeSlug } from "./source";
+import { safeSlug } from "@/lib/slug";
+import { dataSource } from "./source";
 import type { ProductFilter } from "./types";
 import { isSearchableCode, matchVariantCode, normalizeCode } from "./variant-code";
 
@@ -17,10 +18,17 @@ export async function listCategories() {
   return (await dataSource()).listCategories();
 }
 
+/** Los slugs llegan de la URL: uno inválido da null sin crear una entrada de caché. */
 export async function getCategory(slug: string) {
+  const valid = safeSlug(slug);
+  return valid ? cachedGetCategory(valid) : null;
+}
+
+async function cachedGetCategory(slug: string) {
   "use cache";
   cacheLife("max");
-  cacheTag(TAGS.category(slug), TAGS.categories);
+  // productCount depende de los productos.
+  cacheTag(TAGS.category(slug), TAGS.categories, TAGS.products);
   return (await dataSource()).getCategory(slug);
 }
 
@@ -50,8 +58,14 @@ async function cachedListProducts(categorySlug: string, useSlug: string) {
   });
 }
 
-/** La ficha incluye tarjetas de relacionados: cualquier cambio de producto la refresca. */
 export async function getProduct(categorySlug: string, slug: string) {
+  const category = safeSlug(categorySlug);
+  const product = safeSlug(slug);
+  return category && product ? cachedGetProduct(category, product) : null;
+}
+
+/** La ficha incluye tarjetas de relacionados: cualquier cambio de producto la refresca. */
+async function cachedGetProduct(categorySlug: string, slug: string) {
   "use cache";
   cacheLife("max");
   cacheTag(TAGS.product(slug), TAGS.category(categorySlug), TAGS.products, TAGS.categories);

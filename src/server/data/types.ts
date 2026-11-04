@@ -156,6 +156,8 @@ export type SchoolActivityView = {
   description: string;
   colorKey: "coral" | "kblue" | "kgreen" | "paper";
   iconKey: string;
+  /** Texto de ejemplo de la demo, sin validar: nunca llega a producción. */
+  sample: boolean;
 };
 
 export type SectionAppearanceView = { backgroundPreset: BackgroundPreset; tone: "light" | "dark" };
@@ -169,6 +171,8 @@ export type KitView = {
   /** Solo si Mercadeo aprobó mostrar el precio (priceVisible). */
   suggestedPrice: number | null;
   items: { description: string; quantity: number }[];
+  /** Kit de ejemplo de la demo: nunca llega a producción. */
+  sample: boolean;
 };
 
 export type SiteSettings = {

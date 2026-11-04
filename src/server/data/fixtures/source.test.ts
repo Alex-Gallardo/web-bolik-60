@@ -15,7 +15,9 @@ describe("fuente de ejemplo: productos de muestra", () => {
   });
 
   it("muestra las actividades de ejemplo de la demo", async () => {
-    expect(await fixturesSource.listSchoolActivities()).toHaveLength(4);
+    const activities = await fixturesSource.listSchoolActivities();
+    expect(activities).toHaveLength(4);
+    expect(activities.every((a) => a.sample)).toBe(true);
   });
 
   it("cada categoría tiene al menos un producto para mostrar", async () => {

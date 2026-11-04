@@ -22,6 +22,8 @@ const mm = z.number().positive();
 const text = (max: number) => z.string().trim().min(1).max(max);
 // Terminan como href públicos: solo https.
 const httpsUrl = z.url({ protocol: /^https$/ });
+// Ruta del propio sitio: "/productos", nunca "//otro-dominio.com".
+const internalPath = z.string().regex(/^\/(?!\/)/, "ruta interna que empieza con una sola /");
 const lat = z.number().min(-90).max(90);
 const lng = z.number().min(-180).max(180);
 /** Dato de ejemplo (de la demo, sin validar): se ve con DATA_SOURCE=fixtures, nunca va a producción. */
@@ -140,10 +142,10 @@ export const contentSchema = z.object({
         line: text(220),
         ctaLabel: text(40),
         ctaKind: z.enum(["link", "quote"]),
-        ctaHref: z.string().startsWith("/").optional(),
+        ctaHref: internalPath.optional(),
         ctaQuoteType: z.enum(["empresa", "libreria"]).optional(),
-        videoDesktop: z.string().startsWith("/").optional(),
-        videoMobile: z.string().startsWith("/").optional(),
+        videoDesktop: internalPath.optional(),
+        videoMobile: internalPath.optional(),
         posterKey: z.string().optional(),
         published: z.boolean().default(true),
       })

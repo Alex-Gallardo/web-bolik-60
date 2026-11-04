@@ -266,6 +266,7 @@ export const fixturesSource: DataSource = {
         description: a.description,
         colorKey: a.colorKey,
         iconKey: a.iconKey,
+        sample: a.sample,
       }));
   },
 
@@ -285,6 +286,7 @@ export const fixturesSource: DataSource = {
         description: k.description,
         suggestedPrice: k.priceVisible ? (k.suggestedPrice ?? null) : null,
         items: k.items.map((i) => ({ description: i.description, quantity: i.quantity })),
+        sample: k.sample,
       }));
   },
 

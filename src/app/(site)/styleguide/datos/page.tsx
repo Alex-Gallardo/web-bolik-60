@@ -211,7 +211,10 @@ export default async function DatosPage() {
             <h3>Actividades escolares</h3>
             <ul className="text-sm">
               {activities.map((a) => (
-                <li key={a.key}>{a.title}</li>
+                <li key={a.key}>
+                  {a.title}
+                  {a.sample && <span className="text-muted"> · ejemplo</span>}
+                </li>
               ))}
             </ul>
           </div>

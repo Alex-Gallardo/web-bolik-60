@@ -257,7 +257,7 @@ const quote = await db.$transaction(async (tx) => {
 
 ## 6. Datos iniciales (seeds)
 
-`prisma/seed/` contiene JSON por entidad, validados con `prisma/seed/schema.ts` (Zod), y `seed.ts` los inserta de forma **idempotente** (`upsert` por `slug`/`sku`/`key`). Los mismos archivos son la fuente de datos de ejemplo de la web (`DATA_SOURCE=fixtures`, BD-037; doc 03 §3). El orden de cada arreglo es el `sortOrder`. Lo marcado `"sample": true` (productos de ejemplo con códigos `EJ-…`, tomados de la demo) no existe en el catálogo real y **nunca se carga en producción**; los textos que no vienen de doc 17 quedan con `isVerified = false` o `published = false` hasta que los valide su área:
+`prisma/seed/` contiene JSON por entidad, validados con `prisma/seed/schema.ts` (Zod), y `seed.ts` los inserta de forma **idempotente** (`upsert` por `slug`/`sku`/`key`). Los mismos archivos son la fuente de datos de ejemplo de la web (`DATA_SOURCE=fixtures`, BD-037; doc 03 §3). El orden de cada arreglo es el `sortOrder`. Lo marcado `"sample": true` (productos de ejemplo con códigos `EJ-…`, tomados de la demo) no existe en el catálogo real y **nunca se carga en producción**; los textos que no vienen de doc 17 quedan marcados `sample`, `isVerified = false` o `published = false` hasta que los valide su área, salvo textos auxiliares publicados que la tabla anota (el `hint`/`eyebrow` del hero y las descripciones de los hitos, por validar en BD-050 y en `/nuestra-historia`):
 
 | Archivo | Contenido inicial | Fuente |
 |---|---|---|

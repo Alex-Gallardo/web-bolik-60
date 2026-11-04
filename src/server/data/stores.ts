@@ -1,7 +1,8 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { TAGS } from "@/lib/cache-tags";
-import { dataSource, safeSlug } from "./source";
+import { safeSlug } from "@/lib/slug";
+import { dataSource } from "./source";
 import type { StoreFilter } from "./types";
 
 /** Dónde comprar: departamentos y puntos de venta (BD-037). */
@@ -13,7 +14,13 @@ export async function listDepartments() {
   return (await dataSource()).listDepartments();
 }
 
+/** El slug llega de la URL: uno inválido da null sin crear una entrada de caché. */
 export async function getDepartment(slug: string) {
+  const valid = safeSlug(slug);
+  return valid ? cachedGetDepartment(valid) : null;
+}
+
+async function cachedGetDepartment(slug: string) {
   "use cache";
   cacheLife("max");
   cacheTag(TAGS.department(slug), TAGS.stores);

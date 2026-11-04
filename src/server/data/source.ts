@@ -15,10 +15,3 @@ export async function dataSource(): Promise<DataSource> {
   const { fixturesSource } = await import("./fixtures/source");
   return fixturesSource;
 }
-
-/** Slug válido o undefined: lo que llega de la URL no crea entradas de caché arbitrarias. */
-export function safeSlug(value: string | undefined): string | undefined {
-  return value && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) && value.length <= 100
-    ? value
-    : undefined;
-}
