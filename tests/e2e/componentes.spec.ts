@@ -47,6 +47,42 @@ test.describe("componentes", () => {
     expect(errors, "errores en la consola").toEqual([]);
   });
 
+  test("los 9 fondos de sección se ven con su tono", async ({ page }) => {
+    await page.goto("/styleguide/componentes");
+    const expected = {
+      paper: "light",
+      soft: "light",
+      dots: "light",
+      grid: "light",
+      lines: "light",
+      ink: "light",
+      brand: "dark",
+      navy: "dark",
+      sun: "light",
+    };
+    for (const [bg, tone] of Object.entries(expected)) {
+      const section = page.getByTestId(`fondo-${bg}`);
+      await expect(section).toBeVisible();
+      await expect(section).toHaveAttribute("data-bg", bg);
+      await expect(section).toHaveAttribute("data-tone", tone);
+    }
+
+    // Cada fondo tiene su CSS (color o patrón distintos entre sí).
+    const looks = await page.evaluate(() =>
+      ["paper", "dots", "navy", "brand"].map((bg) => {
+        const style = getComputedStyle(document.querySelector(`[data-testid="fondo-${bg}"]`)!);
+        return `${style.backgroundColor}|${style.backgroundImage}`;
+      }),
+    );
+    expect(new Set(looks).size).toBe(4);
+
+    // Ningún fondo (ni el trazo de "ink") provoca scroll horizontal.
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(0);
+  });
+
   test("con movimiento reducido el spinner no gira", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/styleguide/componentes");
