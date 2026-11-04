@@ -36,6 +36,7 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-line-control: var(--line-control);
   --color-soft: var(--soft);
   --color-paper: var(--paper);
   --color-on-dark: var(--on-dark);

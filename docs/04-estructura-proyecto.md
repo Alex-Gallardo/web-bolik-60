@@ -112,6 +112,7 @@ bolik-digital/
 │  ├─ lib/                      # utilidades puras
 │  │  ├─ constants.ts           # estados, tipos, presets (reemplazan enums)
 │  │  ├─ cache-tags.ts · slug.ts · format.ts · cn.ts · image-loader.ts · contrast.ts
+│  │  ├─ form-schemas.ts        # piezas de Zod compartidas (teléfono GT, correo, NIT, cantidad)
 │  ├─ content/                  # textos de interfaz
 │  │  ├─ feedback.ts            # todos los mensajes de toasts y diálogos
 │  │  ├─ ui.ts                  # textos de interfaz que no son feedback (Enviando…, Guardando…)

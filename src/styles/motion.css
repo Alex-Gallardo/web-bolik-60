@@ -85,6 +85,20 @@
     transform: translateX(6px);
   }
 }
+@keyframes shake-again {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
 @keyframes draw {
   from {
     stroke-dashoffset: var(--path-length, 1000);
@@ -164,6 +178,11 @@
 }
 .shake {
   animation: shake var(--dur-shake) var(--ease-in-out);
+}
+/* Mismo movimiento con otro nombre: alternar .shake / .shake-again reinicia la animación en cada
+   envío con error sin volver a montar el campo (perdería el foco). Lo usa Field (BD-022). */
+.shake-again {
+  animation: shake-again var(--dur-shake) var(--ease-in-out);
 }
 
 /* ── Trazo de tinta (subrayados, logo) A-11 ── */

@@ -97,6 +97,71 @@ test.describe("componentes", () => {
     expect(errors, "errores en la consola").toEqual([]);
   });
 
+  test("formulario: con errores el foco va al primero y los mensajes salen en español", async ({
+    page,
+  }) => {
+    await page.goto("/styleguide/componentes");
+    const form = page.locator("form");
+    await form.getByRole("button", { name: "Enviar cotización" }).focus();
+    await page.keyboard.press("Enter");
+
+    await expect(form.getByRole("radio", { name: "Librería o tienda" })).toBeFocused();
+    await expect(form.getByText("Este dato es necesario")).toHaveCount(3);
+    await expect(form.getByText("Déjanos al menos un teléfono o un correo")).toHaveCount(2);
+    await expect(form.getByRole("textbox", { name: /Tu nombre/ })).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await expectNoA11yViolations(page);
+  });
+
+  test("formulario: se llena y se envía solo con el teclado", async ({ page }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto("/styleguide/componentes");
+    const form = page.locator("form");
+    const keys = page.keyboard;
+
+    // Punto de partida: la primera opción del grupo (desde ahí, todo con el teclado).
+    await form.getByRole("radio", { name: "Librería o tienda" }).focus();
+    await keys.press("ArrowDown"); // Empresa
+    await expect(form.getByRole("radio", { name: "Empresa" })).toBeChecked();
+    await keys.press("Tab");
+    await expect(form.getByRole("textbox", { name: /Tu nombre/ })).toBeFocused();
+    await keys.type("Ana López");
+    await keys.press("Tab");
+    await keys.type("55551234");
+    await keys.press("Tab"); // al salir, el teléfono se acomoda
+    await expect(form.getByRole("textbox", { name: "Teléfono" })).toHaveValue("5555 1234");
+    await expect(form.getByRole("textbox", { name: "Correo" })).toBeFocused();
+    await keys.press("Tab");
+    await expect(form.getByRole("combobox", { name: /Departamento/ })).toBeFocused();
+    await keys.type("Quetzal"); // búsqueda por letras del <select> nativo
+    await expect(form.getByRole("combobox", { name: /Departamento/ })).toHaveValue(
+      "quetzaltenango",
+    );
+    await keys.press("Tab"); // «−» (en 1, aria-disabled: no hace nada pero conserva el foco)
+    await keys.press("Tab");
+    const quantity = form.getByRole("spinbutton", { name: "Cantidad de cajillas" });
+    await expect(quantity).toBeFocused();
+    await keys.press("ArrowUp");
+    await keys.press("ArrowUp");
+    await expect(quantity).toHaveValue("3");
+    await keys.press("Tab"); // «+»
+    await keys.press("Tab");
+    await expect(form.getByRole("textbox", { name: "Notas" })).toBeFocused();
+    await keys.type("Entrega en enero");
+    await keys.press("Tab");
+    await keys.press("Space");
+    await expect(form.getByRole("checkbox")).toBeChecked();
+    await keys.press("Tab");
+    await expect(form.getByRole("button", { name: "Enviar cotización" })).toBeFocused();
+    await keys.press("Enter");
+
+    await expect(form.getByRole("status").last()).toHaveText(/Formulario válido/);
+    await expect(form.locator("[aria-invalid='true']")).toHaveCount(0);
+    expect(errors, "errores en la consola").toEqual([]);
+  });
+
   test("con movimiento reducido el spinner no gira", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/styleguide/componentes");
