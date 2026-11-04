@@ -54,7 +54,7 @@ export default defineConfig({
 });
 ```
 
-`.mts` para que Node la cargue como ESM. El umbral se aplica en `pnpm test:coverage`, que corre en el `pre-push` y en CI.
+`.mts` para que Node la cargue como ESM. El umbral se aplica en `pnpm test:coverage`, que corre en el `pre-push` y en CI. El `pre-push` la corre con `--maxWorkers=2`: por defecto Vitest abre un proceso por núcleo menos uno, y con poca memoria libre esos procesos no alcanzan a arrancar y el hook falla aunque el código esté bien (la CI no cambia).
 
 Integración en un proyecto aparte (`vitest.integration.config.mts`, `environment: "node"`, `include: ["tests/integration/**/*.test.ts"]`) con `TEST_DATABASE_URL` apuntando a la base `BolikDigital_Test`, a la que `tests/integration/global-setup.ts` aplica las migraciones pendientes (`prisma migrate deploy`, nunca borra) antes de la suite; cada prueba limpia los datos que crea. Para dejarla en cero, una persona corre `pnpm db:reset:test` (se niega si la base no termina en `_Test`); Prisma bloquea `migrate reset` cuando lo lanza un agente de IA. Ojo: con `NODE_ENV=test`, `@next/env` no carga `.env.local`; la configuración de integración debe leer `TEST_DATABASE_URL` de forma explícita (por ejemplo, cargando `.env.local` con `loadEnvConfig` y pasando esa URL como `DATABASE_URL` a la suite).
 
@@ -64,7 +64,7 @@ SQL Server local para desarrollo y pruebas (BD-017): **SQL Server 2022 Express**
 powershell -ExecutionPolicy Bypass -File scripts\dev\sqlserver-local.ps1
 ```
 
-En la CI (BD-014) se usa un contenedor de SQL Server 2022 Express con la misma intercalación (`scripts/ci/sqlserver.sh`): crea `BolikDigital_Test` y el login `bolik_app` con contraseñas aleatorias en cada corrida, ocultas del log; el repo no guarda ningún secreto.
+En la CI (BD-014) se usa un contenedor de SQL Server 2022 Express con la misma intercalación (`scripts/ci/sqlserver.sh`): crea `BolikDigital_Test` y el login `bolik_app` con contraseñas aleatorias en cada corrida, ocultas del log; el repo no guarda ningún secreto. Cada intento de conexión tiene su límite (`timeout 15` en `docker exec`, `-l 5` en `sqlcmd`) y la espera total, 120 s (`SQLSERVER_WAIT_SECONDS`); si el contenedor se detiene, falla en el acto. En todos los casos muestra el log del contenedor, y el paso tiene `timeout-minutes: 5` como red de seguridad.
 
 ### CI (`.github/workflows/ci.yml`)
 

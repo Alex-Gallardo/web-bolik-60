@@ -69,6 +69,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: SQL Server en contenedor
+        # Red de seguridad: si algo se cuelga igual, falla el paso y no se cancela todo el trabajo.
+        timeout-minutes: 5
         run: bash scripts/ci/sqlserver.sh
       - run: pnpm test:int
 
