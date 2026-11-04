@@ -1,1 +1,1 @@
-pnpm typecheck && pnpm run --if-present test:coverage
+pnpm typecheck && pnpm run --if-present test:coverage --maxWorkers=2
