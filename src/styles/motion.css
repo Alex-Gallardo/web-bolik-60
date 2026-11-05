@@ -316,6 +316,109 @@
   animation: confetti var(--dur-slower) var(--ease-out) var(--delay, 0ms) both;
 }
 
+/* ── Sheet (A-08), BD-025 ──
+   Desliza desde su lado: 420 ms al entrar, 240 ms al salir. `auto`: abajo en móvil, derecha
+   desde md. El fondo usa .dialog-overlay. */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes slide-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes slide-out-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+.sheet-content[data-side="bottom"][data-state="open"],
+.sheet-content[data-side="auto"][data-state="open"] {
+  animation: sheet-in var(--dur-slow) var(--ease-out);
+}
+.sheet-content[data-side="bottom"][data-state="closed"],
+.sheet-content[data-side="auto"][data-state="closed"] {
+  animation: sheet-out var(--dur-base) var(--ease-in);
+}
+.sheet-content[data-side="right"][data-state="open"] {
+  animation: slide-in-right var(--dur-slow) var(--ease-out);
+}
+.sheet-content[data-side="right"][data-state="closed"] {
+  animation: slide-out-right var(--dur-base) var(--ease-in);
+}
+.sheet-content[data-side="left"][data-state="open"] {
+  animation: slide-in-left var(--dur-slow) var(--ease-out);
+}
+.sheet-content[data-side="left"][data-state="closed"] {
+  animation: slide-out-left var(--dur-base) var(--ease-in);
+}
+@media (min-width: 48rem) {
+  .sheet-content[data-side="auto"][data-state="open"] {
+    animation: slide-in-right var(--dur-slow) var(--ease-out);
+  }
+  .sheet-content[data-side="auto"][data-state="closed"] {
+    animation: slide-out-right var(--dur-base) var(--ease-in);
+  }
+}
+
+/* ── Popover, BD-025: opacidad y escala corta desde el lado del Trigger ── */
+.popover-content {
+  transform-origin: var(--radix-popover-content-transform-origin);
+}
+.popover-content[data-state="open"] {
+  animation: scale-in var(--dur-fast) var(--ease-out);
+}
+.popover-content[data-state="closed"] {
+  animation: scale-out var(--dur-fast) var(--ease-in);
+}
+
+/* ── Acordeón (A-35), BD-025 ──
+   El ícono + rota a ×. La apertura de <details> se anima con ::details-content (block-size con
+   interpolate-size): como grid-template-rows en docs/09, es la excepción permitida solo para el
+   acordeón. Donde el navegador no lo soporta, la regla se ignora y abre al instante. */
+.accordion-icon {
+  transition: transform var(--dur-base) var(--ease-in-out);
+}
+.accordion-item[open] .accordion-icon,
+.accordion-icon[data-open] {
+  transform: rotate(45deg);
+}
+.accordion-item {
+  interpolate-size: allow-keywords;
+}
+.accordion-item::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition:
+    block-size var(--dur-base) var(--ease-in-out),
+    content-visibility var(--dur-base) allow-discrete;
+}
+.accordion-item[open]::details-content {
+  block-size: auto;
+}
+
+/* ── Tabs, BD-025 ──
+   Sin JS se ven todos los paneles. Con JS (clase .js puesta antes de pintar): en escritorio solo
+   el activo; en el acordeón móvil, solo el abierto. */
+@media (min-width: 48rem) {
+  .js [data-tab-panel]:not([data-active]) {
+    display: none;
+  }
+}
+@media (width < 48rem) {
+  .js [data-tabs="tabs"] [data-tab-panel]:not([data-active]),
+  .js [data-tabs="accordion"] [data-tab-panel]:not([data-open]) {
+    display: none;
+  }
+}
+
 /* ── Movimiento reducido: sin desplazamientos, solo opacidad breve ── */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -357,5 +460,19 @@
   }
   .confetti {
     display: none;
+  }
+  /* Sheet y Popover: aparecen y se van solo con opacidad. */
+  /* El * de arriba no alcanza ::details-content: el acordeón abre al instante. */
+  .accordion-item::details-content {
+    transition: none;
+  }
+  /* Misma especificidad que las reglas por lado ([data-side]): gana por ir después. */
+  .sheet-content[data-side][data-state="open"],
+  .popover-content[data-state="open"] {
+    animation-name: fade-in;
+  }
+  .sheet-content[data-side][data-state="closed"],
+  .popover-content[data-state="closed"] {
+    animation-name: fade-out;
   }
 }

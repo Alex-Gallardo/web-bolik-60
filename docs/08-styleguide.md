@@ -67,9 +67,10 @@ Tamaños: `sm` 40 px (solo admin y desktop), `md` **48–52 px** (por defecto), 
 | `Stepper` | − / número / +, mínimo 1, valores sugeridos por presentación |
 | `ColorSwatches` | Selección de color con círculo, nombre y SKU; `role="radiogroup"` |
 | `PackSelector` | Presentaciones (blister x1/x3/x5, cajilla, fardo) como `radiogroup` |
-| `Tabs` | Radix Tabs; en móvil se convierten en acordeón |
-| `Accordion` | Radix Accordion para FAQs; ícono + que rota a × (A-35) |
-| `Sheet` / `Drawer` | Radix Dialog en modo lateral o inferior (A-08) |
+| `Tabs` | Propio (patrón WAI-ARIA, sin Radix): todos los paneles en el HTML y visibles sin JS (los inactivos se ocultan con la clase `js` de `<html>`); en móvil se convierten en acordeón con los mismos paneles (BD-025) |
+| `Accordion` | `<details>` nativo (sin JS, contenido en el HTML, la búsqueda del navegador lo abre) para FAQs; ícono + que rota a × (A-35) (BD-025) |
+| `Sheet` / `Drawer` | Radix Dialog en modo lateral o inferior (A-08); lado `auto`: abajo en móvil, derecha desde md |
+| `Dialog` / `Popover` | Radix Dialog (A-09) y Radix Popover |
 | `FriendlyDialog` | Diálogo de éxito, error o confirmación (ver §4) |
 | `Toaster` | `sonner` configurado con colores y posición (abajo al centro en móvil, abajo a la derecha en desktop) |
 | `Breadcrumbs` | Con JSON-LD `BreadcrumbList` generado del mismo arreglo |

@@ -84,8 +84,9 @@ BD-024,E1,Sistema de diseño y /styleguide,Alertas amigables: Toaster y Friendly
 3. Hook `useFeedback()` que toma los textos de `content/feedback.ts`.
 4. Aviso de ""sin conexión"" y ""conexión recuperada"".","- Cada fila de la matriz del doc 08 §4 tiene un ejemplo en `/styleguide`.
 - Toasts anunciados con `aria-live`.",Sí
-BD-025,E1,Sistema de diseño y /styleguide,"Overlays: Sheet, Dialog, Tabs, Accordion",S1,0.5,Must,A,BD-021,"08, 09",Componentes de Radix/shadcn con nuestras animaciones.,"1. Agregar con `pnpm dlx shadcn@latest add dialog sheet tabs accordion popover`.
-2. Reemplazar sus animaciones por los presets del doc 09.","- Escape cierra; el foco vuelve al disparador.
+BD-025,E1,Sistema de diseño y /styleguide,"Overlays: Sheet, Dialog, Tabs, Accordion",S1,0.5,Must,A,BD-021,"08, 09",Componentes de Radix/shadcn con nuestras animaciones.,"1. Dialog, Sheet y Popover sobre Radix, con la estructura de shadcn escrita a mano (sin `tailwind-merge`).
+2. Tabs propio y Accordion con `<details>`: contenido en el HTML y visible sin JS (docs/11 §1). Decisión aprobada en BD-025.
+3. Animaciones con los presets del doc 09.","- Escape cierra; el foco vuelve al disparador.
 - Con `prefers-reduced-motion` aparecen sin desplazamiento.",Sí
 BD-026,E1,Sistema de diseño y /styleguide,Vista /styleguide,S1,1,Must,A,BD-020 BD-021 BD-022 BD-023 BD-024 BD-025,08 §6,Vitrina interna con todos los componentes reales.,"1. `app/(site)/styleguide/page.tsx` con las 13 secciones del doc 08 §6.
 2. `noindex`, fuera del sitemap, bloqueada en robots.

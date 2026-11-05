@@ -532,8 +532,9 @@ Componentes de Radix/shadcn con nuestras animaciones.
 
 **Pasos**
 
-1. Agregar con `pnpm dlx shadcn@latest add dialog sheet tabs accordion popover`.
-2. Reemplazar sus animaciones por los presets del doc 09.
+1. Dialog, Sheet y Popover sobre Radix, con la estructura de shadcn escrita a mano (sin `tailwind-merge`).
+2. Tabs propio y Accordion con `<details>`: contenido en el HTML y visible sin JS (docs/11 §1). Decisión aprobada en BD-025.
+3. Animaciones con los presets del doc 09.
 
 **Criterios de aceptación**
 
