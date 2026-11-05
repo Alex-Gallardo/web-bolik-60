@@ -84,7 +84,8 @@ bolik-digital/
 │  │  ├─ feedback/              # friendly-dialog, toaster, empty-state, inline-alert
 │  │  ├─ motion/                # reveal, count-up, ink-stroke, lazy-motion-provider
 │  │  ├─ hero/                  # video-hero, chapter-tabs
-│  │  ├─ catalog/               # product-card, category-card, filters, color-swatches, pack-selector, specs, dimensions
+│  │  ├─ catalog/               # product-card (+ skeleton), category-card, filters, color-swatches, pack-selector, specs, dimensions
+│  │  ├─ home/                  # audience-card (tarjetas por público de la home)
 │  │  ├─ quote/                 # quote-drawer, quote-button, quote-line, quote-form
 │  │  ├─ stores/                # store-list, store-map (lazy), department-picker
 │  │  ├─ schools/               # activity-card, school-form, kids-decor
@@ -171,7 +172,7 @@ flowchart LR
 ```
 
 Reglas:
-1. `components/*` no importa `server/*` (los datos llegan como props desde páginas Server Components).
+1. `components/*` no importa `server/*` (los datos llegan como props desde páginas Server Components). Excepción: `import type` de los tipos de vista de `src/server/data/types.ts` (se borra al compilar; no arrastra código de servidor).
 2. Todo archivo en `server/` empieza con `import "server-only"`.
 3. `features/*/actions.ts` son la única puerta de escritura desde el sitio público.
 4. `lib/*` no tiene efectos secundarios ni imports de React.

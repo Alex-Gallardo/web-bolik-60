@@ -35,6 +35,15 @@ export type VariantView = {
   isDefault: boolean;
 };
 
+/** Imagen ya procesada (BD-034): ruta base del loader, alt real, medidas y blur. */
+export type ImageView = {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  blurDataUrl: string | null;
+};
+
 export type ProductCardView = {
   slug: string;
   name: string;
@@ -46,6 +55,8 @@ export type ProductCardView = {
   featured: boolean;
   /** Producto de ejemplo (no existe en el catálogo real): nunca llega a producción. */
   sample: boolean;
+  /** Imagen principal; null hasta que haya fotos (BD-034): la tarjeta muestra sus colores. */
+  image: ImageView | null;
 };
 
 export type SpecGroupView = { name: string; items: { label: string; value: string }[] };

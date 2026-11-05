@@ -165,12 +165,29 @@
 .press:active {
   transform: scale(0.97);
 }
+/* A-30: sube 4 px y aparece la sombra por opacidad de una capa (no se anima box-shadow).
+   Solo con hover real: en pantallas táctiles no hay efecto. */
 .lift {
+  position: relative;
   transition: transform var(--dur-fast) var(--ease-out);
+}
+.lift::after {
+  content: "";
+  position: absolute;
+  /* -2px: la sombra sale del borde exterior (las tarjetas llevan border-2), no del interior. */
+  inset: -2px;
+  border-radius: inherit;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out);
 }
 @media (hover: hover) {
   .lift:hover {
     transform: translateY(-4px);
+  }
+  .lift:hover::after {
+    opacity: 1;
   }
 }
 .badge-pop {
@@ -234,5 +251,9 @@
   .skeleton::after {
     animation: none;
     opacity: 0;
+  }
+  /* La tarjeta no sube: solo aparece la sombra (opacidad). */
+  .lift:hover {
+    transform: none;
   }
 }

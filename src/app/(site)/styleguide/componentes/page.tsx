@@ -6,7 +6,17 @@ import { Container } from "@/components/layout/container";
 import { Section } from "@/components/layout/section";
 import { Button } from "@/components/ui/button";
 import { BACKGROUND_PRESETS, type BackgroundPreset } from "@/lib/constants";
-import { listDepartments } from "@/server/data/stores";
+import { CategoryCard } from "@/components/catalog/category-card";
+import { ProductCard } from "@/components/catalog/product-card";
+import { ProductCardSkeleton } from "@/components/catalog/product-card-skeleton";
+import { AudienceCard } from "@/components/home/audience-card";
+import { StoreCard } from "@/components/stores/store-card";
+import { Badge } from "@/components/ui/badge";
+import { Chip, ChipToggle } from "@/components/ui/chip";
+import { audiences } from "@/content/home";
+import { ui } from "@/content/ui";
+import { listCategories, listProducts } from "@/server/data/catalog";
+import { listDepartments, listStores } from "@/server/data/stores";
 import { FormDemo } from "./form-demo";
 import { LoadingDemo } from "./loading-demo";
 
@@ -57,7 +67,12 @@ const BACKGROUND_USES: Record<BackgroundPreset, string> = {
 };
 
 export default async function ComponentesPage() {
-  const departments = await listDepartments();
+  const [departments, products, categories, stores] = await Promise.all([
+    listDepartments(),
+    listProducts(),
+    listCategories(),
+    listStores(),
+  ]);
   return (
     <>
       <div className="container-site flex flex-col gap-16 py-16">
@@ -187,6 +202,72 @@ export default async function ComponentesPage() {
             <Button block size="lg">
               Enviar cotización
             </Button>
+          </div>
+        </section>
+        <section className="flex flex-col gap-8" aria-labelledby="tarjetas">
+          <h2 id="tarjetas">Tarjetas</h2>
+          <h3>Productos (grilla de 12)</h3>
+          <ul
+            data-testid="grilla-productos"
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+          >
+            {products.slice(0, 12).map((product) => (
+              <li key={product.slug}>
+                {/* Sin prefetch: las fichas, categorías y páginas por público llegan en S2. */}
+                <ProductCard product={product} headingLevel={4} prefetch={false} />
+              </li>
+            ))}
+          </ul>
+          <h3>Categorías</h3>
+          <ul className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {categories.map((category) => (
+              <li key={category.slug}>
+                <CategoryCard category={category} headingLevel={4} prefetch={false} />
+              </li>
+            ))}
+          </ul>
+          <h3>Por público</h3>
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {audiences.map((audience) => (
+              <li key={audience.title}>
+                <AudienceCard {...audience} headingLevel={4} prefetch={false} />
+              </li>
+            ))}
+          </ul>
+          <h3>Tiendas</h3>
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {stores.slice(0, 3).map((store) => (
+              <li key={store.slug}>
+                <StoreCard store={store} headingLevel={4} />
+              </li>
+            ))}
+          </ul>
+          <h3>Badges y chips</h3>
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge>Nueva</Badge>
+            <Badge tone="info">En proceso</Badge>
+            <Badge tone="success">Ganada</Badge>
+            <Badge tone="warning">Pendiente</Badge>
+            <Badge tone="danger">Perdida</Badge>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Chip line="escritura">Escritura</Chip>
+            <Chip line="escolar">Escolar</Chip>
+            <Chip line="arte">Arte</Chip>
+            <Chip line="oficina">Oficina</Chip>
+            <ChipToggle line="escolar" pressed>
+              Escolar
+            </ChipToggle>
+            <ChipToggle line="oficina" pressed={false}>
+              Oficina
+            </ChipToggle>
+          </div>
+          <h3>Cargando (skeleton)</h3>
+          <div aria-busy="true" className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <span className="sr-only">{ui.loading.products}</span>
+            {Array.from({ length: 4 }, (_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
           </div>
         </section>
         <section className="flex flex-col gap-8" aria-labelledby="formularios">

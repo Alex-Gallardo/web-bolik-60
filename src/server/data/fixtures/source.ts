@@ -51,6 +51,7 @@ function toCard(data: SeedData, product: Product): ProductCardView {
     skus: variants.map((v) => v.sku),
     featured: product.featured,
     sample: product.sample,
+    image: null, // las fotos llegan con BD-034
   };
 }
 
