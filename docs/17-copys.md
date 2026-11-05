@@ -46,13 +46,13 @@ Chip: **60 años · Hecho en Guatemala**
 
 ### Soluciones · "Un Bolik para cada etapa"
 
-| Tarjeta | Texto | Enlace |
-|---|---|---|
-| Colegios | Útiles y actividades para que escribir sea divertido. | `/escuelas` |
-| Universidades | Bolígrafos con el logo de tu facultad o asociación. | `/empresas` |
-| Empresas | Lapiceros personalizados para eventos y equipos. | `/empresas` |
-| Librerías | Precio de fábrica por cajilla y fardo. | `/mayoreo` |
-| Distribuidores | Lleva Bolik a tu municipio. | `/mayoreo#distribuidor` |
+| Tarjeta | Texto | Enlace | Color |
+|---|---|---|---|
+| Colegios | Útiles y actividades para que escribir sea divertido. | `/escuelas` | Amarillo (texto tinta) |
+| Universidades | Bolígrafos con el logo de tu facultad o asociación. | `/empresas` | Navy |
+| Empresas | Lapiceros personalizados para eventos y equipos. | `/empresas` | Azul |
+| Librerías | Precio de fábrica por cajilla y fardo. | `/mayoreo` | Verde |
+| Distribuidores | Lleva Bolik a tu municipio. | `/mayoreo#distribuidor` | Rojo |
 
 ### Catálogo destacado
 - Título: **Encuentra lo que necesitas**
@@ -104,6 +104,8 @@ Chip: **60 años · Hecho en Guatemala**
 | Filtros | Uso: Escolar · Oficina · Arte y manualidades · Promocional |
 | Contador | {n} productos |
 | Tarjeta, botón | Ver producto |
+| Tarjeta, colores | Color: {color} · Colores: {a}, {b} y {c} (en minúscula; +{n} si no caben los puntos) |
+| Tarjeta de categoría | 1 producto · {n} productos |
 | Sin resultados con filtros | No hay productos con esos filtros. · Quitar filtros |
 
 Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa el admin):
@@ -184,7 +186,10 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Intro: Encuentra librerías, supermercados y cadenas con productos Bolik en tu departamento.
 - Botón de ubicación: Usar mi ubicación
 - Lista: {n} tiendas en {departamento}
-- Tarjeta de tienda: Cómo llegar · Llamar
+- Tarjeta de tienda: Cómo llegar · Llamar · Comprar en línea (solo si la tienda tiene tienda en línea https)
+- Tipo de tienda: Cadena · Librería · Distribuidor
+- Tienda sin verificar por Ventas: Datos por confirmar (sin dirección; «Cómo llegar» busca por nombre y municipio)
+- Lector de pantalla: «Cómo llegar a {tienda} (se abre en otra pestaña)», «Llamar a {tienda}», «Comprar en línea en {tienda}»
 - En línea: Compra en línea en Walmart Guatemala y La Torre.
 - `/donde-comprar/[dep]` `h1`: Dónde comprar Bolik en {departamento}
 

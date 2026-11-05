@@ -180,6 +180,54 @@ test.describe("componentes", () => {
     expect(errors, "errores en la consola").toEqual([]);
   });
 
+  test("tarjetas: la grilla de 12 productos carga sin saltos (CLS 0)", async ({ page }) => {
+    // Registra los cambios de diseño desde el inicio de la carga.
+    await page.addInitScript(() => {
+      const w = window as unknown as { __cls: number };
+      w.__cls = 0;
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries() as unknown as {
+          value: number;
+          hadRecentInput: boolean;
+        }[])
+          if (!entry.hadRecentInput) w.__cls += entry.value;
+      }).observe({ type: "layout-shift", buffered: true });
+    });
+    await page.goto("/styleguide/componentes");
+    const grid = page.getByTestId("grilla-productos");
+    await grid.scrollIntoViewIfNeeded();
+    await expect(grid.getByRole("link")).toHaveCount(12);
+    await page.waitForLoadState("networkidle");
+    const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
+    expect(cls).toBe(0);
+  });
+
+  test("tarjetas: se elevan solo con hover real", async ({ page }) => {
+    await page.goto("/styleguide/componentes");
+    const card = page.getByTestId("grilla-productos").getByRole("link").first();
+    await card.scrollIntoViewIfNeeded();
+    const canHover = await page.evaluate(() => matchMedia("(hover: hover)").matches);
+    await card.hover();
+    // Espera a que termine la transición en vez de un tiempo fijo.
+    const transform = () => card.evaluate((el) => getComputedStyle(el).transform);
+    if (canHover) await expect.poll(transform).not.toBe("none");
+    else await expect.poll(transform).toBe("none");
+  });
+
+  test("tarjetas: con movimiento reducido no suben, solo muestran sombra", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/styleguide/componentes");
+    const card = page.getByTestId("grilla-productos").getByRole("link").first();
+    await card.scrollIntoViewIfNeeded();
+    const canHover = await page.evaluate(() => matchMedia("(hover: hover)").matches);
+    await card.hover();
+    if (canHover)
+      await expect
+        .poll(() => card.evaluate((el) => getComputedStyle(el, "::after").opacity))
+        .toBe("1");
+    expect(await card.evaluate((el) => getComputedStyle(el).transform)).toBe("none");
+  });
+
   test("con movimiento reducido el spinner no gira", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/styleguide/componentes");

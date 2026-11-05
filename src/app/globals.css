@@ -37,6 +37,11 @@
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-line-control: var(--line-control);
+  /* Línea de producto (docs/02): punto de los chips y acentos de tarjetas */
+  --color-line-escritura: var(--line-escritura);
+  --color-line-escolar: var(--line-escolar);
+  --color-line-arte: var(--line-arte);
+  --color-line-oficina: var(--line-oficina);
   --color-soft: var(--soft);
   --color-paper: var(--paper);
   --color-on-dark: var(--on-dark);
