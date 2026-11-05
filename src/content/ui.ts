@@ -10,6 +10,7 @@ export const ui = {
     sending: "Enviando…",
     saving: "Guardando…",
     searching: "Buscando…",
+    products: "Cargando productos…",
   },
   /** Botones del selector de cantidad (nombre accesible; en pantalla se ven − y +). */
   quantity: {

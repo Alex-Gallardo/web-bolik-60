@@ -181,7 +181,8 @@ test.describe("componentes", () => {
   });
 
   test("tarjetas: la grilla de 12 productos carga sin saltos (CLS 0)", async ({ page }) => {
-    // Registra los cambios de diseño desde el inicio de la carga.
+    // Registra desde el inicio de la carga solo los cambios de diseño de la grilla (el cambio de
+    // fuente u otras secciones de la vitrina no cuentan aquí).
     await page.addInitScript(() => {
       const w = window as unknown as { __cls: number };
       w.__cls = 0;
@@ -189,8 +190,15 @@ test.describe("componentes", () => {
         for (const entry of list.getEntries() as unknown as {
           value: number;
           hadRecentInput: boolean;
-        }[])
-          if (!entry.hadRecentInput) w.__cls += entry.value;
+          sources?: { node?: Node | null }[];
+        }[]) {
+          const inGrid = (entry.sources ?? []).some((source) =>
+            (source.node instanceof Element ? source.node : source.node?.parentElement)?.closest(
+              '[data-testid="grilla-productos"]',
+            ),
+          );
+          if (!entry.hadRecentInput && inGrid) w.__cls += entry.value;
+        }
       }).observe({ type: "layout-shift", buffered: true });
     });
     await page.goto("/styleguide/componentes");

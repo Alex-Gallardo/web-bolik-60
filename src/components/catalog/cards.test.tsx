@@ -108,7 +108,7 @@ describe("ProductCard", () => {
     // Mismas alturas que la tarjeta: chip 24 px, título text-lg leading-tight, colores text-sm.
     const bars = [...root.querySelectorAll(".p-4 .skeleton")].map((el) => el.className);
     expect(bars[0]).toContain("h-6");
-    expect(bars[1]).toContain("h-[1.40625rem]");
+    expect(bars[1]).toContain("h-[2.8125rem]");
     expect(bars[2]).toContain("h-5");
     expect(root.querySelector(".mt-auto.pt-2 > .skeleton")).not.toBeNull();
   });

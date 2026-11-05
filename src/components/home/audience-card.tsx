@@ -8,7 +8,8 @@ import Link from "next/link";
  * contraste AA (amarillo con tinta; el resto con blanco).
  */
 export const audienceCardVariants = cva(
-  "lift group flex h-full flex-col gap-3 rounded-xl p-6 no-underline",
+  // Borde transparente de 2 px como las demás tarjetas: la sombra de .lift (inset -2px) calza.
+  "lift group flex h-full flex-col gap-3 rounded-xl border-2 border-transparent p-6 no-underline",
   {
     variants: {
       tone: {

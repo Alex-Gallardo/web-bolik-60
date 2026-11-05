@@ -14,6 +14,8 @@ export const PRODUCT_CARD_SIZES =
 
 /** Puntos de color en la fila de texto; el resto se resume en «+N». */
 const MAX_DOTS = 5;
+/** Círculos grandes en el cuadro sin foto: 4 caben en 2 × 2 a 360 px; la lista completa va abajo. */
+const MAX_SWATCHES = 4;
 
 type ProductCardProps = {
   product: ProductCardView;
@@ -70,7 +72,7 @@ export function ProductCard({
             aria-hidden="true"
             className="flex h-full flex-wrap content-center items-center justify-center gap-2 p-4 sm:p-6"
           >
-            {colors.slice(0, 4).map((color) => (
+            {colors.slice(0, MAX_SWATCHES).map((color) => (
               <span
                 key={color.key}
                 className="size-8 shrink-0 rounded-full border-2 border-paper shadow-sm sm:size-10"
@@ -82,28 +84,33 @@ export function ProductCard({
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">
         {/* El título va primero en el DOM (nombre accesible «Bolik Ultra, Bolígrafos…»); el chip
-            se ve arriba con order-first. */}
-        <Heading className="text-lg leading-tight">{product.name}</Heading>
+            se ve arriba con order-first. Alturas fijas (título 2 líneas, colores 1 línea) para que
+            el skeleton mida lo mismo a 360 px, donde el texto se parte (CLS 0). */}
+        <Heading className="line-clamp-2 min-h-[2lh] text-lg leading-tight">{product.name}</Heading>
         <Chip line={product.category.lineGroup} className="order-first self-start">
           {product.category.name}
         </Chip>
-        {colors.length > 0 ? (
-          <p className="flex items-center gap-1.5 text-sm text-muted">
-            <span aria-hidden="true" className="flex shrink-0 items-center -space-x-1">
-              {colors.slice(0, MAX_DOTS).map((color) => (
-                <span
-                  key={color.key}
-                  className="size-3.5 shrink-0 rounded-full border-2 border-paper"
-                  style={{ backgroundColor: color.hex }}
-                />
-              ))}
-              {extraDots > 0 ? (
-                <span className="ps-2 text-xs">{ui.cards.moreColors(extraDots)}</span>
-              ) : null}
-            </span>
-            <span>{ui.cards.colors(colors.map((c) => c.name))}</span>
-          </p>
-        ) : null}
+        <p className="flex min-h-5 items-center gap-1.5 text-sm text-muted">
+          {colors.length > 0 ? (
+            <>
+              <span aria-hidden="true" className="flex shrink-0 items-center -space-x-1">
+                {colors.slice(0, MAX_DOTS).map((color) => (
+                  <span
+                    key={color.key}
+                    className="size-3.5 shrink-0 rounded-full border-2 border-paper"
+                    style={{ backgroundColor: color.hex }}
+                  />
+                ))}
+                {extraDots > 0 ? (
+                  <span className="ps-2 text-xs">{ui.cards.moreColors(extraDots)}</span>
+                ) : null}
+              </span>
+              <span className="line-clamp-1 min-w-0">
+                {ui.cards.colors(colors.map((c) => c.name))}
+              </span>
+            </>
+          ) : null}
+        </p>
         <span className="mt-auto pt-2 text-sm font-bold text-blue group-hover:underline">
           {ui.cards.viewProduct}
         </span>

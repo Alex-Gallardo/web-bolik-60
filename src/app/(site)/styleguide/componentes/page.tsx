@@ -14,6 +14,7 @@ import { StoreCard } from "@/components/stores/store-card";
 import { Badge } from "@/components/ui/badge";
 import { Chip, ChipToggle } from "@/components/ui/chip";
 import { audiences } from "@/content/home";
+import { ui } from "@/content/ui";
 import { listCategories, listProducts } from "@/server/data/catalog";
 import { listDepartments, listStores } from "@/server/data/stores";
 import { FormDemo } from "./form-demo";
@@ -263,6 +264,7 @@ export default async function ComponentesPage() {
           </div>
           <h3>Cargando (skeleton)</h3>
           <div aria-busy="true" className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <span className="sr-only">{ui.loading.products}</span>
             {Array.from({ length: 4 }, (_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
