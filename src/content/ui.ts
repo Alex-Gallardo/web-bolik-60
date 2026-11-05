@@ -6,6 +6,8 @@
 const LIST = new Intl.ListFormat("es-GT", { type: "conjunction" });
 
 export const ui = {
+  /** Enlace para saltar al contenido con el teclado (docs/17 §1). */
+  skipToContent: "Saltar al contenido",
   loading: {
     sending: "Enviando…",
     saving: "Guardando…",

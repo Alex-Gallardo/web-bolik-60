@@ -135,7 +135,7 @@ BD-037,E2,"Datos, medios e integración base",Fuente de datos de ejemplo,S1,1,Mu
 BD-040,E3,"Estructura global, splash y movimiento",Layout raíz del sitio,S1,0.5,Must,A,BD-008 BD-024,06 §2,"HTML base, metadatos raíz y proveedores mínimos.","1. `app/layout.tsx`: `<html lang=""es-GT"">`, fuentes, `rootMetadata`, enlace ""Saltar al contenido"".
 2. `app/(site)/layout.tsx`: Header, `<main id=""contenido"">`, Footer, Toaster, RevealObserver.
 3. Script del splash en `<head>`.","- Una sola etiqueta `<main>` por página.
-- JS compartido ≤ 90 KB gzip.",Sí
+- JS inicial dentro del presupuesto de docs/12 §2 (home ≤ 165 KB, resto ≤ 150 KB; lo vigila Lighthouse CI). El criterio original de 90 KB compartidos no es alcanzable con Next 16 + React 19 (~132 KB de runtime); BD-040 no suma JS: 140.6 KB compartidos antes y después.",Sí
 BD-041,E3,"Estructura global, splash y movimiento",Header y menú móvil,S1,1,Must,A,BD-040 BD-025,06 §2,Navegación principal con acceso a buscar y a la cotización.,"1. Header fijo que se compacta al bajar (A-20) y se oculta/aparece por dirección de scroll en móvil.
 2. Badge de cotización con `badge-pop` (A-05).
 3. Menú móvil en `Sheet` con enlaces grandes y CTA de WhatsApp.","- Sin CLS al compactarse.

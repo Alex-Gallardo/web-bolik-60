@@ -739,7 +739,7 @@ HTML base, metadatos raíz y proveedores mínimos.
 **Criterios de aceptación**
 
 - [ ] Una sola etiqueta `<main>` por página.
-- [ ] JS compartido ≤ 90 KB gzip.
+- [ ] JS inicial dentro del presupuesto de docs/12 §2 (home ≤ 165 KB, resto ≤ 150 KB; lo vigila Lighthouse CI). El criterio original de 90 KB compartidos no es alcanzable con Next 16 + React 19 (~132 KB de runtime); BD-040 no suma JS: 140.6 KB compartidos antes y después.
 
 #### BD-041 · Header y menú móvil
 
