@@ -1,3 +1,12 @@
+import { SITE, buildMetadata } from "@/features/seo/metadata";
+
+/** Home: título por defecto sin plantilla (docs/10 §1) y descripción de docs/17 §6. */
+export const metadata = buildMetadata({
+  title: { absolute: SITE.defaultTitle },
+  description: SITE.description,
+  path: "/",
+});
+
 /** Marcador provisional de la home (textos de docs/17): la landing real llega con los tickets de E4. */
 export default function HomePage() {
   return (

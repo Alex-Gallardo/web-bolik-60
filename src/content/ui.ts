@@ -6,6 +6,14 @@
 const LIST = new Intl.ListFormat("es-GT", { type: "conjunction" });
 
 export const ui = {
+  /** Enlace para saltar al contenido con el teclado (docs/17 §1). */
+  skipToContent: "Saltar al contenido",
+  /** Página 404 mínima (docs/17 §4); la completa, con buscador y categorías, llega en BD-046. */
+  notFound: {
+    title: "Esta página se borró como lápiz.",
+    body: "Puede que la dirección haya cambiado. Busca un producto o vuelve al inicio.",
+    home: "Volver al inicio",
+  },
   loading: {
     sending: "Enviando…",
     saving: "Guardando…",

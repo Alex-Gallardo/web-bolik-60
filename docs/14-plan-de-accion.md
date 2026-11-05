@@ -739,7 +739,7 @@ HTML base, metadatos raíz y proveedores mínimos.
 **Criterios de aceptación**
 
 - [ ] Una sola etiqueta `<main>` por página.
-- [ ] JS compartido ≤ 90 KB gzip.
+- [ ] JS inicial dentro del presupuesto de docs/12 §2 (home ≤ 165 KB, resto ≤ 150 KB; lo vigila Lighthouse CI). El criterio original de 90 KB compartidos no es alcanzable con Next 16 + React 19 (~132 KB de runtime); BD-040 no suma JS: 140.6 KB compartidos antes y después.
 
 #### BD-041 · Header y menú móvil
 
@@ -830,7 +830,7 @@ Errores amables que ayudan a seguir navegando.
 
 **Pasos**
 
-1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías.
+1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías. Conserva su `<MainContent>` (BD-040: queda fuera de los layouts de grupo) y revisa que no salga el `<title>` de Next en inglés.
 2. `error.tsx` con WhatsApp y "Reintentar".
 
 **Criterios de aceptación**
