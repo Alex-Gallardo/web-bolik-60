@@ -73,7 +73,10 @@ export function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cx(
-          "dialog-content fixed inset-x-0 bottom-0 z-(--z-modal) flex max-h-[90dvh] flex-col gap-4 overflow-y-auto rounded-t-xl bg-paper px-6 pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-ink shadow-lg sm:inset-0 sm:m-auto sm:h-fit sm:w-[min(28rem,calc(100%-2rem))] sm:rounded-xl sm:p-8",
+          "dialog-content fixed inset-x-0 bottom-0 z-(--z-modal) flex max-h-[90dvh] flex-col gap-4 overflow-y-auto rounded-t-xl bg-paper px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-ink shadow-lg sm:inset-0 sm:m-auto sm:h-fit sm:w-[min(28rem,calc(100%-2rem))] sm:rounded-xl sm:px-8 sm:pb-8",
+          // Con el ×, el contenido empieza debajo de él: un título largo no queda tapado. Sin
+          // tailwind-merge, el padding de arriba va en una sola clase.
+          showClose ? "pt-14" : "pt-8",
           className,
         )}
         {...props}

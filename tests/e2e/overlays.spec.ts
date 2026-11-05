@@ -13,7 +13,7 @@ test.describe("overlays", () => {
       const overlay =
         name === "Popover" ? page.locator(".popover-content") : page.getByRole("dialog");
       await expect(overlay).toBeVisible();
-      if (name !== "Popover") await expectNoA11yViolations(page);
+      await expectNoA11yViolations(page);
       await page.keyboard.press("Escape");
       await expect(overlay).toHaveCount(0);
       await expect(trigger).toBeFocused();
@@ -39,27 +39,36 @@ test.describe("overlays", () => {
       .toBe(true);
   });
 
-  test("con movimiento reducido el sheet solo cambia de opacidad", async ({ page }) => {
+  test("con movimiento reducido: sheets y popover solo opacidad, acordeón al instante", async ({
+    page,
+  }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/styleguide/componentes");
-    await page.getByRole("button", { name: "Sheet derecha" }).click();
-    const sheet = page.getByRole("dialog");
-    await expect(sheet).toBeVisible();
-    expect(await sheet.evaluate((el) => getComputedStyle(el).animationName)).toBe("fade-in");
+    for (const name of ["Sheet derecha", "Sheet (auto)", "Popover"]) {
+      await page.getByRole("button", { name, exact: true }).click();
+      const overlay =
+        name === "Popover" ? page.locator(".popover-content") : page.getByRole("dialog");
+      await expect(overlay).toBeVisible();
+      expect(await overlay.evaluate((el) => getComputedStyle(el).animationName)).toBe("fade-in");
+      await page.keyboard.press("Escape");
+      await expect(overlay).toHaveCount(0);
+    }
+    const duration = await page
+      .locator("details.accordion-item")
+      .first()
+      .evaluate((el) => getComputedStyle(el, "::details-content").transitionDuration);
+    // Sin soporte de ::details-content tampoco hay transición ("0s" o vacío).
+    expect(["0s", ""]).toContain(duration);
   });
 
   test("pestañas: teclado en escritorio, acordeón en móvil", async ({ page }, testInfo) => {
     await page.goto("/styleguide/componentes");
     if (testInfo.project.name === "movil") {
       const header = page.getByRole("button", { name: "Medidas" });
-      const panel = page.locator(
-        `#${await header.getAttribute("aria-controls")}`.replaceAll(":", "\\:"),
-      );
-      await expect(panel).toBeHidden();
+      await expect(page.getByRole("region", { name: "Medidas" })).toHaveCount(0);
       await header.click();
       await expect(header).toHaveAttribute("aria-expanded", "true");
-      await expect(panel).toBeVisible();
-      await expect(panel).toHaveAttribute("role", "region");
+      await expect(page.getByRole("region", { name: "Medidas" })).toBeVisible();
     } else {
       const first = page.getByRole("tab", { name: "Especificaciones" });
       await first.focus();

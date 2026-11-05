@@ -202,7 +202,7 @@ Reglas:
 7. `src/server/db.ts` — cliente Prisma.
 8. `src/components/layout/section.tsx` — contenedor de sección con fondo configurable.
 9. `src/components/feedback/*` — toasts y diálogos. Desde un componente cliente: `const { toast, dialog } = useFeedback()` y `toast(feedback.quote.added(...), { onAction })`. `FeedbackHost` (en el layout) carga sonner y Radix Dialog al primer uso: nunca importes `sonner` directo en una página.
-10. `src/components/ui/{dialog,sheet,popover}.tsx` — overlays sobre Radix (~10 KB gzip el Dialog). En piezas de todas las páginas (menú móvil del header, BD-041) se cargan al primer uso, como el toaster; en una sola página (filtros, mapa) se importan donde se usan. La clase `js` de `<html>` (script del layout raíz) indica que hay JS: lo que se oculta o anima solo con JS depende de ella.
+10. `src/components/ui/{dialog,sheet,popover}.tsx` — overlays sobre Radix (~10 KB gzip el Dialog). En piezas de todas las páginas (menú móvil del header, BD-041) se cargan al primer uso, como el toaster; en una sola página (filtros, mapa) se importan donde se usan. La clase `js` de `<html>` (script del layout raíz) indica que hay JS: lo que se oculta o anima solo con JS depende de ella. Ojo: un Sheet o Dialog modal pone `aria-hidden` a todo lo de fuera, incluidas las regiones `aria-live` de `FeedbackHost`; un toast lanzado con un sheet abierto (drawer de cotización, BD-071) debe probarse con lector de pantalla.
 11. `src/app/(site)/styleguide/page.tsx` — vitrina de todo lo anterior.
 
 ## 5. package.json (scripts)

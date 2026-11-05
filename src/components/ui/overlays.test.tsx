@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { ui } from "@/content/ui";
 import { Accordion } from "./accordion";
 import { Button } from "./button";
@@ -12,7 +12,7 @@ let mobile = false;
 beforeAll(() => {
   // jsdom no trae matchMedia: Tabs lo usa para el modo acordeón.
   window.matchMedia = ((query: string) => ({
-    matches: query.includes("max-width") ? mobile : !mobile,
+    matches: query.includes("width <") ? mobile : !mobile,
     media: query,
     onchange: null,
     addEventListener: () => {},
@@ -21,6 +21,11 @@ beforeAll(() => {
     removeListener: () => {},
     dispatchEvent: () => false,
   })) as typeof window.matchMedia;
+});
+
+// Si una prueba en modo móvil falla, las siguientes no deben heredarlo.
+afterEach(() => {
+  mobile = false;
 });
 
 const ITEMS = [
@@ -75,7 +80,25 @@ describe("Tabs", () => {
     // Otro encabezado cierra el anterior; el mismo lo cierra.
     fireEvent.click(screen.getByRole("button", { name: "Seguridad" }));
     expect(header.getAttribute("aria-expanded")).toBe("false");
-    mobile = false;
+  });
+
+  it("valor inicial inexistente: la primera queda alcanzable; sin pestañas no dibuja nada", () => {
+    const { container, rerender } = render(
+      <Tabs label="Información" items={ITEMS} defaultValue="no-existe" />,
+    );
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs[0]!.tabIndex).toBe(0);
+    fireEvent.keyDown(tabs[0]!, { key: "ArrowLeft" });
+    expect(tabs[2]!.getAttribute("aria-selected")).toBe("true");
+    rerender(<Tabs label="Información" items={[]} />);
+    expect(container.innerHTML).toBe("");
+  });
+
+  it("con Alt, Ctrl o Cmd no mueve nada (Alt+← es «atrás»)", () => {
+    render(<Tabs label="Información" items={ITEMS} />);
+    const tabs = screen.getAllByRole("tab");
+    fireEvent.keyDown(tabs[0]!, { key: "ArrowRight", altKey: true });
+    expect(tabs[0]!.getAttribute("aria-selected")).toBe("true");
   });
 });
 
@@ -145,10 +168,11 @@ describe("Dialog, Sheet y Popover", () => {
         <PopoverTrigger asChild>
           <Button>¿Qué es una cajilla?</Button>
         </PopoverTrigger>
-        <PopoverContent>Una caja de tienda.</PopoverContent>
+        <PopoverContent title="Cajilla">Una caja de tienda.</PopoverContent>
       </Popover>,
     );
     fireEvent.click(screen.getByRole("button", { name: "¿Qué es una cajilla?" }));
-    expect(await screen.findByText("Una caja de tienda.")).toBeTruthy();
+    expect(await screen.findByRole("dialog", { name: "Cajilla" })).toBeTruthy();
+    expect(screen.getByText("Una caja de tienda.")).toBeTruthy();
   });
 });

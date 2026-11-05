@@ -30,7 +30,8 @@ type TabsProps = {
   className?: string;
 };
 
-const MOBILE = "(max-width: 47.99rem)";
+/** Mismo corte que max-md: de Tailwind (y que motion.css). */
+const MOBILE = "(width < 48rem)";
 function subscribeMobile(callback: () => void) {
   const query = window.matchMedia(MOBILE);
   query.addEventListener("change", callback);
@@ -69,12 +70,16 @@ export function Tabs({
     () => false,
   );
   const Heading = `h${headingLevel}` as const;
+  // Si defaultValue no existe o items cambió, la primera queda activa (siempre hay una alcanzable).
+  const selectedValue = items.some((item) => item.value === active) ? active : items[0]?.value;
   const tabId = (value: string) => `${id}-tab-${value}`;
   const panelId = (value: string) => `${id}-panel-${value}`;
   const headerId = (value: string) => `${id}-header-${value}`;
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const current = items.findIndex((item) => item.value === active);
+    // Alt+← es «atrás» del navegador: con modificadores no se toca nada.
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const current = items.findIndex((item) => item.value === selectedValue);
     const last = items.length - 1;
     const next = {
       ArrowRight: current === last ? 0 : current + 1,
@@ -88,6 +93,8 @@ export function Tabs({
     tabs.current[next]?.focus();
   };
 
+  if (items.length === 0) return null;
+
   return (
     <div data-tabs={accordionOnMobile ? "accordion" : "tabs"} className={className}>
       <div
@@ -95,12 +102,14 @@ export function Tabs({
         aria-label={label}
         onKeyDown={onKeyDown}
         className={cx(
-          "flex gap-1 overflow-x-auto border-b-2 border-line",
+          // Línea base con una sombra interior: con overflow-x el borde de la lista recortaba el
+          // indicador. Relleno arriba y a los lados para el anillo de foco.
+          "flex gap-1 overflow-x-auto px-1.5 pt-1.5 shadow-[inset_0_-2px_0_var(--line)]",
           accordionOnMobile && "max-md:hidden",
         )}
       >
         {items.map((item, index) => {
-          const selected = item.value === active;
+          const selected = item.value === selectedValue;
           return (
             <button
               key={item.value}
@@ -115,7 +124,8 @@ export function Tabs({
               tabIndex={selected ? 0 : -1}
               onClick={() => setActive(item.value)}
               className={cx(
-                "-mb-0.5 min-h-11 shrink-0 cursor-pointer border-b-4 px-4 font-bold whitespace-nowrap",
+                // Foco por dentro (el borde inferior de la lista recortaría el anillo de afuera).
+                "min-h-11 shrink-0 cursor-pointer rounded-t-md border-b-4 px-4 font-bold whitespace-nowrap focus-visible:shadow-[inset_0_0_0_2px_var(--ink)] focus-visible:outline-offset-[-5px]",
                 selected ? "border-blue text-ink" : "border-transparent text-muted hover:text-ink",
               )}
             >
@@ -162,7 +172,7 @@ export function Tabs({
                   ? { role: "region", "aria-labelledby": headerId(item.value) }
                   : { role: "tabpanel", "aria-labelledby": tabId(item.value), tabIndex: 0 })}
                 data-tab-panel
-                data-active={item.value === active || undefined}
+                data-active={item.value === selectedValue || undefined}
                 data-open={expanded || undefined}
                 className="py-5"
               >

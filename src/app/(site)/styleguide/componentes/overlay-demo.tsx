@@ -73,8 +73,7 @@ export function OverlayDemo() {
         <PopoverTrigger asChild>
           <Button variant="outline">Popover</Button>
         </PopoverTrigger>
-        <PopoverContent>
-          <p className="font-bold">Cajilla</p>
+        <PopoverContent title="Cajilla">
           <p className="text-sm text-muted">
             Presentación para tiendas: varias unidades del mismo color en una caja.
           </p>

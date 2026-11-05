@@ -412,7 +412,7 @@
     display: none;
   }
 }
-@media (max-width: 47.99rem) {
+@media (width < 48rem) {
   .js [data-tabs="tabs"] [data-tab-panel]:not([data-active]),
   .js [data-tabs="accordion"] [data-tab-panel]:not([data-open]) {
     display: none;
@@ -462,6 +462,10 @@
     display: none;
   }
   /* Sheet y Popover: aparecen y se van solo con opacidad. */
+  /* El * de arriba no alcanza ::details-content: el acordeón abre al instante. */
+  .accordion-item::details-content {
+    transition: none;
+  }
   /* Misma especificidad que las reglas por lado ([data-side]): gana por ir después. */
   .sheet-content[data-side][data-state="open"],
   .popover-content[data-state="open"] {
