@@ -1,9 +1,9 @@
 "use client";
 
-import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useRef, type CSSProperties } from "react";
 import { Illustration } from "@/components/brand/illustration";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ui } from "@/content/ui";
 import {
   announce,
@@ -100,67 +100,61 @@ export default function FriendlyDialog({ request, open, busy }: FriendlyDialogPr
   }, [request, open]);
 
   return (
-    <Dialog.Root
+    <Dialog
       open={open}
       onOpenChange={(next) => {
         if (!next && !busy) closeDialog();
       }}
     >
-      <Dialog.Portal>
-        <Dialog.Overlay className="dialog-overlay fixed inset-0 z-(--z-modal) bg-ink/60" />
-        <Dialog.Content
-          aria-busy={busy || undefined}
-          onEscapeKeyDown={block}
-          onCloseAutoFocus={(event) => {
+      <DialogContent
+        showClose={false}
+        aria-busy={busy || undefined}
+        onEscapeKeyDown={block}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          takeReturnFocus()?.focus();
+        }}
+        onInteractOutside={block}
+        // Confirmación destructiva: el foco empieza en «Cancelar», no en «Sí, eliminar».
+        onOpenAutoFocus={(event) => {
+          if (request.destructive && safeAction.current) {
             event.preventDefault();
-            takeReturnFocus()?.focus();
-          }}
-          onInteractOutside={block}
-          // Confirmación destructiva: el foco empieza en «Cancelar», no en «Sí, eliminar».
-          onOpenAutoFocus={(event) => {
-            if (request.destructive && safeAction.current) {
-              event.preventDefault();
-              safeAction.current.focus();
-            }
-          }}
-          className="dialog-content fixed inset-x-0 bottom-0 z-(--z-modal) flex max-h-[90dvh] flex-col items-center gap-4 overflow-y-auto rounded-t-xl bg-paper px-6 pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center text-ink shadow-lg sm:inset-0 sm:m-auto sm:h-fit sm:w-[min(28rem,calc(100%-2rem))] sm:rounded-xl sm:p-8"
-        >
-          {/* key: con un diálogo nuevo, el ícono vuelve a animarse. */}
-          <div key={request.id} className="relative flex justify-center">
-            <KindIcon kind={request.kind} />
-          </div>
-          {request.celebrate ? <Confetti key={`c${request.id}`} /> : null}
-          <Dialog.Title className="text-2xl leading-tight sm:text-[1.75rem]">
-            {request.title}
-          </Dialog.Title>
-          <Dialog.Description className="max-w-[var(--measure)] text-[length:var(--fs-body)] text-muted">
-            {request.body}
-          </Dialog.Description>
-          {request.note ? <p className="text-sm text-muted">{request.note}</p> : null}
-          <div className="mt-2 flex w-full flex-col gap-3">
+            safeAction.current.focus();
+          }
+        }}
+        className="items-center text-center"
+      >
+        {/* key: con un diálogo nuevo, el ícono vuelve a animarse. */}
+        <div key={request.id} className="relative flex justify-center">
+          <KindIcon kind={request.kind} />
+        </div>
+        {request.celebrate ? <Confetti key={`c${request.id}`} /> : null}
+        <DialogTitle>{request.title}</DialogTitle>
+        <DialogDescription className="max-w-[var(--measure)]">{request.body}</DialogDescription>
+        {request.note ? <p className="text-sm text-muted">{request.note}</p> : null}
+        <div className="mt-2 flex w-full flex-col gap-3">
+          <Button
+            ref={primaryAction}
+            variant={request.destructive ? "danger" : "primary"}
+            className="w-full"
+            loading={busy}
+            onClick={() => void runPrimary()}
+          >
+            {request.primary ?? ui.feedback.ok}
+          </Button>
+          {request.secondary ? (
             <Button
-              ref={primaryAction}
-              variant={request.destructive ? "danger" : "primary"}
+              ref={safeAction}
+              variant="outline"
               className="w-full"
-              loading={busy}
-              onClick={() => void runPrimary()}
+              aria-disabled={busy || undefined}
+              onClick={() => runSecondary()}
             >
-              {request.primary ?? ui.feedback.ok}
+              {request.secondary}
             </Button>
-            {request.secondary ? (
-              <Button
-                ref={safeAction}
-                variant="outline"
-                className="w-full"
-                aria-disabled={busy || undefined}
-                onClick={() => runSecondary()}
-              >
-                {request.secondary}
-              </Button>
-            ) : null}
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          ) : null}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

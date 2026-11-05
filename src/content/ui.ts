@@ -48,4 +48,8 @@ export const ui = {
   },
   /** Prefijo de país del campo de teléfono, para lectores de pantalla. */
   phonePrefix: "Código de país +502, Guatemala",
+  /** Sheet, Dialog y Popover (BD-025). */
+  overlays: {
+    close: "Cerrar",
+  },
 } as const;

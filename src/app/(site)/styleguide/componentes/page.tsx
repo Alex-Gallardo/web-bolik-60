@@ -15,10 +15,14 @@ import { Badge } from "@/components/ui/badge";
 import { Chip, ChipToggle } from "@/components/ui/chip";
 import { audiences } from "@/content/home";
 import { ui } from "@/content/ui";
-import { listCategories, listProducts } from "@/server/data/catalog";
+import { Accordion } from "@/components/ui/accordion";
+import { Tabs, type TabItem } from "@/components/ui/tabs";
+import { getFeaturedProduct, listCategories, listProducts } from "@/server/data/catalog";
+import { listFaqs } from "@/server/data/content";
 import { listDepartments, listStores } from "@/server/data/stores";
 import { FormDemo } from "./form-demo";
 import { LoadingDemo } from "./loading-demo";
+import { OverlayDemo } from "./overlay-demo";
 
 /**
  * Vitrina interna de componentes (BD-020…BD-025): cada ticket agrega aquí sus piezas reales.
@@ -67,12 +71,66 @@ const BACKGROUND_USES: Record<BackgroundPreset, string> = {
 };
 
 export default async function ComponentesPage() {
-  const [departments, products, categories, stores] = await Promise.all([
+  const [departments, products, categories, stores, featured, faqs] = await Promise.all([
     listDepartments(),
     listProducts(),
     listCategories(),
     listStores(),
+    getFeaturedProduct(),
+    listFaqs({ scope: "home" }),
   ]);
+  // Pestañas de la ficha (docs/06 §4) con los datos de ejemplo del producto estrella.
+  const tabs: TabItem[] = featured
+    ? [
+        {
+          value: "especificaciones",
+          label: "Especificaciones",
+          content: (
+            <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-[auto_1fr]">
+              {featured.specs.flatMap((group) =>
+                group.items.map((item) => (
+                  <div key={`${group.name}-${item.label}`} className="contents">
+                    <dt className="font-bold">{item.label}</dt>
+                    <dd className="text-muted">{item.value}</dd>
+                  </div>
+                )),
+              )}
+            </dl>
+          ),
+        },
+        {
+          value: "medidas",
+          label: "Medidas",
+          content: (
+            <ul className="flex flex-col gap-1">
+              {featured.dimensions.map((d) => (
+                <li key={d.partKey}>
+                  <span className="font-bold">{d.label}:</span> {d.valueMm} mm
+                </li>
+              ))}
+            </ul>
+          ),
+        },
+        {
+          value: "distribuidores",
+          label: "Para distribuidores",
+          content: (
+            <ul className="flex flex-col gap-1">
+              {featured.packagings.map((pack) => (
+                <li key={pack.code}>
+                  <span className="font-bold">{pack.name}:</span> {pack.unitsPerPack} unidades
+                </li>
+              ))}
+            </ul>
+          ),
+        },
+        {
+          value: "seguridad",
+          label: "Seguridad",
+          content: <p className="max-w-[var(--measure)]">{featured.safetyWarning}</p>,
+        },
+      ]
+    : [];
   return (
     <>
       <div className="container-site flex flex-col gap-16 py-16">
@@ -277,6 +335,26 @@ export default async function ComponentesPage() {
             errores; con el teclado se llena de principio a fin.
           </p>
           <FormDemo departments={departments.map(({ slug, name }) => ({ slug, name }))} />
+        </section>
+        <section className="flex flex-col gap-8" aria-labelledby="overlays">
+          <h2 id="overlays">Overlays y navegación</h2>
+          <p className="text-muted">
+            Escape cierra y el foco vuelve al botón que abrió. Las pestañas y el acordeón tienen
+            todo su contenido en el HTML y se ven completos sin JavaScript.
+          </p>
+          <h3>Sheet, Dialog y Popover</h3>
+          <OverlayDemo />
+          <h3>Pestañas (acordeón bajo 768 px)</h3>
+          <Tabs label="Información del producto" items={tabs} headingLevel={4} />
+          <h3>Acordeón</h3>
+          <Accordion
+            exclusive="faq-demo"
+            items={faqs.map((faq) => ({
+              id: `faq-${faq.key}`,
+              title: faq.question,
+              content: <p>{faq.answer}</p>,
+            }))}
+          />
         </section>
       </div>
 

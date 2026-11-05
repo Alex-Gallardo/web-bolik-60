@@ -47,7 +47,7 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 | A-70 | Skeleton | Carga en cliente | Brillo `translateX` | 1.2 s loop | Sin brillo |
 | A-71 | Spinner | Botón cargando (BD-021) | Giro `rotate` del arco (`.spin`, `--dur-spin`) | 800 ms loop | Quieto; el texto «Enviando…» anuncia la carga |
 
-\* `grid-template-rows` no es `transform`, pero solo afecta al contenido del acordeón abierto (un elemento) y es la técnica estándar; está permitido **solo** en el acordeón.
+\* Con `<details>` nativo (BD-025) la técnica equivalente es `::details-content` con `block-size` e `interpolate-size: allow-keywords`; donde no hay soporte, abre al instante. `grid-template-rows` no es `transform`, pero solo afecta al contenido del acordeón abierto (un elemento) y es la técnica estándar; está permitido **solo** en el acordeón.
 
 <a id="splash"></a>
 
