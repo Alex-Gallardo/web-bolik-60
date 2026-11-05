@@ -30,6 +30,12 @@ test.describe("styleguide", () => {
       await expect(section.getByRole("heading", { level: 2 })).toBeVisible();
     }
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    // Ids únicos: un id repetido deja etiquetas y aria-* apuntando al elemento equivocado.
+    const duplicated = await page.evaluate(() => {
+      const ids = [...document.querySelectorAll("[id]")].map((el) => el.id);
+      return ids.filter((id, i) => ids.indexOf(id) !== i);
+    });
+    expect(duplicated, "ids repetidos").toEqual([]);
     // Los colores muestran su contraste calculado (en el navegador).
     await expect(page.locator('[data-token="blue"] [data-contrast="paper"]')).toContainText(/AA/);
     await expectNoA11yViolations(page);

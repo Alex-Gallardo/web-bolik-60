@@ -86,7 +86,7 @@ test.describe("componentes", () => {
   test("la marca muestra el logo en sus versiones y carga sus archivos", async ({ page }) => {
     const errors = collectConsoleErrors(page);
     await page.goto("/styleguide");
-    const marca = page.locator("section", { has: page.getByRole("heading", { name: "Marca" }) });
+    const marca = page.locator("section#marca");
     const logos = marca.getByRole("img", { name: "Bolik" });
     await expect(logos).toHaveCount(6);
     // Los archivos SVG cargan con su tamaño (al menos el mínimo de marca, 96 px).

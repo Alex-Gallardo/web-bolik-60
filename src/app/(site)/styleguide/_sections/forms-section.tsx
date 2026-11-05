@@ -9,7 +9,10 @@ import { FormDemo } from "../_demos/form-demo";
 
 type FormsSectionProps = { departments: { slug: string; name: string }[] };
 
-/** 7 · Formularios: cada control en sus estados y el formulario de ejemplo con validación real. */
+/**
+ * 7 · Formularios: cada control en sus estados y el formulario de ejemplo con validación real.
+ * Ids sin «-error» al final: Field y Checkbox llaman `${id}-error` al mensaje y chocarían.
+ */
 export function FormsSection({ departments }: FormsSectionProps) {
   const error = feedback.forms.errors.required;
   return (
@@ -22,7 +25,7 @@ export function FormsSection({ departments }: FormsSectionProps) {
         <Field id="estado-normal" label="Normal" hint="Con texto de ayuda">
           <Input placeholder="Tu nombre" />
         </Field>
-        <Field id="estado-error" label="Con error" error={error}>
+        <Field id="estado-invalido" label="Con error" error={error}>
           <Input defaultValue="" />
         </Field>
         <Field id="estado-deshabilitado" label="Deshabilitado">
@@ -37,7 +40,7 @@ export function FormsSection({ departments }: FormsSectionProps) {
             ))}
           </Select>
         </Field>
-        <Field id="estado-select-error" label="Lista con error" error={error}>
+        <Field id="estado-select-invalida" label="Lista con error" error={error}>
           <Select placeholder="Elige tu departamento" defaultValue="">
             {departments.slice(0, 3).map((d) => (
               <option key={d.slug} value={d.slug}>
@@ -53,7 +56,7 @@ export function FormsSection({ departments }: FormsSectionProps) {
       <div className="flex flex-col gap-3">
         <Checkbox id="estado-check" label="Casilla normal" />
         <Checkbox id="estado-check-on" label="Casilla marcada" defaultChecked />
-        <Checkbox id="estado-check-error" label="Casilla con error" error={error} />
+        <Checkbox id="estado-check-invalida" label="Casilla con error" error={error} />
         <Checkbox id="estado-check-off" label="Casilla deshabilitada" disabled />
       </div>
       <h3>Formulario de ejemplo</h3>

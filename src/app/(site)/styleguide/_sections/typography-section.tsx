@@ -1,6 +1,6 @@
 import { SgSection } from "../_components/sg-section";
 
-/** Escala tipográfica (tokens.css): tamaño a 360 px → en escritorio. */
+/** Escala tipográfica (tokens.css): tamaño a 360 px → en escritorio. Textos de docs/17. */
 const SCALE = [
   {
     token: "hero",
@@ -24,13 +24,13 @@ const SCALE = [
     token: "h3",
     size: "21 → 26 px",
     className: "font-display text-[length:var(--fs-h3)] font-bold",
-    sample: "Todo lo que va en el estuche",
+    sample: "Bolik en tu escuela",
   },
   {
     token: "lead",
     size: "18 → 20 px",
     className: "text-[length:var(--fs-lead)]",
-    sample: "Elige tu perfil y te llevamos directo a lo que necesitas.",
+    sample: "Visitamos colegios con talleres de escritura, dibujo y creatividad.",
   },
   {
     token: "body",

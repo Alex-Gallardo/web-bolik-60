@@ -22,6 +22,7 @@ const GROUPS: { title: string; tokens: string[] }[] = [
       "green",
       "green-50",
       "whatsapp",
+      "whatsapp-700",
     ],
   },
   {
@@ -30,7 +31,24 @@ const GROUPS: { title: string; tokens: string[] }[] = [
   },
   { title: "Sobre fondo oscuro", tokens: ["on-dark", "on-dark-muted"] },
   { title: "Escuelas", tokens: ["sun", "coral", "kblue", "kgreen"] },
-  { title: "Semánticos", tokens: ["success", "warning", "warning-bg", "danger", "info", "focus"] },
+  {
+    title: "Semánticos",
+    tokens: [
+      "success",
+      "success-bg",
+      "warning",
+      "warning-bg",
+      "danger",
+      "danger-bg",
+      "info",
+      "info-bg",
+      "focus",
+    ],
+  },
+  {
+    title: "Líneas de producto",
+    tokens: ["line-escritura", "line-escolar", "line-arte", "line-oficina"],
+  },
 ];
 
 const ALL = GROUPS.flatMap((group) => group.tokens);
@@ -47,7 +65,7 @@ const subscribe = () => () => {};
 const isHex = (value: string | undefined): value is string =>
   Boolean(value && /^#[0-9a-f]{6}$/i.test(value));
 
-/** «rgb(17, 19, 24)» → «#111318». */
+/** Color calculado (rgb con tres números) → hex de 6 dígitos. */
 function rgbToHex(rgb: string): string {
   const parts =
     rgb
@@ -60,21 +78,27 @@ function rgbToHex(rgb: string): string {
 
 /**
  * Valor real de cada token, como lo resuelve el navegador. No se lee el texto de la variable: el
- * CSS minificado lo reescribe (#ffffff → #fff) y podría usar otros formatos. Se aplica a un
- * elemento de prueba y se lee su color calculado (siempre rgb). JSON estable para el store.
+ * CSS minificado acorta el hex del blanco y podría usar otros formatos. Se aplica a un elemento de
+ * prueba y se lee su color calculado (siempre rgb). Un token que no existe queda vacío («—») en
+ * lugar de heredar el color del texto. Se calcula una vez: los tokens no cambian en la página.
  */
+let cached: string | null = null;
 function readTokens(): string {
+  if (cached) return cached;
+  const root = getComputedStyle(document.documentElement);
   const probe = document.createElement("span");
   probe.style.display = "none";
   document.body.append(probe);
   const values = Object.fromEntries(
     ALL.map((name) => {
+      if (!root.getPropertyValue(`--${name}`).trim()) return [name, ""];
       probe.style.color = `var(--${name})`;
       return [name, rgbToHex(getComputedStyle(probe).color)];
     }),
   );
   probe.remove();
-  return JSON.stringify(values);
+  cached = JSON.stringify(values);
+  return cached;
 }
 
 /**

@@ -1,16 +1,9 @@
 import { SgSection } from "../_components/sg-section";
 
+/** Escala --space-N de tokens.css (N × 4 px): cada barra mide el token real. */
+const SPACES = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24];
+
 // Clases completas (no interpoladas) para que Tailwind las detecte.
-const SPACES = [
-  { name: "1 · 4", className: "w-1" },
-  { name: "2 · 8", className: "w-2" },
-  { name: "3 · 12", className: "w-3" },
-  { name: "4 · 16", className: "w-4" },
-  { name: "6 · 24", className: "w-6" },
-  { name: "8 · 32", className: "w-8" },
-  { name: "12 · 48", className: "w-12" },
-  { name: "16 · 64", className: "w-16" },
-];
 const RADII = [
   { name: "sm · 10", className: "rounded-sm" },
   { name: "md · 14", className: "rounded-md" },
@@ -33,10 +26,15 @@ export function SpacingSection() {
     >
       <h3>Espacios</h3>
       <ul className="flex flex-col gap-2">
-        {SPACES.map((s) => (
-          <li key={s.name} className="flex items-center gap-4">
-            <span className={`${s.className} block h-4 rounded-sm bg-blue`} />
-            <span className="text-sm text-muted tnum">--space-{s.name} px</span>
+        {SPACES.map((n) => (
+          <li key={n} className="flex items-center gap-4">
+            <span
+              className="block h-4 shrink-0 rounded-sm bg-blue"
+              style={{ width: `var(--space-${n})` }}
+            />
+            <span className="text-sm text-muted tnum">
+              --space-{n} · {n * 4} px
+            </span>
           </li>
         ))}
       </ul>

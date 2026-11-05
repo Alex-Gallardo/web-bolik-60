@@ -140,7 +140,18 @@ export function MotionLab() {
       name: "Acordeón",
       demo: () => (
         <Accordion
-          items={[{ title: "¿Dónde se fabrica?", content: <p>En Guatemala, desde 1966.</p> }]}
+          items={[
+            {
+              // Pregunta frecuente de docs/17 §7.
+              title: "¿Dónde se fabrican los productos Bolik?",
+              content: (
+                <p>
+                  En Guatemala. Bolik fabrica y empaca sus productos en su planta de San José Villa
+                  Nueva desde 1966.
+                </p>
+              ),
+            },
+          ]}
         />
       ),
     },
