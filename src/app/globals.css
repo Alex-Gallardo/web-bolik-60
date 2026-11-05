@@ -179,3 +179,26 @@
 @utility tnum {
   font-variant-numeric: tabular-nums;
 }
+
+/* ── sonner (BD-024) ──
+   Su CSS se inyecta sin capa en <head>: ganaría a todas nuestras capas. Estas reglas, también sin
+   capa y con más especificidad (html …), le devuelven el foco visible, la fuente y el z-index del
+   sitio, y dejan solo transform y opacidad en la transición (sonner también anima height). Su
+   regla de prefers-reduced-motion usa !important y sigue mandando. */
+html [data-sonner-toaster] {
+  z-index: var(--z-toast);
+  font-family: inherit;
+}
+html [data-sonner-toaster] [data-sonner-toast] {
+  transition:
+    transform var(--dur-slow) var(--ease-out),
+    opacity var(--dur-slow) var(--ease-out);
+}
+html [data-sonner-toaster] [data-sonner-toast][data-swiping="true"] {
+  transition: none;
+}
+html [data-sonner-toaster] [data-sonner-toast]:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--ink);
+}

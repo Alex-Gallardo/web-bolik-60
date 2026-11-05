@@ -8,7 +8,8 @@ import { cn } from "@/lib/cn";
  * anuncian. El significado nunca depende del amarillo (contraste bajo sobre blanco): es acento.
  */
 
-export type IllustrationName = "success" | "error" | "empty" | "no-results" | "offline";
+export type IllustrationName =
+  "success" | "error" | "empty" | "no-results" | "offline" | "error-cloud" | "question";
 
 const INK = "fill-none stroke-blue";
 const ACCENT = "fill-none stroke-yellow";
@@ -56,6 +57,26 @@ const DRAWINGS: Record<IllustrationName, ReactNode> = {
     <>
       <path className={INK} d="M36 86h48a18 18 0 0 0 0-36 26 26 0 0 0-50-4 20 20 0 0 0 2 40z" />
       <path className={ACCENT} strokeWidth="6" d="M22 22l76 76" />
+    </>
+  ),
+  // Error que bloquea (FriendlyDialog, docs/08 §4): nube con una gota roja que cae.
+  "error-cloud": (
+    <>
+      <path className={INK} d="M36 74h48a18 18 0 0 0 0-36 26 26 0 0 0-50-4 20 20 0 0 0 2 40z" />
+      <path
+        className="fill-red stroke-red"
+        strokeWidth="2"
+        d="M60 84c-5 7-8 11-8 15a8 8 0 0 0 16 0c0-4-3-8-8-15z"
+      />
+    </>
+  ),
+  // Confirmación (FriendlyDialog): signo de pregunta en tinta sobre un círculo amarillo. El trazo
+  // azul lleva la forma; el amarillo es fondo (no llega a 3:1 sobre blanco por sí solo).
+  question: (
+    <>
+      <circle className="fill-yellow stroke-yellow" cx="60" cy="60" r="38" />
+      <path className={INK} strokeWidth="7" d="M47 48a13 13 0 1 1 18 12c-3 1.5-5 4-5 8v4" />
+      <circle className="fill-blue" cx="60" cy="86" r="4.5" />
     </>
   ),
 };

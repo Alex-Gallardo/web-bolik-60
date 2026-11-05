@@ -48,7 +48,15 @@ describe("Logo", () => {
 });
 
 describe("Illustration", () => {
-  const names: IllustrationName[] = ["success", "error", "empty", "no-results", "offline"];
+  const names: IllustrationName[] = [
+    "success",
+    "error",
+    "empty",
+    "no-results",
+    "offline",
+    "error-cloud",
+    "question",
+  ];
 
   it.each(names)("%s pesa menos de 3 KB", (name) => {
     const html = renderToStaticMarkup(<Illustration name={name} />);

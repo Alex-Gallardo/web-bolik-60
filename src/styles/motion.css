@@ -228,6 +228,93 @@
   animation: shimmer var(--dur-shimmer) linear infinite;
 }
 
+/* Aviso de sin conexión (FeedbackHost, BD-024): aparece con opacidad. */
+.notice-in {
+  animation: fade-in var(--dur-base) var(--ease-out) both;
+}
+
+/* ── FriendlyDialog (A-09) y éxito (A-60), BD-024 ──
+   Radix pone data-state="open|closed" y espera a que termine la animación de salida. Móvil: bottom
+   sheet (A-08: 420 ms al entrar, 240 ms al salir); desde sm, centrado con scale + opacidad. */
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes scale-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@keyframes confetti {
+  from {
+    opacity: 1;
+    transform: rotate(var(--angle)) translateY(0) scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateY(-5.5rem) rotate(200deg) scale(1);
+  }
+}
+.dialog-overlay[data-state="open"] {
+  animation: fade-in var(--dur-base) var(--ease-out);
+}
+.dialog-overlay[data-state="closed"] {
+  animation: fade-out var(--dur-base) var(--ease-in);
+}
+.dialog-content[data-state="open"] {
+  animation: sheet-in var(--dur-slow) var(--ease-out);
+}
+.dialog-content[data-state="closed"] {
+  animation: sheet-out var(--dur-base) var(--ease-in);
+}
+@media (min-width: 40rem) {
+  .dialog-content[data-state="open"] {
+    animation: scale-in var(--dur-base) var(--ease-out);
+  }
+  .dialog-content[data-state="closed"] {
+    animation: scale-out var(--dur-base) var(--ease-in);
+  }
+}
+/* Círculo del ícono con rebote; el check se dibuja después (pathLength=1). */
+.dialog-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop-in var(--dur-slow) var(--ease-spring) both;
+}
+.dialog-check {
+  stroke-dasharray: 1;
+  animation: draw var(--dur-slower) var(--ease-out) var(--dur-fast) both;
+  --path-length: 1;
+}
+.confetti-piece {
+  position: absolute;
+  left: calc(50% - 0.25rem);
+  top: 0;
+  width: 0.5rem;
+  height: 0.75rem;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti var(--dur-slower) var(--ease-out) var(--delay, 0ms) both;
+}
+
 /* ── Movimiento reducido: sin desplazamientos, solo opacidad breve ── */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -255,5 +342,19 @@
   /* La tarjeta no sube: solo aparece la sombra (opacidad). */
   .lift:hover {
     transform: none;
+  }
+  /* Diálogo: aparece y se va solo con opacidad; el ícono queda quieto y sin confeti. */
+  .dialog-content[data-state="open"] {
+    animation-name: fade-in;
+  }
+  .dialog-content[data-state="closed"] {
+    animation-name: fade-out;
+  }
+  .dialog-pop,
+  .dialog-check {
+    animation: none;
+  }
+  .confetti {
+    display: none;
   }
 }
