@@ -20,7 +20,8 @@ for _ in $(seq 1 60); do
     cat "${log}" >&2
     exit 1
   fi
-  if curl -fs --max-time 5 -o /dev/null http://127.0.0.1:3100/; then
+  # node y no curl: en la imagen de Playwright (job E2E) node está seguro; curl, no.
+  if node -e "fetch('http://127.0.0.1:3100/',{signal:AbortSignal.timeout(5000)}).then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"; then
     echo "El artefacto responde en http://127.0.0.1:3100"
     exit 0
   fi
