@@ -60,6 +60,8 @@ export const feedback = {
     rateLimited: {
       title: "Recibimos varias solicitudes seguidas",
       body: "Espera unos minutos e inténtalo de nuevo. Si es urgente, escríbenos por WhatsApp.",
+      primary: "Escribir por WhatsApp",
+      secondary: "Entendido",
     },
     schoolSent: (folio: string, school: string) => ({
       title: `¡Qué emoción, ${school}!`,

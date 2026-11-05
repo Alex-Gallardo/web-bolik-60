@@ -11,6 +11,17 @@ export const ui = {
     saving: "Guardando…",
     searching: "Buscando…",
     products: "Cargando productos…",
+    uploading: "Subiendo imagen…",
+    /** Nombre accesible de la barra de progreso de una subida. */
+    uploadProgress: "Progreso de la subida",
+  },
+  /** Toaster y FriendlyDialog (BD-024): etiquetas, no mensajes (esos van en feedback.ts). */
+  feedback: {
+    /** Nombre de la región de avisos; sonner le agrega el atajo (Alt+T) para llegar a ellos. */
+    region: "Avisos",
+    closeToast: "Cerrar aviso",
+    /** Botón principal cuando el mensaje no trae uno. */
+    ok: "Entendido",
   },
   /** Botones del selector de cantidad (nombre accesible; en pantalla se ven − y +). */
   quantity: {

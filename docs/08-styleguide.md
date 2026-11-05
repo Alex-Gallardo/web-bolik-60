@@ -153,7 +153,7 @@ En la página: `const look = await getSectionAppearance("home.solutions")` → `
 | Filtros sin resultados | Estado vacío + "Quitar filtros" | Inline | `catalog.filtersEmpty` |
 | Descargar PDF | Toast "Descargando la ficha técnica" | Toast | `catalog.pdfReady` |
 | Usar mi ubicación | Toast "Buscando…" → "Encontramos N tiendas" o "No pasa nada, elige tu departamento" | Toast | `stores.*` |
-| Sin conexión / reconexión | Toast persistente / toast de éxito | Toast | `system.offline/online` |
+| Sin conexión / reconexión | Aviso persistente arriba (lo dibuja `FeedbackHost`: funciona sin red) / toast de éxito | Toast | `system.offline/online` |
 | Error inesperado | Página de error amable con reintento | Página | `system.genericError` |
 | Admin: guardar | Toast "Cambios guardados y publicados · Ver en el sitio" | Toast | `admin.saved` |
 | Admin: eliminar | Confirmación → toast con "Deshacer" | Dialog + Toast | `admin.confirmDelete`, `admin.deleted` |

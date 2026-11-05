@@ -81,7 +81,7 @@ bolik-digital/
 │  ├─ components/
 │  │  ├─ ui/                    # primitivas (shadcn/Radix): button, dialog, sheet, tabs, accordion…
 │  │  ├─ layout/                # header, mobile-nav, footer, splash, section, container, breadcrumbs
-│  │  ├─ feedback/              # friendly-dialog, toaster, empty-state, inline-alert
+│  │  ├─ feedback/              # feedback-host (en el layout), use-feedback, friendly-dialog y toaster (al primer uso), empty-state, inline-alert
 │  │  ├─ motion/                # reveal, count-up, ink-stroke, lazy-motion-provider
 │  │  ├─ hero/                  # video-hero, chapter-tabs
 │  │  ├─ catalog/               # product-card (+ skeleton), category-card, filters, color-swatches, pack-selector, specs, dimensions
@@ -201,7 +201,7 @@ Reglas:
 6. `src/lib/cache-tags.ts` — nombres de tags.
 7. `src/server/db.ts` — cliente Prisma.
 8. `src/components/layout/section.tsx` — contenedor de sección con fondo configurable.
-9. `src/components/feedback/*` — toasts y diálogos.
+9. `src/components/feedback/*` — toasts y diálogos. Desde un componente cliente: `const { toast, dialog } = useFeedback()` y `toast(feedback.quote.added(...), { onAction })`. `FeedbackHost` (en el layout) carga sonner y Radix Dialog al primer uso: nunca importes `sonner` directo en una página.
 10. `src/app/(site)/styleguide/page.tsx` — vitrina de todo lo anterior.
 
 ## 5. package.json (scripts)
