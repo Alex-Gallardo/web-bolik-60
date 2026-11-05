@@ -15,7 +15,7 @@ test.describe("humo @critico", () => {
   // Revisa cabeceras, no la página: basta con un proyecto.
   test("el styleguide y el admin llevan noindex", async ({ request }, testInfo) => {
     test.skip(testInfo.project.name !== "escritorio", "solo cabeceras HTTP");
-    for (const path of ["/styleguide/tokens", "/admin"]) {
+    for (const path of ["/styleguide", "/admin"]) {
       const response = await request.get(path);
       expect(response.headers()["x-robots-tag"], path).toContain("noindex");
     }

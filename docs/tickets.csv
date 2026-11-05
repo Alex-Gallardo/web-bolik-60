@@ -250,7 +250,8 @@ BD-090,E8,SEO técnico,Metadatos en todas las rutas,S2,1,Must,B,BD-037,10 §3,"T
 BD-091,E8,SEO técnico,Datos estructurados JSON-LD,S2,0.5,Must,B,BD-090,10 §4,Datos que Google y las IA entienden.,"1. Copiar `features/seo/jsonld.tsx` y usarlo en cada plantilla.
 2. Validar con la Prueba de resultados enriquecidos y validator.schema.org.","- 0 errores en las plantillas: home, categoría, ficha, FAQ, dónde comprar.
 - Capturas de la validación adjuntas al ticket.",Sí
-BD-092,E8,SEO técnico,sitemap.xml y robots.txt,S2,0.25,Must,B,BD-032,10 §5,Mapa del sitio con fechas reales y reglas para bots.,1. Copiar `app/sitemap.ts` y `app/robots.ts`.,"- El sitemap solo incluye páginas publicadas e indexables.
+BD-092,E8,SEO técnico,sitemap.xml y robots.txt,S2,0.25,Must,B,BD-032,10 §5,Mapa del sitio con fechas reales y reglas para bots.,1. Copiar `app/sitemap.ts` y `app/robots.ts`.
+2. `robots.txt` con `Disallow: /styleguide` y `Disallow: /admin`; ninguno de los dos en el sitemap (BD-026).,"- El sitemap solo incluye páginas publicadas e indexables.
 - En staging robots bloquea todo.",Sí
 BD-093,E8,SEO técnico,Migas de pan y enlazado interno,S2,0.5,Must,B,BD-061,10 §7,Ayuda a usuarios y buscadores a entender la jerarquía.,"1. Componente `Breadcrumbs` visible + `BreadcrumbList`.
 2. Bloques de enlaces relacionados (categorías hermanas, productos relacionados, departamentos).",- Ninguna página pública queda a más de 3 clics de la home.,Sí
@@ -298,7 +299,8 @@ BD-112,E10,Páginas por público e institucionales,Páginas legales,S3,0.25,Must
 BD-114,E11,Panel administrativo,Acceso al admin (iron-session),S2,1,Must,B,BD-030,"03 §8, 01 ADR-08",Inicio de sesión seguro para el equipo interno.,"1. Copiar `starter/src/server/auth/*`.
 2. `/admin/login` con server action, bloqueo tras 5 intentos.
 3. `requireRole()` en cada página y acción; `proxy.ts` redirige sin cookie.
-4. Script `pnpm admin:create` para el primer usuario.","- Sin sesión, `/admin/*` redirige a login.
+4. Script `pnpm admin:create` para el primer usuario.
+5. `canViewStyleguide()` (`src/server/auth/styleguide-access.ts`) suma la sesión de admin: en producción /styleguide se ve con sesión (BD-026).","- Sin sesión, `/admin/*` redirige a login.
 - Rol `ventas` no puede editar productos (prueba).
 - Cookie `httpOnly`, `secure`, `sameSite=lax`.",Sí
 BD-115,E11,Panel administrativo,Layout del admin y dashboard,S3,1,Must,A,BD-114,"06 §4, 12 §6",Panel con indicadores principales.,"1. Menú lateral/inferior, encabezado con usuario.

@@ -476,3 +476,57 @@
     animation-name: fade-out;
   }
 }
+
+/* ── Movimiento reducido simulado (BD-026) ──
+   El interruptor «Simular movimiento reducido» de /styleguide pone data-reduced-motion en <html>.
+   Mismas reglas que el bloque @media de arriba: una prueba (motion-css.test.ts) exige que tengan
+   los mismos selectores. No se usa una variante de Tailwind: envolvería los selectores en :is() y
+   perdería los pseudo-elementos (::before, ::details-content). */
+[data-reduced-motion],
+[data-reduced-motion] *,
+[data-reduced-motion] *::before,
+[data-reduced-motion] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+.js[data-reduced-motion] [data-reveal]:not([data-revealed]) {
+  opacity: 1;
+  transform: none;
+}
+[data-reduced-motion] .spin {
+  animation: none;
+}
+[data-reduced-motion] .skeleton::after {
+  animation: none;
+  opacity: 0;
+}
+[data-reduced-motion] .lift:hover {
+  transform: none;
+}
+[data-reduced-motion] .dialog-content[data-state="open"] {
+  animation-name: fade-in;
+}
+[data-reduced-motion] .dialog-content[data-state="closed"] {
+  animation-name: fade-out;
+}
+[data-reduced-motion] .dialog-pop,
+[data-reduced-motion] .dialog-check {
+  animation: none;
+}
+[data-reduced-motion] .confetti {
+  display: none;
+}
+[data-reduced-motion] .accordion-item::details-content {
+  transition: none;
+}
+[data-reduced-motion] .sheet-content[data-side][data-state="open"],
+[data-reduced-motion] .popover-content[data-state="open"] {
+  animation-name: fade-in;
+}
+[data-reduced-motion] .sheet-content[data-side][data-state="closed"],
+[data-reduced-motion] .popover-content[data-state="closed"] {
+  animation-name: fade-out;
+}

@@ -5,7 +5,7 @@ import { collectConsoleErrors, expect, expectNoA11yViolations, test } from "./he
 test.describe("componentes", () => {
   test("los botones pasan axe y tienen foco visible", async ({ page }) => {
     const errors = collectConsoleErrors(page);
-    const response = await page.goto("/styleguide/componentes");
+    const response = await page.goto("/styleguide");
     expect(response?.status()).toBe(200);
     expect(response?.headers()["x-robots-tag"]).toContain("noindex");
     await expectNoA11yViolations(page);
@@ -26,7 +26,7 @@ test.describe("componentes", () => {
     page,
   }) => {
     const errors = collectConsoleErrors(page);
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     const demo = page.getByRole("button", { name: "Probar envío" });
     const before = await demo.boundingBox();
 
@@ -48,7 +48,7 @@ test.describe("componentes", () => {
   });
 
   test("los 9 fondos de sección se ven con su tono", async ({ page }) => {
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     const expected = {
       paper: "light",
       soft: "light",
@@ -85,7 +85,7 @@ test.describe("componentes", () => {
 
   test("la marca muestra el logo en sus versiones y carga sus archivos", async ({ page }) => {
     const errors = collectConsoleErrors(page);
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     const marca = page.locator("section", { has: page.getByRole("heading", { name: "Marca" }) });
     const logos = marca.getByRole("img", { name: "Bolik" });
     await expect(logos).toHaveCount(6);
@@ -100,8 +100,8 @@ test.describe("componentes", () => {
   test("formulario: con errores el foco va al primero y los mensajes salen en español", async ({
     page,
   }) => {
-    await page.goto("/styleguide/componentes");
-    const form = page.locator("form");
+    await page.goto("/styleguide");
+    const form = page.getByTestId("formulario-ejemplo");
     await form.getByRole("button", { name: "Enviar cotización" }).focus();
     await page.keyboard.press("Enter");
 
@@ -116,8 +116,8 @@ test.describe("componentes", () => {
   });
 
   test("formulario: corregir el teléfono borra el aviso de los dos campos", async ({ page }) => {
-    await page.goto("/styleguide/componentes");
-    const form = page.locator("form");
+    await page.goto("/styleguide");
+    const form = page.getByTestId("formulario-ejemplo");
     const phone = form.getByRole("textbox", { name: "Teléfono" });
     const email = form.getByRole("textbox", { name: "Correo" });
     // Antes de enviar, salir del teléfono vacío no marca el correo.
@@ -135,8 +135,8 @@ test.describe("componentes", () => {
 
   test("formulario: se llena y se envía solo con el teclado", async ({ page }) => {
     const errors = collectConsoleErrors(page);
-    await page.goto("/styleguide/componentes");
-    const form = page.locator("form");
+    await page.goto("/styleguide");
+    const form = page.getByTestId("formulario-ejemplo");
     const keys = page.keyboard;
 
     // Punto de partida: la primera opción del grupo (desde ahí, todo con el teclado).
@@ -201,7 +201,7 @@ test.describe("componentes", () => {
         }
       }).observe({ type: "layout-shift", buffered: true });
     });
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     const grid = page.getByTestId("grilla-productos");
     await grid.scrollIntoViewIfNeeded();
     await expect(grid.getByRole("link")).toHaveCount(12);
@@ -211,7 +211,7 @@ test.describe("componentes", () => {
   });
 
   test("tarjetas: se elevan solo con hover real", async ({ page }) => {
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     const card = page.getByTestId("grilla-productos").getByRole("link").first();
     await card.scrollIntoViewIfNeeded();
     const canHover = await page.evaluate(() => matchMedia("(hover: hover)").matches);
@@ -224,7 +224,7 @@ test.describe("componentes", () => {
 
   test("tarjetas: con movimiento reducido no suben, solo muestran sombra", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     const card = page.getByTestId("grilla-productos").getByRole("link").first();
     await card.scrollIntoViewIfNeeded();
     const canHover = await page.evaluate(() => matchMedia("(hover: hover)").matches);
@@ -238,7 +238,7 @@ test.describe("componentes", () => {
 
   test("con movimiento reducido el spinner no gira", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     const spinner = page.locator("svg.spin").first();
     await expect(spinner).toBeVisible();
     expect(await spinner.evaluate((el) => getComputedStyle(el).animationName)).toBe("none");

@@ -1339,6 +1339,7 @@ Mapa del sitio con fechas reales y reglas para bots.
 **Pasos**
 
 1. Copiar `app/sitemap.ts` y `app/robots.ts`.
+2. `robots.txt` con `Disallow: /styleguide` y `Disallow: /admin`; ninguno de los dos en el sitemap (BD-026).
 
 **Criterios de aceptación**
 
@@ -1640,6 +1641,7 @@ Inicio de sesión seguro para el equipo interno.
 2. `/admin/login` con server action, bloqueo tras 5 intentos.
 3. `requireRole()` en cada página y acción; `proxy.ts` redirige sin cookie.
 4. Script `pnpm admin:create` para el primer usuario.
+5. `canViewStyleguide()` (`src/server/auth/styleguide-access.ts`) suma la sesión de admin: en producción /styleguide se ve con sesión (BD-026).
 
 **Criterios de aceptación**
 
