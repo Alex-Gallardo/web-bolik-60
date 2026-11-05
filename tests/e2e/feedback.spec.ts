@@ -20,8 +20,10 @@ test.describe("feedback", () => {
 
   test("toast: se ve, se anuncia una vez y su acción funciona", async ({ page }) => {
     const row = page.locator('[data-row="Quitar línea"]');
+    // El nombre sale de los datos de ejemplo: se lee de la fila, no se supone.
+    const product = (await row.locator("span").first().textContent())!.trim();
     await row.getByRole("button", { name: "Quitar" }).click();
-    const text = feedback.quote.removed("Bolik Ultra").title;
+    const text = feedback.quote.removed(product).title;
     await expect(page.locator("[data-sonner-toast]").getByText(text)).toBeVisible();
     await expect(page.locator('[data-feedback-live="polite"]')).toHaveText(text);
     // La región de sonner no anuncia (la nuestra ya lo hizo).
@@ -50,7 +52,8 @@ test.describe("feedback", () => {
   test("reintento: ocupado no cierra con Escape y luego muestra un solo diálogo", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: "Ver diálogo de error" }).click();
+    const trigger = page.getByRole("button", { name: "Ver diálogo de error" });
+    await trigger.click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Intentar de nuevo" }).click();
     await expect(dialog).toHaveAttribute("aria-busy", "true");
@@ -60,6 +63,14 @@ test.describe("feedback", () => {
       feedback.quote.sent("x").title,
     );
     await expect(page.getByRole("dialog")).toHaveCount(1);
+    // El diálogo nuevo toma el foco y se anuncia; al cerrar, el foco vuelve al primer botón.
+    await expect(dialog.getByRole("button", { name: "Ver resumen" })).toBeFocused();
+    await expect(page.locator('[data-feedback-live="polite"]')).toContainText(
+      feedback.quote.sent("x").title,
+    );
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(trigger).toBeFocused();
   });
 
   test("sin conexión: aviso persistente y, al volver, conexión recuperada", async ({
@@ -76,6 +87,28 @@ test.describe("feedback", () => {
     );
     await context.setOffline(false);
     await expect(notice).toHaveCount(0);
+    await expect(
+      page.locator("[data-sonner-toast]").getByText(feedback.system.online.title),
+    ).toBeVisible();
+  });
+
+  test("sin red y sin haber cargado sonner, un toast no rompe la página", async ({
+    page,
+    context,
+  }) => {
+    await context.setOffline(true);
+    await page.getByRole("button", { name: "Descargar ficha técnica" }).click();
+    // El aviso igual se anuncia y la página sigue en pie.
+    await expect(page.locator('[data-feedback-live="polite"]')).toContainText(
+      feedback.catalog.pdfReady.title,
+    );
+    await page.getByRole("button", { name: "Ver diálogo de éxito" }).click();
+    await expect(page.locator('[data-feedback-live="assertive"]')).toContainText(
+      feedback.quote.sent("x").title,
+    );
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Feedback");
+    // Al volver la red, el toaster se descarga y avisa.
+    await context.setOffline(false);
     await expect(
       page.locator("[data-sonner-toast]").getByText(feedback.system.online.title),
     ).toBeVisible();

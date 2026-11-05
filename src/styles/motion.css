@@ -301,7 +301,8 @@
 }
 .dialog-check {
   stroke-dasharray: 1;
-  animation: draw var(--dur-slower) var(--ease-out) var(--dur-fast) both;
+  /* A-60 ≈ 600 ms: 160 ms de espera + 420 ms de trazo. */
+  animation: draw var(--dur-slow) var(--ease-out) var(--dur-fast) both;
   --path-length: 1;
 }
 .confetti-piece {

@@ -1,17 +1,31 @@
 "use client";
 
-import { Suspense, lazy, useEffect, useSyncExternalStore } from "react";
-import { getState, setConnection, subscribe, type ConnectionMessages } from "./feedback-store";
+import { useEffect, useState, useSyncExternalStore, type ComponentType } from "react";
+import {
+  announce,
+  clearAnnouncement,
+  closeDialog,
+  getServerState,
+  getState,
+  retryableImport,
+  setConnection,
+  subscribe,
+  type ConnectionMessages,
+} from "./feedback-store";
+import type { FriendlyDialogProps } from "./friendly-dialog";
 import { ToneIcon } from "./tone-icon";
 
 // Solo se descargan cuando hacen falta (docs/12 §2: lo que carga al interactuar no cuenta como JS
-// inicial). Se precargan con la primera interacción para que el primer toast no espere la red.
-// React.lazy y no next/dynamic: nunca se dibujan en el servidor (aparecen tras una acción) y así
-// el JS de todas las páginas no carga la maquinaria de next/dynamic.
-const loadToaster = () => import("./toaster");
-const loadDialog = () => import("./friendly-dialog");
-const Toaster = lazy(loadToaster);
-const FriendlyDialog = lazy(loadDialog);
+// inicial) y se precargan con la primera interacción. No usa next/dynamic ni React.lazy: si la
+// descarga falla (sin red, o una pestaña abierta durante un despliegue) lanzarían el error al
+// dibujar y, como este componente está en el layout, se caería la página. Aquí el componente se
+// monta solo cuando su import() resolvió; si falla, se reintenta con el próximo pedido o al
+// volver la conexión.
+const loadToaster = retryableImport(() => import("./toaster"));
+const loadDialog = retryableImport(() => import("./friendly-dialog"));
+
+/** Tiempo para que el lector termine de leer un anuncio antes de vaciar la región. */
+const ANNOUNCEMENT_MS = 7000;
 
 /**
  * Anfitrión del feedback (docs/08 §4, BD-024), montado una vez en el layout. Pesa poco: dos
@@ -19,11 +33,13 @@ const FriendlyDialog = lazy(loadDialog);
  * leería), el aviso de sin conexión y el montaje perezoso del toaster y del diálogo.
  *
  * Los textos de conexión llegan como props desde el layout (servidor): así content/feedback.ts no
- * entra en el JS de todas las páginas. El aviso de sin conexión lo dibuja este componente y no sonner: sin red no se podría descargar
- * el toaster. Va arriba al centro para no chocar con la pila de toasts de abajo.
+ * entra en el JS de todas las páginas. El aviso de sin conexión lo dibuja este componente y no
+ * sonner (sin red no se podría descargar); va arriba al centro para no chocar con los toasts.
  */
 export function FeedbackHost({ messages }: { messages: ConnectionMessages }) {
-  const state = useSyncExternalStore(subscribe, getState, getState);
+  const state = useSyncExternalStore(subscribe, getState, getServerState);
+  const [Toaster, setToaster] = useState<ComponentType | null>(null);
+  const [Dialog, setDialog] = useState<ComponentType<FriendlyDialogProps> | null>(null);
 
   useEffect(() => {
     const offline = () => setConnection(false, messages);
@@ -40,8 +56,8 @@ export function FeedbackHost({ messages }: { messages: ConnectionMessages }) {
   // Precarga en la primera interacción (no en la carga: eso sí contaría como JS inicial).
   useEffect(() => {
     const warm = () => {
-      void loadToaster();
-      void loadDialog();
+      loadToaster().catch(() => {});
+      loadDialog().catch(() => {});
     };
     const options = { once: true, passive: true, capture: true } as const;
     window.addEventListener("pointerdown", warm, options);
@@ -52,7 +68,47 @@ export function FeedbackHost({ messages }: { messages: ConnectionMessages }) {
     };
   }, []);
 
+  // Toaster: se monta al primer toast; si no se pudo descargar, lo intenta de nuevo con el
+  // siguiente toast o cuando vuelve la conexión (el toast pendiente se ve entonces: sonner lo guarda).
+  const { toastRequests, offline } = state;
+  useEffect(() => {
+    if (toastRequests === 0 || Toaster) return;
+    let active = true;
+    loadToaster()
+      .then((module) => active && setToaster(() => module.default))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [toastRequests, offline, Toaster]);
+
+  // Diálogo: si no se pudo descargar, su texto se anuncia y el pedido se descarta (no queda un
+  // diálogo «abierto» invisible que bloquee el siguiente).
+  const dialogId = state.dialog?.id;
+  useEffect(() => {
+    if (dialogId === undefined || Dialog) return;
+    let active = true;
+    loadDialog()
+      .then((module) => active && setDialog(() => module.default))
+      .catch(() => {
+        const pending = getState().dialog;
+        if (!active || pending?.id !== dialogId) return;
+        announce(`${pending.title}. ${pending.body}`, "assertive");
+        closeDialog();
+      });
+    return () => {
+      active = false;
+    };
+  }, [dialogId, Dialog]);
+
+  // Vacía la región cuando ya se leyó: no queda texto viejo para quien recorre la página.
   const { announcement } = state;
+  useEffect(() => {
+    if (!announcement) return;
+    const timer = setTimeout(() => clearAnnouncement(announcement.id), ANNOUNCEMENT_MS);
+    return () => clearTimeout(timer);
+  }, [announcement]);
+
   const polite = announcement?.politeness === "polite" ? announcement : null;
   const assertive = announcement?.politeness === "assertive" ? announcement : null;
 
@@ -70,7 +126,7 @@ export function FeedbackHost({ messages }: { messages: ConnectionMessages }) {
       >
         {assertive ? <p key={assertive.id}>{assertive.text}</p> : null}
       </div>
-      {state.offline ? (
+      {offline ? (
         // Ya anunciado por la región polite al perder la conexión; queda en la página para quien
         // la recorra después.
         <div
@@ -84,13 +140,10 @@ export function FeedbackHost({ messages }: { messages: ConnectionMessages }) {
           </div>
         </div>
       ) : null}
-      {/* Un Suspense para cada uno: si compartieran, el toaster se ocultaría mientras carga el diálogo. */}
-      <Suspense fallback={null}>{state.toasterRequested ? <Toaster /> : null}</Suspense>
-      <Suspense fallback={null}>
-        {state.dialog ? (
-          <FriendlyDialog request={state.dialog} open={state.dialogOpen} busy={state.dialogBusy} />
-        ) : null}
-      </Suspense>
+      {Toaster ? <Toaster /> : null}
+      {Dialog && state.dialog ? (
+        <Dialog request={state.dialog} open={state.dialogOpen} busy={state.dialogBusy} />
+      ) : null}
     </>
   );
 }

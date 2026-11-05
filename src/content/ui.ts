@@ -12,6 +12,8 @@ export const ui = {
     searching: "Buscando…",
     products: "Cargando productos…",
     uploading: "Subiendo imagen…",
+    /** Nombre accesible de la barra de progreso de una subida. */
+    uploadProgress: "Progreso de la subida",
   },
   /** Toaster y FriendlyDialog (BD-024): etiquetas, no mensajes (esos van en feedback.ts). */
   feedback: {

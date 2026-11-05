@@ -8,6 +8,7 @@ import {
   getState,
   openDialog,
   resetFeedbackState,
+  retryableImport,
   runPrimary,
   runSecondary,
   setConnection,
@@ -69,6 +70,36 @@ describe("almacén de feedback", () => {
     expect(getState()).toMatchObject({ dialogBusy: false, dialogOpen: false });
   });
 
+  it("doble clic durante la salida: la acción corre una sola vez", async () => {
+    const onPrimary = vi.fn();
+    openDialog(feedback.admin.confirmDelete("x"), { kind: "confirm", onPrimary });
+    await runPrimary();
+    await runPrimary();
+    runSecondary();
+    expect(onPrimary).toHaveBeenCalledOnce();
+  });
+
+  it("si la acción falla, el diálogo queda abierto para reintentar", async () => {
+    openDialog(feedback.quote.failed, {
+      kind: "error",
+      onPrimary: () => Promise.reject(new Error("sin red")),
+    });
+    await runPrimary();
+    expect(getState()).toMatchObject({ dialogOpen: true, dialogBusy: false });
+  });
+
+  it("una descarga fallida se reintenta; una exitosa se recuerda", async () => {
+    const load = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValue("ok");
+    const once = retryableImport(load);
+    await expect(once()).rejects.toThrow("offline");
+    await expect(once()).resolves.toBe("ok");
+    await expect(once()).resolves.toBe("ok");
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
   it("si la acción abre otro diálogo, ese queda abierto", async () => {
     openDialog(feedback.quote.failed, {
       kind: "error",
@@ -108,7 +139,7 @@ describe("almacén de feedback", () => {
       text: feedback.catalog.pdfReady.title,
       politeness: "polite",
     });
-    expect(getState().toasterRequested).toBe(true);
+    expect(getState().toastRequests).toBe(1);
     await showToast(feedback.admin.uploadTooBig);
     expect(getState().announcement).toMatchObject({
       text: `${feedback.admin.uploadTooBig.title}. ${feedback.admin.uploadTooBig.description}`,
@@ -188,6 +219,18 @@ describe("FriendlyDialog", () => {
     renderDialog(false);
     fireEvent.keyDown(await screen.findByRole("dialog"), { key: "Escape" });
     expect(getState().dialogOpen).toBe(false);
+  });
+
+  it("al reemplazarse, el diálogo nuevo toma el foco y se anuncia", async () => {
+    openDialog(feedback.quote.failed, { kind: "error" });
+    const view = render(<FriendlyDialog request={getState().dialog!} open busy={false} />);
+    await screen.findByRole("dialog");
+    openDialog(feedback.quote.sent("COT-2027-000123"), { kind: "success" });
+    view.rerender(<FriendlyDialog request={getState().dialog!} open busy={false} />);
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Ver resumen" })),
+    );
+    expect(getState().announcement?.text).toContain(feedback.quote.sent("x").title);
   });
 
   it("sin texto de botón usa «Entendido»; con celebrate lleva confeti decorativo", async () => {

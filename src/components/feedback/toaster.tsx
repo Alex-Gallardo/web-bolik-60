@@ -24,7 +24,7 @@ const ICONS: ToasterProps["icons"] = {
 };
 
 /**
- * Toaster de sonner con los tokens de Bolik (BD-024). Se carga con dynamic() desde FeedbackHost
+ * Toaster de sonner con los tokens de Bolik (BD-024). Lo importa FeedbackHost
  * al primer toast. Sin los estilos de sonner (unstyled): clases de Tailwind sobre los tokens.
  * La región aria-live de sonner se silencia: FeedbackHost ya anuncia cada toast, con assertive
  * para errores (sonner solo usa polite y, al montarse tarde, su región nacería con el aviso).
@@ -42,7 +42,9 @@ export default function Toaster() {
       position={desktop ? "bottom-right" : "bottom-center"}
       visibleToasts={3}
       gap={8}
-      offset={24}
+      // Abajo al centro (menos de 768 px) también sube sobre la barra móvil: sonner solo usa
+      // mobileOffset hasta 600 px.
+      offset={desktop ? 24 : { bottom: "calc(var(--mobile-bar-h) + 0.75rem)" }}
       // No tapa la barra inferior móvil (docs/08 §4).
       mobileOffset={{ bottom: "calc(var(--mobile-bar-h) + 0.75rem)", left: 16, right: 16 }}
       // Más ancho que el de sonner (356 px): título, acción y cerrar caben sin partir el texto.

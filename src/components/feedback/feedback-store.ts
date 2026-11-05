@@ -6,8 +6,10 @@ import type { ToastTone } from "@/content/feedback";
  * mínimo que FeedbackHost lee con useSyncExternalStore.
  *
  * sonner y Radix Dialog no van en el JS inicial (docs/12 §2): sonner se importa con import() al
- * primer toast (y guarda los toasts creados antes de que el Toaster se suscriba) y el diálogo lo
- * carga FeedbackHost con dynamic() la primera vez que se pide.
+ * primer toast (y guarda los toasts creados antes de que el Toaster se suscriba) y FeedbackHost
+ * importa el Toaster y el diálogo la primera vez que se piden. Si la descarga falla (sin red, o una
+ * pestaña abierta durante un despliegue), nada se rompe: el aviso ya salió por aria-live y se
+ * reintenta al siguiente uso.
  */
 
 /** Toast tal como lo define content/feedback.ts. */
@@ -66,7 +68,8 @@ export type FeedbackState = {
   dialog: DialogRequest | null;
   dialogOpen: boolean;
   dialogBusy: boolean;
-  toasterRequested: boolean;
+  /** Cuántos toasts se pidieron: cada pedido reintenta montar el Toaster si su descarga falló. */
+  toastRequests: number;
   announcement: Announcement | null;
   /** Sin conexión: FeedbackHost dibuja el aviso él mismo (sin red no se puede cargar sonner). */
   offline: boolean;
@@ -76,7 +79,7 @@ const INITIAL: FeedbackState = {
   dialog: null,
   dialogOpen: false,
   dialogBusy: false,
-  toasterRequested: false,
+  toastRequests: 0,
   announcement: null,
   offline: false,
 };
@@ -98,9 +101,34 @@ export function getState(): FeedbackState {
   return state;
 }
 
+/** Lo que dibuja el servidor: nada pendiente (useSyncExternalStore, sin desajuste al hidratar). */
+export function getServerState(): FeedbackState {
+  return INITIAL;
+}
+
 /** Texto para la región aria-live de FeedbackHost (los errores interrumpen: assertive). */
 export function announce(text: string, politeness: Politeness = "polite") {
   set({ announcement: { id: nextId++, text, politeness } });
+}
+
+/** Vacía la región cuando ya se leyó, para que no quede texto viejo al recorrer la página. */
+export function clearAnnouncement(id: number) {
+  if (state.announcement?.id === id) set({ announcement: null });
+}
+
+/**
+ * import() que se recuerda si resolvió y se olvida si falló (para reintentar). Lo usan sonner,
+ * el Toaster y el diálogo.
+ */
+export function retryableImport<T>(load: () => Promise<T>): () => Promise<T> {
+  let pending: Promise<T> | null = null;
+  return () => {
+    pending ??= load().catch((error: unknown) => {
+      pending = null;
+      throw error;
+    });
+    return pending;
+  };
 }
 
 /** Duración por defecto: 4 s; 6 s si ofrece «Deshacer» u otra acción (docs/08 §4). */
@@ -109,20 +137,24 @@ export function toastDuration(message: ToastMessage, options: ToastOptions = {})
   return message.action && options.onAction ? 6000 : 4000;
 }
 
-/** Carga sonner al primer uso (la promesa se reutiliza). */
-let sonner: Promise<typeof import("sonner")> | null = null;
-export function loadSonner() {
-  sonner ??= import("sonner");
-  return sonner;
-}
+/** Carga sonner al primer uso. */
+let loadSonner = retryableImport(() => import("sonner"));
+let sonnerLoaded = false;
 
 export async function showToast(message: ToastMessage, options: ToastOptions = {}) {
-  if (!state.toasterRequested) set({ toasterRequested: true });
+  set({ toastRequests: state.toastRequests + 1 });
   announce(
     [message.title, message.description].filter(Boolean).join(". "),
     message.tone === "error" ? "assertive" : "polite",
   );
-  const { toast } = await loadSonner();
+  let toast;
+  try {
+    ({ toast } = await loadSonner());
+    sonnerLoaded = true;
+  } catch {
+    // Sin red o archivo viejo tras un despliegue: el aviso ya se anunció; el próximo reintenta.
+    return undefined;
+  }
   return toast[message.tone](message.title, {
     id: options.id,
     description: message.description,
@@ -135,8 +167,8 @@ export async function showToast(message: ToastMessage, options: ToastOptions = {
 }
 
 export async function dismissToast(id: string) {
-  if (!sonner) return;
-  (await sonner).toast.dismiss(id);
+  if (!sonnerLoaded) return;
+  (await loadSonner()).toast.dismiss(id);
 }
 
 /**
@@ -169,9 +201,11 @@ export function setConnection(online: boolean, messages: ConnectionMessages) {
 
 /** Abre un diálogo; si ya había uno, lo reemplaza (nunca dos a la vez). */
 export function openDialog(message: DialogMessage, options: DialogOptions) {
-  // Si reemplaza a otro diálogo, el foco vuelve igual al botón que abrió el primero.
-  if (!state.dialogOpen && typeof document !== "undefined") {
-    returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  // Si reemplaza a otro diálogo (o se abre mientras el anterior sale), el foco vuelve igual al
+  // botón que abrió el primero: nunca se guarda un botón de dentro de un diálogo.
+  if (typeof document !== "undefined") {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && !active.closest('[role="dialog"]')) returnFocus = active;
   }
   const request: DialogRequest = { ...message, ...options, id: nextId++ };
   set({ dialog: request, dialogOpen: true, dialogBusy: false });
@@ -191,22 +225,26 @@ export function closeDialog() {
  */
 export async function runPrimary() {
   const current = state.dialog;
-  if (!current || state.dialogBusy) return;
+  // !dialogOpen: Radix deja el diálogo clicable durante la salida; un doble clic no repite la acción.
+  if (!current || !state.dialogOpen || state.dialogBusy) return;
   const result = current.onPrimary?.();
   if (result instanceof Promise) {
     set({ dialogBusy: true });
     try {
       await result;
-    } finally {
+    } catch {
+      // La acción falló y no abrió otro diálogo: este queda abierto para reintentar.
       if (state.dialog?.id === current.id) set({ dialogBusy: false });
+      return;
     }
+    if (state.dialog?.id === current.id) set({ dialogBusy: false });
   }
   if (state.dialog?.id === current.id) closeDialog();
 }
 
 export function runSecondary() {
   const current = state.dialog;
-  if (!current || state.dialogBusy) return;
+  if (!current || !state.dialogOpen || state.dialogBusy) return;
   current.onSecondary?.();
   if (state.dialog?.id === current.id) closeDialog();
 }
@@ -214,7 +252,8 @@ export function runSecondary() {
 /** Solo para pruebas: vuelve al estado inicial. */
 export function resetFeedbackState() {
   returnFocus = null;
-  sonner = null;
+  loadSonner = retryableImport(() => import("sonner"));
+  sonnerLoaded = false;
   state = INITIAL;
   for (const listener of listeners) listener();
 }

@@ -1,11 +1,12 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { useRef, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { Illustration } from "@/components/brand/illustration";
 import { Button } from "@/components/ui/button";
 import { ui } from "@/content/ui";
 import {
+  announce,
   closeDialog,
   runPrimary,
   runSecondary,
@@ -68,7 +69,7 @@ function Confetti() {
   );
 }
 
-type FriendlyDialogProps = {
+export type FriendlyDialogProps = {
   request: DialogRequest;
   open: boolean;
   busy: boolean;
@@ -81,10 +82,22 @@ type FriendlyDialogProps = {
  * cerrar, el foco vuelve al botón que lo abrió. Lo monta FeedbackHost (uno a la vez).
  */
 export default function FriendlyDialog({ request, open, busy }: FriendlyDialogProps) {
+  const primaryAction = useRef<HTMLButtonElement>(null);
   const safeAction = useRef<HTMLButtonElement>(null);
+  const shownId = useRef(request.id);
   const block = (event: Event) => {
     if (busy) event.preventDefault();
   };
+
+  // Un diálogo reemplaza a otro abierto (reintento → éxito): Radix no vuelve a montar el contenido,
+  // así que ni mueve el foco ni el lector se entera. Se repite aquí lo que hace al abrir.
+  useEffect(() => {
+    if (shownId.current === request.id) return;
+    shownId.current = request.id;
+    if (!open) return;
+    (request.destructive && safeAction.current ? safeAction : primaryAction).current?.focus();
+    announce(`${request.title}. ${request.body}`);
+  }, [request, open]);
 
   return (
     <Dialog.Root
@@ -126,6 +139,7 @@ export default function FriendlyDialog({ request, open, busy }: FriendlyDialogPr
           {request.note ? <p className="text-sm text-muted">{request.note}</p> : null}
           <div className="mt-2 flex w-full flex-col gap-3">
             <Button
+              ref={primaryAction}
               variant={request.destructive ? "danger" : "primary"}
               className="w-full"
               loading={busy}

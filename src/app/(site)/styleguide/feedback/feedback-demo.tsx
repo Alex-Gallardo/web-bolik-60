@@ -410,7 +410,8 @@ export function FeedbackDemo({ productName, storeName }: FeedbackDemoProps) {
             dialog(feedback.admin.confirmDelete(`la tienda ${storeName}`), {
               kind: "confirm",
               destructive: true,
-              onPrimary: () => toast(feedback.admin.deleted("Tienda"), { onAction: () => {} }),
+              onPrimary: () =>
+                toast(feedback.admin.deleted("Punto de venta"), { onAction: () => {} }),
             })
           }
         >
@@ -435,7 +436,7 @@ export function FeedbackDemo({ productName, storeName }: FeedbackDemoProps) {
           </Button>
           <div
             role="progressbar"
-            aria-label="Subida de la imagen"
+            aria-label={ui.loading.uploadProgress}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={progress ?? 0}
