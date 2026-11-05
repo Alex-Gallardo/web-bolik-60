@@ -830,7 +830,7 @@ Errores amables que ayudan a seguir navegando.
 
 **Pasos**
 
-1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías.
+1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías. Conserva su `<MainContent>` (BD-040: queda fuera de los layouts de grupo) y revisa que no salga el `<title>` de Next en inglés.
 2. `error.tsx` con WhatsApp y "Reintentar".
 
 **Criterios de aceptación**

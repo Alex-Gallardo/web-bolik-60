@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildMetadata, canonicalPath, rootMetadata } from "./metadata";
+import { publicEnv } from "@/env.public";
+import { SITE, buildMetadata, canonicalPath, rootMetadata } from "./metadata";
 
 describe("metadata (BD-040, docs/10)", () => {
   it("canónica sin barra final, salvo la home", () => {
@@ -35,6 +36,23 @@ describe("metadata (BD-040, docs/10)", () => {
     });
     expect(meta.robots).toMatchObject({ index: false, follow: true });
     expect(meta.openGraph).not.toHaveProperty("images");
+  });
+
+  it("título absoluto (la home): sin plantilla y el mismo en Open Graph", () => {
+    const meta = buildMetadata({
+      title: { absolute: SITE.defaultTitle },
+      description: SITE.description,
+      path: "/",
+    });
+    expect(meta.title).toEqual({ absolute: SITE.defaultTitle });
+    expect(meta.openGraph).toMatchObject({ title: SITE.defaultTitle, url: "/" });
+    expect(meta.alternates?.canonical).toBe("/");
+  });
+
+  it("la raíz no impone canónica ni robots (cada página pone los suyos)", () => {
+    expect(rootMetadata).not.toHaveProperty("alternates");
+    expect(rootMetadata).not.toHaveProperty("robots");
+    expect(String(rootMetadata.metadataBase)).toBe(new URL(publicEnv.siteUrl).toString());
   });
 
   it("la raíz trae plantilla de título y metadataBase", () => {

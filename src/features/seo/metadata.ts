@@ -2,33 +2,27 @@ import type { Metadata } from "next";
 import { publicEnv } from "@/env.public";
 
 /**
- * Datos del sitio para metadatos y JSON-LD (docs/10). NAP igual en todo el sitio (docs/06 §2):
- * dirección, teléfono y horario de docs/17 §1 y del ajuste `SiteSetting`.
+ * Datos fijos del sitio para metadatos (docs/10). El NAP (dirección, teléfono, horario) y las
+ * redes no van aquí: el JSON-LD los lee de `SiteSetting` (getSiteSettings), una sola fuente.
  */
 export const SITE = {
   url: publicEnv.siteUrl,
   name: "Bolik",
-  /** Por validar con Gerencia (docs/17 §1, docs/02). */
-  legalName: "Industrias Bolik, S.A.",
-  tagline: "De la materia prima a tu primer trazo.",
+  /** Título por defecto y de la home, sin plantilla (docs/10 §1). */
+  defaultTitle: "Bolik · Útiles escolares y de oficina hechos en Guatemala desde 1966",
+  /** Descripción por defecto y de la home (docs/17 §6). */
   description:
-    "Bolik fabrica en Guatemala desde 1966 bolígrafos, lápices, marcadores y útiles escolares y de oficina. Encuentra dónde comprar y cotiza por mayor.",
+    "Útiles escolares y de oficina fabricados en Guatemala desde 1966. Encuentra dónde comprar Bolik, cotiza por mayor o lleva Bolik a tu escuela.",
   locale: "es_GT",
-  phone: "+502 6628 2600",
-  address: {
-    streetAddress: "6a. Avenida 6-31, zona 2",
-    addressLocality: "San José Villa Nueva",
-    addressRegion: "Guatemala",
-    postalCode: "01064",
-    addressCountry: "GT",
-  },
   foundingDate: "1966-06",
-  sameAs: ["https://www.facebook.com/universoBolik/"],
 } as const;
 
 type BuildArgs = {
-  /** Sin « | Bolik»: lo agrega la plantilla de rootMetadata. */
-  title: string;
+  /**
+   * Sin « | Bolik»: lo agrega la plantilla de rootMetadata. `{ absolute }` sale tal cual (la
+   * home, docs/10 §1).
+   */
+  title: string | { absolute: string };
   /** 140–160 caracteres. */
   description: string;
   /** Ruta canónica: «/productos/boligrafos/bolik-ultra». */
@@ -55,6 +49,7 @@ export function buildMetadata({
   type = "website",
 }: BuildArgs): Metadata {
   const canonical = canonicalPath(path);
+  const plain = typeof title === "string" ? title : title.absolute;
   return {
     title,
     description,
@@ -76,13 +71,13 @@ export function buildMetadata({
       locale: SITE.locale,
       siteName: SITE.name,
       url: canonical,
-      title,
+      title: plain,
       description,
-      ...(image ? { images: [{ url: image, width: 1200, height: 630, alt: title }] } : {}),
+      ...(image ? { images: [{ url: image, width: 1200, height: 630, alt: plain }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: plain,
       description,
       ...(image ? { images: [image] } : {}),
     },
@@ -90,13 +85,14 @@ export function buildMetadata({
 }
 
 /**
- * Metadata raíz (src/app/layout.tsx). Íconos y manifest llegan con el isotipo de Mercadeo; las
- * verificaciones de buscadores, con su ticket de SEO (variables nuevas en el esquema de env).
+ * Metadata raíz (src/app/layout.tsx). Sin canónica ni robots: cada página pone los suyos con
+ * buildMetadata (si estuvieran aquí, toda página los heredaría). Íconos y manifest llegan con el
+ * isotipo de Mercadeo; las verificaciones de buscadores, con su ticket de SEO.
  */
 export const rootMetadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: "Bolik · Útiles escolares y de oficina hechos en Guatemala desde 1966",
+    default: SITE.defaultTitle,
     template: "%s | Bolik",
   },
   description: SITE.description,

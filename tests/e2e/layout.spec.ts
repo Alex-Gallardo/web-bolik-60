@@ -5,6 +5,8 @@ const DEFAULT_TITLE = (rootMetadata.title as { default: string }).default;
 
 // Layout raíz (BD-040, docs/06 §2): español de Guatemala, metadatos raíz, un solo <main> y el
 // enlace «Saltar al contenido» como primer paso del teclado.
+// Varias usan /styleguide, que en producción responde 404 (BD-026): corren contra development o
+// staging, como la CI.
 test.describe("layout raíz", () => {
   test("la home: es-GT, título por defecto, un solo <main> y axe", async ({ page }) => {
     const errors = collectConsoleErrors(page);
@@ -15,6 +17,27 @@ test.describe("layout raíz", () => {
     await expect(page.locator("main#contenido")).toHaveCount(1);
     await expectNoA11yViolations(page);
     expect(errors, "errores en la consola").toEqual([]);
+  });
+
+  test("la home declara su canónica", async ({ page }) => {
+    await page.goto("/");
+    // La raíz del dominio (metadataBase): Next la escribe sin barra final.
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      /^https?:\/\/[^/]+\/?$/,
+    );
+  });
+
+  test("el 404 responde 404, con un solo <main> y un solo <title>", async ({ page }) => {
+    const response = await page.goto("/no-existe-esta-pagina");
+    expect(response?.status()).toBe(404);
+    await expect(page.locator("main#contenido")).toHaveCount(1);
+    await expect(page.locator("main")).toHaveCount(1);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Esta página se borró como lápiz.",
+    );
+    await expect(page.locator("title")).toHaveCount(1);
+    await expect(page).toHaveTitle("Página no encontrada | Bolik");
   });
 
   test("las páginas internas usan la plantilla «%s | Bolik» y un solo <main>", async ({ page }) => {
