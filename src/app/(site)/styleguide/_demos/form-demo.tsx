@@ -83,7 +83,13 @@ export function FormDemo({ departments }: FormDemoProps) {
   const onSubmit = handleSubmit(async () => setSent(true));
 
   return (
-    <form method="post" noValidate onSubmit={onSubmit} className="flex max-w-2xl flex-col gap-6">
+    <form
+      data-testid="formulario-ejemplo"
+      method="post"
+      noValidate
+      onSubmit={onSubmit}
+      className="flex max-w-2xl flex-col gap-6"
+    >
       <RadioCards
         id="tipo"
         legend="Tipo de cliente"

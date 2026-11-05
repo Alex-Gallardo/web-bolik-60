@@ -5,7 +5,7 @@ import { collectConsoleErrors, expect, expectNoA11yViolations, test } from "./he
 // aria-live, diálogos con foco atrapado y devuelto, y aviso de sin conexión real.
 test.describe("feedback", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/styleguide/feedback");
+    await page.goto("/styleguide");
   });
 
   test("las 24 filas de la matriz tienen ejemplo y la vitrina pasa axe", async ({ page }) => {
@@ -106,7 +106,7 @@ test.describe("feedback", () => {
     await expect(page.locator('[data-feedback-live="assertive"]')).toContainText(
       feedback.quote.sent("x").title,
     );
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Feedback");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Styleguide");
     // Al volver la red, el toaster se descarga y avisa.
     await context.setOffline(false);
     await expect(
@@ -158,6 +158,6 @@ test.describe("feedback", () => {
       feedback.system.genericError.title,
     );
     await page.getByRole("button", { name: feedback.system.genericError.primary }).click();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Feedback");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Styleguide");
   });
 });

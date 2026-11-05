@@ -7,7 +7,7 @@ test.describe("overlays", () => {
 
   for (const name of TRIGGERS) {
     test(`${name}: Escape cierra y el foco vuelve al botón`, async ({ page }) => {
-      await page.goto("/styleguide/componentes");
+      await page.goto("/styleguide");
       const trigger = page.getByRole("button", { name, exact: true });
       await trigger.click();
       const overlay =
@@ -23,7 +23,7 @@ test.describe("overlays", () => {
   test("el sheet auto va abajo en móvil y a la derecha en escritorio", async ({
     page,
   }, testInfo) => {
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     await page.getByRole("button", { name: "Sheet (auto)" }).click();
     const sheet = page.getByRole("dialog");
     const viewport = page.viewportSize()!;
@@ -43,7 +43,7 @@ test.describe("overlays", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     for (const name of ["Sheet derecha", "Sheet (auto)", "Popover"]) {
       await page.getByRole("button", { name, exact: true }).click();
       const overlay =
@@ -62,7 +62,7 @@ test.describe("overlays", () => {
   });
 
   test("pestañas: teclado en escritorio, acordeón en móvil", async ({ page }, testInfo) => {
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     if (testInfo.project.name === "movil") {
       const header = page.getByRole("button", { name: "Medidas" });
       await expect(page.getByRole("region", { name: "Medidas" })).toHaveCount(0);
@@ -86,7 +86,7 @@ test.describe("overlays", () => {
   }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
-    await page.goto("/styleguide/componentes");
+    await page.goto("/styleguide");
     const panels = page.locator("[data-tab-panel]");
     await expect(panels).toHaveCount(4);
     for (const panel of await panels.all()) await expect(panel).toBeVisible();

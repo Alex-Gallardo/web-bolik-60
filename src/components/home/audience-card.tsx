@@ -50,7 +50,7 @@ export function AudienceCard({
         viewBox="0 0 24 24"
         aria-hidden="true"
         focusable="false"
-        className="mt-auto size-6 transition-transform duration-(--dur-fast) ease-(--ease-out) motion-safe:group-hover:translate-x-1"
+        className="nudge mt-auto size-6"
       >
         <path
           d="M5 12h14m-6-6 6 6-6 6"

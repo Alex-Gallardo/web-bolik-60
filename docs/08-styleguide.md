@@ -213,3 +213,12 @@ Secciones (con índice lateral fijo en desktop y menú desplegable en móvil):
 13. **Iconos:** set de Lucide usado + íconos de beneficios propios.
 
 Reglas: la página usa datos ficticios **fijos** (nada aleatorio, para que las capturas no cambien), y cada sección tiene `id` para enlazarla.
+
+Implementación (BD-026):
+- Una sola página; `/styleguide/datos` (visor de los datos de ejemplo, BD-037) queda aparte y se enlaza desde el índice.
+- Lo que aún no existe muestra «llega con BD-xxx»: nada de maquetas inventadas.
+- «Simular movimiento reducido» pone `data-reduced-motion` en `<html>` y activa un bloque de `motion.css` con las mismas reglas que `@media (prefers-reduced-motion)`; una prueba (`src/styles/motion-css.test.ts`) exige que no se desincronicen. Al agregar una regla de movimiento reducido, va en los dos bloques.
+- La simulación cubre las reglas de `motion.css` (por eso las animaciones del sitio van ahí y no en variantes `motion-safe:` de Tailwind); no alcanza la regla propia de sonner ni lo que lea `matchMedia` en JavaScript.
+- Los contrastes se calculan en el navegador con los valores reales de los tokens.
+- Fondos: sin selector de tono. El tono se deduce del fondo (BD-020): el admin elige solo el fondo y el contraste queda garantizado.
+- En producción, sin sesión de admin, responde 404 (la sesión llega con BD-114).
