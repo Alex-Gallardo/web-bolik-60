@@ -134,23 +134,59 @@
   }
 }
 
-/* ── Entrada de página (template.tsx) A-02 ── */
+/* ── Entrada de página A-02, BD-044 ──
+   PageEnter (page-enter.tsx) pone la clase en el contenedor de la página solo al cambiar de ruta
+   dentro del sitio y la quita al terminar: la primera carga no se anima (no retrasa el LCP) y sin
+   JS nunca. */
 .page-enter {
   animation: fade-up var(--dur-base) var(--ease-out) both;
 }
 
-/* ── Reveal al hacer scroll A-21 ──
-   Solo se oculta si hay JS (clase .js en <html>) y el elemento aún no fue visto.
-   Sin JS o con movimiento reducido, todo es visible. */
-.js [data-reveal]:not([data-revealed]) {
+/* ── Reveal al hacer scroll A-21, BD-044 ──
+   Solo se oculta cuando RevealObserver está listo (data-reveal-ready en <html>): antes revela lo que
+   ya está en pantalla. Sin JS, mientras el JS carga o con movimiento reducido, todo es visible.
+   Escalonado con --i: como mucho 8 pasos (doc 09 §6), después el mismo retraso. Lo que ya estaba
+   a la vista se revela con data-revealed="instant", sin transición. data-reveal va en un envoltorio,
+   no en la tarjeta con .lift: esta transición le ganaría a la del hover. */
+html[data-reveal-ready] [data-reveal]:not([data-revealed]) {
   opacity: 0;
   transform: translateY(var(--rise-md));
 }
-.js [data-reveal] {
+html[data-reveal-ready] [data-reveal] {
   transition:
     opacity var(--dur-slow) var(--ease-out),
     transform var(--dur-slow) var(--ease-out);
-  transition-delay: calc(var(--i, 0) * var(--stagger));
+  transition-delay: calc(min(var(--i, 0), 7) * var(--stagger));
+}
+html[data-reveal-ready] [data-reveal][data-revealed="instant"] {
+  transition: none;
+}
+/* Al imprimir sale todo, sin quedar a media transición. */
+@media print {
+  html[data-reveal-ready] [data-reveal]:not([data-revealed]) {
+    opacity: 1;
+    transform: none;
+  }
+  html[data-reveal-ready] [data-reveal] {
+    transition: none;
+  }
+}
+
+/* ── Conteo de cifras A-20, BD-044 (count-up.tsx) ──
+   La copia invisible del número final reserva el ancho; el número animado va encima, alineado a la
+   derecha: al contar no se mueve nada alrededor (CLS 0). */
+.count-up {
+  display: inline-grid;
+}
+.count-up__ghost,
+.count-up__value {
+  grid-area: 1 / 1;
+}
+.count-up__ghost {
+  visibility: hidden;
+}
+.count-up__value {
+  justify-self: end;
 }
 
 /* ── Spinner de carga (botones, BD-021) ── */
@@ -700,7 +736,7 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
     transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
-  .js [data-reveal]:not([data-revealed]) {
+  html[data-reveal-ready] [data-reveal]:not([data-revealed]) {
     opacity: 1;
     transform: none;
   }
@@ -765,7 +801,7 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   transition-delay: 0ms !important;
   scroll-behavior: auto !important;
 }
-.js[data-reduced-motion] [data-reveal]:not([data-revealed]) {
+html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) {
   opacity: 1;
   transform: none;
 }

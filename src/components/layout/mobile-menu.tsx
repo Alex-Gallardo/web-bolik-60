@@ -1,8 +1,8 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { retryableImport } from "@/components/feedback/feedback-store";
+import { OnRouteChange } from "@/components/motion/on-route-change";
 import { ui } from "@/content/ui";
 import type { MobileMenuSheetProps } from "./mobile-menu-sheet";
 import type { NavGroup } from "./products-menu";
@@ -21,13 +21,6 @@ export function MobileMenu({ groups, whatsappUrl }: MobileMenuProps) {
   const button = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [Panel, setPanel] = useState<ComponentType<MobileMenuSheetProps> | null>(null);
-  const pathname = usePathname();
-  const [lastPath, setLastPath] = useState(pathname);
-  // Cambió la ruta (atrás, adelante o un enlace): el menú se cierra.
-  if (pathname !== lastPath) {
-    setLastPath(pathname);
-    setOpen(false);
-  }
 
   // Al pasar a escritorio (≥ 1024 px) el botón se oculta: el menú no puede quedar abierto.
   useEffect(() => {
@@ -58,6 +51,8 @@ export function MobileMenu({ groups, whatsappUrl }: MobileMenuProps) {
 
   return (
     <>
+      {/* Cambió la ruta (atrás, adelante o un enlace): el menú se cierra. */}
+      <OnRouteChange onChange={() => setOpen(false)} />
       <button
         ref={button}
         type="button"

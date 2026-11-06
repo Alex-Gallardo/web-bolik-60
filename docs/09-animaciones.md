@@ -8,7 +8,7 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 2. **CSS primero.** Transiciones y keyframes en CSS para casi todo. La librería **Motion** (`motion/react`) solo para: drawer de cotización, diálogos, listas que se reordenan y la salida de líneas de la cotización. Se carga con `LazyMotion` + `domAnimation` y `m.*`, nunca `motion.*` completo.
 3. **Duraciones cortas y consistentes** (tokens de `motion.css`): 90 ms presionar · 160 ms hover · 240 ms entradas · 420 ms drawer/modal/reveal · 700 ms crossfade y trazos · 2 s splash.
 4. **Curvas con intención:** `--ease-out` para entrar, `--ease-in` para salir, `--ease-in-out` para cambios de estado, `--ease-spring` para celebrar (contador, éxito).
-5. **Visible sin JavaScript.** Ninguna sección empieza oculta en el HTML. Los reveals solo ocultan si `<html>` tiene la clase `js` y tienen red de seguridad a los 2.5 s.
+5. **Visible sin JavaScript.** Ninguna sección empieza oculta en el HTML. Los reveals solo ocultan cuando `RevealObserver` está listo (`data-reveal-ready` en `<html>`, BD-044) y nunca lo que ya está a la vista o recibe el foco.
 6. **Movimiento reducido:** con `prefers-reduced-motion: reduce` no hay desplazamientos ni rebotes; solo cambios de opacidad cortos. El video no se reproduce solo.
 7. **Nada bloquea la interacción.** Ninguna animación impide hacer clic; el splash se puede saltar.
 8. **Una sola cosa protagonista a la vez.** En cada pantalla anima lo que el usuario acaba de hacer o lo que acaba de aparecer, no todo junto.
@@ -18,7 +18,7 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 | ID | Nombre | Dónde | Cómo | Duración / curva | Reducido |
 |---|---|---|---|---|---|
 | A-01 | Splash | Primera visita, home | Overlay navy; wordmark `fade-up`, trazo amarillo se dibuja debajo, salida `opacity` | 2000 ms total | Logo quieto 500 ms |
-| A-02 | Entrada de página | `template.tsx` | `fade-up` 16 px del `<main>` | 240 ms out | Solo opacidad |
+| A-02 | Entrada de página | `PageEnter` (cambio de ruta) | `fade-up` 16 px del contenido del `<main>` | 240 ms out | Solo opacidad |
 | A-03 | Presionar | Botones, tarjetas | `scale(.97)` | 90 ms out | Igual (no desplaza) |
 | A-04 | Error de campo | Inputs al enviar con error | `shake` 6 px | 360 ms in-out | Sin shake, solo borde |
 | A-05 | Contador "pop" | Badge de cotización | `scale 1 → 1.18 → 1` | 420 ms spring | Sin escala |
@@ -87,7 +87,7 @@ Decisiones:
 
 ## 4. Transiciones entre páginas
 
-1. **`template.tsx`** en `(site)`: envuelve `children` en `<div className="page-enter">`. Se vuelve a montar en cada navegación, así cada página entra con A-02.
+1. **`PageEnter`** (`components/motion/page-enter.tsx`) en `(site)/layout.tsx`, junto al contenedor `#pagina` que pinta el servidor: al cambiar la ruta (no los filtros de la URL) anima `.page-enter` antes de pintar y la quita al terminar, así cada página entra con A-02. La primera carga no se anima (no retrasa el LCP) y sin JS nunca. No se usa `template.tsx` (BD-044): la plantilla de `(site)` solo se vuelve a montar cuando cambia el primer segmento, y `/productos/a → /productos/b` no entraría.
 2. **Prefetch:** los `<Link>` de Next precargan las páginas visibles; la navegación se siente instantánea.
 3. **Scroll:** Next restaura el scroll al volver; al ir a una página nueva, sube al inicio.
 4. **View Transitions (opcional, mejora progresiva):** para la imagen del producto (tarjeta del catálogo → galería de la ficha) se puede usar la integración de View Transitions de React/Next si está estable en la versión instalada. Si no lo está, no se implementa: A-02 es suficiente.
@@ -126,9 +126,14 @@ Reglas del video:
 </ul>
 ```
 
-Un solo `RevealObserver` (cliente, montado en el layout del sitio) observa todos los `[data-reveal]` y les pone `data-revealed` al entrar en pantalla. El CSS hace el resto. Código: `starter/src/components/motion/reveal-observer.tsx`.
+Un solo `RevealObserver` (cliente, montado en el layout del sitio) observa todos los `[data-reveal]` y les pone `data-revealed` al entrar en pantalla. El CSS hace el resto. Código: `src/components/motion/reveal-observer.tsx` (BD-044), con tres cambios sobre el starter:
+- El CSS solo oculta con `data-reveal-ready` en `<html>`, que el observer pone después de revelar lo que ya está en pantalla o arriba. Antes ocultaba con la clase `js` (desde el `<head>`): en una red lenta, quien bajaba antes de hidratar veía huecos.
+- Un `MutationObserver` toma los `[data-reveal]` que llegan después (otra página, grilla filtrada), antes de pintarse y con la misma regla.
+- Sin la «red de seguridad» de 2.5 s: revelaba todo lo de abajo y apagaba la animación al bajar. Sin `IntersectionObserver`, o al imprimir, todo se ve.
 
-Límites: máximo 8 elementos escalonados por grupo (después, mismo retraso). No usar en el contenido arriba del pliegue (el hero y la primera sección se ven de inmediato).
+Cifras (A-20): `CountUp` (`components/motion/count-up.tsx`). El HTML trae el número final (sin JS, buscador y lector de pantalla, que siempre oye el final). Una copia invisible reserva el ancho y el número animado va encima (CLS 0). Si ya está en pantalla al montarse o con movimiento reducido, no cuenta.
+
+Límites: máximo 8 elementos escalonados por grupo (después, mismo retraso; el CSS usa `min(var(--i), 7)`). `data-reveal` va en un envoltorio, no en la tarjeta con `.lift`: la transición del reveal le ganaría a la del hover. Lo ya visible se revela con `data-revealed="instant"` (sin transición) y lo que recibe el foco con Tab se revela en el acto. No usar en el contenido arriba del pliegue (el hero y la primera sección se ven de inmediato).
 
 ## 7. Motion (librería) sin inflar el bundle
 

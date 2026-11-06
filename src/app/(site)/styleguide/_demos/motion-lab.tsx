@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import Link from "next/link";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { useFeedback } from "@/components/feedback/use-feedback";
+import { CountUp } from "@/components/motion/count-up";
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -9,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { feedback } from "@/content/feedback";
 import { SPLASH_MS } from "@/lib/splash";
+import type { SiteStatView } from "@/server/data/types";
 import { EXAMPLES } from "./examples";
 
 type Row = {
@@ -53,12 +63,41 @@ function playSplash(reduced: boolean) {
 }
 
 /**
+ * Reveal escalonado (A-21). Al cargar se comporta como cualquier reveal: entra al bajar hasta aquí.
+ * Al «Reproducir» ya está en pantalla y RevealObserver lo mostraría sin animar (regla de lo que ya
+ * se ve): se fija el estado oculto antes de pintar y se revelan, para ver la transición.
+ */
+function RevealDemo({ replay }: { replay: boolean }) {
+  const list = useRef<HTMLUListElement>(null);
+  useLayoutEffect(() => {
+    if (!replay) return;
+    const items = Array.from(list.current?.children ?? []);
+    for (const item of items) void getComputedStyle(item).opacity;
+    for (const item of items) item.setAttribute("data-revealed", "");
+  }, [replay]);
+  return (
+    <ul ref={list} className="grid w-full grid-cols-3 gap-2">
+      {["Escritura", "Escolar", "Arte", "Oficina", "Kits", "Mayoreo"].map((name, i) => (
+        <li
+          key={name}
+          data-reveal
+          style={{ "--i": i } as CSSProperties}
+          className="rounded-md bg-blue-50 px-2 py-3 text-center text-sm font-bold text-ink"
+        >
+          {name}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
  * Movimiento (docs/08 §6.11, docs/09): cada animación A-xx con su demo y «Reproducir», o el
  * ticket que la trae. «Simular movimiento reducido» pone data-reduced-motion en <html>: aplica las
  * reglas de prefers-reduced-motion (bloque simulado de motion.css) a toda la página, incluidos
  * los diálogos que se dibujan fuera de esta sección.
  */
-export function MotionLab() {
+export function MotionLab({ stats }: { stats: SiteStatView[] }) {
   const { dialog } = useFeedback();
   const [reduced, setReduced] = useState(false);
   const [runs, setRuns] = useState<Record<string, number>>({});
@@ -82,7 +121,19 @@ export function MotionLab() {
         </Button>
       ),
     },
-    { code: "A-02", name: "Entrada de página", ticket: "BD-044" },
+    {
+      code: "A-02",
+      name: "Entrada de página",
+      demo: () => (
+        <p className="text-sm">
+          Entra con A-02 al cambiar de página dentro del sitio (no en la primera carga):{" "}
+          <Link href="/styleguide/datos" className="underline">
+            ir a Datos de ejemplo
+          </Link>
+          .
+        </p>
+      ),
+    },
     {
       code: "A-03",
       name: "Presionar",
@@ -160,8 +211,27 @@ export function MotionLab() {
     },
     { code: "A-12", name: "Texto del capítulo", ticket: "BD-050" },
     { code: "A-13", name: "Progreso del capítulo", ticket: "BD-050" },
-    { code: "A-20", name: "Conteo de cifras", ticket: "BD-044" },
-    { code: "A-21", name: "Reveal escalonado", ticket: "BD-044" },
+    {
+      code: "A-20",
+      name: "Conteo de cifras",
+      demo: () => (
+        <div className="flex flex-wrap gap-6">
+          {stats.map((stat) => (
+            <p key={stat.key} className="flex flex-col">
+              <CountUp
+                value={stat.value}
+                prefix={stat.prefix ?? ""}
+                suffix={stat.suffix ?? ""}
+                animateOnMount
+                className="font-display text-4xl font-extrabold text-blue"
+              />
+              <span className="text-sm text-muted">{stat.label}</span>
+            </p>
+          ))}
+        </div>
+      ),
+    },
+    { code: "A-21", name: "Reveal escalonado", demo: (run) => <RevealDemo replay={run > 0} /> },
     { code: "A-22", name: "Reordenar grilla", ticket: "BD-060" },
     {
       code: "A-30",

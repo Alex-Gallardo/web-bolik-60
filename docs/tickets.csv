@@ -148,8 +148,8 @@ BD-043,E3,"Estructura global, splash y movimiento",Splash de 2 segundos,S1,0.5,M
 2. Inyectar el script en `<head>` (`app/head-script.ts`, junto a la clase `js`) y el SVG al inicio del `<body>`. Se salta con toque, clic, tecla o rueda; no bloquea el scroll.
 3. Leer `splash_enabled` de `SiteSetting` en `data-splash-enabled`.","- Prueba E2E `splash.spec.ts` en verde.
 - Lighthouse no cambia el LCP con splash activo vs. inactivo (± 100 ms).",Sí
-BD-044,E3,"Estructura global, splash y movimiento","Revelado al hacer scroll, cifras y transiciones",S1,0.5,Must,A,BD-040,09,Movimiento suave hecho con CSS.,"1. Copiar `reveal-observer.tsx` y `count-up.tsx`.
-2. Transición de entrada de página con `.page-enter`.","- Sin JS el contenido se ve completo.
+BD-044,E3,"Estructura global, splash y movimiento","Revelado al hacer scroll, cifras y transiciones",S1,0.5,Must,A,BD-040,09,Movimiento suave hecho con CSS.,"1. `reveal-observer.tsx` y `count-up.tsx` desde el starter, con las mejoras de BD-044 (docs/09 §6): ocultar solo con `data-reveal-ready`, `MutationObserver`, sin la red de 2.5 s; cifra sin CLS.
+2. Transición de entrada de página con `.page-enter`: `PageEnter` en `(site)/layout.tsx` al cambiar de ruta, sin animar la primera carga (docs/09 §4; no `template.tsx`).","- Sin JS el contenido se ve completo.
 - Con movimiento reducido no hay animaciones.",Sí
 BD-045,E3,"Estructura global, splash y movimiento",MotionProvider diferido,S1,0.25,Must,A,BD-040,09,Motion solo donde CSS no alcanza.,"1. `components/motion/provider.tsx` con `LazyMotion` + `domAnimation` (carga diferida) y presets.
 2. Solo `m.*` en componentes.",- Motion no aparece en el JS inicial de la home (bundle analyzer).,Sí

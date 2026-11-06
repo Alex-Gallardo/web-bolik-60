@@ -800,8 +800,8 @@ Movimiento suave hecho con CSS.
 
 **Pasos**
 
-1. Copiar `reveal-observer.tsx` y `count-up.tsx`.
-2. Transición de entrada de página con `.page-enter`.
+1. `reveal-observer.tsx` y `count-up.tsx` desde el starter, con las mejoras de BD-044 (docs/09 §6): ocultar solo con `data-reveal-ready`, `MutationObserver`, sin la red de 2.5 s; cifra sin CLS.
+2. Transición de entrada de página con `.page-enter`: `PageEnter` en `(site)/layout.tsx` al cambiar de ruta, sin animar la primera carga (docs/09 §4; no `template.tsx`).
 
 **Criterios de aceptación**
 

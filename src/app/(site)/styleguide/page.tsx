@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getFeaturedProduct, listCategories, listProducts } from "@/server/data/catalog";
-import { listFaqs } from "@/server/data/content";
+import { listFaqs, listSiteStats } from "@/server/data/content";
 import { listDepartments, listStores } from "@/server/data/stores";
 import { SgNav } from "./_components/sg-nav";
 import { BackgroundsSection } from "./_sections/backgrounds-section";
@@ -29,13 +29,14 @@ export const metadata: Metadata = {
 };
 
 export default async function StyleguidePage() {
-  const [departments, products, categories, stores, featured, faqs] = await Promise.all([
+  const [departments, products, categories, stores, featured, faqs, stats] = await Promise.all([
     listDepartments(),
     listProducts(),
     listCategories(),
     listStores(),
     getFeaturedProduct(),
     listFaqs({ scope: "home" }),
+    listSiteStats(),
   ]);
 
   return (
@@ -59,7 +60,7 @@ export default async function StyleguidePage() {
         <CardsSection products={products} categories={categories} stores={stores} />
         <NavigationSection featured={featured} faqs={faqs} />
         <FeedbackSection productName={products[0]?.name ?? ""} storeName={stores[0]?.name ?? ""} />
-        <MotionSection />
+        <MotionSection stats={stats} />
         <DomainSection />
         <IconsSection />
       </div>

@@ -41,6 +41,14 @@ const BLOCKING_IMPACTS = new Set(["serious", "critical"]);
  * reporte y falla solo con violaciones serias o críticas, nombrando la regla y los nodos.
  */
 export async function expectNoA11yViolations(page: Page, testInfo: TestInfo = test.info()) {
+  // Reveals (BD-044): se analiza el estado final. A media transición la opacidad baja el contraste
+  // medido y el resultado dependería de cuándo corre axe.
+  await page.addStyleTag({ content: "[data-reveal] { transition: none !important; }" });
+  await page.evaluate(() =>
+    document
+      .querySelectorAll("[data-reveal]")
+      .forEach((el) => el.setAttribute("data-revealed", "")),
+  );
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();

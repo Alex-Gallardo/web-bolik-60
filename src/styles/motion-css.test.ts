@@ -31,9 +31,8 @@ function simulated(): Map<string, string> {
   for (const [selector, declarations] of rules(css)) {
     if (!selector.includes("[data-reduced-motion]") || selector === "[data-reduced-motion]")
       continue;
-    const plain = selector
-      .replace(".js[data-reduced-motion] ", ".js ")
-      .replace("[data-reduced-motion] ", "");
+    // ".spin", ".js .x" o "html[data-reveal-ready] .x": el selector sin el atributo simulado.
+    const plain = selector.replace("[data-reduced-motion]", "").trim();
     map.set(plain, declarations);
   }
   return map;
