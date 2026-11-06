@@ -99,15 +99,16 @@ BD-030,E2,"Datos, medios e integración base",Esquema completo y migraciones,S0,
 2. `pnpm db:migrate --name schema_mvp`.
 3. Revisar índices del doc 05 §6.","- `prisma validate` OK.
 - La migración se aplica en una BD vacía y en staging.",Sí
-BD-031,E2,"Datos, medios e integración base",Seeds con datos reales,S1,1.5,Must,B,BD-030 BD-037,"05 §7, 17",Datos reales para desarrollar y probar (nada de lorem).,"1. Cargar en la base los `prisma/seed/*.json` de BD-037 (categorías, productos, variantes y empaques, tiendas, departamentos, FAQs, contenido de la home) más el admin inicial. Lo marcado `sample` no se carga en producción.
+BD-031,E2,"Datos, medios e integración base",Seeds con datos reales,S1,1.5,Must,B,BD-030 BD-037,"05 §6, 17",Datos reales para desarrollar y probar (nada de lorem).,"1. Cargar en la base los `prisma/seed/*.json` de BD-037 (categorías, productos, variantes y empaques, tiendas, departamentos, FAQs, contenido de la home) más el admin inicial. Lo marcado `sample` no se carga en producción.
 2. Perfiles `--profile dev` y `--profile e2e` (cargan también lo `sample`) y `--profile prod` (staging con base y producción: sin lo `sample` ni relaciones hacia ello).
-3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e`, cuando la CI construya con `DATA_SOURCE=db` (con Cache Components el build prerenderiza leyendo la BD; con la fuente de ejemplo de BD-037 no la necesita).
+3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e`, cuando la CI construya con `DATA_SOURCE=db` (con Cache Components el build prerenderiza leyendo la BD; con la fuente de ejemplo de BD-037 no la necesita). Pasó a BD-032; aquí el seed se prueba en el trabajo Integración.
 4. El seed es idempotente (`upsert`).","- `pnpm db:seed` dos veces seguidas no duplica datos.
 - El Bolik Ultra tiene PT00058/59/60 con sus códigos de barras.",Sí
 BD-032,E2,"Datos, medios e integración base",Capa de datos con Cache Components,S1,1.5,Must,B,BD-031 BD-037,03 §5,Consultas de lectura cacheadas con tags.,"1. La interfaz, los tipos de vista y las funciones cacheadas de `server/data/` ya existen (BD-037): este ticket agrega la fuente `db` con Prisma y las funciones que falten (`sitemap`, `llms`, `search`).
 2. Cada función con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`.
 3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.
-4. La batería de contrato de BD-037 pasa contra `BolikDigital_Test`.","- El build prerenderiza las páginas públicas sin consultar la BD en cada petición.
+4. La batería de contrato de BD-037 pasa contra `BolikDigital_Test`.
+5. CI (paso 3 de BD-031): SQL Server en los trabajos Build y E2E con `migrate deploy` y `pnpm db:seed --profile e2e` cuando la CI construya con `DATA_SOURCE=db`.","- El build prerenderiza las páginas públicas sin consultar la BD en cada petición.
 - Pruebas de integración de las funciones.",Sí
 BD-033,E2,"Datos, medios e integración base",Folios consecutivos,S1,0.5,Must,B,BD-030,05 §5,COT/ESC/DIS-AAAA-NNNNNN sin duplicados.,"1. Copiar `starter/src/server/folio.ts`.
 2. Prueba de concurrencia: 20 envíos simultáneos.","- 20 folios distintos y consecutivos.
@@ -132,6 +133,12 @@ BD-037,E2,"Datos, medios e integración base",Fuente de datos de ejemplo,S1,1,Mu
 5. Pruebas de contrato para la fuente de ejemplo y, en BD-032, para Prisma.","- Con `DATA_SOURCE=fixtures`, `pnpm build` y las páginas funcionan sin SQL Server.
 - `APP_ENV=production` con `DATA_SOURCE=fixtures` no arranca.
 - La batería de contrato pasa con la fuente de ejemplo.",Sí
+BD-038,E2,"Datos, medios e integración base",Catálogo real 2026-2027,S2,1.5,Must,B,BD-031,"05 §6, 17","Ticket nuevo: los productos reales del catálogo impreso 2026-2027 reemplazan a los productos de ejemplo de la demo.","1. Transcribir del catálogo (PDF de Mercadeo, fuera del repo) los ~50 productos y ~140 variantes: nombre, línea, colores, códigos de barras y empaques; cada código pasa la validación del dígito verificador.
+2. Emparejar cada variante con su código SAP (PT…) usando el código de barras como puente, con la exportación de artículos de SAP; sin código SAP no se carga como real.
+3. Ampliar `PACKAGING_CODES` con las presentaciones del catálogo y revisar las categorías.
+4. Decidir cómo se muestran las marcas del grupo (Fabik, Coloreto, EcoBol, K-Pen).
+5. Quitar los productos de ejemplo que el catálogo real ya cubre.","- Cada producto del catálogo con su código SAP está en `products.json` sin `sample`.
+- Todos los códigos de barras pasan la validación y `pnpm db:seed` dos veces no duplica datos.",Sí
 BD-040,E3,"Estructura global, splash y movimiento",Layout raíz del sitio,S1,0.5,Must,A,BD-008 BD-024,06 §2,"HTML base, metadatos raíz y proveedores mínimos.","1. `app/layout.tsx`: `<html lang=""es-GT"">`, fuentes, `rootMetadata`, enlace ""Saltar al contenido"".
 2. `app/(site)/layout.tsx`: Header, `<main id=""contenido"">`, Footer, Toaster, RevealObserver.
 3. Script del splash en `<head>`.","- Una sola etiqueta `<main>` por página.

@@ -111,6 +111,7 @@ model Product {
   category         Category           @relation(fields: [categoryId], references: [id])
   featured         Boolean            @default(false)
   published        Boolean            @default(false)
+  isSample         Boolean            @default(false) // dato de ejemplo (EJ-…): nunca en producción
   sortOrder        Int                @default(0)
   seoTitle         String?            @db.NVarChar(70)
   seoDescription   String?            @db.NVarChar(170)
@@ -164,6 +165,7 @@ model ProductSpec {
   value     String  @db.NVarChar(300) // "Mediana 1.0 mm"
   sortOrder Int     @default(0)
 
+  @@unique([productId, groupName, label])
   @@index([productId, sortOrder])
 }
 
@@ -211,6 +213,7 @@ model ProductImage {
   alt       String          @db.NVarChar(200)
   sortOrder Int             @default(0)
 
+  @@unique([productId, mediaId])
   @@index([productId, variantId, sortOrder])
 }
 
@@ -222,6 +225,8 @@ model ProductBenefit {
   title     String  @db.NVarChar(80)
   text      String? @db.NVarChar(200)
   sortOrder Int     @default(0)
+
+  @@unique([productId, iconKey])
 }
 
 model UseTag {
@@ -252,6 +257,7 @@ model ProductRelation {
 
 model Faq {
   id         Int       @id @default(autoincrement())
+  key        String    @unique @db.VarChar(80) // clave natural del seed: donde-compro
   scope      String    @db.VarChar(20) // global | home | category | product | mayoreo | escuelas | empresas | tiendas
   categoryId Int?
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -320,6 +326,7 @@ model Kit {
   imageId        Int?
   image          MediaAsset? @relation(fields: [imageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   published      Boolean     @default(false)
+  isSample       Boolean     @default(false) // dato de ejemplo: nunca en producción
   sortOrder      Int         @default(0)
   items          KitItem[]
   stores         KitStore[]
@@ -335,6 +342,8 @@ model KitItem {
   description String          @db.NVarChar(120) // "Crayones de cera x12"
   quantity    Int             @default(1)
   sortOrder   Int             @default(0)
+
+  @@unique([kitId, description])
 }
 
 model KitStore {
@@ -514,6 +523,7 @@ model SiteStat {
 
 model HistoryMilestone {
   id          Int         @id @default(autoincrement())
+  key         String      @unique @db.VarChar(60) // clave natural del seed: nace-k66
   year        Int
   title       String      @db.NVarChar(120)
   description String      @db.NVarChar(400)
@@ -526,6 +536,7 @@ model HistoryMilestone {
 
 model SchoolActivity {
   id          Int         @id @default(autoincrement())
+  key         String      @unique @db.VarChar(60) // clave natural del seed: visita-la-planta
   title       String      @db.NVarChar(120)
   description String      @db.NVarChar(400)
   colorKey    String      @db.VarChar(20) // coral | kblue | kgreen | paper
@@ -534,6 +545,7 @@ model SchoolActivity {
   image       MediaAsset? @relation(fields: [imageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sortOrder   Int         @default(0)
   published   Boolean     @default(true)
+  isSample    Boolean     @default(false) // dato de ejemplo: nunca en producción
 }
 
 model SectionAppearance {

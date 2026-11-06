@@ -394,6 +394,15 @@ pnpm db:deploy
 Remove-Item Env:MIGRATE_DATABASE_URL
 ```
 
+Después, los datos iniciales con el usuario de la app (`DATABASE_URL`, `bolik_app`) y el perfil `prod`: solo crea lo que falta, sin datos de ejemplo, y no pisa lo editado en el admin (doc 05 §6). Se puede repetir en cada despliegue. Con `DATA_SOURCE=db` (desde BD-032), migrar y sembrar van **antes** del paso 2: el build lee la base.
+
+```powershell
+$env:APP_ENV = "staging"
+$env:DATABASE_URL = [Net.NetworkCredential]::new("", (Read-Host "DATABASE_URL" -AsSecureString)).Password
+pnpm db:seed --profile prod
+Remove-Item Env:DATABASE_URL
+```
+
 ### 4. Desplegar
 
 En el servidor, como administrador. `$cuenta` es la misma que se pasó a `-ServiceAccount`:

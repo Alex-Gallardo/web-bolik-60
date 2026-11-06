@@ -32,7 +32,7 @@ export function describeDataSourceContract(name: string, getSource: () => DataSo
       expect(ultra!.variants.map((v) => [v.sku, v.barcode, v.color.key])).toEqual([
         ["PT00058", "759364663092", "azul"],
         ["PT00059", "759364663108", "negro"],
-        ["PT00060", null, "rojo"], // UPC por confirmar con Mercadeo (doc 05 §6)
+        ["PT00060", "759364663115", "rojo"],
       ]);
       expect(ultra!.variants.filter((v) => v.isDefault)).toHaveLength(1);
       expect(ultra!.packagings.map((p) => p.code)).toEqual([

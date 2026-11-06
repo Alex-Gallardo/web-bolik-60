@@ -228,7 +228,7 @@ Reglas:
     "lhci": "lhci autorun --config=lighthouse.config.cjs",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed/seed.ts",
+    "db:seed": "tsx scripts/db-seed.mts",
     "db:status": "prisma migrate status",
     "db:generate": "prisma generate",
     "db:reset:test": "node scripts/db-reset-test.mjs",

@@ -48,7 +48,7 @@ pnpm db:deploy        # aplica migraciones pendientes (despliegue)
 pnpm db:status        # ¿la base está al día con las migraciones?
 pnpm db:generate      # regenera el cliente (también corre en pnpm install)
 pnpm db:reset:test    # borra y recrea BolikDigital_Test (manual; nunca lo corre un agente)
-pnpm db:seed          # datos iniciales
+pnpm db:seed          # datos iniciales: --profile dev (por defecto) | e2e | prod (solo crea lo que falta, sin ejemplos)
 pnpm sync:catalog     # sincroniza artículos desde SMART-K66
 ```
 
@@ -132,7 +132,7 @@ Detalle en `docs/04-estructura-proyecto.md`.
 - Release: `release/vX.Y.Z` desde `develop` → PR a `master` → tag `vX.Y.Z` en `master` → `master` de vuelta a `develop`.
 - Hotfix: `hotfix/vX.Y.Z` desde `master` → `master` (tag) y `develop`.
 - Backlog maestro: `docs/14-plan-de-accion.md` y `docs/tickets.csv`. En GitHub solo se abren como Issues los tickets del sprint en curso (milestone por sprint). Un ticket nuevo usa un hueco de numeración de su épica y se agrega al doc 14 en el mismo PR.
-- Alcance: se implementa el plan **completo** (los 117 tickets y los que surjan); no hay "núcleo" ni Fase posterior para recortar.
+- Alcance: se implementa el plan **completo** (los 120 tickets y los que surjan); no hay "núcleo" ni Fase posterior para recortar.
 - Repo público: nunca subas `.env*` reales, credenciales, cadenas de conexión ni datos de clientes.
 
 ## Definición de terminado (por ticket)

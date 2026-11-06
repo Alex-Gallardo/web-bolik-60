@@ -97,7 +97,7 @@ Helpers en `tests/e2e/helpers.ts` (las specs importan `test` y `expect` de ahí,
 - `expectNoA11yViolations(page)`: axe con WCAG 2.0/2.1 A y AA; adjunta el resultado y falla con violaciones serias o críticas.
 - `collectConsoleErrors(page)`: errores de consola y excepciones, sin los avisos conocidos de `KNOWN_CONSOLE_ERRORS` (cada uno dice en qué ticket se quita).
 
-Datos E2E: `pnpm db:seed --profile e2e` carga categorías, 6 productos (incluye Bolik Ultra con sus 3 variantes), 2 departamentos con 4 tiendas, 1 kit y FAQs. `ERP_MODE=noop` y `SMTP_MODE=file` (los correos se escriben en `tmp/mails/*.eml` para poder verificarlos).
+Datos E2E: `pnpm db:seed --profile e2e` carga lo mismo que `dev`: todos los JSON de `prisma/seed`, con los ejemplos, que son los datos que ven las E2E con `DATA_SOURCE=fixtures` (BD-031). `ERP_MODE=noop` y `SMTP_MODE=file` (los correos se escriben en `tmp/mails/*.eml` para poder verificarlos).
 
 El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` en un `addInitScript` (fixture `page` de `tests/e2e/helpers.ts`), salvo en su prueba específica.
 
