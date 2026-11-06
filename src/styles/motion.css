@@ -247,6 +247,12 @@
   z-index: var(--z-header);
   height: var(--header-h);
   isolation: isolate;
+  /* Compactado, el fondo mide 60 px pero el header ocupa 72: esa franja deja pasar los clics al
+     contenido; solo los controles del header los reciben. */
+  pointer-events: none;
+}
+.site-header__bar > * {
+  pointer-events: auto;
 }
 .site-header::before,
 .site-header::after {

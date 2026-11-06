@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useRef, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import { retryableImport } from "@/components/feedback/feedback-store";
 import { ui } from "@/content/ui";
 import type { MobileMenuSheetProps } from "./mobile-menu-sheet";
@@ -29,6 +29,16 @@ export function MobileMenu({ groups, whatsappUrl }: MobileMenuProps) {
     setOpen(false);
   }
 
+  // Al pasar a escritorio (≥ 1024 px) el botón se oculta: el menú no puede quedar abierto.
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 64rem)");
+    const onChange = () => {
+      if (desktop.matches) setOpen(false);
+    };
+    desktop.addEventListener("change", onChange);
+    return () => desktop.removeEventListener("change", onChange);
+  }, []);
+
   const warm = () => void loadSheet().catch(() => {});
   const openMenu = async () => {
     if (!Panel) {
@@ -36,7 +46,11 @@ export function MobileMenu({ groups, whatsappUrl }: MobileMenuProps) {
         const loaded = await loadSheet();
         setPanel(() => loaded.default);
       } catch {
-        return; // Sin red: el botón vuelve a intentarlo en el próximo toque.
+        // Con red, lo probable es una pestaña abierta durante un despliegue (archivos viejos):
+        // recargar trae los nuevos. Sin red, el aviso de sin conexión ya está en pantalla y el
+        // próximo toque reintenta.
+        if (navigator.onLine) window.location.reload();
+        return;
       }
     }
     setOpen(true);

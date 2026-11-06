@@ -29,7 +29,7 @@ export default function MobileMenuSheet({
   whatsappUrl,
 }: MobileMenuSheetProps) {
   const close = () => onOpenChange(false);
-  const [productos, ...rest] = ui.header.nav;
+  const productos = ui.header.products;
   const linkClass =
     "flex min-h-14 items-center rounded-md px-2 text-lg font-bold text-ink no-underline hover:bg-soft";
 
@@ -53,6 +53,7 @@ export default function MobileMenuSheet({
               <Button asChild variant="whatsapp" size="lg" className="w-full">
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" onClick={close}>
                   {ui.header.whatsapp}
+                  <span className="sr-only"> {ui.header.newTab}</span>
                 </a>
               </Button>
             ) : null}
@@ -92,7 +93,7 @@ export default function MobileMenuSheet({
                 ))}
               </div>
             </li>
-            {rest.map((item) => (
+            {ui.header.nav.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href as Route}

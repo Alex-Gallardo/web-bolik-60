@@ -151,6 +151,10 @@
     color: var(--ink);
   }
 
+  /* El elemento con foco no queda debajo del header sticky al tabular (WCAG 2.4.11). */
+  html {
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+  }
   /* Anclas no quedan debajo del header sticky */
   [id] {
     scroll-margin-top: calc(var(--header-h) + 1rem);

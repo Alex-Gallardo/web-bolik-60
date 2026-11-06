@@ -27,9 +27,18 @@ export function ProductsMenu({ groups }: { groups: NavGroup[] }) {
     const close = (focusSummary: boolean) => {
       const element = details.current;
       if (!element?.open) return;
+      // Escape devuelve el foco solo si estaba dentro del menú (no se lo quita a otro elemento).
+      const hadFocus = element.contains(document.activeElement);
       element.open = false;
-      if (focusSummary) element.querySelector("summary")?.focus();
+      if (focusSummary && hadFocus) element.querySelector("summary")?.focus();
     };
+    // El foco salió del menú con Tab: se cierra.
+    const onFocusOut = (event: FocusEvent) => {
+      const next = event.relatedTarget as Node | null;
+      if (next && !details.current?.contains(next)) close(false);
+    };
+    const element = details.current;
+    element?.addEventListener("focusout", onFocusOut);
     const onPointerDown = (event: PointerEvent) => {
       if (!details.current?.contains(event.target as Node)) close(false);
     };
@@ -39,15 +48,16 @@ export function ProductsMenu({ groups }: { groups: NavGroup[] }) {
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
+      element?.removeEventListener("focusout", onFocusOut);
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, []);
 
-  const productos = ui.header.nav[0];
+  const productos = ui.header.products;
   return (
     <details ref={details} className="group relative">
-      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 rounded-md px-3 font-bold text-ink hover:bg-soft [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 rounded-md px-2 font-bold whitespace-nowrap text-ink hover:bg-soft xl:px-3 [&::-webkit-details-marker]:hidden">
         {productos.label}
         <svg
           viewBox="0 0 24 24"

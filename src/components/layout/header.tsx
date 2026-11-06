@@ -15,8 +15,9 @@ type HeaderProps = {
   whatsappUrl: string | null;
 };
 
+// Sin salto de línea; padding corto hasta xl: a 1024 px el menú entero cabe en una línea.
 const navLink =
-  "flex min-h-11 items-center rounded-md px-3 font-bold text-ink no-underline hover:bg-soft";
+  "flex min-h-11 items-center rounded-md px-2 font-bold whitespace-nowrap text-ink no-underline hover:bg-soft xl:px-3";
 
 /**
  * Header del sitio (BD-041, docs/06 §2). Server Component: solo son cliente las islas pequeñas
@@ -26,7 +27,6 @@ const navLink =
  * Mi cotización · menú.
  */
 export function Header({ groups, whatsappUrl }: HeaderProps) {
-  const [, ...links] = ui.header.nav;
   return (
     <header className="site-header">
       <HeaderScroll />
@@ -43,7 +43,7 @@ export function Header({ groups, whatsappUrl }: HeaderProps) {
             <li>
               <ProductsMenu groups={groups} />
             </li>
-            {links.map((item) => (
+            {ui.header.nav.map((item) => (
               <li key={item.href}>
                 <Link href={item.href as Route} prefetch={false} className={navLink}>
                   {item.label}
@@ -76,7 +76,8 @@ export function Header({ groups, whatsappUrl }: HeaderProps) {
           <QuoteLink />
           {/* El contenedor se oculta en móvil: en el botón, hidden chocaría con su inline-flex. */}
           <div className="ms-2 hidden lg:block">
-            <Button asChild size="sm">
+            {/* md: 44 px o más, también en tablets táctiles (1024–1366 px). */}
+            <Button asChild>
               <Link href={ui.header.cta.href as Route} prefetch={false}>
                 {ui.header.cta.label}
               </Link>

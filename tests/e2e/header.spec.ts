@@ -72,6 +72,27 @@ test.describe("header", () => {
     await expect(panel).not.toHaveAttribute("open");
   });
 
+  test("a 1024 px el menú cabe en una línea", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "escritorio", "menú de escritorio");
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.goto("/");
+    const nav = page.locator("header").getByRole("navigation", { name: "Menú principal" });
+    for (const link of await nav.getByRole("link").all())
+      expect((await link.boundingBox())!.height).toBeLessThanOrEqual(48);
+    const cotizar = page.locator("header").getByRole("link", { name: "Cotizar" });
+    expect((await cotizar.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  });
+
+  test("Productos se cierra cuando el foco sale con Tab", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "escritorio", "menú de escritorio");
+    await page.goto("/");
+    const panel = page.locator("header details");
+    await page.locator("header summary").click();
+    await expect(panel).toHaveAttribute("open", "");
+    await page.locator("header").getByRole("link", { name: "Dónde comprar" }).focus();
+    await expect(panel).not.toHaveAttribute("open");
+  });
+
   test("menú móvil: se descarga al tocar, Escape cierra y el foco vuelve", async ({
     page,
   }, testInfo) => {

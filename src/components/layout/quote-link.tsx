@@ -1,5 +1,6 @@
 "use client";
 
+import { cx } from "class-variance-authority";
 import type { Route } from "next";
 import Link from "next/link";
 import { ui } from "@/content/ui";
@@ -38,7 +39,12 @@ export function QuoteLink() {
           key={popKey}
           aria-hidden="true"
           data-quote-count
-          className={`${popKey > 0 ? "badge-pop" : ""}tnum absolute -top-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-yellow px-1 text-xs font-bold text-ink`}
+          // cx y no un template: el orden de clases de Prettier recortaba el espacio y pegaba
+          // «badge-pop» con la clase siguiente.
+          className={cx(
+            popKey > 0 && "badge-pop",
+            "absolute -top-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-yellow px-1 text-xs font-bold text-ink tnum",
+          )}
         >
           {count}
         </span>
