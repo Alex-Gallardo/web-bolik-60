@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { feedback } from "@/content/feedback";
+import { SPLASH_MS } from "@/lib/splash";
 import { EXAMPLES } from "./examples";
 
 type Row = {
@@ -18,6 +19,38 @@ type Row = {
   /** Ticket que la trae, si todavía no existe. */
   ticket?: string;
 };
+
+/**
+ * Repite el splash (A-01) como lo hace el script de <head>: data-splash en <html> y se salta con
+ * un toque, clic, tecla, la rueda o un scroll. El overlay es el del layout raíz.
+ */
+function playSplash(reduced: boolean) {
+  const root = document.documentElement;
+  if (root.hasAttribute("data-splash")) return;
+  let timer = 0;
+  const off = () => {
+    removeEventListener("keydown", skip, true);
+    removeEventListener("pointerdown", skip, true);
+    removeEventListener("wheel", skip, true);
+    removeEventListener("scroll", skip, true);
+  };
+  const end = () => {
+    root.removeAttribute("data-splash");
+    off();
+  };
+  function skip() {
+    off();
+    clearTimeout(timer);
+    root.setAttribute("data-splash", "out");
+    timer = window.setTimeout(end, SPLASH_MS.out + SPLASH_MS.margin);
+  }
+  root.setAttribute("data-splash", reduced ? "reduced" : "on");
+  addEventListener("keydown", skip, true);
+  addEventListener("pointerdown", skip, true);
+  addEventListener("wheel", skip, { capture: true, passive: true });
+  addEventListener("scroll", skip, { capture: true, passive: true });
+  timer = window.setTimeout(end, reduced ? SPLASH_MS.reduced : SPLASH_MS.on + SPLASH_MS.margin);
+}
 
 /**
  * Movimiento (docs/08 §6.11, docs/09): cada animación A-xx con su demo y «Reproducir», o el
@@ -40,7 +73,15 @@ export function MotionLab() {
   }, [reduced]);
 
   const rows: Row[] = [
-    { code: "A-01", name: "Splash", ticket: "BD-043" },
+    {
+      code: "A-01",
+      name: "Splash",
+      demo: () => (
+        <Button variant="outline" onClick={() => playSplash(reduced)}>
+          Ver splash
+        </Button>
+      ),
+    },
     { code: "A-02", name: "Entrada de página", ticket: "BD-044" },
     {
       code: "A-03",

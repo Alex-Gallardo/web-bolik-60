@@ -19,7 +19,7 @@ Voz (doc 02 §8): **tú**, cálido y directo, frases cortas, orgullo guatemaltec
 | Pie, datos | Industrias Bolik, S.A. **(validar razón social)** · 6a. Avenida 6-31, zona 2, San José Villa Nueva, Guatemala · +502 6628 2600 · Lunes a viernes, 7:30 a 16:30 **(validar horario)** · Facebook: facebook.com/universoBolik **(validar)** |
 | Pie, legal | © {año} Bolik. Hecho en Guatemala. |
 | Saltar al contenido | Saltar al contenido |
-| Splash (`aria-label`) | Bolik, desde 1966 |
+| Splash | Sin texto: es decorativo (`aria-hidden`, docs/09 §3) y solo muestra el wordmark BOLIK® (BD-043). «Bolik, desde 1966» queda como frase de marca disponible. |
 
 ## 2. Inicio
 

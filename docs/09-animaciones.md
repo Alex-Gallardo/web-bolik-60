@@ -17,7 +17,7 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 
 | ID | Nombre | Dónde | Cómo | Duración / curva | Reducido |
 |---|---|---|---|---|---|
-| A-01 | Splash | Primera visita, home | Overlay navy; cuadro azul `scale-in`, trazo amarillo se dibuja, palabra `fade-up`, salida `opacity` | 2000 ms total | Fundido 500 ms |
+| A-01 | Splash | Primera visita, home | Overlay navy; wordmark `fade-up`, trazo amarillo se dibuja debajo, salida `opacity` | 2000 ms total | Logo quieto 500 ms |
 | A-02 | Entrada de página | `template.tsx` | `fade-up` 16 px del `<main>` | 240 ms out | Solo opacidad |
 | A-03 | Presionar | Botones, tarjetas | `scale(.97)` | 90 ms out | Igual (no desplaza) |
 | A-04 | Error de campo | Inputs al enviar con error | `shake` 6 px | 360 ms in-out | Sin shake, solo borde |
@@ -76,12 +76,14 @@ sequenceDiagram
 ```
 
 Decisiones:
-- **Solo en la primera visita de la sesión y solo si se aterriza en `/`.** Quien llega desde Google a una ficha de producto busca un dato; un splash ahí aumenta el rebote. (Se puede activar en todas las páginas con el ajuste `splash_scope`, pero no se recomienda.)
+- **Solo en la primera visita de la sesión y solo si se aterriza en `/` sin ancla.** Quien llega desde Google a una ficha de producto (o a una sección de la home) busca un dato; un splash ahí aumenta el rebote. Si el navegador prerenderiza la página, espera a que se active.
 - **Nunca a crawlers** (Googlebot, Bingbot, bots de IA, previsualizadores de enlaces de WhatsApp/Facebook).
 - **Cero React:** un script inline en `<head>` y CSS. No depende de la hidratación, así que no se queda "pegado" si el JS tarda.
-- **Saltable** con toque, clic o Escape. `aria-hidden` en el overlay (es decorativo; el contenido real ya está en la página).
+- **Saltable** con toque, clic, cualquier tecla, la rueda o un scroll (BD-043: cualquier tecla; con Tab el foco avanza y el overlay ya se está yendo). Al saltarlo sale con un fundido de 240 ms que ya no captura clics. No bloquea el scroll: `overflow: hidden` cambiaba el ancho de la página al quitarse (CLS). `aria-hidden` en el overlay (es decorativo; el contenido real ya está en la página).
+- **Movimiento reducido:** el logo quieto 500 ms y se quita sin transición (las reglas globales de reducido dejan las animaciones en 1 ms).
+- **Marca (BD-043):** wordmark oficial BOLIK® en blanco sobre navy y un trazo amarillo que se dibuja debajo; sin el «cuadro azul» del starter (docs/02: no hay isotipo aprobado) y sin texto (un SVG en línea no compite como LCP). Medido: LCP móvil 2170 ms con splash y 2211 ms sin él (mediana de 3; elemento LCP: el `<h1>` en ambos).
 - **Configurable:** `splash_enabled` en `SiteSetting` (admin › Ajustes).
-- Código completo: `starter/src/components/layout/splash.tsx`.
+- Código: `src/app/head-script.ts` (decisión, con pruebas en jsdom), `src/components/layout/splash.tsx` (overlay) y `motion.css` (estilos). Lighthouse: el LCP no cambia, el Speed Index sube (~1.0 → ~2.0 s, el overlay tapa la página) y la nota de Rendimiento queda igual (0.96–0.99).
 
 ## 4. Transiciones entre páginas
 

@@ -136,7 +136,7 @@ Etiqueta `@critico` = corre también en iPhone y bloquea el release.
 | Archivo | Flujo | Verificaciones clave |
 |---|---|---|
 | `home.spec.ts` @critico | Abrir `/` | H1 visible; hero con póster; capítulos navegables con teclado; CTA "Cotizar" abre drawer; sin errores de consola |
-| `splash.spec.ts` | Primera visita a `/` | `html[data-splash="on"]` y desaparece en ≤ 2.3 s; segunda visita sin splash; `Escape` lo salta; en `/productos` nunca aparece; con UA `Googlebot` nunca aparece |
+| `splash.spec.ts` | Primera visita a `/` | `html[data-splash="on"]` y desaparece en ≤ 2.3 s sin CLS; segunda visita sin splash; `Escape` y un clic lo saltan; en otra ruta nunca aparece; con UA `Googlebot` nunca aparece; con movimiento reducido dura ≤ 0.7 s; sin JavaScript no aparece. Las reglas finas (bots, ajuste apagado, rueda, storage bloqueado) están en `src/app/head-script.test.ts` |
 | `catalogo.spec.ts` | `/productos` → filtro → categoría → ficha | filtros sin recarga; URL con `?uso=`; breadcrumbs; JSON-LD presente |
 | `ficha.spec.ts` @critico | Ficha Bolik Ultra | cambiar color cambia imagen y SKU visible; elegir empaque; agregar a cotización muestra toast y badge; WhatsApp abre con mensaje correcto |
 | `cotizacion.spec.ts` @critico | Agregar 2 productos → `/cotizacion` → enviar | validaciones amigables; diálogo de éxito con folio; `/cotizacion/enviada`; carrito vacío; correo en `tmp/mails` |

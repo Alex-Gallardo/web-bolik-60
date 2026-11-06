@@ -783,8 +783,8 @@ Animación del logo antes del hero, sin afectar SEO ni LCP.
 
 **Pasos**
 
-1. Copiar `starter/src/components/layout/splash.tsx`.
-2. Inyectar el script en `<head>` y el SVG al inicio del `<body>`.
+1. Adaptar `starter/src/components/layout/splash.tsx` a la marca: wordmark oficial y trazo amarillo, sin el «cuadro azul» ni texto (decisión de BD-043; docs/09 §3).
+2. Inyectar el script en `<head>` (`app/head-script.ts`, junto a la clase `js`) y el SVG al inicio del `<body>`. Se salta con toque, clic, tecla o rueda; no bloquea el scroll.
 3. Leer `splash_enabled` de `SiteSetting` en `data-splash-enabled`.
 
 **Criterios de aceptación**
@@ -2005,6 +2005,7 @@ Proteger el sitio sin romper la analítica.
 2. HSTS en IIS.
 3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.
 4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).
+5. Si `script-src` deja `'unsafe-inline'` (nonce o hashes), agregar el `sha256` del script de `<head>` (`HEAD_SCRIPT` de `src/app/head-script.ts`, constante): sin él no corre ni la clase `js` ni el splash (BD-043). Las páginas estáticas no pueden llevar nonce.
 
 **Criterios de aceptación**
 
