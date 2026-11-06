@@ -1,8 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test as base, expect, type Page, type TestInfo } from "@playwright/test";
 
-/** Clave de sessionStorage con la que el splash (BD-04x) sabe que ya se mostró en la sesión. */
-export const SPLASH_KEY = "bolik_splash";
+import { SPLASH_KEY } from "../../src/lib/splash";
+
+/** Clave de sessionStorage con la que el splash (BD-043) sabe que ya se mostró en la sesión. */
+export { SPLASH_KEY };
 
 /** Marca el splash como ya visto antes de que cargue la página (docs/13 §2). */
 export async function skipSplash(page: Page) {

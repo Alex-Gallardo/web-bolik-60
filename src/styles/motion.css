@@ -443,6 +443,61 @@ body[data-scroll-locked] .floating-item {
   }
 }
 
+/* ── Splash (A-01), BD-043 ──
+   El script de <head> (app/head-script.ts) pone data-splash en <html>: «on» (2 s), «reduced»
+   (movimiento reducido: el logo quieto 500 ms, sin transiciones), «out» (lo saltaron: fundido corto
+   y ya no captura clics). Sin el atributo no existe. No bloquea el scroll (overflow hidden movería
+   el ancho de la página al quitarse): la rueda o un scroll también lo saltan. El script termina con
+   el animationend del overlay. Coreografía: el wordmark sube (fade-up), el trazo amarillo se dibuja
+   y todo sale con opacidad. La salida al saltarlo usa su propio keyframe (splash-out): con el mismo
+   nombre que la de «on» la animación no se reiniciaría y el overlay desaparecería de golpe. */
+.splash {
+  display: none;
+}
+html[data-splash] .splash {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-splash);
+  display: grid;
+  place-items: center;
+  background: var(--navy);
+  color: var(--paper);
+  animation: fade-out var(--dur-slow) var(--ease-in) calc(var(--dur-splash) - var(--dur-slow)) both;
+}
+html[data-splash="reduced"] .splash {
+  animation: none;
+}
+html[data-splash="out"] .splash {
+  pointer-events: none;
+  animation: splash-out var(--dur-base) var(--ease-in) both;
+}
+@keyframes splash-out {
+  to {
+    opacity: 0;
+  }
+}
+.splash__inner {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+}
+.splash__ink path {
+  fill: none;
+  stroke: var(--yellow);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+/* También en «out»: si lo saltan a media entrada, el logo no brinca a su estado final. */
+html[data-splash]:not([data-splash="reduced"]) .splash__word {
+  animation: fade-up var(--dur-slow) var(--ease-out) both;
+}
+html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
+  --path-length: 1;
+  animation: draw var(--dur-slower) var(--ease-out) var(--dur-base) both;
+}
+
 /* Aviso de sin conexión (FeedbackHost, BD-024): aparece con opacidad. */
 .notice-in {
   animation: fade-in var(--dur-base) var(--ease-out) both;

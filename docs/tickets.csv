@@ -144,8 +144,8 @@ BD-042,E3,"Estructura global, splash y movimiento",Footer y botones flotantes,S1
 2. Botón WhatsApp flotante (escritorio) y barra de acciones abajo (móvil: WhatsApp y Cotizar), con el mensaje general prellenado. Se ocultan con CSS cuando el drawer o el teclado están abiertos. «Cotizar» de la barra es fijo: el contador ya está en el header (decisión de BD-042, por presupuesto de JS).
 3. «Volver arriba»: enlace en el pie y flotante pasada una pantalla (`data-scrolled-far` de `header-scroll.tsx`).","- Teléfono con `tel:` y WhatsApp con mensaje prellenado.
 - Los flotantes no tapan el CTA principal en móvil.",Sí
-BD-043,E3,"Estructura global, splash y movimiento",Splash de 2 segundos,S1,0.5,Must,A,BD-040,09 §splash,"Animación del logo antes del hero, sin afectar SEO ni LCP.","1. Copiar `starter/src/components/layout/splash.tsx`.
-2. Inyectar el script en `<head>` y el SVG al inicio del `<body>`.
+BD-043,E3,"Estructura global, splash y movimiento",Splash de 2 segundos,S1,0.5,Must,A,BD-040,09 §splash,"Animación del logo antes del hero, sin afectar SEO ni LCP.","1. Adaptar `starter/src/components/layout/splash.tsx` a la marca: wordmark oficial y trazo amarillo, sin el «cuadro azul» ni texto (decisión de BD-043; docs/09 §3).
+2. Inyectar el script en `<head>` (`app/head-script.ts`, junto a la clase `js`) y el SVG al inicio del `<body>`. Se salta con toque, clic, tecla o rueda; no bloquea el scroll.
 3. Leer `splash_enabled` de `SiteSetting` en `data-splash-enabled`.","- Prueba E2E `splash.spec.ts` en verde.
 - Lighthouse no cambia el LCP con splash activo vs. inactivo (± 100 ms).",Sí
 BD-044,E3,"Estructura global, splash y movimiento","Revelado al hacer scroll, cifras y transiciones",S1,0.5,Must,A,BD-040,09,Movimiento suave hecho con CSS.,"1. Copiar `reveal-observer.tsx` y `count-up.tsx`.
@@ -354,7 +354,8 @@ BD-141,E14,Despliegue y operación,Pipeline de despliegue,S3,1,Must,B,BD-014 BD-
 BD-142,E14,Despliegue y operación,Cabeceras de seguridad y CSP,S3,0.5,Must,B,BD-004,15 §6,Proteger el sitio sin romper la analítica.,"1. Cabeceras y CSP del doc 15 §6 en `next.config.ts` (primero como Report-Only en staging).
 2. HSTS en IIS.
 3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.
-4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).","- securityheaders.com: nota A.
+4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).
+5. Si `script-src` deja `'unsafe-inline'` (nonce o hashes), agregar el `sha256` del script de `<head>` (`HEAD_SCRIPT` de `src/app/head-script.ts`, constante): sin él no corre ni la clase `js` ni el splash (BD-043). Las páginas estáticas no pueden llevar nonce.","- securityheaders.com: nota A.
 - Sin errores de CSP en consola.",Sí
 BD-143,E14,Despliegue y operación,Respaldos y prueba de restauración,S4,0.5,Must,B,BD-140,15 §7,Poder recuperar datos y medios.,"1. Respaldos de BD (DBA) y de `D:\bolik\media` (robocopy nocturno).
 2. Restaurar en staging y verificar.",- Restauración documentada con tiempos reales.,Sí
