@@ -237,6 +237,53 @@
   animation: shimmer var(--dur-shimmer) linear infinite;
 }
 
+/* ── Header (A-07), BD-041 ──
+   Sticky con su altura reservada (--header-h): al compactarse no cambia el espacio que ocupa
+   (sin CLS). Pasados 80 px de scroll (data-scrolled en <html>, header-scroll.tsx) el fondo se
+   encoge con scaleY hasta 60 px, el contenido sube 6 px y la sombra aparece con opacidad. */
+.site-header {
+  position: sticky;
+  top: env(safe-area-inset-top, 0);
+  z-index: var(--z-header);
+  height: var(--header-h);
+  isolation: isolate;
+}
+.site-header::before,
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform-origin: top;
+  transition: transform var(--dur-base) var(--ease-out);
+  pointer-events: none;
+}
+.site-header::before {
+  background: var(--paper);
+  border-bottom: 2px solid var(--line);
+}
+.site-header::after {
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
+}
+.site-header__bar {
+  transition: transform var(--dur-base) var(--ease-out);
+}
+[data-scrolled] .site-header::before,
+[data-scrolled] .site-header::after {
+  /* 60 / 72: la altura compacta (--header-h-compact) sobre la normal. */
+  transform: scaleY(0.8333);
+}
+[data-scrolled] .site-header::after {
+  opacity: 1;
+}
+[data-scrolled] .site-header__bar {
+  transform: translateY(-0.375rem);
+}
+
 /* Aviso de sin conexión (FeedbackHost, BD-024): aparece con opacidad. */
 .notice-in {
   animation: fade-in var(--dur-base) var(--ease-out) both;
