@@ -151,8 +151,8 @@ BD-043,E3,"Estructura global, splash y movimiento",Splash de 2 segundos,S1,0.5,M
 BD-044,E3,"Estructura global, splash y movimiento","Revelado al hacer scroll, cifras y transiciones",S1,0.5,Must,A,BD-040,09,Movimiento suave hecho con CSS.,"1. `reveal-observer.tsx` y `count-up.tsx` desde el starter, con las mejoras de BD-044 (docs/09 §6): ocultar solo con `data-reveal-ready`, `MutationObserver`, sin la red de 2.5 s; cifra sin CLS.
 2. Transición de entrada de página con `.page-enter`: `PageEnter` en `(site)/layout.tsx` al cambiar de ruta, sin animar la primera carga (docs/09 §4; no `template.tsx`).","- Sin JS el contenido se ve completo.
 - Con movimiento reducido no hay animaciones.",Sí
-BD-045,E3,"Estructura global, splash y movimiento",MotionProvider diferido,S1,0.25,Must,A,BD-040,09,Motion solo donde CSS no alcanza.,"1. `components/motion/provider.tsx` con `LazyMotion` + `domAnimation` (carga diferida) y presets.
-2. Solo `m.*` en componentes.",- Motion no aparece en el JS inicial de la home (bundle analyzer).,Sí
+BD-045,E3,"Estructura global, splash y movimiento",MotionProvider diferido,S1,0.25,Must,A,BD-040,09,Motion solo donde CSS no alcanza.,"1. `components/motion/motion-provider.tsx` con `LazyMotion strict` + `domAnimation` (o `domMax` con `layout`) por `import()`, `MotionConfig reducedMotion` y presets en `lib/motion.ts` con los tokens de `motion.css` (Motion 14.6.0, BD-045).
+2. Solo `m.*` en componentes, desde `components/motion/m.ts` (regla de ESLint). Guardián E2E: la home no descarga Motion.",- Motion no aparece en el JS inicial de la home (bundle analyzer).,Sí
 BD-046,E3,"Estructura global, splash y movimiento",Páginas 404 y 500,S2,0.5,Must,B,BD-040 BD-037,"06 §3.19, 10 §6",Errores amables que ayudan a seguir navegando.,"1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías. Conserva su `<MainContent>` (BD-040: queda fuera de los layouts de grupo) y revisa que no salga el `<title>` de Next en inglés.
 2. `error.tsx` con WhatsApp y ""Reintentar"".","- Una URL vieja registrada en `Redirect` responde 301.
 - Las demás registran el 404 con contador.",Sí
@@ -210,7 +210,7 @@ BD-067,E5,"Catálogo, fichas y búsqueda",WhatsApp contextual,S2,0.25,Must,A,BD-
 BD-070,E6,Cotización y formularios,Estado de la cotización,S2,0.5,Must,A,BD-024,07 §2.3,Lista de productos a cotizar que se guarda en el navegador.,"1. Copiar `starter/src/features/quote/store.ts`.
 2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header: `useQuoteCount` (`features/quote/quote-count.ts`) pasa de leer `localStorage` a un selector del store, sin tocar el header (BD-041).","- Recargar la página conserva la lista.
 - Pruebas unitarias del doc 13 §3.",Sí
-BD-071,E6,Cotización y formularios,Drawer de cotización,S2,1,Must,A,BD-070 BD-045,"06, 09",Ver y editar la cotización sin salir de la página.,"1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso.
+BD-071,E6,Cotización y formularios,Drawer de cotización,S2,1,Must,A,BD-070 BD-045,"06, 09",Ver y editar la cotización sin salir de la página.,"1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso. Ojo (BD-045): Motion pesa ≈ 50 KB gzip al primer uso; con el criterio de 30 KB, el drawer usa el `Sheet` con CSS (A-08) y Motion queda para A-36, o se revisa el criterio (docs/09 §7).
 2. Editar cantidades, quitar con deshacer (toast), ir a enviar.
 3. Si el presupuesto de JS lo permite, «Cotizar» de la barra móvil (BD-042) pasa a «Mi cotización (n)» y abre el drawer.","- Abrir el drawer no carga más de 30 KB adicionales.
 - Deshacer restaura la línea.",Sí

@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   useEffect,
@@ -61,6 +62,11 @@ function playSplash(reduced: boolean) {
   addEventListener("scroll", skip, { capture: true, passive: true });
   timer = window.setTimeout(end, reduced ? SPLASH_MS.reduced : SPLASH_MS.on + SPLASH_MS.margin);
 }
+
+// Motion (core y funciones) se descarga solo al «Reproducir» A-36, como lo hará el drawer (BD-071).
+const MotionDemo = dynamic(() => import("./motion-demo").then((mod) => mod.MotionDemo), {
+  ssr: false,
+});
 
 /**
  * Reveal escalonado (A-21). Al cargar se comporta como cualquier reveal: entra al bajar hasta aquí.
@@ -266,7 +272,19 @@ export function MotionLab({ stats }: { stats: SiteStatView[] }) {
         />
       ),
     },
-    { code: "A-36", name: "Quitar línea", ticket: "BD-071" },
+    {
+      code: "A-36",
+      name: "Quitar línea",
+      demo: (run) =>
+        run > 0 ? (
+          <MotionDemo />
+        ) : (
+          <p className="text-sm text-muted">
+            Con Motion diferido (BD-045): «Reproducir» lo descarga y monta la lista. La cotización
+            real llega con BD-071.
+          </p>
+        ),
+    },
     { code: "A-40", name: "Tarjetas infantiles", ticket: "BD-105" },
     { code: "A-41", name: "Garabatos", ticket: "BD-105" },
     { code: "A-50", name: "Línea de tiempo", ticket: "BD-109" },
