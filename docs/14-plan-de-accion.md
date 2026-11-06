@@ -749,7 +749,7 @@ Navegación principal con acceso a buscar y a la cotización.
 
 **Pasos**
 
-1. Header fijo que se compacta al bajar (A-20) y se oculta/aparece por dirección de scroll en móvil.
+1. Header fijo que se compacta al bajar (A-07). Nunca se oculta (docs/06 §2: la cotización siempre a mano; decisión de BD-041).
 2. Badge de cotización con `badge-pop` (A-05).
 3. Menú móvil en `Sheet` con enlaces grandes y CTA de WhatsApp.
 
@@ -1095,7 +1095,7 @@ Lista de productos a cotizar que se guarda en el navegador.
 **Pasos**
 
 1. Copiar `starter/src/features/quote/store.ts`.
-2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header.
+2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header: `useQuoteCount` (`features/quote/quote-count.ts`) pasa de leer `localStorage` a un selector del store, sin tocar el header (BD-041).
 
 **Criterios de aceptación**
 

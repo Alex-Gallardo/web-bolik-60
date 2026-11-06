@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { MainContent } from "@/components/layout/main-content";
 import { ui } from "@/content/ui";
 
@@ -21,12 +20,14 @@ export default function NotFound() {
         <p className="max-w-[var(--measure)] text-[length:var(--fs-lead)] text-muted">
           {ui.notFound.body}
         </p>
-        <Link
+        {/* <a> y no <Link>: next/link sumaría 3 KB de JS a una página que no lo necesita. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- ver arriba */}
+        <a
           href="/"
           className="press inline-flex min-h-12.5 items-center rounded-md bg-blue px-7 font-bold text-paper no-underline hover:bg-blue-700"
         >
           {ui.notFound.home}
-        </Link>
+        </a>
       </section>
     </MainContent>
   );

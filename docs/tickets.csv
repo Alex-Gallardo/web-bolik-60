@@ -136,7 +136,7 @@ BD-040,E3,"Estructura global, splash y movimiento",Layout raíz del sitio,S1,0.5
 2. `app/(site)/layout.tsx`: Header, `<main id=""contenido"">`, Footer, Toaster, RevealObserver.
 3. Script del splash en `<head>`.","- Una sola etiqueta `<main>` por página.
 - JS inicial dentro del presupuesto de docs/12 §2 (home ≤ 165 KB, resto ≤ 150 KB; lo vigila Lighthouse CI). El criterio original de 90 KB compartidos no es alcanzable con Next 16 + React 19 (~132 KB de runtime); BD-040 no suma JS: 140.6 KB compartidos antes y después.",Sí
-BD-041,E3,"Estructura global, splash y movimiento",Header y menú móvil,S1,1,Must,A,BD-040 BD-025,06 §2,Navegación principal con acceso a buscar y a la cotización.,"1. Header fijo que se compacta al bajar (A-20) y se oculta/aparece por dirección de scroll en móvil.
+BD-041,E3,"Estructura global, splash y movimiento",Header y menú móvil,S1,1,Must,A,BD-040 BD-025,06 §2,Navegación principal con acceso a buscar y a la cotización.,"1. Header fijo que se compacta al bajar (A-07). Nunca se oculta (docs/06 §2: la cotización siempre a mano; decisión de BD-041).
 2. Badge de cotización con `badge-pop` (A-05).
 3. Menú móvil en `Sheet` con enlaces grandes y CTA de WhatsApp.","- Sin CLS al compactarse.
 - El menú se cierra al navegar y devuelve el foco.",Sí
@@ -207,7 +207,7 @@ BD-066,E5,"Catálogo, fichas y búsqueda",Buscador,S2,1.5,Must,B,BD-032 BD-025,"
 BD-067,E5,"Catálogo, fichas y búsqueda",WhatsApp contextual,S2,0.25,Must,A,BD-009,07,Mensajes prellenados según dónde esté el visitante.,"1. `lib/whatsapp.ts` con plantillas (producto, cotización, general) y número desde `SiteSetting`.","- El mensaje incluye producto, SKU, empaque y URL.
 - Evento `whatsapp_open`.",Sí
 BD-070,E6,Cotización y formularios,Estado de la cotización,S2,0.5,Must,A,BD-024,07 §2.3,Lista de productos a cotizar que se guarda en el navegador.,"1. Copiar `starter/src/features/quote/store.ts`.
-2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header.","- Recargar la página conserva la lista.
+2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header: `useQuoteCount` (`features/quote/quote-count.ts`) pasa de leer `localStorage` a un selector del store, sin tocar el header (BD-041).","- Recargar la página conserva la lista.
 - Pruebas unitarias del doc 13 §3.",Sí
 BD-071,E6,Cotización y formularios,Drawer de cotización,S2,1,Must,A,BD-070 BD-045,"06, 09",Ver y editar la cotización sin salir de la página.,"1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso.
 2. Editar cantidades, quitar con deshacer (toast), ir a enviar.","- Abrir el drawer no carga más de 30 KB adicionales.
