@@ -2,8 +2,8 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { OnRouteChange } from "@/components/motion/on-route-change";
 import { ui } from "@/content/ui";
 import type { LineGroup } from "@/server/data/types";
 
@@ -17,12 +17,6 @@ export type NavGroup = { line: LineGroup; categories: { name: string; href: stri
  */
 export function ProductsMenu({ groups }: { groups: NavGroup[] }) {
   const details = useRef<HTMLDetailsElement>(null);
-  const pathname = usePathname();
-
-  useEffect(() => {
-    details.current?.removeAttribute("open");
-  }, [pathname]);
-
   useEffect(() => {
     const close = (focusSummary: boolean) => {
       const element = details.current;
@@ -102,6 +96,8 @@ export function ProductsMenu({ groups }: { groups: NavGroup[] }) {
           {ui.header.allProducts}
         </Link>
       </div>
+      {/* Al navegar (atrás, adelante o un enlace) se cierra. */}
+      <OnRouteChange onChange={() => details.current?.removeAttribute("open")} />
     </details>
   );
 }

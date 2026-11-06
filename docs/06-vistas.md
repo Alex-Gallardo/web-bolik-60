@@ -39,7 +39,7 @@ flowchart TB
 │ Header sticky: Logo · Menú · Buscar ·        │
 │ Mi cotización (contador) · Cotizar           │
 ├──────────────────────────────────────────────┤
-│ <main id="contenido"> (template.tsx A-02)    │
+│ <main id="contenido"> (PageEnter A-02)       │
 │   Breadcrumbs (excepto home)                 │
 │   Secciones de la página                     │
 │   CTA final de página                        │
