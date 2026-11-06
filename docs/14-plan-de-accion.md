@@ -766,8 +766,9 @@ Pie con datos de la empresa y flotantes de WhatsApp y volver arriba.
 
 **Pasos**
 
-1. Footer con dirección, teléfono, redes, enlaces legales, razón social desde `SiteSetting`.
-2. Botón WhatsApp flotante (se oculta cuando el drawer o el teclado están abiertos).
+1. Footer con dirección, teléfono, redes, enlaces legales, razón social desde `SiteSetting` (Server Component, sin JS; el NAP completo del doc 06 en `settings.json`, el mismo de `/contacto` y el JSON-LD).
+2. Botón WhatsApp flotante (escritorio) y barra de acciones abajo (móvil: WhatsApp y Cotizar), con el mensaje general prellenado. Se ocultan con CSS cuando el drawer o el teclado están abiertos. «Cotizar» de la barra es fijo: el contador ya está en el header (decisión de BD-042, por presupuesto de JS).
+3. «Volver arriba»: enlace en el pie y flotante pasada una pantalla (`data-scrolled-far` de `header-scroll.tsx`).
 
 **Criterios de aceptación**
 
@@ -1112,6 +1113,7 @@ Ver y editar la cotización sin salir de la página.
 
 1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso.
 2. Editar cantidades, quitar con deshacer (toast), ir a enviar.
+3. Si el presupuesto de JS lo permite, «Cotizar» de la barra móvil (BD-042) pasa a «Mi cotización (n)» y abre el drawer.
 
 **Criterios de aceptación**
 

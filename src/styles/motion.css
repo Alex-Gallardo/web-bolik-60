@@ -290,6 +290,159 @@
   transform: translateY(-0.375rem);
 }
 
+/* ── Flotantes (BD-042, docs/06 §2) ──
+   Barra de acciones abajo en móvil, botón de WhatsApp en escritorio (≥ 1024 px) y «Volver arriba»
+   pasada una pantalla (data-scrolled-far, header-scroll.tsx). Aparecen y se van con opacidad y
+   transform; visibility los saca del orden de tabulación mientras están ocultos. */
+.floating-item {
+  position: fixed;
+  z-index: var(--z-fab);
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out),
+    visibility 0s linear 0s;
+}
+.mobile-bar {
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  gap: var(--space-2);
+  min-height: calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px));
+  align-items: center;
+  padding: var(--space-2) var(--gutter) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  background: var(--paper);
+  border-top: 2px solid var(--line);
+}
+.floating-whatsapp,
+.floating-top {
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+}
+.floating-whatsapp {
+  display: none;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  width: 3.75rem;
+  height: 3.75rem;
+  background: var(--whatsapp);
+  color: var(--paper);
+}
+.floating-whatsapp:hover {
+  background: var(--whatsapp-700);
+}
+/* La sombra de elevación reemplazaría el anillo oscuro del foco (globals.css): se suman los dos. */
+.floating-whatsapp:focus-visible,
+.floating-top:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--ink),
+    var(--shadow-md);
+}
+/* «Volver arriba» oculto hasta bajar una pantalla (sin JS nunca aparece: el pie tiene el suyo). */
+.floating-top {
+  right: var(--gutter);
+  bottom: calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px) + var(--space-3));
+  width: 2.75rem;
+  height: 2.75rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--line-strong);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(var(--rise-sm));
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out),
+    visibility 0s linear var(--dur-base);
+}
+.floating-top:hover {
+  background: var(--soft);
+}
+@media (width >= 64rem) {
+  .mobile-bar {
+    display: none;
+  }
+  .floating-whatsapp {
+    display: grid;
+  }
+  .floating-top {
+    right: calc(var(--space-6) + 0.5rem);
+    bottom: var(--space-6);
+  }
+  /* Con el botón de WhatsApp, «Volver arriba» va encima de él. */
+  .floating-actions:has(.floating-whatsapp) .floating-top {
+    bottom: calc(var(--space-6) + 3.75rem + var(--space-3));
+  }
+}
+/* El pie reserva abajo el alto de los flotantes: al final de la página nada queda debajo de ellos.
+   Móvil: barra + «Volver arriba»; escritorio: «Volver arriba» y, si hay, el botón de WhatsApp. */
+.site-footer {
+  padding-bottom: calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px) + 3.5rem);
+}
+@media (width >= 64rem) {
+  .site-footer {
+    padding-bottom: 5rem;
+  }
+  body:has(.floating-whatsapp) .site-footer {
+    padding-bottom: 9rem;
+  }
+}
+[data-scrolled-far] .floating-top {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+/* Con un sheet, drawer o diálogo abierto (Radix pone data-scroll-locked en <body>) se ocultan. */
+body[data-scroll-locked] .floating-item {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(var(--rise-md));
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    transform var(--dur-fast) var(--ease-in),
+    visibility 0s linear var(--dur-fast);
+}
+/* Teclado en pantalla abierto (un campo de texto con foco en pantallas táctiles o angostas): se
+   ocultan para no tapar el campo ni el botón de enviar. Casillas, radios y botones no abren teclado. */
+@media (width < 64rem), (pointer: coarse) {
+  html:has(
+      :is(
+        input:not(
+          [type="checkbox"],
+          [type="radio"],
+          [type="range"],
+          [type="button"],
+          [type="submit"],
+          [type="reset"],
+          [type="file"],
+          [type="color"],
+          [type="hidden"],
+          [type="image"]
+        ),
+        textarea,
+        select,
+        [contenteditable]:not([contenteditable="false"])
+      ):focus
+    )
+    .floating-item {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(var(--rise-md));
+    transition:
+      opacity var(--dur-fast) var(--ease-in),
+      transform var(--dur-fast) var(--ease-in),
+      visibility 0s linear var(--dur-fast);
+  }
+}
+/* Al imprimir no salen. */
+@media print {
+  .floating-actions {
+    display: none;
+  }
+}
+
 /* Aviso de sin conexión (FeedbackHost, BD-024): aparece con opacidad. */
 .notice-in {
   animation: fade-in var(--dur-base) var(--ease-out) both;

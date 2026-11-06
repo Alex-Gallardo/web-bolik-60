@@ -68,7 +68,8 @@ test.describe("header", () => {
     // Un clic afuera también lo cierra.
     await summary.click();
     await expect(panel).toHaveAttribute("open", "");
-    await page.locator("main").click({ position: { x: 5, y: 300 } });
+    // En el pie: la home de ejemplo es corta y su <main> puede quedar bajo el panel abierto.
+    await page.getByRole("contentinfo").click({ position: { x: 5, y: 5 } });
     await expect(panel).not.toHaveAttribute("open");
   });
 

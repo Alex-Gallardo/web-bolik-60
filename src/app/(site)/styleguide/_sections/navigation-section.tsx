@@ -60,7 +60,7 @@ function productTabs(featured: ProductView): TabItem[] {
   ];
 }
 
-/** 9 · Navegación: overlays, pestañas, acordeón; breadcrumbs, paginación, header y footer después. */
+/** 9 · Navegación: overlays, pestañas, acordeón, header y pie; breadcrumbs y paginación después. */
 export function NavigationSection({ featured, faqs }: NavigationSectionProps) {
   return (
     <SgSection
@@ -84,12 +84,17 @@ export function NavigationSection({ featured, faqs }: NavigationSectionProps) {
           content: <p>{faq.answer}</p>,
         }))}
       />
+      <h3>Header, pie y flotantes</h3>
+      {/* Sin copia en miniatura: un segundo <header>/<footer> duplicaría los landmarks. */}
+      <p className="max-w-[var(--measure)]">
+        Son los de esta misma página (BD-041 y BD-042): el header se compacta al bajar, el pie lleva
+        los datos de la empresa y, pasada una pantalla, aparece «Volver arriba». En móvil, la barra
+        de acciones se oculta al escribir en un campo o al abrir el menú.
+      </p>
       <h3>Por llegar</h3>
       <div className="grid gap-3 md:grid-cols-2">
         <Pending what="Breadcrumbs" ticket="BD-093" />
         <Pending what="Paginación (admin)" ticket="BD-115" />
-        <Pending what="Header en miniatura" ticket="BD-041" />
-        <Pending what="Footer en miniatura" ticket="BD-042" />
       </div>
     </SgSection>
   );

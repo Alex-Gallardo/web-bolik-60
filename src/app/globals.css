@@ -154,6 +154,17 @@
   /* El elemento con foco no queda debajo del header sticky al tabular (WCAG 2.4.11). */
   html {
     scroll-padding-top: calc(var(--header-h) + 1rem);
+    /* Ni debajo de la barra de acciones en móvil (BD-042). */
+    scroll-padding-bottom: calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+  /* En escritorio, ni debajo del botón flotante de WhatsApp (abajo a la derecha). */
+  @media (width >= 64rem) {
+    html {
+      scroll-padding-bottom: 0;
+    }
+    html:has(.floating-whatsapp) {
+      scroll-padding-bottom: calc(var(--space-6) + 3.75rem + var(--space-3));
+    }
   }
   /* Anclas no quedan debajo del header sticky */
   [id] {

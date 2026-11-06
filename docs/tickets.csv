@@ -141,7 +141,8 @@ BD-041,E3,"Estructura global, splash y movimiento",Header y menú móvil,S1,1,Mu
 3. Menú móvil en `Sheet` con enlaces grandes y CTA de WhatsApp.","- Sin CLS al compactarse.
 - El menú se cierra al navegar y devuelve el foco.",Sí
 BD-042,E3,"Estructura global, splash y movimiento",Footer y botones flotantes,S1,0.5,Must,A,BD-040,06 §2,Pie con datos de la empresa y flotantes de WhatsApp y volver arriba.,"1. Footer con dirección, teléfono, redes, enlaces legales, razón social desde `SiteSetting`.
-2. Botón WhatsApp flotante (se oculta cuando el drawer o el teclado están abiertos).","- Teléfono con `tel:` y WhatsApp con mensaje prellenado.
+2. Botón WhatsApp flotante (escritorio) y barra de acciones abajo (móvil: WhatsApp y Cotizar), con el mensaje general prellenado. Se ocultan con CSS cuando el drawer o el teclado están abiertos. «Cotizar» de la barra es fijo: el contador ya está en el header (decisión de BD-042, por presupuesto de JS).
+3. «Volver arriba»: enlace en el pie y flotante pasada una pantalla (`data-scrolled-far` de `header-scroll.tsx`).","- Teléfono con `tel:` y WhatsApp con mensaje prellenado.
 - Los flotantes no tapan el CTA principal en móvil.",Sí
 BD-043,E3,"Estructura global, splash y movimiento",Splash de 2 segundos,S1,0.5,Must,A,BD-040,09 §splash,"Animación del logo antes del hero, sin afectar SEO ni LCP.","1. Copiar `starter/src/components/layout/splash.tsx`.
 2. Inyectar el script en `<head>` y el SVG al inicio del `<body>`.
@@ -210,7 +211,8 @@ BD-070,E6,Cotización y formularios,Estado de la cotización,S2,0.5,Must,A,BD-02
 2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header: `useQuoteCount` (`features/quote/quote-count.ts`) pasa de leer `localStorage` a un selector del store, sin tocar el header (BD-041).","- Recargar la página conserva la lista.
 - Pruebas unitarias del doc 13 §3.",Sí
 BD-071,E6,Cotización y formularios,Drawer de cotización,S2,1,Must,A,BD-070 BD-045,"06, 09",Ver y editar la cotización sin salir de la página.,"1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso.
-2. Editar cantidades, quitar con deshacer (toast), ir a enviar.","- Abrir el drawer no carga más de 30 KB adicionales.
+2. Editar cantidades, quitar con deshacer (toast), ir a enviar.
+3. Si el presupuesto de JS lo permite, «Cotizar» de la barra móvil (BD-042) pasa a «Mi cotización (n)» y abre el drawer.","- Abrir el drawer no carga más de 30 KB adicionales.
 - Deshacer restaura la línea.",Sí
 BD-072,E6,Cotización y formularios,Página /cotizacion y formulario,S2,1,Must,A,BD-071 BD-022,06 §3.16,Formulario corto para pedir la cotización.,"1. Tipo de cliente (librería, empresa, institución, otro) que ajusta los campos.
 2. Borrador del formulario guardado en `sessionStorage`.

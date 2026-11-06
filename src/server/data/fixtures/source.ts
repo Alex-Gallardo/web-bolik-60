@@ -299,6 +299,7 @@ export const fixturesSource: DataSource = {
       businessHours: s.business_hours,
       legalName: s.legal_name,
       whatsappNumber: s.whatsapp_number ?? null,
+      socialFacebook: s.social_facebook ?? null,
       splashEnabled: s.splash_enabled === "true",
       kitsEnabled: s.kits_enabled === "true",
       minCustomOrder: s.min_custom_order ? Number(s.min_custom_order) : null,

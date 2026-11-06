@@ -5,8 +5,11 @@ import { Toaster as Sonner, type ToasterProps } from "sonner";
 import { ui } from "@/content/ui";
 import { ToneIcon } from "./tone-icon";
 
-/** Escritorio desde md (768 px): abajo a la derecha; en móvil, abajo al centro (docs/08 §4). */
-const DESKTOP = "(min-width: 48rem)";
+/**
+ * Escritorio desde lg (1024 px): abajo a la derecha; debajo, abajo al centro (docs/08 §4). El mismo
+ * corte que la barra de acciones móvil (BD-042): por debajo el toast sube sobre ella.
+ */
+const DESKTOP = "(min-width: 64rem)";
 
 function subscribeDesktop(callback: () => void) {
   const query = window.matchMedia(DESKTOP);
@@ -14,6 +17,10 @@ function subscribeDesktop(callback: () => void) {
   return () => query.removeEventListener("change", callback);
 }
 const isDesktop = () => window.matchMedia(DESKTOP).matches;
+
+/** Distancia al borde inferior: por encima de la barra móvil o del botón flotante de WhatsApp. */
+const BOTTOM_MOBILE = "calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px) + 0.75rem)";
+const BOTTOM_DESKTOP = "calc(var(--space-6) + 3.75rem + var(--space-3))";
 
 /** Ícono por tono, siempre junto al texto: el color nunca es el único indicador (docs/08 §4). */
 const ICONS: ToasterProps["icons"] = {
@@ -42,11 +49,11 @@ export default function Toaster() {
       position={desktop ? "bottom-right" : "bottom-center"}
       visibleToasts={3}
       gap={8}
-      // Abajo al centro (menos de 768 px) también sube sobre la barra móvil: sonner solo usa
-      // mobileOffset hasta 600 px.
-      offset={desktop ? 24 : { bottom: "calc(var(--mobile-bar-h) + 0.75rem)" }}
+      // Escritorio: encima del botón de WhatsApp (BD-042). Abajo al centro (menos de 1024 px)
+      // sube sobre la barra móvil y su safe area: sonner solo usa mobileOffset hasta 600 px.
+      offset={desktop ? { bottom: BOTTOM_DESKTOP, right: 24 } : { bottom: BOTTOM_MOBILE }}
       // No tapa la barra inferior móvil (docs/08 §4).
-      mobileOffset={{ bottom: "calc(var(--mobile-bar-h) + 0.75rem)", left: 16, right: 16 }}
+      mobileOffset={{ bottom: BOTTOM_MOBILE, left: 16, right: 16 }}
       // Más ancho que el de sonner (356 px): título, acción y cerrar caben sin partir el texto.
       style={{ "--width": "26rem" } as CSSProperties}
       containerAriaLabel={ui.feedback.region}
