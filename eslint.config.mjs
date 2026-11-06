@@ -8,9 +8,9 @@ const motionImports = {
   paths: [
     {
       name: "motion/react",
-      message: "Usa los componentes de @/components/motion (LazyMotion + m).",
+      message: "Usa m y AnimatePresence de @/components/motion/m, dentro de MotionProvider.",
     },
-    { name: "motion", message: "Usa los componentes de @/components/motion (LazyMotion + m)." },
+    { name: "motion", message: "Usa m y AnimatePresence de @/components/motion/m." },
     {
       name: "framer-motion",
       message: "Este proyecto usa Motion (motion/react) desde @/components/motion.",
@@ -58,6 +58,34 @@ const dbDynamicImport = [
 const DB_ALLOWED = ["src/server/**", "prisma/**", "scripts/**", "tests/integration/**"];
 const MOTION_ALLOWED = ["src/components/motion/**"];
 
+// Dentro de src/components/motion: solo m.* con LazyMotion (BD-045). El componente motion completo
+// trae todas las funciones en el JS de la página; con LazyMotion strict además lanza un error.
+const motionComponentImports = {
+  paths: [
+    {
+      name: "motion/react",
+      importNames: ["motion"],
+      message: "Usa m.* dentro de MotionProvider (LazyMotion): motion.* no es diferido.",
+    },
+    { name: "motion", message: "Usa motion/react (m.*) dentro de MotionProvider." },
+    { name: "framer-motion", message: "Este proyecto usa Motion (motion/react)." },
+  ],
+  patterns: [
+    {
+      // motion/react-client trae motion.* completo; motion/react-m es lo mismo que m.
+      group: ["motion/*", "!motion/react", "!motion/react-m", "framer-motion/*"],
+      message: "Usa motion/react (m.*) dentro de MotionProvider.",
+    },
+  ],
+};
+
+// no-restricted-imports no revisa import() dinámicos: tampoco se carga Motion así fuera de
+// src/components/motion.
+const motionDynamicImport = {
+  selector: "ImportExpression[source.value=/^(motion|framer-motion)(\\/|$)/]",
+  message: "Usa m y AnimatePresence de @/components/motion/m, dentro de MotionProvider.",
+};
+
 /** Une las restricciones (ESLint no combina dos bloques con la misma regla: el último gana). */
 const restrictImports = (...configs) => [
   "error",
@@ -75,17 +103,20 @@ const eslintConfig = defineConfig([
     ignores: [...MOTION_ALLOWED, ...DB_ALLOWED],
     rules: {
       "no-restricted-imports": restrictImports(motionImports, dbImports),
-      "no-restricted-syntax": dbDynamicImport,
+      "no-restricted-syntax": [...dbDynamicImport, motionDynamicImport],
     },
   },
   {
     files: DB_ALLOWED,
-    rules: { "no-restricted-imports": restrictImports(motionImports) },
+    rules: {
+      "no-restricted-imports": restrictImports(motionImports),
+      "no-restricted-syntax": ["error", motionDynamicImport],
+    },
   },
   {
     files: MOTION_ALLOWED,
     rules: {
-      "no-restricted-imports": restrictImports(dbImports),
+      "no-restricted-imports": restrictImports(motionComponentImports, dbImports),
       "no-restricted-syntax": dbDynamicImport,
     },
   },

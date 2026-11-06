@@ -816,8 +816,8 @@ Motion solo donde CSS no alcanza.
 
 **Pasos**
 
-1. `components/motion/provider.tsx` con `LazyMotion` + `domAnimation` (carga diferida) y presets.
-2. Solo `m.*` en componentes.
+1. `components/motion/motion-provider.tsx` con `LazyMotion strict` + `domAnimation` (o `domMax` con `layout`) por `import()`, `MotionConfig reducedMotion` y presets en `lib/motion.ts` con los tokens de `motion.css` (Motion 14.6.0, BD-045).
+2. Solo `m.*` en componentes, desde `components/motion/m.ts` (regla de ESLint). Guardián E2E: la home no descarga Motion.
 
 **Criterios de aceptación**
 
@@ -1111,7 +1111,7 @@ Ver y editar la cotización sin salir de la página.
 
 **Pasos**
 
-1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso.
+1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso. Ojo (BD-045): Motion pesa ≈ 50 KB gzip al primer uso; con el criterio de 30 KB, el drawer usa el `Sheet` con CSS (A-08) y Motion queda para A-36, o se revisa el criterio (docs/09 §7).
 2. Editar cantidades, quitar con deshacer (toast), ir a enviar.
 3. Si el presupuesto de JS lo permite, «Cotizar» de la barra móvil (BD-042) pasa a «Mi cotización (n)» y abre el drawer.
 

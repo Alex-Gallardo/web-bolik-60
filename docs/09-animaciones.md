@@ -39,7 +39,7 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 | A-33 | Cota interactiva | Diagrama de medidas | Línea de cota con `stroke-dashoffset` y etiqueta `fade-in` | 320 ms out | Estático |
 | A-34 | Pines del mapa | Dónde comprar | Pines caen con `translateY(-8px) → 0` escalonado; pin activo con `scale(1.15)` | 240 ms spring | Estático |
 | A-35 | Acordeón | FAQs | `<details>` + `::details-content` (`block-size`)* y rotación del ícono + | 240 ms in-out | Instantáneo |
-| A-36 | Quitar línea | Cotización | Motion `AnimatePresence`: `opacity` y `x` hacia la derecha, luego colapso de altura | 280 ms | Solo opacidad |
+| A-36 | Quitar línea | Cotización | Motion `AnimatePresence`: `opacity` y `x` hacia la derecha; al terminar, las de abajo suben (sin animar la altura; `layout` necesitaría `domMax`) | 240 ms (`--dur-base`) | Solo opacidad |
 | A-40 | Tarjetas infantiles | Escuelas | Rotación ±1.5° en reposo; hover `rotate(0) scale(1.03)` | 240 ms spring | Sin rotación |
 | A-41 | Garabatos | Fondo de escuelas | SVG que se dibuja una vez al entrar + `float` lento de figuras | 1.2 s una vez; float 5 s loop | Estático |
 | A-50 | Línea de tiempo | Historia | Línea con `scaleX`/`scaleY` desde el origen + hitos con A-21 | 700 ms out | Estático |
@@ -137,36 +137,32 @@ Límites: máximo 8 elementos escalonados por grupo (después, mismo retraso; el
 
 ## 7. Motion (librería) sin inflar el bundle
 
+Motion 14 (`motion/react`), instalado en BD-045. Código en `src/components/motion/`:
+
 ```tsx
-// src/components/motion/lazy-motion-provider.tsx
-"use client";
-import { LazyMotion } from "motion/react";
-const loadFeatures = () => import("./motion-features").then((m) => m.default);
-export function MotionProvider({ children }: { children: React.ReactNode }) {
-  return <LazyMotion features={loadFeatures} strict>{children}</LazyMotion>;
+// motion-provider.tsx (cliente): LazyMotion strict + MotionConfig
+const loadAnimation = () => import("./motion-features").then((mod) => mod.default); // domAnimation
+const loadLayout = () => import("./motion-features-layout").then((mod) => mod.default); // domMax
+export function MotionProvider({ children, layout = false }) {
+  return (
+    <LazyMotion features={layout ? loadLayout : loadAnimation} strict>
+      <MotionConfig reducedMotion={simulado ? "always" : "user"}>{children}</MotionConfig>
+    </LazyMotion>
+  );
 }
 
-// src/components/motion/motion-features.ts
-import { domAnimation } from "motion/react";
-export default domAnimation;
+// En un componente (fuera de src/components/motion):
+import { AnimatePresence, m } from "@/components/motion/m";
+import { MotionProvider } from "@/components/motion/motion-provider";
+import { lineExit } from "@/lib/motion";
 ```
 
-- Se usa `m.div` (no `motion.div`) dentro del provider.
-- El provider envuelve **solo** el drawer de cotización, los diálogos y la grilla filtrable; no todo el sitio.
-- Presets en `src/lib/motion.ts`:
-
-```ts
-export const spring = { type: "spring", stiffness: 380, damping: 32, mass: 0.9 } as const;
-export const drawer = { initial: { x: "100%" }, animate: { x: 0 }, exit: { x: "100%" }, transition: spring };
-export const sheet = { initial: { y: "100%" }, animate: { y: 0 }, exit: { y: "100%" }, transition: spring };
-export const fadeScale = {
-  initial: { opacity: 0, scale: 0.96 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.98 },
-  transition: { duration: 0.24, ease: [0.22, 1, 0.36, 1] },
-};
-export const lineExit = { exit: { opacity: 0, x: 24, transition: { duration: 0.2 } } };
-```
-
-- Con `useReducedMotion()` de Motion, los presets se reemplazan por solo opacidad.
+- Se usa `m.div` (no `motion.div`) dentro del provider. ESLint lo exige: fuera de `src/components/motion` no se importa `motion/react` (se usa `components/motion/m.ts`) y dentro no se importa el componente `motion` completo; con `strict`, Motion además lanza un error si aparece (solo en desarrollo). Tampoco se permite `import()` de Motion fuera de esa carpeta.
+- El provider envuelve **solo** el drawer de cotización, los diálogos que lo necesiten y la grilla filtrable; no todo el sitio. `layout` carga `domMax` (animaciones de layout, A-22), que pesa más; el resto usa `domAnimation`.
+- Lo que usa Motion se carga al interactuar (`dynamic()` o `import()`), como la demo A-36 de `/styleguide`: así ni el núcleo de Motion entra en el JS inicial. Lo vigila `tests/e2e/motion-lazy.spec.ts` (la home no descarga ningún script con Motion). Peso al primer uso (Motion 14.6.0, gzip, medido con la demo A-36): ≈ 50 KB (núcleo de `m.*` ≈ 30.5 KB, funciones `domAnimation` ≈ 14.8 KB, provider y `AnimatePresence` ≈ 5 KB); `domMax` pesa más. **Choca con BD-071** («abrir el drawer no carga más de 30 KB»): el drawer puede usar el `Sheet` con CSS (A-08, ya existe) y Motion solo para quitar líneas (A-36), o revisar ese criterio.
+- `layout` es fijo por instancia del provider (LazyMotion carga sus funciones una vez).
+- Presets en `src/lib/motion.ts` (`spring`, `drawer`, `sheet`, `fadeScale`, `lineExit`): duraciones y curvas son los tokens de `motion.css` en segundos (`DUR`, `EASE`; una prueba exige que coincidan; el resorte de drawer y sheet no tiene duración) y solo animan transform y opacidad. Todos cambian la opacidad: con movimiento reducido es lo único que queda.
+- Movimiento reducido: `MotionConfig reducedMotion="user"` deja solo la opacidad cuando el sistema lo pide; el interruptor de `/styleguide` lo fuerza con `"always"`.
 
 ## 8. Rendimiento de las animaciones (verificación)
 
