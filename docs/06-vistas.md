@@ -65,8 +65,10 @@ flowchart TB
 - Redes sociales, enlaces legales, "Hecho en Guatemala desde 1966".
 
 ### Flotantes
-- **WhatsApp (desktop):** botón circular abajo a la derecha; abre `WhatsAppSheet` con mensaje contextual (página/producto actual).
-- **Barra móvil:** fija abajo con 2 botones: WhatsApp y Cotizar (o "Mi cotización (3)" cuando hay líneas). Respeta `safe-area-inset-bottom`. Se oculta cuando el teclado está abierto.
+- **WhatsApp (desktop):** botón circular abajo a la derecha; abre `WhatsAppSheet` con mensaje contextual (página/producto actual). Hasta BD-067 es un enlace a `wa.me` con el mensaje general prellenado.
+- **Barra móvil:** fija abajo con 2 botones: WhatsApp y Cotizar. Respeta `safe-area-inset-bottom`. Se oculta cuando el teclado o un sheet están abiertos. «Mi cotización (3)» en lugar de «Cotizar» queda para BD-071 si el presupuesto de JS lo permite (el contador ya está siempre en el header).
+- **Volver arriba:** botón redondo pasada una pantalla (encima del de WhatsApp o de la barra) y enlace en el pie.
+- El pie reserva abajo el alto de los flotantes: al final de la página nada queda debajo de ellos.
 - **Drawer de cotización:** desde la derecha en desktop, desde abajo (bottom sheet) en móvil.
 
 ## 3. Vistas públicas

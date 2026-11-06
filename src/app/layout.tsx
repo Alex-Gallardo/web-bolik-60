@@ -22,7 +22,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: HEAD_SCRIPT }} />
       </head>
-      <body className="flex min-h-full flex-col">
+      {/* id="top": destino de «Volver arriba» (BD-042). En el <body> y no en «Saltar al contenido»:
+          el navegador enfoca el destino y ese enlace, con foco, pasa a fixed (no habría scroll). */}
+      <body id="top" className="flex min-h-full flex-col">
         <a
           href="#contenido"
           // Relleno solo con foco: sobre sr-only, px/py le ganarían a su padding 0 y el enlace oculto

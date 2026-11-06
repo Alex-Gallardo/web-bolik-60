@@ -72,7 +72,7 @@ Tamaños: `sm` 40 px (solo admin y desktop), `md` **48–52 px** (por defecto), 
 | `Sheet` / `Drawer` | Radix Dialog en modo lateral o inferior (A-08); lado `auto`: abajo en móvil, derecha desde md |
 | `Dialog` / `Popover` | Radix Dialog (A-09) y Radix Popover |
 | `FriendlyDialog` | Diálogo de éxito, error o confirmación (ver §4) |
-| `Toaster` | `sonner` configurado con colores y posición (abajo al centro en móvil, abajo a la derecha en desktop) |
+| `Toaster` | `sonner` configurado con colores y posición (abajo al centro bajo 1024 px, sobre la barra de acciones; abajo a la derecha desde 1024 px, sobre el botón de WhatsApp) |
 | `Breadcrumbs` | Con JSON-LD `BreadcrumbList` generado del mismo arreglo |
 | `Section` | Contenedor de sección con `background` y `tone` configurables (§3) |
 | `EmptyState` | Ilustración pequeña SVG, título, texto y acción |

@@ -193,6 +193,8 @@ export type SiteSettings = {
   legalName: string;
   /** null mientras no haya número: los botones de WhatsApp no se muestran. */
   whatsappNumber: string | null;
+  /** Página de Facebook (https); null si no hay: el pie no muestra el enlace. */
+  socialFacebook: string | null;
   splashEnabled: boolean;
   kitsEnabled: boolean;
   minCustomOrder: number | null;

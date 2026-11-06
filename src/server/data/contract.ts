@@ -141,5 +141,12 @@ export function describeDataSourceContract(name: string, getSource: () => DataSo
       expect(settings.whatsappNumber).toBeNull();
       expect(settings.splashEnabled).toBe(true);
     });
+
+    it("los ajustes traen el NAP completo del pie y la página de Facebook", async () => {
+      const settings = await source().getSiteSettings();
+      expect(settings.address).toBe("6a. Avenida 6-31, zona 2, San José Villa Nueva, Guatemala");
+      expect(settings.legalName).toBe("Industrias Bolik, S.A.");
+      expect(settings.socialFacebook).toMatch(/^https:\/\/www\.facebook\.com\//);
+    });
   });
 }
