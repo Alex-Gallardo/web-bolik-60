@@ -880,6 +880,13 @@ Errores amables que ayudan a seguir navegando.
 - [ ] Una URL vieja registrada en `Redirect` responde 301.
 - [ ] Las demás registran el 404 con contador.
 
+**Cómo quedó (7 nov 2026)**
+
+- Redirecciones en `proxy.ts` con **301** (o el estado guardado) en un solo salto: el mapa vive en memoria (`server/seo/redirects.ts`), se recarga cada 60 s sin bloquear peticiones (tras arrancar, las peticiones esperan juntas la primera carga, como mucho 5 s), resuelve cadenas y descarta ciclos, destinos externos y claves repetidas. `permanentRedirect()` en la 404 daba 308 y la volvía dinámica. Rutas normalizadas en `lib/redirect-path.ts`: minúsculas, sin barra final, acentos codificados siempre igual, query ordenada y sin parámetros de seguimiento (`utm_*`, `gclid`, `fbclid`…) ni `_rsc`; si la query no está en la tabla, se busca la ruta sola. La barra final la quita el proxy después de la tabla (`skipTrailingSlashRedirect`): `/viejo/` va al destino en un salto. El proxy lee `Redirect` con su propio cliente de Prisma (`server/data/proxy-db.ts`): se compila en otro bundle y no comparte el de la app; los errores de Prisma se distinguen por `code`, nunca por `instanceof`.
+- 404 estática: leer la petición en ella volvía «prerender parcial» **todas** las rutas (la 404 forma parte del árbol de cada una). Por eso registra con un script mínimo (`app/not-found-beacon.ts`) que avisa a `/api/not-found`; los 404 y los usos de cada redirección se cuentan en memoria y se escriben en lote cada 30 s (`server/seo/hit-log.ts`, tope de 500 rutas por lote; la limpieza de `NotFoundLog` va con BD-145). `/api/not-found` solo cuenta avisos del mismo sitio (`Sec-Fetch-Site`), con cuerpo de hasta 4 KB, y del referer guarda solo origen y ruta. Una navegación en el cliente (`<Link>`) a una ruta inexistente no ejecuta el script: esos 404 internos no se cuentan.
+- 404 con enlaces a Inicio, Catálogo, Dónde comprar y las líneas de producto; el buscador queda para BD-066. Un solo `<meta name="robots">` (el de Next).
+- 500 con reintentar, WhatsApp (si hay número) y teléfono (`data-contact-*` del layout de `(site)`); sin número, el texto no promete WhatsApp. La 404 dice «Revisa el catálogo…» hasta que BD-066 traiga el buscador (doc 17).
+
 ### E4 · Inicio
 
 #### BD-050 · Hero con video por capítulos
@@ -1110,6 +1117,8 @@ Búsqueda instantánea por nombre, código o código de barras.
 
 - [ ] "ultra", "pt00058", "759364663092" y "crayon" encuentran resultados.
 - [ ] Sin resultados: sugerencias + WhatsApp.
+
+**Nota de BD-046:** agregar el buscador a la página 404 (`app/not-found.tsx`), sin volverla dinámica.
 
 #### BD-067 · WhatsApp contextual
 
@@ -1415,6 +1424,8 @@ No perder el posicionamiento ganado por el sitio actual.
 1. Rastrear el sitio actual (Screaming Frog o script) y exportar URLs con tráfico desde Search Console.
 2. Completar `features/seo/legacy-redirects.ts` y la tabla `Redirect`.
 3. `scripts/check-redirects.ts`: verifica 301 y destino 200.
+
+**Nota de BD-046:** el mapa estático va en el mismo `proxy.ts`, antes de la consulta a la tabla, con las mismas rutas normalizadas (`lib/redirect-path.ts`). El matcher ya incluye extensiones (imágenes viejas); para las que no tienen equivalente, el proxy puede responder 410. El destino sale de `SITE.url` (`NEXT_PUBLIC_SITE_URL`): en staging debe ser la URL de staging, o `check:redirects` terminaría verificando producción.
 
 **Criterios de aceptación**
 
@@ -1834,6 +1845,8 @@ Corregir enlaces rotos sin desplegar.
 
 - [ ] Una redirección creada funciona de inmediato.
 
+**Nota de BD-046:** el mapa de redirecciones vive en memoria y se recarga cada 60 s. Es una sola instancia por proceso (en `globalThis`), así que la acción del admin puede llamar `redirectStore.invalidate()` de `server/seo/redirects.ts`, que lanza una carga nueva y descarta la que estuviera en curso: funciona de inmediato con una sola instancia de Node (doc 15). Validar `fromPath`/`toPath` con `lib/redirect-path.ts` (destino interno). La lista de 404 sale de `NotFoundLog`.
+
 #### BD-124 · Usuarios, auditoría y sincronización
 
 **Sprint** S4 · **Días** 0.5 · **Prioridad** Should · **Pista** B · **Depende de** BD-114, BD-036 · **Docs** 06 §4
@@ -2052,7 +2065,7 @@ Proteger el sitio sin romper la analítica.
 2. HSTS en IIS.
 3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.
 4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).
-5. Si `script-src` deja `'unsafe-inline'` (nonce o hashes), agregar el `sha256` del script de `<head>` (`HEAD_SCRIPT` de `src/app/head-script.ts`, constante): sin él no corre ni la clase `js` ni el splash (BD-043). Las páginas estáticas no pueden llevar nonce.
+5. Si `script-src` deja `'unsafe-inline'` (nonce o hashes), agregar el `sha256` del script de `<head>` (`HEAD_SCRIPT` de `src/app/head-script.ts`, constante): sin él no corre ni la clase `js` ni el splash (BD-043). Igual con `NOT_FOUND_BEACON` (`src/app/not-found-beacon.ts`, el registro de 404 de BD-046). Las páginas estáticas no pueden llevar nonce.
 
 **Criterios de aceptación**
 
@@ -2107,6 +2120,8 @@ Procesos que corren solos.
 **Criterios de aceptación**
 
 - [ ] Cada tarea registra su resultado; fallas generan alerta.
+
+**Nota de BD-046:** incluir la limpieza de `NotFoundLog` (por ejemplo, borrar las rutas con pocas visitas y sin verse en 90 días): el registro en lote limita las filas nuevas por lote, no el tamaño de la tabla.
 
 ### E15 · Lanzamiento e hipercuidado
 
