@@ -1,9 +1,10 @@
 "use client";
 
+import { PAGE_ID } from "@/components/layout/page-id";
 import { OnRouteChange } from "./on-route-change";
 
-/** id del contenedor de la página, que pinta el servidor en `(site)/layout.tsx`. */
-export const PAGE_ID = "pagina";
+/** Se reexporta: el layout y las pruebas lo importan de aquí. */
+export { PAGE_ID };
 
 /** Reinicia `.page-enter` en el contenedor; al terminar se quita (no deja transform ni capa). */
 function restart() {

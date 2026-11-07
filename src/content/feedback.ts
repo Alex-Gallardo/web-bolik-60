@@ -125,7 +125,12 @@ export const feedback = {
     genericError: {
       title: "Algo salió mal de nuestro lado",
       body: "Ya quedó registrado. Inténtalo de nuevo en un momento o escríbenos por WhatsApp.",
+      /** Mientras no haya número de WhatsApp (ajuste whatsapp_number), sin prometerlo. */
+      bodyNoWhatsapp: "Ya quedó registrado. Inténtalo de nuevo en un momento o llámanos.",
       primary: "Intentar de nuevo",
+      /** Enlaces de contacto de la pantalla de error (BD-046); WhatsApp solo si hay número. */
+      whatsapp: "Escríbenos por WhatsApp",
+      call: (phone: string) => `Llámanos al ${phone}`,
       /** Se muestra para que el visitante lo comparta con Ventas y se busque en el log. */
       reference: (code: string) => `Código de referencia: ${code}`,
     },

@@ -211,8 +211,8 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Botones: Escribir por WhatsApp con mi folio · Seguir viendo productos
 
 ### 404 y 500
-- 404: **Esta página se borró como lápiz.** Puede que la dirección haya cambiado. Busca un producto o vuelve al inicio.
-- 500: **Algo salió mal de nuestro lado.** Ya lo estamos revisando. Intenta de nuevo o escríbenos por WhatsApp.
+- 404: **Esta página se borró como lápiz.** Puede que la dirección haya cambiado. Busca un producto o vuelve al inicio. *(Hasta que el buscador llegue a la 404 con BD-066: «Revisa el catálogo o vuelve al inicio».)*
+- 500: **Algo salió mal de nuestro lado.** Ya lo estamos revisando. Intenta de nuevo o escríbenos por WhatsApp. *(Sin número de WhatsApp: «Inténtalo de nuevo en un momento o llámanos».)*
 
 <a id="microcopy"></a>
 ## 5. Microcopy

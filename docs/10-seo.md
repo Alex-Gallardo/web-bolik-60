@@ -136,7 +136,8 @@ Proceso (ticket BD-094):
 2. **Mapear** cada URL vieja → nueva en `src/features/seo/legacy-redirects.ts` (mapa estático) o en la tabla `Redirect` (casos sueltos, editables en el admin).
 3. **Implementación:**
    - Rutas `/index.php/*`, `/index.php?option=com_virtuemart&…` y `/component/virtuemart/*` → `proxy.ts` (mapa estático en memoria, sin BD).
-   - Redirecciones creadas en el admin → se consultan en `not-found.tsx` antes de mostrar el 404 (`permanentRedirect()`), así no se toca la BD en cada petición.
+   - Redirecciones de la tabla `Redirect` (las del admin) → también en `proxy.ts` (BD-046), con **301** (o el estado guardado) en un solo salto: el mapa vive en memoria (`server/seo/redirects.ts`), se recarga cada 60 s sin bloquear peticiones y resuelve cadenas; solo acepta destinos internos. Así no se toca la BD en cada petición. (`permanentRedirect()` en `not-found.tsx` respondería 308 y volvería dinámica la 404.)
+   - Rutas que dan 404 → `NotFoundLog`: la 404 (estática) avisa con un script mínimo a `/api/not-found`, que cuenta en memoria y escribe en lote cada 30 s, con tope de 500 rutas por lote.
    - `http`, sin `www` → IIS URL Rewrite.
 4. **Prueba automática** `pnpm check:redirects`: lee la lista de URLs viejas, hace petición a cada una contra staging y verifica: estado 301, un solo salto, destino responde 200.
 5. **Después del lanzamiento:** revisar `NotFoundLog` y el informe de cobertura de Search Console cada semana durante 2 meses.

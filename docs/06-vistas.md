@@ -240,8 +240,8 @@ Datos NAP, horario, mapa estático de la planta (imagen, no iframe), formulario 
 Privacidad y términos en Markdown (`src/content/legal`). Indexables, enlazadas en el pie y en formularios.
 
 ### 3.19 `404` y `500`
-- **404:** ilustración amable (lapicero sin tinta), "No encontramos esta página", buscador, enlaces a Catálogo, Dónde comprar, Inicio. Registra la ruta en `NotFoundLog`.
-- **500 / error:** "Algo salió mal de nuestro lado", botón "Intentar de nuevo" (`reset()`), WhatsApp y teléfono.
+- **404** (BD-046): ilustración amable (lapicero sin tinta), textos de doc 17, enlaces a Inicio, Catálogo y Dónde comprar, y las líneas de producto. Estática; registra la ruta en `NotFoundLog` con un aviso desde el navegador. El buscador se agrega con BD-066. Las URLs con redirección nunca llegan aquí (`proxy.ts`, 301).
+- **500 / error** (BD-046): "Algo salió mal de nuestro lado", botón "Intentar de nuevo", WhatsApp (si hay número) y teléfono, que el layout deja en `data-contact-*` del contenedor de la página. En `global-error` (sin layout), solo reintentar.
 
 ### 3.20 `/styleguide`
 **noindex.** Ver `docs/08-styleguide.md#vista-styleguide`.

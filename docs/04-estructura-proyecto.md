@@ -102,10 +102,12 @@ bolik-digital/
 │  │  ├─ analytics/(events.ts, track.ts)
 │  │  └─ seo/      (metadata.ts, jsonld.ts, indexnow.ts, llms.ts)
 │  ├─ server/                   # solo servidor ("server-only")
-│  │  ├─ db.ts                  # PrismaClient singleton
+│  │  ├─ db.ts · db-client.ts   # PrismaClient de la app (singleton) y la fábrica que comparte con el proxy
 │  │  ├─ data/                  # funciones con caché + tags, tipos de vista y fuente (fixtures | db: BD-037, BD-032)
 │  │  │  ├─ fixtures/ · db/      # las dos fuentes; settings-view.ts comparte el mapeo de ajustes
-│  │  │  └─ sitemap.ts · llms.ts · search.ts   # datos del sitemap, /llms.txt y el buscador
+│  │  │  ├─ sitemap.ts · llms.ts · search.ts   # datos del sitemap, /llms.txt y el buscador
+│  │  │  └─ redirects.ts · proxy-db.ts · seo-logs.ts   # tabla Redirect para proxy.ts (cliente propio) y escrituras de NotFoundLog/hits (BD-046)
+│  │  ├─ seo/                   # redirects.ts (mapa en memoria), hit-log.ts (conteo en lote), not-found-log.ts (BD-046)
 │  │  ├─ erp/                   # gateway.ts, smartk66.ts, noop.ts
 │  │  ├─ mail/                  # transport.ts, templates/
 │  │  ├─ auth/                  # session.ts (iron-session), password.ts, guards.ts (requireRole)
@@ -114,16 +116,18 @@ bolik-digital/
 │  ├─ lib/                      # utilidades puras
 │  │  ├─ constants.ts           # estados, tipos, presets (reemplazan enums)
 │  │  ├─ cache-tags.ts · slug.ts · format.ts · cn.ts · image-loader.ts · contrast.ts
+│  │  ├─ redirect-path.ts       # rutas normalizadas y mapa de redirecciones (BD-046)
 │  │  ├─ form-schemas.ts        # piezas de Zod compartidas (teléfono GT, correo, NIT, cantidad)
 │  ├─ content/                  # textos de interfaz
 │  │  ├─ feedback.ts            # todos los mensajes de toasts y diálogos
 │  │  ├─ ui.ts                  # textos de interfaz que no son feedback (Enviando…, Guardando…)
+│  │  ├─ footer.ts · not-found.ts   # textos que solo leen Server Components (no viajan en el JS)
 │  │  ├─ navigation.ts          # menú y pie
 │  │  └─ legal/*.md
 │  ├─ styles/
 │  │  ├─ tokens.css · backgrounds.css · motion.css · base.css
 │  ├─ env.ts                    # variables validadas con Zod
-│  └─ proxy.ts | middleware.ts  # redirecciones legadas + protección admin
+│  └─ proxy.ts                 # redirecciones (tabla Redirect, BD-046; mapa de Joomla, BD-094) + protección admin (BD-115)
 ├─ next.config.ts
 ├─ tailwind/postcss config
 ├─ vitest.config.mts · vitest.integration.config.mts · playwright.config.ts

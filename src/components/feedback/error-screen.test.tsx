@@ -38,3 +38,49 @@ describe("errorReference", () => {
     expect(errorReference(null)).toBeUndefined();
   });
 });
+
+describe("ErrorScreen: contacto (BD-046)", () => {
+  function withPage(data: Record<string, string>) {
+    const page = document.createElement("div");
+    page.id = "pagina";
+    Object.assign(page.dataset, data);
+    document.body.append(page);
+    return () => page.remove();
+  }
+
+  it("ofrece WhatsApp y teléfono con los datos que deja el layout", () => {
+    const remove = withPage({
+      contactPhone: "+502 6628 2600",
+      contactTel: "tel:+50266282600",
+      contactWhatsapp: "https://wa.me/50255550000",
+    });
+    render(<ErrorScreen error={null} retry={() => {}} />);
+    const text = feedback.system.genericError;
+    expect(screen.getByRole("link", { name: text.whatsapp }).getAttribute("href")).toBe(
+      "https://wa.me/50255550000",
+    );
+    expect(
+      screen.getByRole("link", { name: text.call("+502 6628 2600") }).getAttribute("href"),
+    ).toBe("tel:+50266282600");
+    remove();
+  });
+
+  it("sin número de WhatsApp (o con un enlace raro) no lo muestra", () => {
+    const remove = withPage({
+      contactPhone: "+502 6628 2600",
+      contactTel: "tel:+50266282600",
+      contactWhatsapp: "javascript:alert(1)",
+    });
+    render(<ErrorScreen error={null} retry={() => {}} />);
+    expect(screen.queryByRole("link", { name: feedback.system.genericError.whatsapp })).toBeNull();
+    expect(screen.getByRole("link", { name: /Llámanos/ })).toBeTruthy();
+    remove();
+  });
+
+  it("sin layout (global-error) solo ofrece reintentar", () => {
+    render(<ErrorScreen error={null} retry={() => {}} />);
+    expect(screen.queryAllByRole("link")).toHaveLength(0);
+    // Sin WhatsApp, el texto no lo promete.
+    expect(screen.getByText(feedback.system.genericError.bodyNoWhatsapp)).toBeTruthy();
+  });
+});

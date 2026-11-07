@@ -362,7 +362,7 @@ BD-142,E14,Despliegue y operación,Cabeceras de seguridad y CSP,S3,0.5,Must,B,BD
 2. HSTS en IIS.
 3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.
 4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).
-5. Si `script-src` deja `'unsafe-inline'` (nonce o hashes), agregar el `sha256` del script de `<head>` (`HEAD_SCRIPT` de `src/app/head-script.ts`, constante): sin él no corre ni la clase `js` ni el splash (BD-043). Las páginas estáticas no pueden llevar nonce.","- securityheaders.com: nota A.
+5. Si `script-src` deja `'unsafe-inline'` (nonce o hashes), agregar el `sha256` del script de `<head>` (`HEAD_SCRIPT` de `src/app/head-script.ts`, constante): sin él no corre ni la clase `js` ni el splash (BD-043). Igual con `NOT_FOUND_BEACON` (`src/app/not-found-beacon.ts`, el registro de 404 de BD-046). Las páginas estáticas no pueden llevar nonce.","- securityheaders.com: nota A.
 - Sin errores de CSP en consola.",Sí
 BD-143,E14,Despliegue y operación,Respaldos y prueba de restauración,S4,0.5,Must,B,BD-140,15 §7,Poder recuperar datos y medios.,"1. Respaldos de BD (DBA) y de `D:\bolik\media` (robocopy nocturno).
 2. Restaurar en staging y verificar.",- Restauración documentada con tiempos reales.,Sí
