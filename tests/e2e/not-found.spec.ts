@@ -60,7 +60,9 @@ test.describe("barra final (proxy, BD-046)", () => {
   test("una ruta con barra final responde un solo 308 a la ruta sin ella", async ({ request }) => {
     const response = await request.get("/styleguide/?x=1", { maxRedirects: 0 });
     expect(response.status()).toBe(308);
-    expect(new URL(response.headers().location!).pathname).toBe("/styleguide");
-    expect(new URL(response.headers().location!).search).toBe("?x=1");
+    // Next deja el Location relativo cuando el destino es del mismo origen: se resuelve con una base.
+    const location = new URL(response.headers().location!, "http://base.invalid");
+    expect(location.pathname).toBe("/styleguide");
+    expect(location.search).toBe("?x=1");
   });
 });
