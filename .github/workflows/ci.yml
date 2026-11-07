@@ -57,7 +57,7 @@ jobs:
     name: Integración
     if: github.event_name != 'schedule' # de noche solo Build y Lighthouse
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -73,6 +73,20 @@ jobs:
         timeout-minutes: 5
         run: bash scripts/ci/sqlserver.sh
       - run: pnpm test:int
+      # BD-032: el build con DATA_SOURCE=db (el de staging y producción) contra la base de pruebas
+      # sembrada; después se sirve con la base desconectada: no debe consultarla en cada petición.
+      - name: Sembrar la base de pruebas (perfil e2e)
+        run: pnpm db:seed --profile e2e
+        env:
+          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+      - name: Build con DATA_SOURCE=db
+        run: pnpm build
+        env:
+          DATA_SOURCE: db
+          DATABASE_URL: ${{ env.TEST_DATABASE_URL }}
+      - name: Servir el build sin base
+        timeout-minutes: 3
+        run: bash scripts/ci/smoke-db-build.sh
 
   build:
     name: Build
@@ -123,6 +137,19 @@ jobs:
           New-Item -ItemType Directory $app | Out-Null
           tar -xzf $pkg -C $app
           if ($LASTEXITCODE -ne 0) { throw "tar no pudo extraer el paquete" }
+          # El adaptador de SQL Server va fuera del bundle (serverExternalPackages, BD-032): con
+          # DATA_SOURCE=db el servidor lo importa (ESM) por un enlace de .next/node_modules. Debe
+          # cargar desde el paquete, y con él mssql y tedious desde la raíz.
+          $prisma = Join-Path $app ".next/node_modules/@prisma"
+          $adapters = @(Get-ChildItem $prisma -Directory -Filter "adapter-mssql*")
+          if ($adapters.Count -eq 0) { throw "El paquete no trae el adaptador de SQL Server en $prisma" }
+          Push-Location (Join-Path $app ".next")
+          foreach ($dir in $adapters) {
+            node --input-type=module -e "const m = await import(process.argv[1]); if (!m.PrismaMssql) throw new Error('sin PrismaMssql')" "@prisma/$($dir.Name)"
+            if ($LASTEXITCODE -ne 0) { throw "No carga $($dir.Name) (con mssql y tedious) desde el paquete" }
+          }
+          Pop-Location
+          "El adaptador de SQL Server carga desde el paquete"
           $env:PORT = "3100"; $env:HOSTNAME = "127.0.0.1"
           $log = Join-Path $env:RUNNER_TEMP "server.log"
           $server = Start-Process node -ArgumentList "server.js" -WorkingDirectory $app -PassThru `

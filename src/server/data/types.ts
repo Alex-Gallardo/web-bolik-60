@@ -200,8 +200,43 @@ export type SiteSettings = {
   minCustomOrder: number | null;
 };
 
+/** Fecha ISO de la última edición en la base; null con la fuente de ejemplo (no inventa "ahora"). */
+export type UpdatedAt = string | null;
+
+/** Lo que necesita el sitemap (BD-092): solo páginas publicadas, con su fecha real. */
+export type SitemapEntriesView = {
+  categories: { slug: string; updatedAt: UpdatedAt }[];
+  products: { slug: string; categorySlug: string; updatedAt: UpdatedAt; images: string[] }[];
+  /** Solo departamentos con al menos un punto de venta publicado. */
+  departments: { slug: string; updatedAt: UpdatedAt }[];
+  /** Última edición de ajustes, apariencia o FAQs: fecha de las páginas de contenido. */
+  contentUpdatedAt: UpdatedAt;
+};
+
+/** Una entrada del índice del buscador (BD-066): se busca por nombre, código o código de barras. */
+export type SearchEntryView = {
+  slug: string;
+  name: string;
+  href: string;
+  category: string;
+  lineGroup: LineGroup;
+  shortDescription: string;
+  colors: string[];
+  skus: string[];
+  barcodes: string[];
+  sample: boolean;
+};
+
+/** Lo que resume /llms.txt (BD-100). */
+export type LlmsDataView = {
+  categories: CategoryView[];
+  products: ProductCardView[];
+  faqs: FaqView[];
+  departmentsWithStores: DepartmentView[];
+};
+
 /**
- * Lo que debe ofrecer cada fuente (fixtures hoy, Prisma en BD-032). Las páginas no la usan
+ * Lo que debe ofrecer cada fuente (fixtures: los JSON de prisma/seed; db: SQL Server). Las páginas no la usan
  * directo: pasan por las funciones cacheadas de src/server/data/*.ts.
  */
 export type DataSource = {
@@ -217,6 +252,11 @@ export type DataSource = {
   getDepartment(slug: string): Promise<DepartmentView | null>;
   listStores(filter?: StoreFilter): Promise<StoreView[]>;
   listFaqs(filter: FaqFilter): Promise<FaqView[]>;
+  /**
+   * Todas las FAQs publicadas, en el orden de FAQ_SCOPES y luego de sortOrder, sin las de un
+   * producto o categoría que no se ve (para /llms.txt: nunca habla de lo que el sitio oculta).
+   */
+  listPublishedFaqs(): Promise<FaqView[]>;
   listHeroChapters(): Promise<HeroChapterView[]>;
   listSiteStats(): Promise<SiteStatView[]>;
   listMilestones(): Promise<MilestoneView[]>;
@@ -224,4 +264,5 @@ export type DataSource = {
   getSectionAppearance(sectionKey: string): Promise<SectionAppearanceView | null>;
   listKits(): Promise<KitView[]>;
   getSiteSettings(): Promise<SiteSettings>;
+  listSitemapEntries(): Promise<SitemapEntriesView>;
 };
