@@ -73,7 +73,7 @@ Corre en cada PR y cada push a `develop` y `master`, en máquinas de GitHub (gra
 | Trabajo | Qué hace |
 |---|---|
 | **Calidad** | `pnpm typecheck`, `pnpm lint`, `pnpm test:coverage` |
-| **Integración** | SQL Server en contenedor + `pnpm test:int` (aplica migraciones con `migrate deploy`) |
+| **Integración** | SQL Server en contenedor + `pnpm test:int` (aplica migraciones con `migrate deploy`); después `pnpm db:seed --profile e2e`, `pnpm build` con `DATA_SOURCE=db` y `scripts/ci/smoke-db-build.sh`, que sirve ese build con la base desconectada (las páginas no la consultan por petición, BD-032) |
 | **Build** | Instala con `--config.node-linker=hoisted` (`node_modules` plano, sin los enlaces de pnpm), `pnpm build` y el paquete de docs/15 §5 (`scripts/ci/package.sh`), publicado como artefacto `bolik-standalone` (tar.gz, 90 días) |
 | **Artefacto en Windows** | En una máquina Windows extrae el paquete con `tar` y lo arranca con `node server.js`: el servidor de producción es Windows |
 | **Lighthouse** | Corre `pnpm lhci` contra el artefacto y comenta el resumen en el PR (§7) |

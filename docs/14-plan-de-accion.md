@@ -638,7 +638,15 @@ Consultas de lectura cacheadas con tags.
 2. Cada función con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`.
 3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.
 4. La batería de contrato de BD-037 pasa contra `BolikDigital_Test`.
-5. CI (paso 3 de BD-031): levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e`, cuando la CI construya con `DATA_SOURCE=db`.
+5. CI (paso 3 de BD-031): el trabajo Integración siembra la base de pruebas, construye con `DATA_SOURCE=db` y sirve ese build con la base desconectada.
+
+**Cómo quedó (6 nov 2026)**
+
+- `server/data/db/source.ts` con las reglas de la fuente de ejemplo; pasa la batería de contrato contra `BolikDigital_Test` y da exactamente las mismas vistas que `fixtures` con los mismos datos. `settings-view.ts` comparte el mapeo de ajustes (un ajuste obligatorio que falte da un error claro).
+- Nuevas: `listSitemapEntries()` (fechas reales: la ficha toma la más reciente entre producto y variantes, la categoría la de sus productos; sin fechas con `fixtures`; solo departamentos con tiendas), `getLlmsData()` (con `listPublishedFaqs()`: nunca FAQs de un producto o categoría oculta) y `getSearchIndex()`, con sus tags.
+- Un ajuste opcional guardado vacío cuenta como ausente (no tumba el sitio).
+- `serverExternalPackages: ["@prisma/adapter-mssql"]`: Turbopack no puede empaquetar la cadena del driver. «Artefacto en Windows» comprueba que el adaptador (con `mssql` y `tedious`) carga desde el paquete.
+- CI (paso 5): en lugar de Build y E2E (el trabajo E2E corre dentro del contenedor de Playwright, sin Docker), el trabajo **Integración** siembra la base de pruebas, hace `pnpm build` con `DATA_SOURCE=db` y sirve ese build con la base desconectada (`scripts/ci/smoke-db-build.sh`). Build, E2E y Lighthouse siguen con `fixtures`: las dos fuentes cumplen el mismo contrato.
 
 **Criterios de aceptación**
 

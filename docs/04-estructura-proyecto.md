@@ -103,7 +103,9 @@ bolik-digital/
 │  │  └─ seo/      (metadata.ts, jsonld.ts, indexnow.ts, llms.ts)
 │  ├─ server/                   # solo servidor ("server-only")
 │  │  ├─ db.ts                  # PrismaClient singleton
-│  │  ├─ data/                  # funciones con caché + tags, tipos de vista y fuente (fixtures | db, BD-037)
+│  │  ├─ data/                  # funciones con caché + tags, tipos de vista y fuente (fixtures | db: BD-037, BD-032)
+│  │  │  ├─ fixtures/ · db/      # las dos fuentes; settings-view.ts comparte el mapeo de ajustes
+│  │  │  └─ sitemap.ts · llms.ts · search.ts   # datos del sitemap, /llms.txt y el buscador
 │  │  ├─ erp/                   # gateway.ts, smartk66.ts, noop.ts
 │  │  ├─ mail/                  # transport.ts, templates/
 │  │  ├─ auth/                  # session.ts (iron-session), password.ts, guards.ts (requireRole)

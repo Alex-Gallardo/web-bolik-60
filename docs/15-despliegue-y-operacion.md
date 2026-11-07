@@ -333,7 +333,7 @@ Ver la lista completa en doc 03 §9 y `starter/.env.example`. Diferencias:
 | Variable | Staging | Producción |
 |---|---|---|
 | `APP_ENV` | `staging` | `production` |
-| `DATA_SOURCE` | `fixtures` (datos de ejemplo, sin base) o `db` (disponible desde BD-032; antes, el build falla); cambiarla exige un build nuevo | `db` (la app no arranca con otro valor; disponible desde BD-032) |
+| `DATA_SOURCE` | `fixtures` (datos de ejemplo, sin base) o `db` (el build lee `BolikDigital_Stg`, migrada y sembrada); cambiarla exige un build nuevo | `db` (la app no arranca con otro valor) |
 | `NEXT_PUBLIC_SITE_URL` | `https://staging.bolik66.com` | `https://www.bolik66.com` |
 | `NEXT_PUBLIC_GA_ID` / `CLARITY_ID` | vacío | IDs reales |
 | `ERP_MODE` | `smartk66` contra SAP de pruebas (o `noop`) | `smartk66` (o `noop` hasta BD-128) |
@@ -394,7 +394,7 @@ pnpm db:deploy
 Remove-Item Env:MIGRATE_DATABASE_URL
 ```
 
-Después, los datos iniciales con el usuario de la app (`DATABASE_URL`, `bolik_app`) y el perfil `prod`: solo crea lo que falta, sin datos de ejemplo, y no pisa lo editado en el admin (doc 05 §6). Se puede repetir en cada despliegue. Con `DATA_SOURCE=db` (desde BD-032), migrar y sembrar van **antes** del paso 2: el build lee la base.
+Después, los datos iniciales con el usuario de la app (`DATABASE_URL`, `bolik_app`) y el perfil `prod`: solo crea lo que falta, sin datos de ejemplo, y no pisa lo editado en el admin (doc 05 §6). Se puede repetir en cada despliegue. Con `DATA_SOURCE=db`, migrar y sembrar van **antes** del paso 2: el build lee la base y prerenderiza con esos datos. Después, el servidor solo consulta la base para lo que no se generó en el build (un 404, una página con parámetros nuevos) o cuando se revalida un tag; aun así, el servicio necesita la base disponible.
 
 ```powershell
 $env:APP_ENV = "staging"

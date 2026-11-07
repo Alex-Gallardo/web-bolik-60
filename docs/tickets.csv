@@ -108,7 +108,7 @@ BD-032,E2,"Datos, medios e integración base",Capa de datos con Cache Components
 2. Cada función con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`.
 3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.
 4. La batería de contrato de BD-037 pasa contra `BolikDigital_Test`.
-5. CI (paso 3 de BD-031): SQL Server en los trabajos Build y E2E con `migrate deploy` y `pnpm db:seed --profile e2e` cuando la CI construya con `DATA_SOURCE=db`.","- El build prerenderiza las páginas públicas sin consultar la BD en cada petición.
+5. CI (paso 3 de BD-031): el trabajo Integración siembra la base de pruebas, construye con `DATA_SOURCE=db` y sirve ese build con la base desconectada.","- El build prerenderiza las páginas públicas sin consultar la BD en cada petición.
 - Pruebas de integración de las funciones.",Sí
 BD-033,E2,"Datos, medios e integración base",Folios consecutivos,S1,0.5,Must,B,BD-030,05 §5,COT/ESC/DIS-AAAA-NNNNNN sin duplicados.,"1. Copiar `starter/src/server/folio.ts`.
 2. Prueba de concurrencia: 20 envíos simultáneos.","- 20 folios distintos y consecutivos.

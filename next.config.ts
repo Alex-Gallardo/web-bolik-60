@@ -49,6 +49,10 @@ const nextConfig: NextConfig = {
   cacheComponents: true, // 'use cache' + cacheLife + cacheTag (docs/03 §5)
   partialPrefetching: true,
   typedRoutes: true,
+  // Adaptador de SQL Server (BD-032): se carga de node_modules en el servidor, sin empaquetar.
+  // Turbopack no puede seguir su cadena (mssql → tedious → @azure/identity → open → powershell-utils);
+  // fuera del bundle, el trazado del standalone copia el paquete con sus dependencias.
+  serverExternalPackages: ["@prisma/adapter-mssql"],
   poweredByHeader: false,
   reactStrictMode: true,
   images: {

@@ -1,5 +1,6 @@
 import "server-only";
 import type { SeedData } from "../../../../prisma/seed/schema";
+import { FAQ_SCOPES } from "@/lib/constants";
 import type {
   CategoryView,
   DataSource,
@@ -10,6 +11,7 @@ import type {
   StoreView,
   VariantView,
 } from "../types";
+import { toSiteSettings } from "../settings-view";
 import { seedData } from "./load";
 
 /**
@@ -93,10 +95,10 @@ function toProduct(data: SeedData, product: Product): ProductView {
       title: b.title,
       text: b.text ?? null,
     })),
-    uses: product.uses.map((slug) => {
-      const tag = data.useTags.find((u) => u.slug === slug)!;
-      return { slug: tag.slug, name: tag.name };
-    }),
+    // En el orden de use-tags.json, igual que la base.
+    uses: data.useTags
+      .filter((u) => product.uses.includes(u.slug))
+      .map((u) => ({ slug: u.slug, name: u.name })),
     related: product.related.flatMap((slug) => {
       const related = visible.get(slug);
       return related ? [toCard(data, related)] : [];
@@ -219,6 +221,23 @@ export const fixturesSource: DataSource = {
       .map((f) => ({ key: f.key, question: f.question, answer: f.answer }));
   },
 
+  async listPublishedFaqs() {
+    const data = seedData();
+    const products = new Set(visibleProducts(data).map((p) => p.slug));
+    const categories = new Set(data.categories.filter((c) => c.published).map((c) => c.slug));
+    return data.faqs
+      .map((f, sortOrder) => ({ f, sortOrder }))
+      .filter(({ f }) => f.published)
+      .filter(({ f }) => !f.productSlug || products.has(f.productSlug))
+      .filter(({ f }) => !f.categorySlug || categories.has(f.categorySlug))
+      .sort(
+        (a, b) =>
+          FAQ_SCOPES.indexOf(a.f.scope) - FAQ_SCOPES.indexOf(b.f.scope) ||
+          a.sortOrder - b.sortOrder,
+      )
+      .map(({ f }) => ({ key: f.key, question: f.question, answer: f.answer }));
+  },
+
   async listHeroChapters() {
     return seedData()
       .content.heroChapters.filter((h) => h.published)
@@ -292,17 +311,26 @@ export const fixturesSource: DataSource = {
   },
 
   async getSiteSettings() {
-    const s = seedData().settings;
+    return toSiteSettings(seedData().settings);
+  },
+
+  // Sin fechas: los JSON no dicen cuándo cambió cada cosa y el sitemap no inventa "ahora".
+  async listSitemapEntries() {
+    const data = seedData();
+    const categories = new Set(data.categories.filter((c) => c.published).map((c) => c.slug));
+    const withStores = new Set(data.stores.filter((s) => s.published).map((s) => s.departmentSlug));
     return {
-      phone: s.phone,
-      address: s.address,
-      businessHours: s.business_hours,
-      legalName: s.legal_name,
-      whatsappNumber: s.whatsapp_number ?? null,
-      socialFacebook: s.social_facebook ?? null,
-      splashEnabled: s.splash_enabled === "true",
-      kitsEnabled: s.kits_enabled === "true",
-      minCustomOrder: s.min_custom_order ? Number(s.min_custom_order) : null,
+      categories: [...categories].map((slug) => ({ slug, updatedAt: null })),
+      products: visibleProducts(data).map((p) => ({
+        slug: p.slug,
+        categorySlug: p.categorySlug,
+        updatedAt: null,
+        images: [],
+      })),
+      departments: data.departments
+        .filter((d) => withStores.has(d.slug))
+        .map((d) => ({ slug: d.slug, updatedAt: null })),
+      contentUpdatedAt: null,
     };
   },
 };
