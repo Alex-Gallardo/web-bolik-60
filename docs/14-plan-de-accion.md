@@ -39,12 +39,12 @@ Plan para construir el MVP en **tickets pequeños**, cada uno con pasos, criteri
 
 ## 2. Equipo y capacidad
 
-La suma de todos los tickets es **88.25 días-persona** (Must 78.5 · Should 8.5 · Could 1.25). Entre el 28 de octubre y el 8 de enero hay **50 días hábiles** por persona (descontando feriados de fin de año).
+La suma de todos los tickets es **89.75 días-persona** (Must 80 · Should 8.5 · Could 1.25). Entre el 28 de octubre y el 8 de enero hay **50 días hábiles** por persona (descontando feriados de fin de año).
 
 | Escenario | Viable para el 11 de enero | Cómo |
 |---|---|---|
 | **Recomendado: 2 desarrolladores** (pista A y pista B) + apoyo puntual de TI (servidor, DNS, BD) | **Sí**, con margen para imprevistos | Cada sprint tiene ~20 días de capacidad (2 × 10). Ver tabla §3. |
-| **1 desarrollador** | **No** con este alcance | Aun recortando al **núcleo** (§7, ~71 días) el lanzamiento realista sería alrededor del **10 de febrero de 2027**. |
+| **1 desarrollador** | **No** con este alcance | Aun recortando al **núcleo** (§7, ~74 días) el lanzamiento realista sería alrededor del **10 de febrero de 2027**. |
 
 Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: sumar un segundo desarrollador desde S1, o mover la fecha y lanzar el núcleo. **No** se recortan pruebas ni rendimiento para ganar tiempo: es mejor lanzar con menos páginas que con un sitio lento o con errores.
 
@@ -54,7 +54,7 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 |---|---|---|---|
 | **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
 | **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 16.25 (9.25 / 7) |
-| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 19.5 (11.25 / 8.25) |
+| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 21 (11.25 / 9.75) |
 | **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 20.5 (10 / 10.5) |
 | **S4** | lun 21 dic – vie 8 ene 2027 | Estabilización, pruebas, contenido, producción · feriados 24-25 dic y 31 dic-1 ene · **código congelado el 6 ene** | 19.25 (7.5 / 11.75) |
 | **S5** | lun 11 ene – vie 22 ene 2027 | **Lanzamiento** e hipercuidado | 3 (1 / 2) |
@@ -120,6 +120,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | Textos, fotos, videos del hero, tiendas verificadas, datos de kits | Otras áreas | BD-150 (mientras tanto: seed provisional) | 18 dic |
 | Acceso a Search Console, GA4, DNS de bolik66.com | TI / dueño de la cuenta | BD-096, BD-125, BD-152 | 18 dic |
 | Exportación de URLs con tráfico del sitio actual | Dueño de Search Console | BD-094 | 4 dic |
+| Exportación de artículos de SAP (código PT, descripción, código de barras) | Sistemas | BD-038 | 23 nov |
 
 ## 5. Resumen por épica
 
@@ -127,7 +128,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 |---|---|---|---|
 | E0 | Fundaciones del repositorio | 17 | 9.25 |
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
-| E2 | Datos, medios e integración base | 8 | 8.5 |
+| E2 | Datos, medios e integración base | 9 | 10 |
 | E3 | Estructura global, splash y movimiento | 7 | 3.75 |
 | E4 | Inicio | 6 | 4 |
 | E5 | Catálogo, fichas y búsqueda | 8 | 7.5 |
@@ -141,7 +142,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **119** | **88.25** |
+| | **Total** | **120** | **89.75** |
 
 ## 6. Tickets
 
@@ -595,7 +596,7 @@ Todas las tablas del MVP.
 
 #### BD-031 · Seeds con datos reales
 
-**Sprint** S1 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-030, BD-037 · **Docs** 05 §7, 17
+**Sprint** S1 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-030, BD-037 · **Docs** 05 §6, 17
 
 Datos reales para desarrollar y probar (nada de lorem).
 
@@ -603,8 +604,17 @@ Datos reales para desarrollar y probar (nada de lorem).
 
 1. Cargar en la base los `prisma/seed/*.json` de BD-037 (categorías, productos, variantes y empaques, tiendas, departamentos, FAQs, contenido de la home) más el admin inicial. Lo marcado `sample` no se carga en producción.
 2. Perfiles `--profile dev` y `--profile e2e` (cargan también lo `sample`) y `--profile prod` (staging con base y producción: sin lo `sample` ni relaciones hacia ello).
-3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e`, cuando la CI construya con `DATA_SOURCE=db` (con Cache Components el build prerenderiza leyendo la BD; con la fuente de ejemplo de BD-037 no la necesita).
+3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e`, cuando la CI construya con `DATA_SOURCE=db` (con Cache Components el build prerenderiza leyendo la BD; con la fuente de ejemplo de BD-037 no la necesita). *Pasó a BD-032, que es cuando la CI construye con `db`; aquí el seed se prueba en el trabajo Integración.*
 4. El seed es idempotente (`upsert`).
+
+**Cómo quedó (6 nov 2026)**
+
+- `pnpm db:seed [--profile dev|e2e|prod]` (`scripts/db-seed.mts`): `dev` y `e2e` cargan todo y **sincronizan** con los JSON (actualizan, quitan las partes que ya no están y despublican los ejemplos y variantes que salieron; nunca borran variantes); `prod` **solo crea lo que falta**, sin ejemplos ni relaciones, FAQs o líneas de kit hacia ellos, no pisa lo editado en el admin y omite (con aviso) un producto cuyo SKU ya pertenece a otro. `dev`/`e2e` solo siembran bases `…_Dev` o `…_Test` y nunca con `APP_ENV` `staging` o `production`.
+- `prod` vuelve a crear lo que se **borró** en el admin (y duplica lo renombrado con slug nuevo): el admin despublica en lugar de borrar (BD-116 a BD-118, BD-121).
+- `e2e` carga lo mismo que `dev` (lo que ya prueban las E2E con `fixtures`), no un subconjunto.
+- Admin inicial desde `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD` (≥ 12 caracteres, bcrypt coste 12), sin `admin.json`; se crea una sola vez y volver a sembrar no cambia su contraseña.
+- Migración `seed_claves_naturales`: claves únicas en `ProductSpec`, `ProductBenefit`, `ProductImage` (`productId` + `mediaId`), `KitItem` (`kitId` + `description`) y `key` en `Faq`, `HistoryMilestone` y `SchoolActivity`; `isSample` en `Product`, `Kit` y `SchoolActivity`.
+- El esquema de los seeds valida el dígito verificador de cada código de barras (`src/lib/gtin.ts`). El UPC del PT00060 sale del catálogo 2026-2027: 759364663115.
 
 **Notas de la revisión de BD-030**
 
@@ -628,6 +638,7 @@ Consultas de lectura cacheadas con tags.
 2. Cada función con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`.
 3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.
 4. La batería de contrato de BD-037 pasa contra `BolikDigital_Test`.
+5. CI (paso 3 de BD-031): levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e`, cuando la CI construya con `DATA_SOURCE=db`.
 
 **Criterios de aceptación**
 
@@ -667,6 +678,8 @@ Imágenes rápidas: se procesan una sola vez al subir.
 
 - [ ] Una foto de 4 MB genera 6 archivos y la de 640 pesa < 60 KB.
 - [ ] `next/image` pide el ancho correcto según `sizes`.
+
+**Nota de BD-031:** `ProductImage` es única por `[productId, mediaId]`: una misma foto no se repite dentro de un producto (para varias variantes, una fila por foto con `variantId` nulo). Fotos de ejemplo: las del catálogo 2026-2027, solo en `MEDIA_DIR` local, nunca en el repo.
 
 #### BD-035 · Gateway del ERP
 
@@ -721,6 +734,26 @@ El frontend avanza sin esperar la base: las páginas leen de `src/server/data`, 
 - [ ] Con `DATA_SOURCE=fixtures`, `pnpm build` y las páginas funcionan sin SQL Server.
 - [ ] `APP_ENV=production` con `DATA_SOURCE=fixtures` no arranca.
 - [ ] La batería de contrato pasa con la fuente de ejemplo.
+
+#### BD-038 · Catálogo real 2026-2027
+
+**Sprint** S2 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-031 · **Docs** 05 §6, 17 · *Ticket nuevo (6 nov 2026)*
+
+Los productos reales del catálogo impreso 2026-2027 reemplazan a los 24 productos de ejemplo de la demo.
+
+**Pasos**
+
+1. Transcribir del catálogo (PDF de Mercadeo, fuera del repo) los ~50 productos y ~140 variantes de color: nombre, línea, colores, códigos de barras y unidades de empaque. Cada código pasa la validación del dígito verificador.
+2. Emparejar cada variante con su código SAP (PT…) usando el código de barras como puente, con la exportación de artículos de SAP. Sin código SAP no se carga como real: no se inventa.
+3. Ampliar `PACKAGING_CODES` con las presentaciones del catálogo (estuche, bolsa, bote, tubo, blíster de 4, six pack…) y revisar las categorías contra las líneas del catálogo.
+4. Decidir cómo se muestran las marcas del grupo (Fabik, Coloreto, EcoBol, K-Pen).
+5. Quitar los productos de ejemplo que el catálogo real ya cubre (el seed `dev` los despublica en las bases que ya los tienen).
+6. Con el perfil `prod`, una categoría sin productos reales no debe quedar publicada (página vacía en el sitemap).
+
+**Criterios de aceptación**
+
+- [ ] Cada producto del catálogo con su código SAP está en `products.json` sin `sample`.
+- [ ] Todos los códigos de barras pasan la validación y `pnpm db:seed` dos veces no duplica datos.
 
 ### E3 · Estructura global, splash y movimiento
 
@@ -1684,6 +1717,8 @@ Crear y editar fichas completas sin tocar código.
 - [ ] Publicar un producto lo muestra en el sitio en < 1 min sin redeploy.
 - [ ] Toast en cada guardado; confirmación al despublicar.
 
+**Nota de BD-031:** despublicar en lugar de borrar (productos, variantes, FAQs, tiendas, hitos y actividades): `pnpm db:seed --profile prod` vuelve a crear lo que falte por su clave natural.
+
 #### BD-117 · Categorías y FAQs
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-115 · **Docs** 06 §4
@@ -1697,6 +1732,8 @@ Textos SEO de categorías y preguntas frecuentes.
 **Criterios de aceptación**
 
 - [ ] Cambios invalidan los tags correctos.
+
+**Nota de BD-031:** `Faq.key` es obligatoria y única: el formulario la genera con `slugify` de la pregunta (y no la cambia al editar).
 
 #### BD-118 · Tiendas
 
@@ -1754,6 +1791,8 @@ Hero, cifras, historia, actividades, fondos por sección y ajustes.
 1. Formularios de contenido con "Ver en el sitio".
 2. Apariencia: fondo por sección con vista previa.
 3. Ajustes: WhatsApp, teléfonos, redes, correos, splash on/off, pedido mínimo.
+
+*Nota de BD-031:* `HistoryMilestone.key` y `SchoolActivity.key` son obligatorias y únicas: el formulario las genera con `slugify` del título.
 
 **Criterios de aceptación**
 
@@ -2137,7 +2176,7 @@ Aprender y ordenar lo que sigue.
 
 ## 7. Escenario de un solo desarrollador: el núcleo
 
-El núcleo suma **72.75 días** (95 tickets): con dos desarrolladores es el plan de contingencia si algo se atrasa; con uno solo es el alcance mínimo para lanzar. Se posponen a las semanas 2–4 después del lanzamiento:
+El núcleo suma **74.25 días** (96 tickets): con dos desarrolladores es el plan de contingencia si algo se atrasa; con uno solo es el alcance mínimo para lanzar. Se posponen a las semanas 2–4 después del lanzamiento:
 
 | Ticket | Qué se pospone | Mientras tanto |
 |---|---|---|

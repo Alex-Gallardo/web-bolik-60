@@ -19,7 +19,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["src/**/*.test.{ts,tsx}", "prisma/seed/**/*.test.ts"],
     coverage: {
       provider: "v8",
       // Alcance del 80 % según docs/13 §1: utilidades, esquemas Zod y SEO.

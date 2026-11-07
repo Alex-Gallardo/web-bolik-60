@@ -6,6 +6,7 @@ import {
   PACKAGING_CODES,
   STORE_TYPES,
 } from "../../src/lib/constants";
+import { isValidGtin } from "../../src/lib/gtin";
 
 /**
  * Formato de los datos de prisma/seed/*.json (BD-037). Los lee la fuente de ejemplo de la web
@@ -44,7 +45,7 @@ export const variantSchema = z.object({
   sku: z.string().regex(/^[A-Z0-9-]{3,30}$/),
   barcode: z
     .string()
-    .regex(/^\d{8,14}$/)
+    .refine(isValidGtin, "código de barras con dígito verificador inválido")
     .nullable(), // null = por confirmar (no se inventa)
   colorKey: key,
   colorName: text(40),
@@ -324,6 +325,21 @@ export const seedDataSchema = z
         fail(["products", i], "debe tener exactamente una variante por defecto");
       const colors = p.variants.map((v) => v.colorKey);
       if (new Set(colors).size !== colors.length) fail(["products", i], "colores repetidos");
+      // Cada parte tiene clave única en la base (BD-031) y SQL Server no distingue mayúsculas
+      // (collation CI): un repetido se fundiría en una sola fila y la base diferiría de fixtures.
+      const partKeys: [string, string[]][] = [
+        ["especificación", p.specs.map((s) => `${s.groupName}|${s.label}`)],
+        ["medida", p.dimensions.map((d) => d.partKey)],
+        ["empaque", p.packagings.map((k) => k.code)],
+        ["beneficio", p.benefits.map((b) => b.iconKey)],
+        ["uso", p.uses],
+        ["relacionado", p.related],
+      ];
+      for (const [part, keys] of partKeys) {
+        const lower = keys.map((k) => k.toLowerCase());
+        if (new Set(lower).size !== lower.length)
+          fail(["products", i], `${part} con clave repetida`);
+      }
       // Los códigos de ejemplo nunca deben parecer de SAP (PT…).
       for (const v of p.variants)
         if (p.sample !== v.sku.startsWith("EJ-"))
@@ -340,6 +356,8 @@ export const seedDataSchema = z
         fail(["faqs", i], `producto ${f.productSlug} no existe`);
     });
     data.kits.forEach((k, i) => {
+      const items = k.items.map((item) => item.description.toLowerCase());
+      if (new Set(items).size !== items.length) fail(["kits", i], "línea de kit repetida");
       for (const item of k.items)
         if (item.variantSku && !skus.has(item.variantSku))
           fail(["kits", i], `${item.variantSku} no existe`);

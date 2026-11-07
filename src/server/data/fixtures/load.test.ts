@@ -42,6 +42,29 @@ describe("datos de prisma/seed", () => {
     expect(issuesOf(data).some((m) => m.includes("PT99999"))).toBe(true);
   });
 
+  it("rechaza un código de barras con el dígito verificador equivocado", () => {
+    const data = clone();
+    data.products[0]!.variants[0]!.barcode = "759364663093";
+    expect(issuesOf(data)).toContain("código de barras con dígito verificador inválido");
+  });
+
+  it("rechaza partes repetidas de un producto aunque cambien las mayúsculas", () => {
+    const data = clone();
+    const ultra = data.products[0]!;
+    ultra.specs!.push({ ...ultra.specs![0]!, label: ultra.specs![0]!.label.toUpperCase() });
+    ultra.packagings!.push({ ...ultra.packagings![0]! });
+    expect(issuesOf(data)).toEqual(
+      expect.arrayContaining(["especificación con clave repetida", "empaque con clave repetida"]),
+    );
+  });
+
+  it("rechaza una línea de kit repetida", () => {
+    const data = clone();
+    const kit = data.kits[0]!;
+    kit.items.push({ ...kit.items[0]! });
+    expect(issuesOf(data)).toContain("línea de kit repetida");
+  });
+
   it("exige exactamente una variante por defecto", () => {
     const data = clone();
     for (const variant of data.products[0]!.variants)

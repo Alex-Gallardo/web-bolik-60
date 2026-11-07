@@ -125,19 +125,19 @@ Tablas independientes (sin relaciones): `SiteStat`, `SiteSetting`, `SectionAppea
 | `AuditLog` | Bitácora de cambios del admin | `action`, `entity`, `entityId`, `diff` (JSON) | Se escribe en cada mutación |
 | `MediaAsset` | Archivo subido | `key` UK, `width`, `height`, `blurDataUrl` | Los anchos generados se derivan de `key` |
 | `Category` | Línea de producto | `slug` UK, `lineGroup`, `intro` (SEO) | Bolígrafos, Lápices, Marcadores… |
-| `Product` | Producto comercial | `slug` UK, `keyFacts` (JSON array), `safetyWarning` | Contenido editorial |
+| `Product` | Producto comercial | `slug` UK, `keyFacts` (JSON array), `safetyWarning`, `isSample` | Contenido editorial; `isSample` = producto de ejemplo (`EJ-…`), nunca en producción |
 | `ProductVariant` | Color/SKU de SAP | `sku` UK, `barcode` (índice), `colorKey`, `colorHex`, `erpActive` | `@@unique([productId, colorKey])` |
-| `ProductSpec` | Especificación clave/valor | `groupName`, `label`, `value` | Flexible para cualquier categoría |
+| `ProductSpec` | Especificación clave/valor | `groupName`, `label`, `value` | Flexible para cualquier categoría; única por producto + grupo + etiqueta |
 | `ProductDimension` | Medidas para el diagrama | `partKey`, `valueMm`, `tolerance` | body 145.83, cap 60.15… |
 | `Packaging` | Presentaciones | `code`, `unitsPerPack`, `innerPacks`, medidas, peso | blister1/3/5, cajilla12, fardo |
 | `ProductImage` | Imagen de producto | `variantId?`, `kind`, `alt` | `alt` obligatorio |
 | `ProductBenefit` | Beneficio con ícono | `iconKey`, `title` | Tapa ventilada, baja viscosidad… |
 | `UseTag` / `ProductUse` | Usos (Escolar, Oficina, Manualidades) | — | Filtro en catálogo |
 | `ProductRelation` | Productos relacionados | `fromId`, `toId` | "Completa tu estuche" |
-| `Faq` | Preguntas frecuentes | `scope`, `categoryId?`, `productId?` | Alimenta FAQPage y `llms.txt` |
+| `Faq` | Preguntas frecuentes | `key` UK, `scope`, `categoryId?`, `productId?` | Alimenta FAQPage y `llms.txt` |
 | `Department` | Departamentos de GT (+ El Salvador) | `slug` UK, `lat`, `lng`, `intro` | 22 + SV |
 | `Store` | Punto de venta | `type`, `departmentId`, `lat/lng`, `onlineShopUrl`, `isVerified` | Lista validada por Ventas |
-| `Kit` / `KitItem` / `KitStore` | Kits escolares | `season`, `suggestedPrice`, `priceVisible` | Precio solo si se aprueba |
+| `Kit` / `KitItem` / `KitStore` | Kits escolares | `season`, `suggestedPrice`, `priceVisible`, `isSample` | Precio solo si se aprueba |
 | `QuoteRequest` | Cotización | `folio` UK, `status`, `customerType`, UTM, `erpStatus`, `erpAttempts` | Corazón comercial |
 | `QuoteItem` | Línea de cotización | `itemType`, `description` (copia), `quantity`, `unitLabel` | La copia de texto conserva lo pedido aunque cambie el catálogo |
 | `QuoteNote` | Notas internas de Ventas | `authorId`, `text` | — |
@@ -147,8 +147,8 @@ Tablas independientes (sin relaciones): `SiteStat`, `SiteSetting`, `SectionAppea
 | `FolioSequence` | Correlativos por prefijo y año | PK (`prefix`, `year`), `lastValue` | Ver §4 |
 | `HeroChapter` | Capítulos del hero | `key`, textos, CTA, videos, póster | 4 registros |
 | `SiteStat` | Cifras de la franja | `value`, `suffix`, `label`, `sourceNote` | `sourceNote` documenta de dónde sale |
-| `HistoryMilestone` | Línea de tiempo | `year`, `title`, `isVerified` | Solo se publican verificados en producción |
-| `SchoolActivity` | Actividades de escuelas | `colorKey`, `iconKey` | — |
+| `HistoryMilestone` | Línea de tiempo | `key` UK, `year`, `title`, `isVerified` | Solo se publican verificados en producción |
+| `SchoolActivity` | Actividades de escuelas | `key` UK, `colorKey`, `iconKey`, `isSample` | — |
 | `SectionAppearance` | Fondo por sección | `sectionKey` PK, `backgroundPreset`, `tone` | Fondos configurables |
 | `SiteSetting` | Ajustes clave/valor | `key` PK, `value` | WhatsApp, teléfono, redes, correo de ventas, splash |
 | `Redirect` | Redirecciones 301 | `fromPath` UK, `toPath`, `hits` | Incluye mapa de Joomla |
@@ -191,7 +191,7 @@ import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
-  migrations: { path: "prisma/migrations", seed: "tsx prisma/seed/seed.ts" },
+  migrations: { path: "prisma/migrations" }, // el seed corre con pnpm db:seed (§6)
   datasource: { url: env("DATABASE_URL") },
 });
 ```
@@ -257,18 +257,30 @@ const quote = await db.$transaction(async (tx) => {
 
 ## 6. Datos iniciales (seeds)
 
-`prisma/seed/` contiene JSON por entidad, validados con `prisma/seed/schema.ts` (Zod), y `seed.ts` los inserta de forma **idempotente** (`upsert` por `slug`/`sku`/`key`). Los mismos archivos son la fuente de datos de ejemplo de la web (`DATA_SOURCE=fixtures`, BD-037; doc 03 §3). El orden de cada arreglo es el `sortOrder`. Lo marcado `"sample": true` (productos de ejemplo con códigos `EJ-…`, tomados de la demo) no existe en el catálogo real y **nunca se carga en producción**; los textos que no vienen de doc 17 quedan marcados `sample`, `isVerified = false` o `published = false` hasta que los valide su área, salvo textos auxiliares publicados que la tabla anota (el `hint`/`eyebrow` del hero y las descripciones de los hitos, por validar en BD-050 y en `/nuestra-historia`):
+`prisma/seed/` contiene JSON por entidad, validados con `prisma/seed/schema.ts` (Zod, incluido el dígito verificador de cada código de barras), y `pnpm db:seed` (`scripts/db-seed.mts` → `prisma/seed/seed.ts`, BD-031) los inserta de forma **idempotente** (`upsert` por `slug`/`sku`/`key`). Los mismos archivos son la fuente de datos de ejemplo de la web (`DATA_SOURCE=fixtures`, BD-037; doc 03 §3). El orden de cada arreglo es el `sortOrder`. Lo marcado `"sample": true` (productos de ejemplo con códigos `EJ-…`, tomados de la demo) no existe en el catálogo real y **nunca se carga en producción**; los textos que no vienen de doc 17 quedan marcados `sample`, `isVerified = false` o `published = false` hasta que los valide su área, salvo textos auxiliares publicados que la tabla anota (el `hint`/`eyebrow` del hero y las descripciones de los hitos, por validar en BD-050 y en `/nuestra-historia`):
 
 | Archivo | Contenido inicial | Fuente |
 |---|---|---|
 | `departments.json` | 22 departamentos de Guatemala + El Salvador con lat/lng | Dato público |
 | `categories.json` | Bolígrafos, Lápices y lápices de colores, Crayones de cera, Marcadores, Pegamentos y silicón, Borradores y sacapuntas, Tijeras/reglas/geometría, Artículos publicitarios | Catálogo actual de bolik66.com |
-| `products.json` | **Bolik Ultra** con 3 variantes reales: PT00058 azul (UPC 759364663092), PT00059 negro (UPC 759364663108), PT00060 rojo (UPC **por confirmar**: la ficha técnica repite el del negro). Especificaciones, medidas y empaques de la ficha técnica | Fichas técnicas de Mercadeo |
+| `products.json` | **Bolik Ultra** con 3 variantes reales: PT00058 azul (UPC 759364663092), PT00059 negro (UPC 759364663108), PT00060 rojo (UPC 759364663115, del catálogo 2026-2027: la ficha técnica repetía el del negro). Especificaciones, medidas y empaques de la ficha técnica | Fichas técnicas de Mercadeo; catálogo 2026-2027 |
 | `stores.json` | Walmart, La Torre, Unimarck, Econosuper, La Barata, Librerías Progreso, Fátima, Platino, Marlon, Paper Distribuciones, almacenes Ariana, Baluc, Gala (Guatemala); Tulán, San Bartolomé, Victoria, Nueva Esperanza, San Miguel (Quetzaltenango); Cano Recinos (Huehuetenango); Milita (Chiquimula); Xocomil, Rayo de Luz (Sololá); A y M, Tulán (Mazatenango); Cervantes (San Salvador). `isVerified = false` hasta que Ventas valide direcciones | Página "Dónde comprar" actual |
 | `content.json` | Capítulos del hero, cifras (con `sourceNote`), hitos (1966 y 2026 verificados; intermedios `isVerified = false`), actividades escolares, apariencia por sección | `docs/17-copys.md`; de la demo (`docs/referencia/demo`, por validar): `hint` y `eyebrow` del hero, la descripción de los hitos, los hitos intermedios y las actividades (`sample`) |
 | `kits.json` | 3 kits 2027 (`published = false`, `sample` hasta que Mercadeo defina su contenido; sin precios) | Demo (`docs/referencia/demo`); doc 17 no los define |
 | `faqs.json` · `settings.json` | FAQs con respuesta de doc 17 §7 (las **(validar)** no se cargan) y ajustes de `SiteSetting` (teléfono, dirección, horario, interruptores; sin WhatsApp hasta tener el número) | `docs/17-copys.md`, doc 16 |
-| `admin.json` | Usuario admin inicial (contraseña desde variable `SEED_ADMIN_PASSWORD`) | — |
+| — | Usuario admin inicial: `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD` (≥ 12 caracteres, bcrypt coste 12). Se crea una sola vez; volver a sembrar no cambia su contraseña. Sin la variable, el seed lo omite | Variables de entorno (nunca en el repo) |
+
+### Perfiles
+
+| Perfil | Dónde | Qué carga | Si la fila ya existe |
+|---|---|---|---|
+| `dev` (por defecto) | Base local | Todo, incluidos los ejemplos (`isSample = 1`) | **Sincroniza**: la actualiza con el JSON y quita las partes (especificaciones, medidas, empaques, beneficios, usos, relaciones, líneas de kit) que ya no están; nunca borra variantes |
+| `e2e` | CI con `DATA_SOURCE=db` (BD-032) | Lo mismo que `dev` (lo que ven las E2E con `fixtures`) | Sincroniza |
+| `prod` | Staging con base y producción | Sin ejemplos ni relaciones, FAQs o líneas de kit hacia ellos | **Solo crea lo que falta**: no toca lo que existe ni sus partes, así no pisa lo editado en el admin; nunca borra |
+
+`dev` y `e2e` solo siembran bases `…_Dev` o `…_Test` (lo comprueba con `DB_NAME()`) y se niegan a correr con `APP_ENV` `staging` o `production`. En sync, los ejemplos (`isSample`) y las variantes que salen del JSON quedan despublicados, no borrados. En `prod`, un producto cuyo SKU ya pertenece a otro (renombrado en el admin o creado por la sincronización con SAP) se omite con un aviso.
+
+`prod` vuelve a crear lo que se **borró** en el admin y duplica lo que se renombró con otro slug: por eso el admin despublica en lugar de borrar. El seed no revalida la caché: en staging y producción corre después de migrar y **antes** del build (doc 15 §12). Cada tabla con datos del seed tiene clave natural única (`key` en `Faq`, `HistoryMilestone` y `SchoolActivity`; `[productId, groupName, label]` en `ProductSpec`; `[productId, iconKey]` en `ProductBenefit`; `[kitId, description]` en `KitItem`; `[productId, mediaId]` en `ProductImage`).
 
 ### Datos técnicos del Bolik Ultra (de las fichas)
 
