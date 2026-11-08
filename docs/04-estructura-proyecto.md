@@ -108,7 +108,7 @@ bolik-digital/
 │  │  │  ├─ sitemap.ts · llms.ts · search.ts   # datos del sitemap, /llms.txt y el buscador
 │  │  │  └─ redirects.ts · proxy-db.ts · seo-logs.ts   # tabla Redirect para proxy.ts (cliente propio) y escrituras de NotFoundLog/hits (BD-046)
 │  │  ├─ seo/                   # redirects.ts (mapa en memoria), hit-log.ts (conteo en lote), not-found-log.ts (BD-046)
-│  │  ├─ erp/                   # gateway.ts, smartk66.ts, noop.ts
+│  │  ├─ erp/                   # types.ts, gateway.ts, smartk66.ts, noop.ts, send-quote.ts (BD-035; datos en data/quote-erp.ts)
 │  │  ├─ mail/                  # transport.ts, templates/
 │  │  ├─ auth/                  # session.ts (iron-session), password.ts, guards.ts (requireRole)
 │  │  ├─ media/                 # process-image.ts (sharp)

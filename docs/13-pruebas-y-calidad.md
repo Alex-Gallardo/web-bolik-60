@@ -122,6 +122,7 @@ El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` e
 | Server action / módulo | Casos |
 |---|---|
 | `submitQuote` | crea `QuoteRequest` + `QuoteItem`; folio `COT-2026-000001` y consecutivo; dos envíos simultáneos no duplican folio (`Promise.all` de 20); envía correo interno y acuse; con `ERP_MODE=smartk66` y API caída deja `erpStatus = "pendiente"` sin fallar al usuario |
+| `sendQuoteToErp` (BD-035) | con SMART-K66 simulado con MSW: caída → `pendiente` con intento y motivo; 201 → `enviada` con `erpRef` y no se reenvía; 4xx → `error`; `noop` → `omitida` (`tests/integration/erp.test.ts`). El cliente: reintentos, timeout, 4xx sin reintento, respuestas fuera del contrato (`src/server/erp/smartk66.test.ts`) |
 | `submitSchoolVisit`, `submitDistributor`, `submitContact` | validación servidor; folio `ESC`/`DIS`; límite de 5 envíos por IP en 10 min |
 | `server/folio.ts` | cambio de año reinicia el consecutivo |
 | `server/data/*` | la batería de contrato (`server/data/contract.ts`) contra Prisma sobre la base sembrada: la misma que pasa la fuente de ejemplo en las unitarias (BD-037); solo `published = true`; orden; relaciones |

@@ -25,7 +25,7 @@ export const serverEnvSchema = z
     DATABASE_URL: z.string().startsWith("sqlserver://").optional(),
     SESSION_SECRET: z.string().min(32, "debe tener al menos 32 caracteres"),
     ERP_MODE: z.enum(["noop", "smartk66"]).default("noop"),
-    ERP_BASE_URL: z.url().optional(),
+    ERP_BASE_URL: z.url({ protocol: /^https?$/ }).optional(),
     ERP_API_KEY: z.string().optional(),
     SMTP_MODE: z.enum(["file", "smtp"]).default("file"),
     SMTP_HOST: z.string().optional(),

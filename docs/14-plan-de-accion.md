@@ -691,7 +691,7 @@ Imágenes rápidas: se procesan una sola vez al subir.
 
 #### BD-035 · Gateway del ERP
 
-**Sprint** S1 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 03 §6, 05 §9
+**Sprint** S1 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 03 §5, 05 §8
 
 La web nunca depende de que SAP o SMART-K66 estén arriba.
 
@@ -705,6 +705,12 @@ La web nunca depende de que SAP o SMART-K66 estén arriba.
 
 - [ ] Con `ERP_MODE=noop` todo funciona.
 - [ ] Con la API simulada caída, la cotización se guarda con `erpStatus = pendiente`.
+
+**Cómo quedó (7 nov 2026)**
+
+- `server/erp/types.ts` (interfaz: `createLead`, `listArticles`; devuelven resultado y nunca lanzan), `noop.ts`, `smartk66.ts` y `gateway.ts` (`getErpGateway()` por `ERP_MODE`). El cliente: timeout de 8 s por intento (encabezados y cuerpo), 3 reintentos con backoff exponencial y azar solo para lo pasajero (red caída, timeout, corte a media respuesta, 5xx, 429, 408 y 409); 401/403 es `unauthorized` (clave vencida: aviso a operación), otro 4xx es `rejected`, y un JSON mal formado `invalid-response`, sin reintento; `Idempotency-Key` con el folio; sin seguir redirecciones; respuestas validadas con Zod; mensajes fijos, sin datos personales ni la clave. `ERP_BASE_URL` solo admite `http`/`https`.
+- `server/erp/send-quote.ts` → `sendQuoteToErp(quoteId)`: lee la cotización (`server/data/quote-erp.ts`), la manda y guarda el resultado. `erpStatus`: `enviada` (con `erpRef`), `omitida` (noop), **`pendiente`** (fallo pasajero: la reintenta la tarea) o **`error`** (rechazo o respuesta fuera del contrato: la revisa una persona). Antes de llamar, la cotización se **reclama** (compare-and-set sobre `erpAttempts`): dos procesos nunca la mandan a la vez, y nada baja a una `enviada`. `erpAttempts` cuenta envíos, no peticiones HTTP (un envío son hasta 4).
+- Pruebas con MSW (`msw@3.0.3`): unitarias del cliente y de integración de `sendQuoteToErp` contra `BolikDigital_Test`.
 
 #### BD-036 · Sincronización del catálogo con SAP
 
@@ -1212,7 +1218,10 @@ Guardar, notificar y enviar a SAP sin hacer esperar al visitante.
 **Criterios de aceptación**
 
 - [ ] Respuesta en < 800 ms con SMTP y ERP lentos.
+
 - [ ] Pruebas de integración del doc 13 §4.
+
+**Nota de BD-035:** después de guardar, `after(() => sendQuoteToErp(quote.id))` (`server/erp/send-quote.ts`), solo si el ajuste `erp_enabled` no es `"false"` (interruptor del admin; con él apagado, `erpStatus = omitida`). El gateway solo mira `ERP_MODE`. Una llamada puede tardar hasta ~36 s con SMART-K66 caído (4 intentos de 8 s más esperas): no bloquea al visitante porque va en `after()` y no retiene transacción ni conexión de Prisma.
 
 #### BD-074 · Correos de notificación
 
@@ -1930,6 +1939,11 @@ Cuando TI publique la API, activar el modo real.
 - [ ] Una cotización de staging crea el prospecto en SAP de pruebas.
 - [ ] Si la API no está lista, queda en `noop` y el ticket pasa a Fase 1.1.
 
+**Nota de BD-035:** el contrato del doc 05 §8 es una propuesta; la API real de SMART-K66 vive en K66-APPS bajo `/k66api/api/` (`ERP_BASE_URL`): ajustar rutas y campos en `server/erp/smartk66.ts` y sus pruebas, y confirmar con TI que respeta `Idempotency-Key`. `scripts/retry-erp.ts` reenvía con `sendQuoteToErp` las cotizaciones `pendiente` y define el límite de intentos (`erpAttempts`) a partir del cual pasan a `error`.
+- La tarea solo toma `pendiente` con `erpAttempts > 0` o creadas hace más de unos minutos (las nuevas las está mandando su `after()`), sale de inmediato si `getErpGateway().mode === "noop"` (si no, todas pasarían a `omitida`), usa su propio cliente con `retries: 0` (`sendQuoteToErp(id, gateway)`), corta el lote en el primer `unavailable` y nunca corre dos veces a la vez: con SMART-K66 caído, cada envío con reintentos tarda hasta ~36 s.
+- Con `unauthorized` (clave vencida) todas fallan igual: avisar a operación y reponerlas a `pendiente` cuando se cambie la clave.
+- Pendiente de acordar con TI: `Retry-After` en 429/503, y si el prospecto lleva `unitLabel` y `municipality` (hoy no viajan; las líneas de kit van sin `itemCode`).
+
 ### E13 · Calidad y pruebas
 
 #### BD-130 · Completar pruebas unitarias e integración
@@ -2122,6 +2136,8 @@ Procesos que corren solos.
 - [ ] Cada tarea registra su resultado; fallas generan alerta.
 
 **Nota de BD-046:** incluir la limpieza de `NotFoundLog` (por ejemplo, borrar las rutas con pocas visitas y sin verse en 90 días): el registro en lote limita las filas nuevas por lote, no el tamaño de la tabla.
+
+**Nota de BD-035:** `retry:erp` cada 15 min con candado (no dos a la vez) y las reglas de la nota de BD-128.
 
 ### E15 · Lanzamiento e hipercuidado
 

@@ -307,7 +307,7 @@ Start-Service $svc
 | Servicio caído | NSSM reinicia solo; evento en el Visor de eventos | El monitor de disponibilidad |
 | Certificado TLS | Monitor de TI | 30 días antes de vencer |
 | Disco `D:` | Monitor de TI | < 15 % libre |
-| Cotizaciones atascadas | Dashboard del admin (`erpStatus = error`) | Correo diario si hay > 0 con más de 24 h |
+| Cotizaciones atascadas | Dashboard del admin (`erpStatus = error`, o `pendiente` con más de 24 h: SMART-K66 lleva un día caído) | Correo diario si hay > 0 con más de 24 h |
 | Web Vitals reales | GA4 (`web_vital`) + Search Console | Revisión semanal |
 
 `/api/health` responde `200 {"status":"ok","db":"ok","version":"<commit>"}` tras un `SELECT 1` con timeout de 2 s; `503` si falla la BD. Sin caché y fuera de robots.
