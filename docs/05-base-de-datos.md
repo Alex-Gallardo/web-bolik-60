@@ -332,6 +332,7 @@ Authorization: ApiKey ***
 POST /api/web/prospectos
 Authorization: ApiKey ***
 Content-Type: application/json
+Idempotency-Key: COT-2027-000123
 
 {
   "folio": "COT-2027-000123",
@@ -358,6 +359,8 @@ Content-Type: application/json
 | `barcode` | `ProductVariant.barcode` |
 | `active` | `ProductVariant.erpActive` (si es `false`, la variante se oculta) |
 | `referencia` (respuesta) | `QuoteRequest.erpRef` |
+
+Reglas del cliente (BD-035, `server/erp/smartk66.ts`): cada intento espera como mucho 8 s; un fallo pasajero (red, timeout, 5xx, 429) se reintenta 3 veces con espera exponencial; un 4xx no se reintenta. Por los reintentos, **SMART-K66 debe tratar `Idempotency-Key` (el folio) como único**: si ya creó el prospecto con ese folio, responde la misma `referencia` en lugar de crear otro (pedirlo a TI en BD-128).
 
 ## 9. Retención y respaldos
 

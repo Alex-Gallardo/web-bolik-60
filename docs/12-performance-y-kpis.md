@@ -122,7 +122,7 @@ Sin datos personales en los eventos (nunca nombre, teléfono ni correo).
 | Disponibilidad | ≥ 99.5 % mensual | Monitor de disponibilidad |
 | Errores 5xx | < 0.1 % de peticiones | Logs |
 | 404 desde URLs viejas | 0 con tráfico | `NotFoundLog`, Search Console |
-| Cotizaciones con `erpStatus = error` > 24 h | 0 | Dashboard admin |
+| Cotizaciones con `erpStatus = error`, o `pendiente` > 24 h | 0 | Dashboard admin |
 | Tiempo de build | < 5 min | CI |
 
 ### RUM (datos reales de usuarios)

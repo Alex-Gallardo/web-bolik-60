@@ -175,14 +175,15 @@ sequenceDiagram
   UI-->>C: Diálogo de éxito con folio, vacía la cotización
   SA-)M: Correo a Ventas + confirmación al cliente (sin bloquear)
   SA-)ERP: createLead(quote) (sin bloquear)
-  ERP--)DB: erpStatus = enviada | error
-  Note over DB,ERP: Un job reintenta las que quedaron en error
+  ERP--)DB: erpStatus = enviada | omitida | pendiente | error
+  Note over DB,ERP: Un job reintenta las que quedaron pendientes
 ```
 
 Puntos clave:
 - El folio se genera **dentro de la transacción** con la tabla `FolioSequence` (ver doc 05).
 - El usuario recibe respuesta en cuanto se guarda en la BD; correo y ERP van después (`after()` de Next o promesa no esperada con registro de errores).
 - Si la BD falla, el diálogo de error ofrece reintentar y un enlace de WhatsApp con el contenido de la cotización.
+- **`erpStatus`** (BD-035, `server/erp/send-quote.ts`): `enviada` (SAP la recibió; `erpRef` = referencia), `omitida` (ERP apagado), `pendiente` (SMART-K66 caído o lento: el gateway ya reintentó 3 veces con backoff y la tarea `retry:erp` la vuelve a mandar) o `error` (rechazo 4xx, clave no aceptada o respuesta fuera del contrato: reintentar no lo arregla, la revisa una persona). Cada envío suma 1 a `erpAttempts` (aunque por dentro sean hasta 4 peticiones) y deja el motivo en `erpLastError`, sin datos personales. Antes de mandar, la cotización se reclama: dos procesos nunca la mandan a la vez y nada baja a una `enviada`.
 
 ## 6. Sincronización del catálogo con SAP
 
