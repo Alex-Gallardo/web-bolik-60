@@ -655,19 +655,24 @@ Consultas de lectura cacheadas con tags.
 
 #### BD-033 · Folios consecutivos
 
-**Sprint** S1 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 05 §5
+**Sprint** S1 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 05 §4
 
 COT/ESC/DIS-AAAA-NNNNNN sin duplicados.
 
 **Pasos**
 
-1. Copiar `starter/src/server/folio.ts`.
+1. Copiar `starter/src/server/folio.ts`. *(Versión vigente: `src/server/folio.ts`; la del starter toma el año del reloj del servidor.)*
 2. Prueba de concurrencia: 20 envíos simultáneos.
 
 **Criterios de aceptación**
 
 - [ ] 20 folios distintos y consecutivos.
 - [ ] El 1 de enero reinicia el consecutivo.
+
+**Cómo quedó (8 nov 2026)**
+
+- `src/server/folio.ts` (`nextFolio(tx, prefijo)`, MERGE con HOLDLOCK dentro de la transacción de la solicitud) y `src/lib/folio.ts` (formato, regex, prefijos y año). Cambios frente al starter: el año sale de la **hora de Guatemala** (`folioYear`), no del reloj del servidor; se valida el prefijo y el tope de 999 999 por año.
+- Integración: 20 en paralelo (hasta 10 a la vez, el pool de mssql) que retienen el bloqueo 100 ms tras el MERGE: quedan en fila, sin interbloqueos (*deadlocks*) y con 20 folios distintos y consecutivos; cambio de año, prefijos independientes, sin huecos cuando la solicitud falla y el tope de 999 999 sin avanzar el contador.
 
 #### BD-034 · Procesamiento de imágenes
 
@@ -1220,6 +1225,8 @@ Guardar, notificar y enviar a SAP sin hacer esperar al visitante.
 - [ ] Respuesta en < 800 ms con SMTP y ERP lentos.
 
 - [ ] Pruebas de integración del doc 13 §4.
+
+**Nota de BD-033:** el folio se pide dentro de la misma `db.$transaction` que crea la cotización y sus líneas (`nextFolio(tx, "COT")`, `src/server/folio.ts`); la validación de un folio que llega de la URL (`/cotizacion/enviada/[folio]`) pasa el texto a mayúsculas y usa `FOLIO_REGEX` de `src/lib/folio.ts`. El bloqueo del contador dura hasta el commit: pedir el folio justo antes del `create` (después de validar y leer), nada de correo ni ERP dentro de la transacción y `db.$transaction(fn, { maxWait: 5_000, timeout: 10_000 })`; no atrapar los errores de `nextFolio` dentro de la transacción.
 
 **Nota de BD-035:** después de guardar, `after(() => sendQuoteToErp(quote.id))` (`server/erp/send-quote.ts`), solo si el ajuste `erp_enabled` no es `"false"` (interruptor del admin; con él apagado, `erpStatus = omitida`). El gateway solo mira `ERP_MODE`. Una llamada puede tardar hasta ~36 s con SMART-K66 caído (4 intentos de 8 s más esperas): no bloquea al visitante porque va en `after()` y no retiene transacción ni conexión de Prisma.
 

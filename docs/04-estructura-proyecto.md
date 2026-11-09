@@ -117,6 +117,7 @@ bolik-digital/
 │  │  ├─ constants.ts           # estados, tipos, presets (reemplazan enums)
 │  │  ├─ cache-tags.ts · slug.ts · format.ts · cn.ts · image-loader.ts · contrast.ts
 │  │  ├─ redirect-path.ts       # rutas normalizadas y mapa de redirecciones (BD-046)
+│  │  ├─ folio.ts               # formato, regex y año (hora de Guatemala) de los folios (BD-033)
 │  │  ├─ form-schemas.ts        # piezas de Zod compartidas (teléfono GT, correo, NIT, cantidad)
 │  ├─ content/                  # textos de interfaz
 │  │  ├─ feedback.ts            # todos los mensajes de toasts y diálogos

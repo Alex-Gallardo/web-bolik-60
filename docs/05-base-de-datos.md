@@ -218,27 +218,9 @@ if (env.APP_ENV !== "production") globalForPrisma.prisma = db;
 
 ## 4. Folios correlativos
 
-Formato: `COT-2027-000123` (cotizaciones), `ESC-2027-000045` (escuelas), `DIS-2027-000012` (distribuidores). Se reinician cada año. Se generan **dentro de la misma transacción** que crea la solicitud para que nunca se repitan:
+Formato: `COT-2027-000123` (cotizaciones), `ESC-2027-000045` (escuelas), `DIS-2027-000012` (distribuidores). Se reinician cada 1 de enero **en hora de Guatemala** (no la del servidor: el 31 de diciembre desde las 18:00 ya es 1 de enero en UTC). Se generan **dentro de la misma transacción** que crea la solicitud: si la solicitud falla, el número se revierte con ella y no quedan huecos.
 
-```ts
-// src/server/folio.ts
-import "server-only";
-import type { Prisma } from "@/generated/prisma/client";
-
-export async function nextFolio(tx: Prisma.TransactionClient, prefix: "COT" | "ESC" | "DIS") {
-  const year = new Date().getFullYear();
-  // MERGE atómico: crea el contador del año o lo incrementa, y devuelve el valor nuevo
-  const rows = await tx.$queryRaw<{ lastValue: number }[]>`
-    MERGE FolioSequence WITH (HOLDLOCK) AS t
-    USING (SELECT ${prefix} AS prefix, ${year} AS year) AS s
-      ON t.prefix = s.prefix AND t.year = s.year
-    WHEN MATCHED THEN UPDATE SET lastValue = t.lastValue + 1
-    WHEN NOT MATCHED THEN INSERT (prefix, year, lastValue) VALUES (s.prefix, s.year, 1)
-    OUTPUT inserted.lastValue;`;
-  const n = rows[0].lastValue;
-  return `${prefix}-${year}-${String(n).padStart(6, "0")}`;
-}
-```
+Implementado en BD-033: `src/server/folio.ts` (`nextFolio(tx, prefijo)`, con un `MERGE FolioSequence WITH (HOLDLOCK)` que crea el contador del año o lo incrementa en una sola sentencia y devuelve el valor nuevo) y `src/lib/folio.ts` (lo puro: `formatFolio`, `FOLIO_REGEX`, `FOLIO_PREFIXES`, `folioYear`). Probado con 20 transacciones en paralelo que retienen el bloqueo (hasta 10 a la vez, el pool de mssql): quedan en fila y dan 20 folios distintos y consecutivos. El bloqueo de la fila dura hasta el commit de la solicitud: el folio se pide justo antes del `create` y nada lento (correo, ERP) va dentro de la transacción.
 
 Uso:
 

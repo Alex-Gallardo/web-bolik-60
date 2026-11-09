@@ -110,7 +110,7 @@ BD-032,E2,"Datos, medios e integración base",Capa de datos con Cache Components
 4. La batería de contrato de BD-037 pasa contra `BolikDigital_Test`.
 5. CI (paso 3 de BD-031): el trabajo Integración siembra la base de pruebas, construye con `DATA_SOURCE=db` y sirve ese build con la base desconectada.","- El build prerenderiza las páginas públicas sin consultar la BD en cada petición.
 - Pruebas de integración de las funciones.",Sí
-BD-033,E2,"Datos, medios e integración base",Folios consecutivos,S1,0.5,Must,B,BD-030,05 §5,COT/ESC/DIS-AAAA-NNNNNN sin duplicados.,"1. Copiar `starter/src/server/folio.ts`.
+BD-033,E2,"Datos, medios e integración base",Folios consecutivos,S1,0.5,Must,B,BD-030,05 §4,COT/ESC/DIS-AAAA-NNNNNN sin duplicados.,"1. Copiar `starter/src/server/folio.ts`.
 2. Prueba de concurrencia: 20 envíos simultáneos.","- 20 folios distintos y consecutivos.
 - El 1 de enero reinicia el consecutivo.",Sí
 BD-034,E2,"Datos, medios e integración base",Procesamiento de imágenes,S1,1.5,Must,B,BD-030,03 §7,Imágenes rápidas: se procesan una sola vez al subir.,"1. `server/media/process-image.ts`: sharp → WebP en 320/480/640/960/1280/1920 + `blurDataURL` + hash.
