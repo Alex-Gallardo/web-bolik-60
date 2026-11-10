@@ -6,6 +6,7 @@
 // (.env.local incluido), porque server.js solo busca .env dentro de .next/standalone.
 import { cpSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
+import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import nextEnv from "@next/env";
 
@@ -19,6 +20,11 @@ if (!existsSync(`${standalone}/server.js`)) {
 
 nextEnv.loadEnvConfig(root, false, { info: () => {}, error: console.error });
 process.env.HOSTNAME ??= "127.0.0.1";
+// Más abajo se cambia de carpeta a .next/standalone: un MEDIA_DIR relativo (./.media, el de
+// desarrollo) se resuelve antes contra la raíz del proyecto. En el servidor ya es absoluto.
+if (process.env.MEDIA_DIR && !isAbsolute(process.env.MEDIA_DIR)) {
+  process.env.MEDIA_DIR = resolve(root, process.env.MEDIA_DIR);
+}
 
 cpSync(`${root}public`, `${standalone}/public`, { recursive: true });
 cpSync(`${root}.next/static`, `${standalone}/.next/static`, { recursive: true });

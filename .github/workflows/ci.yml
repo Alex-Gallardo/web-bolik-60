@@ -150,6 +150,14 @@ jobs:
           }
           Pop-Location
           "El adaptador de SQL Server carga desde el paquete"
+          # sharp (BD-034) carga un binario por plataforma: el paquete se arma en Linux y debe traer
+          # el de Windows (supportedArchitectures + outputFileTracingIncludes). Se prueba generando
+          # un WebP de verdad, no solo cargando el módulo.
+          Push-Location $app
+          node -e "require('sharp')({ create: { width: 2, height: 2, channels: 3, background: { r: 0, g: 0, b: 0 } } }).webp().toBuffer().then((b) => { if (!b.length) process.exit(1) }, (e) => { console.error(e.message); process.exit(1) })"
+          if ($LASTEXITCODE -ne 0) { throw "sharp no carga en Windows desde el paquete" }
+          Pop-Location
+          "sharp genera WebP en Windows desde el paquete"
           $env:PORT = "3100"; $env:HOSTNAME = "127.0.0.1"
           $log = Join-Path $env:RUNNER_TEMP "server.log"
           $server = Start-Process node -ArgumentList "server.js" -WorkingDirectory $app -PassThru `

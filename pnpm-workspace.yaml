@@ -8,3 +8,13 @@ ignoredBuiltDependencies:
   - esbuild
   - sharp
   - unrs-resolver
+
+# sharp trae un binario por plataforma (@img/sharp-*). El paquete se construye en Linux (CI) y corre
+# en Windows (IIS): se instala también el de Windows para que entre en el paquete (BD-034).
+supportedArchitectures:
+  os:
+    - current
+    - win32
+  cpu:
+    - current
+    - x64

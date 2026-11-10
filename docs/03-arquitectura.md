@@ -218,7 +218,9 @@ flowchart LR
   L --> IIS[IIS sirve archivo<br/>Cache-Control: public, max-age=31536000, immutable]
 ```
 
-Los nombres de archivo llevan un hash corto (`-a1b2c3`) para que la caché de un año sea segura.
+Los nombres de archivo llevan un hash corto del contenido y de los parámetros (`-a1b2c3d4`) para que la caché de un año sea segura.
+
+Implementado en BD-034: `server/media/process-image.ts` (sharp) genera los 6 anchos de `lib/image-loader.ts` sin agrandar, endereza por EXIF, convierte a sRGB y no copia metadatos (ni la ubicación GPS); no acepta HEIC, SVG, GIF ni animaciones; `server/data/media.ts` registra `MediaAsset`; `pnpm import:media` carga fotos en lote. En el servidor, IIS sirve `/media` desde `D:\bolik\media`; donde no hay IIS (desarrollo, `start:local`, CI), lo sirve `app/media/[...path]/route.ts` desde `MEDIA_DIR`, con las mismas cabeceras.
 
 ## 8. Seguridad
 

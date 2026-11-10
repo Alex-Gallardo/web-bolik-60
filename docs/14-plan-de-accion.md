@@ -685,12 +685,21 @@ Imágenes rápidas: se procesan una sola vez al subir.
 1. `server/media/process-image.ts`: sharp → WebP en 320/480/640/960/1280/1920 + `blurDataURL` + hash.
 2. Guardar en `MEDIA_DIR` y registrar `MediaAsset`.
 3. `lib/image-loader.ts` (starter) y `images.loaderFile` en `next.config.ts`.
-4. Script `scripts/import-media.ts` para cargar en lote las fotos actuales.
+4. Script `scripts/import-media.mts` para cargar en lote las fotos actuales.
 
 **Criterios de aceptación**
 
 - [ ] Una foto de 4 MB genera 6 archivos y la de 640 pesa < 60 KB.
 - [ ] `next/image` pide el ancho correcto según `sizes`.
+
+**Cómo quedó (9 nov 2026)**
+
+- `src/server/media/process-image.ts` (sharp 0.35.5): decodifica el original una sola vez y de ese maestro saca 6 WebP calidad 75 sin agrandar (si la foto es más chica, los anchos mayores quedan del tamaño original), `blurDataURL`, medidas enderezadas por EXIF y color dominante (sobre blanco, para los PNG transparentes); convierte a sRGB; sin metadatos en la salida (ni GPS). Clave con hash de 8 dígitos del contenido y de los parámetros (`products/bolik-ultra-azul-a1b2c3d4`): si cambian la calidad o los anchos, cambia la clave. Si los 6 archivos ya existen no los reescribe; cada archivo se escribe con otro nombre y se renombra, y si algo falla borra lo que creó. Rechaza con `MediaError` lo que no es imagen o está dañado (JPEG cortado), HEIC, SVG, GIF y animaciones, más de 25 MB y más de 50 MP. `src/server/data/media.ts` registra `MediaAsset` (idempotente; no pisa el alt editado).
+- `pnpm import:media <carpeta> [--folder products] [--remoto]` (`scripts/import-media.mts`): por defecto solo corre contra una base `…_Dev` o `…_Test` con `APP_ENV=development`; para staging o producción se corre en ese servidor (con su `MEDIA_DIR`) y con `--remoto`, para que archivos y filas queden en el mismo entorno.
+- sharp en el paquete: Next lo copia al standalone, pero con el binario de la máquina que construye. `supportedArchitectures` (pnpm) instala también el de Windows y `outputFileTracingIncludes` lo mete al paquete; el trabajo «Artefacto en Windows» genera un WebP con sharp desde el paquete.
+- `src/app/media/[...path]/route.ts`: sirve `/media` desde `MEDIA_DIR` donde no hay IIS (desarrollo, `start:local`, CI), solo los WebP que genera el procesador (`…-{ancho}.webp`, en minúsculas), sin salir de la carpeta ni seguir enlaces simbólicos, y en *streaming*; en el servidor lo sirve IIS. `start:local` resuelve un `MEDIA_DIR` relativo antes de cambiar de carpeta.
+- Criterios: una foto de ~4 MB da 6 archivos y la de 640 pesa < 60 KB (prueba con sharp); `next/image` pide el ancho correcto (prueba con `getImageProps` y, en Chromium, 360 px DPR 2 → 960 y 1280 px → 640).
+- Las fotos de ejemplo (del catálogo 2026-2027) se importan solo a `./.media` y a la base local: nunca al repo.
 
 **Nota de BD-031:** `ProductImage` es única por `[productId, mediaId]`: una misma foto no se repite dentro de un producto (para varias variantes, una fila por foto con `variantId` nulo). Fotos de ejemplo: las del catálogo 2026-2027, solo en `MEDIA_DIR` local, nunca en el repo.
 
@@ -1754,6 +1763,8 @@ Crear y editar fichas completas sin tocar código.
 
 **Nota de BD-031:** despublicar en lugar de borrar (productos, variantes, FAQs, tiendas, hitos y actividades): `pnpm db:seed --profile prod` vuelve a crear lo que falte por su clave natural.
 
+**Nota de BD-034:** subir imágenes con `processImage` (`server/media/process-image.ts`) y `saveMediaAsset` (`server/data/media.ts`); su `MediaError` (`too-large`, `unsupported`, `too-many-pixels`, `invalid-folder`) va a un mensaje de `feedback.ts` (HEIC de iPhone: «guárdala como JPEG»). Cualquier otro error es del disco o de la base. Al guardar `ProductImage`, las fuentes de datos dejan de devolver `image: null`: armar el `ImageView` (`src` = `/media/` + `key`, ancho, alto, `blurDataUrl`, `alt`) en `db/source.ts` y en los JSON de ejemplo.
+
 #### BD-117 · Categorías y FAQs
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-115 · **Docs** 06 §4
@@ -1846,6 +1857,8 @@ Subir y reutilizar imágenes y videos.
 **Criterios de aceptación**
 
 - [ ] Archivo inválido → mensaje amable; nunca se guarda.
+
+**Nota de BD-034:** la subida reutiliza `processImage` y `saveMediaAsset`; la misma foto con el mismo nombre da la misma clave (no se duplica ni se reescribe). El procesamiento usa todos los núcleos unos segundos: si compite con el sitio, limitar con `sharp.concurrency()`. Videos y PDF no pasan por sharp: necesitan su propio camino (y la ruta `/media` de Node hoy solo sirve imágenes).
 
 #### BD-123 · Redirecciones y 404
 
