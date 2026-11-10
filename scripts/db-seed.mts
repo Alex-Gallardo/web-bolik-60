@@ -27,26 +27,33 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-/** --profile x o --profile=x; cualquier otro argumento es un error, no un perfil por defecto. */
-function readProfile(): SeedProfile {
+/**
+ * --profile x o --profile=x; cualquier otro argumento es un error, no un perfil por defecto.
+ * --allow-sample-data: ejemplos en staging (perfil dev, base …_Stg) hasta el catálogo real (BD-038).
+ */
+function readArgs(): { profile: SeedProfile; allowSampleData: boolean } {
   let value: string | undefined;
+  let allowSampleData = false;
   try {
     ({
-      values: { profile: value },
+      values: { profile: value, "allow-sample-data": allowSampleData = false },
     } = parseArgs({
-      options: { profile: { type: "string", default: "dev" } },
+      options: {
+        profile: { type: "string", default: "dev" },
+        "allow-sample-data": { type: "boolean", default: false },
+      },
       strict: true,
       allowPositionals: false,
     }));
   } catch (error) {
     fail(
-      `Argumento no reconocido (${(error as Error).message}). Uso: pnpm db:seed --profile ${SEED_PROFILES.join(" | ")}.`,
+      `Argumento no reconocido (${(error as Error).message}). Uso: pnpm db:seed --profile ${SEED_PROFILES.join(" | ")} [--allow-sample-data].`,
     );
   }
   if (!value || !isSeedProfile(value)) {
     fail(`Perfil inválido: usa --profile ${SEED_PROFILES.join(" | ")}.`);
   }
-  return value;
+  return { profile: value, allowSampleData };
 }
 
 /** Admin inicial desde el entorno; la contraseña nunca se imprime. */
@@ -71,7 +78,7 @@ function readAdmin(): SeedAdmin | undefined {
   return parsed.data;
 }
 
-const profile = readProfile();
+const { profile, allowSampleData } = readArgs();
 const url = process.env.DATABASE_URL;
 if (!url) fail("Falta DATABASE_URL.");
 
@@ -84,6 +91,7 @@ try {
   const problem = seedTargetProblem(profile, {
     appEnv: process.env.APP_ENV ?? "development",
     databaseName,
+    allowSampleData,
   });
   if (problem) {
     console.error(`✖ ${problem}`);

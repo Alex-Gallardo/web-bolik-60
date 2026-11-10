@@ -95,6 +95,46 @@ describe("seedTargetProblem", () => {
     expect(seedTargetProblem("e2e", { ...local, appEnv: "production" })).toContain("production");
   });
 
+  it("en staging, dev sugiere --allow-sample-data solo si la base es BolikDigital_Stg", () => {
+    const stg = { appEnv: "staging", databaseName: "BolikDigital_Stg" };
+    expect(seedTargetProblem("dev", stg)).toContain("--allow-sample-data");
+    expect(seedTargetProblem("e2e", stg)).not.toContain("--allow-sample-data");
+    expect(seedTargetProblem("dev", { ...stg, databaseName: "BolikDigital" })).not.toContain(
+      "--allow-sample-data",
+    );
+    expect(seedTargetProblem("dev", { ...stg, databaseName: "Otra_Stg" })).not.toContain(
+      "--allow-sample-data",
+    );
+  });
+
+  it("--allow-sample-data permite dev en staging con BolikDigital_Stg y nada más (BD-016)", () => {
+    const stg = { appEnv: "staging", databaseName: "BolikDigital_Stg", allowSampleData: true };
+    expect(seedTargetProblem("dev", stg)).toBeNull();
+    expect(seedTargetProblem("dev", { ...stg, databaseName: "bolikdigital_stg" })).toBeNull();
+    // Ni e2e, ni producción, ni otra base, ni fuera de staging.
+    expect(seedTargetProblem("e2e", stg)).toContain("--allow-sample-data");
+    expect(seedTargetProblem("dev", { ...stg, appEnv: "production" })).toContain("production");
+    expect(seedTargetProblem("dev", { ...stg, databaseName: "BolikDigital" })).toContain(
+      '"BolikDigital"',
+    );
+    // Ni otra base …_Stg del mismo SQL Server (el de staging comparte con SMART-K66).
+    expect(
+      seedTargetProblem("dev", { ...stg, databaseName: "BolikDigital_Stg_Copia" }),
+    ).not.toBeNull();
+    expect(seedTargetProblem("dev", { ...stg, databaseName: "PuntoVenta_Stg" })).not.toBeNull();
+    expect(seedTargetProblem("dev", { ...stg, appEnv: "development" })).not.toBeNull();
+    expect(
+      seedTargetProblem("dev", {
+        appEnv: "development",
+        databaseName: "BolikDigital_Dev",
+        allowSampleData: true,
+      }),
+    ).not.toBeNull();
+    // Con prod la bandera no tendría efecto: se rechaza en lugar de ignorarla en silencio.
+    expect(seedTargetProblem("prod", stg)).toContain("--allow-sample-data");
+    expect(seedTargetProblem("prod", { ...stg, allowSampleData: false })).toBeNull();
+  });
+
   it("prod puede sembrar cualquier base", () => {
     expect(
       seedTargetProblem("prod", { appEnv: "production", databaseName: "BolikDigital" }),

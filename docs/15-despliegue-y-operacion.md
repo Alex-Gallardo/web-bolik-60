@@ -342,16 +342,55 @@ Ver la lista completa en doc 03 §9 y `starter/.env.example`. Diferencias:
 
 ## 12. Staging: primera instalación y despliegue manual (BD-016)
 
-Hasta que exista el pipeline (BD-141), staging se prepara con un script y se despliega a mano. El script **solo sirve para staging**: su `web.config` lleva `noindex` y no tiene la regla de `www` (se niega a correr con el dominio de producción). Producción (BD-140) usa el `web.config` de §4.3 y `deploy.ps1`.
+Hasta que exista el pipeline (BD-141), staging se prepara y se despliega a mano con cuatro scripts de `scripts/deploy/`. Los cuatro **solo sirven para staging**: el `web.config` lleva `noindex`, no tiene la regla de `www` y el setup se niega a correr con el dominio de producción. Producción (BD-140) usa el `web.config` de §4.3 y `deploy.ps1`.
+
+| Script                  | Dónde y cómo                                                                     | Qué hace                                              |
+| ----------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `staging-preflight.ps1` | En el servidor, de preferencia como administrador                                | Revisa los requisitos. Solo lectura, sin credenciales |
+| `staging-setup.ps1`     | En el servidor, como administrador; una vez y al cambiar el certificado o las IP | Carpetas, `staging.env`, ARR, sitio IIS y servicio    |
+| `staging-build.ps1`     | Clon limpio con acceso a `BolikDigital_Stg`; normalmente el servidor, como administrador | Migra, siembra, construye y empaca                    |
+| `staging-deploy.ps1`    | En el servidor, como administrador                                               | Nuevo release, prueba de humo y vuelta atrás si falla |
+
+### Servidor compartido (`K66-APPS`)
+
+Staging (y después producción) vive en `K66-APPS`, la misma máquina que el SQL Server de la empresa, las bases del punto de venta SMART-K66 y su API (`/k66api/api/`). Antes del setup, TI confirma tres cosas:
+
+- **Que se puede exponer un IIS en esa máquina.** Solo a la red interna o a IP permitidas: `-AllowedIps`.
+- **ARR.** Su configuración es de todo el servidor: `preserveHostHeader=True`, `reverseRewriteHostInResponseHeaders=False` y `responseBufferLimit=0`. Si otro sitio ya usa ARR como proxy, también le aplica. El preflight lista esos sitios y los valores actuales.
+- **DNS.** `bolik66.com` tiene un comodín público. `staging.bolik66.com` ya resuelve al hosting actual aunque nadie haya creado el registro, así que hace falta uno propio (interno o público) hacia `K66-APPS`. El preflight avisa si el nombre no resuelve a ese servidor.
 
 ### Lo que entrega TI antes de empezar
 
-- [ ] Servidor de §2 con IIS 10, URL Rewrite 2.1, ARR 3.0, Node.js 22 (≥ 22.12, el mínimo de `engines` en `package.json`) y NSSM en el `PATH`.
+- [ ] Servidor de §2 con IIS 10, URL Rewrite 2.1, ARR 3.0, Node.js 22 (≥ 22.12, el mínimo de `engines` en `package.json`) y NSSM en el `PATH`. Para `-AllowedIps`, también la característica «IP and Domain Restrictions» (`Web-IP-Security`).
 - [ ] Cuenta de servicio (por ejemplo `.\svc-bolik` o `DOMINIO\svc-bolik`), sin privilegios de administrador, y su contraseña.
-- [ ] Base `BolikDigital_Stg` con dos usuarios: `bolik_app` (lectura y escritura) y `bolik_migrator` (DDL, solo migraciones).
+- [ ] Base `BolikDigital_Stg` con dos usuarios **nuevos**: `bolik_app` (lectura y escritura) y `bolik_migrator` (DDL, solo migraciones). Sus credenciales van solo en `staging.env` o se escriben al migrar. Nunca van al repo.
 - [ ] DNS de `staging.bolik66.com` (o la URL interna) hacia el servidor y su certificado TLS en `LocalMachine\My`.
 - [ ] Acceso limitado a la red interna o a IP permitidas.
-- [ ] En la máquina donde se construye: salida HTTPS al registro de npm, `fonts.googleapis.com` y `fonts.gstatic.com` (§5), y acceso a `BolikDigital_Stg`.
+- [ ] En la máquina donde se construye:
+  - Git for Windows (su `bash` arma el paquete) y pnpm (`corepack enable`).
+  - Salida HTTPS al registro de npm, `fonts.googleapis.com` y `fonts.gstatic.com` (§5).
+  - Acceso a `BolikDigital_Stg`.
+
+### 0. Revisar el servidor
+
+En PowerShell, de preferencia como administrador. Sin esos permisos, IIS y la cuenta quedan sin revisar:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\deploy\staging-preflight.ps1 `
+  -HostName staging.bolik66.com -ServiceAccount ".\svc-bolik" -SqlServer localhost
+```
+
+No cambia nada y se puede repetir. Cada línea sale como OK, AVISO, FALTA o INFO, y el script termina con código 1 si hay algo en FALTA. Revisa:
+
+- Windows y el espacio en disco.
+- Node, NSSM, y git, bash y pnpm para construir.
+- Los módulos de IIS y Brotli.
+- Los valores de ARR y qué otros sitios hacen proxy.
+- Los sitios y enlaces que chocan con el dominio de staging.
+- El puerto 3100.
+- La cuenta de servicio (que exista y no sea administradora).
+- El certificado con su vencimiento y el DNS.
+- La conexión TCP al SQL Server y la salida a npm y a Google Fonts.
 
 ### 1. Preparar el servidor
 
@@ -359,74 +398,89 @@ En PowerShell como administrador, desde una copia del repo en el servidor:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\deploy\staging-setup.ps1 `
-  -HostName staging.bolik66.com -ServiceAccount ".\svc-bolik" -CertThumbprint "<huella del certificado>"
+  -HostName staging.bolik66.com -ServiceAccount ".\svc-bolik" -CertThumbprint "<huella del certificado>" `
+  -AllowedIps "10.0.0.0/8,192.168.10.25"
 ```
 
-Se puede volver a correr (por ejemplo, cuando llega o se renueva el certificado; `-ResetPassword` vuelve a pedir la contraseña de la cuenta). Hace lo siguiente:
+Se puede volver a correr, por ejemplo cuando llega o se renueva el certificado, o cuando cambian las IP. `-ResetPassword` vuelve a pedir la contraseña de la cuenta. El script:
 
-- Crea las carpetas de §3 en `D:\bolik-stg` con permisos explícitos: la cuenta de servicio lee la app y escribe en `media` y `logs`; IIS lee estáticos y medios.
+- Crea las carpetas de §3 en `D:\bolik-stg` con permisos explícitos. La cuenta de servicio lee la app y escribe en `media` y `logs`; IIS lee estáticos y medios.
 - Crea `D:\bolik-stg\config\staging.env` a partir de `.env.example`, ya con `APP_ENV=staging`, la URL `https://` y `MEDIA_DIR`. Solo lo leen la cuenta de servicio y los administradores.
-- Configura ARR a nivel de servidor y crea el sitio IIS `staging-bolik` con su `web.config`. Sin certificado el sitio queda en HTTP y sin redirección.
+- Configura ARR a nivel de servidor y crea el sitio IIS `staging-bolik` con su `web.config`. Sin certificado, el sitio queda en HTTP y sin redirección.
+- Limita el sitio a las IP o redes de `-AllowedIps`, que reemplazan la lista anterior. Siempre agrega el loopback (`127.0.0.1` y `::1`) para la prueba de humo, pero no la IP de red del servidor: desde el propio servidor con el DNS real se recibe `403` si esa IP no está en la lista. Sin el parámetro, la restricción no se toca; `-AllowedIps none` la quita.
+- Si un firewall con NAT reescribe el origen, IIS ve la IP del firewall en todas las visitas y la lista no sirve: en ese caso se limita en el firewall.
 - Crea el servicio `BolikDigital-Staging` (no lo inicia) y le da a la cuenta el derecho «Iniciar sesión como servicio». La contraseña se asigna sin pasar por la línea de comandos.
 
-Después, TI completa `staging.env` con los valores de §11 (`DATABASE_URL` con `bolik_app`, `SESSION_SECRET` aleatorio, correo…). Con `APP_ENV=staging` la app no arranca si queda el `SESSION_SECRET` de ejemplo o el usuario `sa`. `SMTP_MODE` pasa a `smtp` cuando exista la cuenta de correo (BD-074): en modo `file` la app escribiría dentro del release, donde la cuenta no tiene permiso. Esas variables nunca van al repo.
+Después, TI completa `staging.env` con los valores de §11: `DATABASE_URL` con `bolik_app`, `DATA_SOURCE`, un `SESSION_SECRET` aleatorio, el correo… Con `APP_ENV=staging`, la app no arranca si queda el `SESSION_SECRET` de ejemplo o el usuario `sa`.
 
-### 2. Construir el paquete
+`SMTP_MODE` pasa a `smtp` cuando exista la cuenta de correo (BD-074). En modo `file`, la app escribiría dentro del release, donde la cuenta no tiene permiso.
 
-Desde un **clon limpio** del commit de `develop` que se va a desplegar (sin `.env.local`: `next build` también lo lee y completaría lo que falte con valores de desarrollo), en una máquina con acceso a `BolikDigital_Stg`. Las variables de staging van en el entorno del proceso o en un `.env.production.local` que no se sube a git:
+`MIGRATE_DATABASE_URL` **no** va en ese archivo: el servicio no necesita el usuario de DDL. Ninguna de estas variables va al repo.
+
+### 2. Construir el paquete (migra y siembra antes)
+
+Desde un **clon limpio** del commit de `develop` que se va a desplegar. Normalmente es el propio servidor, que llega a `BolikDigital_Stg`, y como administrador: `staging.env` solo lo leen la cuenta de servicio y los administradores, y el clon dentro de `D:\bolik-stg` hereda ese permiso.
 
 ```powershell
-pnpm install --frozen-lockfile --config.node-linker=hoisted
-pnpm build
-bash scripts/ci/package.sh "bolik-$(git rev-parse --short HEAD).tar.gz"
+git clone --branch develop https://github.com/Alex-Gallardo/web-bolik-60.git D:\bolik-stg\build\web-bolik-60
+cd D:\bolik-stg\build\web-bolik-60
+powershell -ExecutionPolicy Bypass -File scripts\deploy\staging-build.ps1 -SampleData -SeedAdminEmail "<correo del admin>"
 ```
+
+`staging-build.ps1`:
+
+1. **Revisa el clon.** Se niega a correr si hay archivos `.env*` locales (`next build` y Prisma completarían con valores de desarrollo) o cambios sin commit.
+2. **Instala las dependencias** con `--config.node-linker=hoisted` (§5), antes de cargar los secretos.
+3. **Carga `staging.env` solo en su proceso.** Usa el mismo analizador que `node --env-file` y exige `APP_ENV=staging` y una URL `https://`. Las variables de staging no se escriben en ningún archivo y se borran al terminar.
+4. **Migra con `pnpm db:deploy`** si `DATA_SOURCE=db`. `MIGRATE_DATABASE_URL` (`bolik_migrator`) se pide sin eco y se borra al acabar.
+5. **Siembra.**
+   - Por defecto, con `--profile prod`: solo crea lo que falta, sin ejemplos, y no pisa lo editado en el admin (doc 05 §6).
+   - Con `-SampleData`, con `--profile dev --allow-sample-data`: los mismos datos de ejemplo que en desarrollo. Este perfil sincroniza con los JSON y pisa lo editado en el admin de staging.
+   - `-SeedAdminEmail` crea el admin inicial y pide su contraseña sin eco.
+6. **Construye.** Con `DATA_SOURCE=db`, el build lee la base y prerenderiza con esos datos.
+7. **Empaca** con `scripts/ci/package.sh` en `bolik-<commit>.tar.gz`, por defecto en la carpeta que contiene el clon, y muestra su SHA256.
+
+Con `DATA_SOURCE=fixtures`, el build no lee la base y se omiten la migración y el seed. `-SkipMigrate` y `-SkipSeed` los omiten a mano.
+
+Aunque las páginas se generen en el build, el servicio necesita la base disponible. La consulta para lo que no se prerenderizó (un 404, una página con parámetros nuevos) y cuando se revalida un tag.
+
+**Datos de ejemplo (BD-016, hasta BD-038).** Con `-SampleData`, staging muestra el catálogo de ejemplo en lugar de solo el Bolik Ultra. La bandera `--allow-sample-data` solo funciona con el perfil `dev`, `APP_ENV=staging` y la base `BolikDigital_Stg`; nunca en producción ni en otra base del mismo SQL Server. Cuando llegue el catálogo real, el DBA recrea `BolikDigital_Stg` vacía y se construye sin `-SampleData`. El perfil `prod` no borra los ejemplos que ya estén.
 
 El artefacto de la CI no sirve aquí: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` y no tiene `APP_ENV=staging`.
 
-### 3. Migrar la base
+### 3. Desplegar
 
-Desde el mismo clon, con `APP_ENV=staging` y `MIGRATE_DATABASE_URL` (usuario `bolik_migrator`) **en el entorno del proceso** (`prisma.config.ts` no lee `.env.production.local`):
-
-```powershell
-$env:APP_ENV = "staging"
-$env:MIGRATE_DATABASE_URL = [Net.NetworkCredential]::new("", (Read-Host "MIGRATE_DATABASE_URL" -AsSecureString)).Password
-pnpm db:deploy
-Remove-Item Env:MIGRATE_DATABASE_URL
-```
-
-Después, los datos iniciales con el usuario de la app (`DATABASE_URL`, `bolik_app`) y el perfil `prod`: solo crea lo que falta, sin datos de ejemplo, y no pisa lo editado en el admin (doc 05 §6). Se puede repetir en cada despliegue. Con `DATA_SOURCE=db`, migrar y sembrar van **antes** del paso 2: el build lee la base y prerenderiza con esos datos. Después, el servidor solo consulta la base para lo que no se generó en el build (un 404, una página con parámetros nuevos) o cuando se revalida un tag; aun así, el servicio necesita la base disponible.
+En el servidor, como administrador. `-ServiceAccount` es la misma cuenta que se pasó a `staging-setup.ps1`, y `-HostName`, `-Base`, `-Port`, `-ServiceName` y `-SiteName` deben coincidir con los del setup (con una URL interna, sin `-HostName` la prueba por IIS falla y el despliegue vuelve atrás). `-Sha256` es el que imprimió `staging-build.ps1`:
 
 ```powershell
-$env:APP_ENV = "staging"
-$env:DATABASE_URL = [Net.NetworkCredential]::new("", (Read-Host "DATABASE_URL" -AsSecureString)).Password
-pnpm db:seed --profile prod
-Remove-Item Env:DATABASE_URL
+powershell -ExecutionPolicy Bypass -File scripts\deploy\staging-deploy.ps1 `
+  -Package D:\bolik-stg\build\bolik-<commit>.tar.gz -ServiceAccount ".\svc-bolik" -Sha256 <hash>
 ```
 
-### 4. Desplegar
+El script:
 
-En el servidor, como administrador. `$cuenta` es la misma que se pasó a `-ServiceAccount`:
+1. Extrae el paquete en `D:\bolik-stg\app\releases\<fecha>_<commit>` y comprueba que trae `server.js`, `.next\static` y `public`.
+2. Le da a la cuenta permiso de escritura en `.next`, donde Next guarda la caché y las páginas que se regeneran al editar en el admin.
+3. Detiene el servicio, apunta la junction `current` al release nuevo y lo inicia.
+4. Hace la prueba de humo. La home debe responder `200` con `X-Robots-Tag: noindex` dos veces:
+   - en Node (`127.0.0.1:3100`), esperando hasta 90 s a que arranque;
+   - a través de IIS con el dominio. Usa `curl --resolve` hacia este mismo servidor, así que no depende del DNS.
+5. Si algo falla, vuelve al release anterior, reinicia el servicio y deja el release fallido para revisarlo.
+6. Conserva los 5 releases buenos más recientes (`-Keep`) y el último fallido; nunca borra el que corre.
 
-```powershell
-$cuenta = ".\svc-bolik"
-$commit = "<commit>"
-$rel = "D:\bolik-stg\app\releases\$(Get-Date -Format yyyy-MM-dd_HHmm)_$commit"
-New-Item -ItemType Directory $rel | Out-Null
-tar -xzf ".\bolik-$commit.tar.gz" -C $rel
-# Next escribe en .next la caché y las páginas que se regeneran al editar en el admin.
-icacls "$rel\.next" /grant "${cuenta}:(OI)(CI)M"
-Stop-Service BolikDigital-Staging -ErrorAction SilentlyContinue
-cmd /c rmdir "D:\bolik-stg\app\current"
-cmd /c mklink /J "D:\bolik-stg\app\current" "$rel"
-Start-Service BolikDigital-Staging
-```
+Si el servicio no arranca (error 1069), el registro del sistema dice la causa:
 
-Si `Start-Service` falla con el error 1069, el registro del sistema dice la causa: el evento 7038 es una contraseña incorrecta (se vuelve a correr `staging-setup.ps1 -ResetPassword`) y el 7041 es que falta el derecho «Iniciar sesión como servicio», normalmente porque una GPO del dominio lo redefine (TI agrega la cuenta en esa GPO). Para volver atrás, se apunta `current` a la carpeta del release anterior y se reinicia el servicio.
+- **Evento 7038:** la contraseña es incorrecta. Se vuelve a correr `staging-setup.ps1 -ResetPassword`.
+- **Evento 7041:** falta el derecho «Iniciar sesión como servicio», normalmente porque una GPO del dominio lo redefine. TI agrega la cuenta en esa GPO.
 
-### 5. Comprobar
+Los errores de la app quedan en `D:\bolik-stg\logs\app-error.log`.
+
+### 4. Comprobar (criterios de BD-016)
+
+Desde un equipo de la red interna:
 
 ```powershell
 curl.exe -sI https://staging.bolik66.com/ | Select-String "HTTP/|X-Robots-Tag"
 ```
 
-Debe responder `200` con `X-Robots-Tag: noindex, nofollow` (criterios de BD-016). La cabecera sale dos veces en las páginas, una de Next y otra de IIS, y es normal. Los errores quedan en `D:\bolik-stg\logs\app-error.log`.
+Debe responder `200` con `X-Robots-Tag: noindex, nofollow`. En las páginas, la cabecera sale dos veces, una de Next y otra de IIS, y es normal. Desde una IP fuera de `-AllowedIps`, IIS responde `403`.

@@ -412,11 +412,29 @@ Un lugar real donde probar desde la primera semana (con apoyo de TI).
 2. Servicio Windows `BolikDigital-Staging` (NSSM o PM2) ejecutando `node server.js`.
 3. BD `BolikDigital_Stg`; carpeta `D:\bolik-stg\media`.
 4. Build en el agente interno (o a mano) con las variables de staging, armado según doc 15 §5, y despliegue manual. El artefacto de la CI (BD-014) no sirve: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` fijo.
+5. Revisión previa de solo lectura del servidor (`staging-preflight.ps1`), que comparte máquina con SQL Server y SMART-K66.
 
 **Criterios de aceptación**
 
 - [ ] `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
 - [ ] `X-Robots-Tag: noindex` presente en staging.
+
+**Avance (10 nov 2026)**
+
+El código está listo. Los criterios se cumplen al ejecutarlo en `K66-APPS`, que hace TI. El Issue se cierra con el resultado del `curl` de doc 15 §12.
+
+- Cuatro scripts en `scripts/deploy/`:
+  - `staging-preflight.ps1`: solo lectura y sin credenciales.
+  - `staging-setup.ps1`, que ahora acepta `-AllowedIps`.
+  - `staging-build.ps1`: migra, siembra, construye y empaca con el `staging.env` del servicio.
+  - `staging-deploy.ps1`: release nuevo, prueba de humo en Node y en IIS, y vuelta atrás automática.
+  El procedimiento está en doc 15 §12.
+- **Datos de ejemplo en staging hasta BD-038:** `pnpm db:seed --profile dev --allow-sample-data`. Solo corre con `APP_ENV=staging` y la base `BolikDigital_Stg` (no otra `…_Stg`, porque el SQL Server se comparte con SMART-K66); nunca en producción ni con los perfiles `e2e` o `prod`.
+  - Este perfil sincroniza con los JSON y pisa lo editado en el admin de staging.
+  - Al llegar el catálogo real, el DBA recrea `BolikDigital_Stg` y se siembra con `--profile prod`.
+- **Servidor compartido.** ARR se configura para todo el servidor (`responseBufferLimit=0`, `preserveHostHeader`). El preflight lista los sitios que ya hacen proxy, como la API de SMART-K66, para confirmarlo con TI antes del setup.
+- **DNS.** `bolik66.com` tiene un comodín público: `staging.bolik66.com` ya resuelve al hosting actual (10 nov 2026). Hace falta un registro propio, interno o público, hacia `K66-APPS`.
+- **Fuera de esta PC.** Desde aquí no se llega a `K66-APPS` (ni DNS ni el puerto 1433). El paquete se construye en el propio servidor.
 
 #### BD-017 · Base de datos local de desarrollo (SQL Server 2022 Express)
 
@@ -609,7 +627,7 @@ Datos reales para desarrollar y probar (nada de lorem).
 
 **Cómo quedó (6 nov 2026)**
 
-- `pnpm db:seed [--profile dev|e2e|prod]` (`scripts/db-seed.mts`): `dev` y `e2e` cargan todo y **sincronizan** con los JSON (actualizan, quitan las partes que ya no están y despublican los ejemplos y variantes que salieron; nunca borran variantes); `prod` **solo crea lo que falta**, sin ejemplos ni relaciones, FAQs o líneas de kit hacia ellos, no pisa lo editado en el admin y omite (con aviso) un producto cuyo SKU ya pertenece a otro. `dev`/`e2e` solo siembran bases `…_Dev` o `…_Test` y nunca con `APP_ENV` `staging` o `production`.
+- `pnpm db:seed [--profile dev|e2e|prod]` (`scripts/db-seed.mts`): `dev` y `e2e` cargan todo y **sincronizan** con los JSON (actualizan, quitan las partes que ya no están y despublican los ejemplos y variantes que salieron; nunca borran variantes); `prod` **solo crea lo que falta**, sin ejemplos ni relaciones, FAQs o líneas de kit hacia ellos, no pisa lo editado en el admin y omite (con aviso) un producto cuyo SKU ya pertenece a otro. `dev`/`e2e` solo siembran bases `…_Dev` o `…_Test` y nunca con `APP_ENV` `staging` o `production`. La única excepción es staging hasta el catálogo real: `--profile dev --allow-sample-data` funciona con `APP_ENV=staging` y la base `BolikDigital_Stg` (BD-016).
 - `prod` vuelve a crear lo que se **borró** en el admin (y duplica lo renombrado con slug nuevo): el admin despublica en lugar de borrar (BD-116 a BD-118, BD-121).
 - `e2e` carga lo mismo que `dev` (lo que ya prueban las E2E con `fixtures`), no un subconjunto.
 - Admin inicial desde `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD` (≥ 12 caracteres, bcrypt coste 12), sin `admin.json`; se crea una sola vez y volver a sembrar no cambia su contraseña.
