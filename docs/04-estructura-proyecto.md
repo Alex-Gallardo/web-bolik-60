@@ -23,7 +23,11 @@ bolik-digital/
 │  ├─ retry-erp.ts              # reintenta envíos fallidos
 │  ├─ build-search-index.ts     # índice JSON del buscador (también en runtime)
 │  ├─ check-redirects.ts        # valida el mapa de redirecciones de Joomla
-│  └─ deploy/staging-setup.ps1  # prepara el servidor de staging (BD-016, doc 15 §12)
+│  └─ deploy/                   # staging en IIS (BD-016, doc 15 §12)
+│     ├─ staging-preflight.ps1  # revisa el servidor (solo lectura)
+│     ├─ staging-setup.ps1      # carpetas, staging.env, ARR, sitio IIS y servicio
+│     ├─ staging-build.ps1      # migra, siembra, construye y empaca
+│     └─ staging-deploy.ps1     # release nuevo, prueba de humo y vuelta atrás
 ├─ tests/
 │  ├─ e2e/                      # Playwright
 │  ├─ fixtures/

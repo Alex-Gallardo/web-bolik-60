@@ -26,15 +26,31 @@ export function isSeedProfile(value: string): value is SeedProfile {
 /**
  * Por qué no se debe sembrar con este perfil en esta base, o null si se puede. dev y e2e cargan
  * ejemplos y sincronizan (pisan lo editado): solo van a una base de desarrollo o de pruebas
- * (BolikDigital_Dev, BolikDigital_Test), nunca con APP_ENV staging o production.
+ * (BolikDigital_Dev, BolikDigital_Test) y nunca con APP_ENV production. La única excepción es
+ * staging mientras no llega el catálogo real (BD-016, BD-038): `allowSampleData`
+ * (`--allow-sample-data`) permite el perfil dev con APP_ENV=staging en la base BolikDigital_Stg,
+ * y solo en ella: el servidor de staging comparte SQL Server con las bases de SMART-K66.
  */
 export function seedTargetProblem(
   profile: SeedProfile,
-  { appEnv, databaseName }: { appEnv: string; databaseName: string },
+  {
+    appEnv,
+    databaseName,
+    allowSampleData = false,
+  }: { appEnv: string; databaseName: string; allowSampleData?: boolean },
 ): string | null {
+  const isStgDatabase = /^BolikDigital_Stg$/i.test(databaseName);
+  if (allowSampleData) {
+    if (profile === "dev" && appEnv === "staging" && isStgDatabase) return null;
+    return `--allow-sample-data solo sirve con --profile dev, APP_ENV=staging y la base BolikDigital_Stg (no ${profile}, ${appEnv} y "${databaseName}").`;
+  }
   if (profile === "prod") return null;
   if (appEnv === "staging" || appEnv === "production") {
-    return `El perfil ${profile} carga datos de ejemplo: en ${appEnv} usa --profile prod.`;
+    const hint =
+      appEnv === "staging" && profile === "dev" && isStgDatabase
+        ? " (o --profile dev --allow-sample-data para tener ejemplos en staging)"
+        : "";
+    return `El perfil ${profile} carga datos de ejemplo: en ${appEnv} usa --profile prod${hint}.`;
   }
   if (!/_(dev|test)$/i.test(databaseName)) {
     return `El perfil ${profile} solo siembra bases de desarrollo o de pruebas (…_Dev, …_Test), no "${databaseName}". Para staging o producción usa --profile prod.`;
