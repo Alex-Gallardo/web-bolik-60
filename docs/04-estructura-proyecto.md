@@ -19,6 +19,7 @@ bolik-digital/
 │  └─ site.webmanifest
 ├─ scripts/
 │  ├─ sync-catalog.ts           # SMART-K66 → BD
+│  ├─ import-media.mts          # fotos en lote → MEDIA_DIR + MediaAsset (BD-034)
 │  ├─ retry-erp.ts              # reintenta envíos fallidos
 │  ├─ build-search-index.ts     # índice JSON del buscador (también en runtime)
 │  ├─ check-redirects.ts        # valida el mapa de redirecciones de Joomla
@@ -111,7 +112,7 @@ bolik-digital/
 │  │  ├─ erp/                   # types.ts, gateway.ts, smartk66.ts, noop.ts, send-quote.ts (BD-035; datos en data/quote-erp.ts)
 │  │  ├─ mail/                  # transport.ts, templates/
 │  │  ├─ auth/                  # session.ts (iron-session), password.ts, guards.ts (requireRole)
-│  │  ├─ media/                 # process-image.ts (sharp)
+│  │  ├─ media/                 # process-image.ts (sharp, BD-034); el registro en data/media.ts
 │  │  ├─ folio.ts · rate-limit.ts · audit.ts
 │  ├─ lib/                      # utilidades puras
 │  │  ├─ constants.ts           # estados, tipos, presets (reemplazan enums)

@@ -116,7 +116,7 @@ BD-033,E2,"Datos, medios e integración base",Folios consecutivos,S1,0.5,Must,B,
 BD-034,E2,"Datos, medios e integración base",Procesamiento de imágenes,S1,1.5,Must,B,BD-030,03 §7,Imágenes rápidas: se procesan una sola vez al subir.,"1. `server/media/process-image.ts`: sharp → WebP en 320/480/640/960/1280/1920 + `blurDataURL` + hash.
 2. Guardar en `MEDIA_DIR` y registrar `MediaAsset`.
 3. `lib/image-loader.ts` (starter) y `images.loaderFile` en `next.config.ts`.
-4. Script `scripts/import-media.ts` para cargar en lote las fotos actuales.","- Una foto de 4 MB genera 6 archivos y la de 640 pesa < 60 KB.
+4. Script `scripts/import-media.mts` para cargar en lote las fotos actuales.","- Una foto de 4 MB genera 6 archivos y la de 640 pesa < 60 KB.
 - `next/image` pide el ancho correcto según `sizes`.",Sí
 BD-035,E2,"Datos, medios e integración base",Gateway del ERP,S1,1,Must,B,BD-030,"03 §5, 05 §8",La web nunca depende de que SAP o SMART-K66 estén arriba.,"1. `server/erp/gateway.ts` (interfaz), `noop.ts`, `smartk66.ts` (fetch con timeout 8 s y 3 reintentos con backoff).
 2. Seleccionar por `ERP_MODE`.
