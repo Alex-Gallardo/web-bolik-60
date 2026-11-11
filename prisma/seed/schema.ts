@@ -29,6 +29,30 @@ const lat = z.number().min(-90).max(90);
 const lng = z.number().min(-180).max(180);
 /** Dato de ejemplo (de la demo, sin validar): se ve con DATA_SOURCE=fixtures, nunca va a producción. */
 const sample = z.boolean().default(false);
+/** Clave de MediaAsset (BD-034): carpeta/nombre-hash8, la misma que genera process-image.ts. */
+const mediaKey = z
+  .string()
+  .max(200)
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*\/[a-z0-9]+(?:-[a-z0-9]+)*-[0-9a-f]{8}$/,
+    "clave carpeta/nombre-hash8 de process-image.ts",
+  );
+
+/**
+ * Imágenes de ejemplo ya procesadas (media.json, BD-050): sus medidas, para que la fuente
+ * `fixtures` arme la vista sin base y el seed registre la fila de MediaAsset. Los archivos no van
+ * al repo (son de la demo): los genera `pnpm media:samples` en MEDIA_DIR, y en la CI se usan
+ * reemplazos con la misma clave (scripts/ci/sample-media.mjs).
+ */
+export const mediaSchema = z.object({
+  key: mediaKey,
+  originalName: text(200),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  bytes: z.number().int().positive(),
+  alt: text(200),
+  sample,
+});
 
 export const categorySchema = z.object({
   slug,
@@ -145,13 +169,22 @@ export const contentSchema = z.object({
         ctaKind: z.enum(["link", "quote"]),
         ctaHref: internalPath.optional(),
         ctaQuoteType: z.enum(["empresa", "libreria"]).optional(),
+        // CTA secundario de doc 17 §2 (BD-050): siempre un enlace interno.
+        secondaryCtaLabel: text(40).optional(),
+        secondaryCtaHref: internalPath.optional(),
         videoDesktop: internalPath.optional(),
         videoMobile: internalPath.optional(),
-        posterKey: z.string().optional(),
+        posterKey: mediaKey.optional(),
+        // Póster y videos de la demo (media.json): el perfil prod los quita, nunca van a producción.
+        sampleMedia: sample,
         published: z.boolean().default(true),
       })
       .refine((h) => h.ctaKind !== "link" || h.ctaHref, "un CTA link requiere ctaHref")
-      .refine((h) => h.ctaKind !== "quote" || h.ctaQuoteType, "un CTA quote requiere ctaQuoteType"),
+      .refine((h) => h.ctaKind !== "quote" || h.ctaQuoteType, "un CTA quote requiere ctaQuoteType")
+      .refine(
+        (h) => !h.secondaryCtaLabel === !h.secondaryCtaHref,
+        "el CTA secundario lleva texto y enlace, o ninguno",
+      ),
   ),
   stats: z.array(
     z.object({
@@ -247,6 +280,7 @@ export const seedDataSchema = z
     content: contentSchema,
     kits: z.array(kitSchema),
     settings: settingsSchema,
+    media: z.array(mediaSchema),
   })
   .superRefine((data, ctx) => {
     const fail = (path: (string | number)[], message: string) =>
@@ -361,6 +395,20 @@ export const seedDataSchema = z
       for (const item of k.items)
         if (item.variantSku && !skus.has(item.variantSku))
           fail(["kits", i], `${item.variantSku} no existe`);
+    });
+    unique(
+      "media",
+      data.media.map((m) => m.key),
+    );
+    // La fuente fixtures solo resuelve pósters del manifiesto; un póster de la demo debe ir marcado
+    // como sampleMedia para que el perfil prod lo quite (y el manifiesto, como sample).
+    const media = new Map(data.media.map((m) => [m.key, m]));
+    data.content.heroChapters.forEach((h, i) => {
+      const poster = h.posterKey ? media.get(h.posterKey) : undefined;
+      if (h.posterKey && !poster)
+        fail(["content", "heroChapters", i], `póster ${h.posterKey} no está en media.json`);
+      if (poster?.sample && !h.sampleMedia)
+        fail(["content", "heroChapters", i], "un póster de ejemplo requiere sampleMedia");
     });
   });
 

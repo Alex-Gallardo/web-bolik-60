@@ -25,6 +25,7 @@
     "db:status": "prisma migrate status",
     "db:seed": "tsx scripts/db-seed.mts",
     "import:media": "tsx scripts/import-media.mts",
+    "media:samples": "tsx scripts/media-samples.mts",
     "db:reset:test": "node scripts/db-reset-test.mjs",
     "prepare": "husky",
     "postinstall": "prisma generate"

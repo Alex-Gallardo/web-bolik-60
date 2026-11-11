@@ -252,6 +252,41 @@ html[data-reveal-ready] [data-reveal][data-revealed="instant"] {
   stroke-dasharray: var(--path-length, 1000);
   animation: draw var(--dur-slower) var(--ease-out) both;
 }
+/* El subrayado del h1 del hero espera a que se vea el título (docs/09: 400 ms de retraso). */
+.ink-draw-late {
+  animation-delay: var(--dur-slow);
+}
+
+/* ── Hero con video (A-10, A-12, A-13), BD-050 ──
+   A-10: las capas (póster + video) están apiladas y solo cambia su opacidad.
+   A-12: el texto del capítulo entra con fade-up, solo al cambiar de capítulo (data-enter lo pone
+   el cliente): el primero ya está en el HTML y se ve sin esperar ninguna animación.
+   A-13: la barra de la pestaña avanza con scaleX (lineal, al ritmo de timeupdate), nunca con width. */
+.hero-layer {
+  opacity: 0;
+  transition: opacity var(--dur-slower) var(--ease-in-out);
+}
+.hero-layer[data-on] {
+  opacity: 1;
+}
+/* Sin JS se ven los cuatro capítulos; con JS, solo el activo. Al volver a mostrarse (de
+   display:none a visible) la animación arranca de nuevo. */
+/* El display va aquí y no con la utilidad flex: en la capa utilities le ganaría a este none. */
+.hero-chapter {
+  display: flex;
+  flex-direction: column;
+}
+.js .hero-chapter:not([data-active]) {
+  display: none;
+}
+.hero-chapter[data-enter] {
+  animation: fade-up var(--dur-base) var(--ease-out);
+}
+.hero-bar {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-base) linear;
+}
 
 /* ── Skeleton ── */
 .skeleton {
@@ -770,6 +805,10 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   .confetti {
     display: none;
   }
+  /* Subrayado del h1 del hero (A-11): fijo al instante, sin esperar el retraso. */
+  .ink-draw-late {
+    animation-delay: 0ms;
+  }
   /* Sheet y Popover: aparecen y se van solo con opacidad. */
   /* El * de arriba no alcanza ::details-content: el acordeón abre al instante. */
   .accordion-item::details-content {
@@ -830,6 +869,9 @@ html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) 
 }
 [data-reduced-motion] .confetti {
   display: none;
+}
+[data-reduced-motion] .ink-draw-late {
+  animation-delay: 0ms;
 }
 [data-reduced-motion] .accordion-item::details-content {
   transition: none;

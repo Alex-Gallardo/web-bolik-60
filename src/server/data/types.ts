@@ -146,9 +146,12 @@ export type HeroChapterView = {
   cta:
     | { kind: "link"; label: string; href: string }
     | { kind: "quote"; label: string; quoteType: "empresa" | "libreria" };
+  /** Segundo CTA de doc 17 §2 (BD-050): siempre un enlace interno. */
+  secondaryCta: { label: string; href: string } | null;
   videoDesktop: string | null;
   videoMobile: string | null;
-  posterKey: string | null;
+  /** Póster del capítulo (MediaAsset); null si no hay o si la clave no existe. */
+  poster: ImageView | null;
 };
 
 export type SiteStatView = {

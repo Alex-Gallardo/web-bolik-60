@@ -45,6 +45,9 @@ export const FAQ_SCOPES = [
   "empresas",
   "tiendas",
 ] as const;
+/** MediaAsset.kind (docs/05). Un póster del hero puede subirse como imagen o como póster. */
+export const MEDIA_KINDS = ["image", "video", "poster", "pdf"] as const;
+export const MEDIA_IMAGE_KINDS: readonly (typeof MEDIA_KINDS)[number][] = ["image", "poster"];
 export const CLICK_KINDS = ["whatsapp", "retailer", "maps", "phone", "pdf"] as const;
 
 export type Role = (typeof ROLES)[number];

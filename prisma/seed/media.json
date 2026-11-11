@@ -1,0 +1,38 @@
+[
+  {
+    "key": "hero/planta-c6dcd764",
+    "originalName": "planta.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 33061,
+    "alt": "Ilustración: bolígrafos Bolik Ultra rojo, azul y negro avanzan por una banda de la planta.",
+    "sample": true
+  },
+  {
+    "key": "hero/aula-c2a1dd4c",
+    "originalName": "aula.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 48664,
+    "alt": "Ilustración: cuaderno de primer grado con trazos azules y un bolígrafo Bolik.",
+    "sample": true
+  },
+  {
+    "key": "hero/oficina-67fd0e5f",
+    "originalName": "oficina.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 34504,
+    "alt": "Ilustración: documento firmado con un bolígrafo Bolik negro sobre un escritorio.",
+    "sample": true
+  },
+  {
+    "key": "hero/libreria-468f48e9",
+    "originalName": "libreria.jpg",
+    "width": 1280,
+    "height": 720,
+    "bytes": 56833,
+    "alt": "Ilustración: estantes de una librería llenos de cajas Bolik de colores.",
+    "sample": true
+  }
+]

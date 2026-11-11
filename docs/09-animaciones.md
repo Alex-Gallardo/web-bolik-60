@@ -115,6 +115,17 @@ Reglas del video:
 - Capa oscura (`hero__shade`) que garantiza contraste AA del texto sobre cualquier cuadro.
 - Botón de pausa visible (requisito de accesibilidad para contenido en movimiento de más de 5 s).
 
+Cómo quedó (BD-050): `src/components/hero/video-hero.tsx` (servidor: chip, h1 con el subrayado A-11 y los atributos del póster con `getImageProps`) y `hero-player.tsx` (cliente: capas, video, texto y pestañas). Lo que cambió respecto del código de referencia:
+
+- **El póster 1 es el LCP:** `<link rel="preload">` con `fetchpriority="high"` en el `<head>` y `<img>` con `loading="eager"`. El `preload` de `next/image` en Next 16 no pone prioridad y Chrome lo pedía como *Low*. Los pósters salen como `<img>` con los atributos de `getImageProps` (mismo loader y srcset): el componente `Image` no viaja al navegador.
+- **Solo un `<video>`:** el del capítulo actual. Los pósters de los demás capítulos se montan al visitarlos, y el del siguiente mientras corre un video. Nada se pide en la carga inicial.
+- **Móvil sin video vertical = solo póster.** El 16:9 recortado gasta datos para verse mal. Lighthouse móvil no pide video.
+- **Un video que falla** (`error`) deja el póster. Si el navegador bloquea la reproducción automática, el hero queda en pausa y el botón lo dice.
+- **Los cuatro paneles van en el HTML:** sin JS se ven todos y con JS solo el activo (`.js .hero-chapter`). A-12 se dispara al volver a mostrarse. Con el foco dentro del hero, el video no avanza solo.
+- **Sin `aria-live` en el texto del capítulo:** con el avance automático anunciaría cada 10 s. Las pestañas siguen el patrón ARIA (`tablist`, `tabpanel`, flechas, Inicio y Fin).
+- **La barra (A-13)** se mueve escribiendo el `transform` directo: `timeupdate` no vuelve a renderizar el hero.
+- **Medios de ejemplo:** las ilustraciones y videos de la demo no van al repo. `pnpm media:samples <carpeta>` los pone en `MEDIA_DIR`. Sin ellos, `scripts/ci/sample-media.mjs` (que corren `start:local` y la CI) deja reemplazos con la misma clave: un póster de peso parecido y un «video» que no se reproduce, así que queda el póster.
+
 ## 6. Reveals al hacer scroll (A-21)
 
 ```tsx

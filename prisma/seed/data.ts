@@ -3,6 +3,7 @@ import content from "./content.json";
 import departments from "./departments.json";
 import faqs from "./faqs.json";
 import kits from "./kits.json";
+import media from "./media.json";
 import products from "./products.json";
 import { seedDataSchema, type SeedData } from "./schema";
 import settings from "./settings.json";
@@ -23,6 +24,7 @@ export const rawSeedData = {
   content,
   kits,
   settings,
+  media,
 };
 
 /** Datos validados con sus valores por defecto; un JSON mal escrito lanza el error de Zod. */

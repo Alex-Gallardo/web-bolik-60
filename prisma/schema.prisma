@@ -492,21 +492,24 @@ model FolioSequence {
 // ──────────────────────────── Contenido editable ────────────────────────────
 
 model HeroChapter {
-  id           Int     @id @default(autoincrement())
-  key          String  @unique @db.VarChar(30) // planta | aula | oficina | libreria
-  label        String  @db.NVarChar(40) // "Planta"
-  hint         String  @db.NVarChar(60) // "Así nace un Bolik"
-  eyebrow      String  @db.NVarChar(80)
-  line         String  @db.NVarChar(220)
-  ctaLabel     String  @db.NVarChar(40)
-  ctaKind      String  @db.VarChar(10) // link | quote
-  ctaHref      String? @db.VarChar(200) // /kits-escolares
-  ctaQuoteType String? @db.VarChar(20) // empresa | libreria
-  videoDesktop String? @db.VarChar(300) // /media/video/planta-1080.mp4
-  videoMobile  String? @db.VarChar(300)
-  posterKey    String? @db.VarChar(200) // clave de MediaAsset del póster
-  sortOrder    Int     @default(0)
-  published    Boolean @default(true)
+  id                Int     @id @default(autoincrement())
+  key               String  @unique @db.VarChar(30) // planta | aula | oficina | libreria
+  label             String  @db.NVarChar(40) // "Planta"
+  hint              String  @db.NVarChar(60) // "Así nace un Bolik"
+  eyebrow           String  @db.NVarChar(80)
+  line              String  @db.NVarChar(220)
+  ctaLabel          String  @db.NVarChar(40)
+  ctaKind           String  @db.VarChar(10) // link | quote
+  ctaHref           String? @db.VarChar(200) // /kits-escolares
+  ctaQuoteType      String? @db.VarChar(20) // empresa | libreria
+  // CTA secundario (doc 17 §2, BD-050): siempre un enlace interno («Nuestra historia» → /nuestra-historia)
+  secondaryCtaLabel String? @db.NVarChar(40)
+  secondaryCtaHref  String? @db.VarChar(200)
+  videoDesktop      String? @db.VarChar(300) // /media/video/planta-1080.mp4
+  videoMobile       String? @db.VarChar(300)
+  posterKey         String? @db.VarChar(200) // clave de MediaAsset del póster
+  sortOrder         Int     @default(0)
+  published         Boolean @default(true)
 }
 
 model SiteStat {

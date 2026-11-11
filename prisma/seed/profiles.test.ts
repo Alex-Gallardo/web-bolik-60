@@ -31,6 +31,23 @@ describe("perfiles del seed (BD-031)", () => {
     expect(prod.settings).toEqual(data.settings);
   });
 
+  it("prod quita los pósters y videos de la demo del hero (BD-050)", () => {
+    expect(data.content.heroChapters.every((h) => h.sampleMedia && h.posterKey)).toBe(true);
+    const prod = dataForProfile(data, "prod");
+    for (const h of prod.content.heroChapters) {
+      expect(h.posterKey).toBeUndefined();
+      expect(h.videoDesktop).toBeUndefined();
+      expect(h.videoMobile).toBeUndefined();
+      // El texto y los CTA siguen.
+      expect(h.secondaryCtaHref).toBeDefined();
+    }
+    expect(prod.media.some((m) => m.sample)).toBe(false);
+    // dev y e2e los conservan.
+    expect(dataForProfile(data, "dev").content.heroChapters[0]!.posterKey).toBe(
+      "hero/planta-c6dcd764",
+    );
+  });
+
   it("prod quita las relaciones, FAQs y líneas de kit que apuntan a un ejemplo", () => {
     const ultra = data.products.find((p) => p.slug === "bolik-ultra")!;
     const sample = data.products.find((p) => p.sample)!;
