@@ -26,14 +26,22 @@
   --color-yellow-50: var(--yellow-50);
   --color-red: var(--red);
   --color-red-50: var(--red-50);
+  --color-red-700: var(--red-700);
   --color-green: var(--green);
   --color-green-50: var(--green-50);
   --color-whatsapp: var(--whatsapp);
+  --color-whatsapp-700: var(--whatsapp-700);
   --color-ink: var(--ink);
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-line-control: var(--line-control);
+  /* Línea de producto (docs/02): punto de los chips y acentos de tarjetas */
+  --color-line-escritura: var(--line-escritura);
+  --color-line-escolar: var(--line-escolar);
+  --color-line-arte: var(--line-arte);
+  --color-line-oficina: var(--line-oficina);
   --color-soft: var(--soft);
   --color-paper: var(--paper);
   --color-on-dark: var(--on-dark);
@@ -143,6 +151,21 @@
     color: var(--ink);
   }
 
+  /* El elemento con foco no queda debajo del header sticky al tabular (WCAG 2.4.11). */
+  html {
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+    /* Ni debajo de la barra de acciones en móvil (BD-042). */
+    scroll-padding-bottom: calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+  /* En escritorio, ni debajo del botón flotante de WhatsApp (abajo a la derecha). */
+  @media (width >= 64rem) {
+    html {
+      scroll-padding-bottom: 0;
+    }
+    html:has(.floating-whatsapp) {
+      scroll-padding-bottom: calc(var(--space-6) + 3.75rem + var(--space-3));
+    }
+  }
   /* Anclas no quedan debajo del header sticky */
   [id] {
     scroll-margin-top: calc(var(--header-h) + 1rem);
@@ -170,4 +193,27 @@
 /* Números alineados en tablas y cifras */
 @utility tnum {
   font-variant-numeric: tabular-nums;
+}
+
+/* ── sonner (BD-024) ──
+   Su CSS se inyecta sin capa en <head>: ganaría a todas nuestras capas. Estas reglas, también sin
+   capa y con más especificidad (html …), le devuelven el foco visible, la fuente y el z-index del
+   sitio, y dejan solo transform y opacidad en la transición (sonner también anima height). Su
+   regla de prefers-reduced-motion usa !important y sigue mandando. */
+html [data-sonner-toaster] {
+  z-index: var(--z-toast);
+  font-family: inherit;
+}
+html [data-sonner-toaster] [data-sonner-toast] {
+  transition:
+    transform var(--dur-slow) var(--ease-out),
+    opacity var(--dur-slow) var(--ease-out);
+}
+html [data-sonner-toaster] [data-sonner-toast][data-swiping="true"] {
+  transition: none;
+}
+html [data-sonner-toaster] [data-sonner-toast]:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--ink);
 }

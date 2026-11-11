@@ -96,6 +96,17 @@ flowchart TB
   D1 --> DB
 ```
 
+### Fuente de datos (`DATA_SOURCE`)
+
+Las páginas leen solo de `server/data` (funciones con `'use cache'` y tags) y reciben **tipos de vista** (`ProductView`, `StoreView`…), nunca modelos de Prisma. Detrás hay una fuente intercambiable, igual que `ERP_MODE` y `SMTP_MODE`:
+
+| `DATA_SOURCE` | De dónde lee | Cuándo |
+|---|---|---|
+| `fixtures` (por defecto) | `prisma/seed/*.json`, validados con Zod | Desarrollo, CI y staging mientras no haya base (BD-037) |
+| `db` | SQL Server con Prisma (BD-032) | Producción (obligatorio) y staging con base |
+
+Las dos fuentes cumplen la misma batería de contrato (`server/data/contract.ts`; la de `db` corre contra `BolikDigital_Test` en `tests/integration/data-source.test.ts`, que además compara ambas fuentes vista por vista), así que cambiar la variable no toca ninguna página. Cada fuente se importa solo cuando se elige. El adaptador de SQL Server (`@prisma/adapter-mssql`) va en `serverExternalPackages`: Turbopack no empaqueta su cadena (`mssql`, `tedious`…), el standalone la copia de `node_modules` y el servidor la importa al elegir `db`. Producción no arranca con `fixtures`. Cambiar `DATA_SOURCE` exige un **build nuevo**: las páginas se prerenderizan con los datos de la fuente que había al construir.
+
 Regla de dependencias: `app → features → server → prisma`. `lib/` (funciones puras) puede usarse en cualquier capa. **`components/` nunca importa de `server/`.**
 
 ## 4. Estrategia de renderizado por ruta
@@ -120,17 +131,18 @@ Regla de dependencias: `app → features → server → prisma`. `lib/` (funcion
 **Caché con Cache Components (Next.js 16):** se activa `cacheComponents: true` en `next.config.ts`. Cada consulta pública en `server/data` es una función con la directiva `'use cache'`, `cacheLife('max')` y `cacheTag(...)`:
 
 ```ts
-// src/server/data/products.ts
+// src/server/data/catalog.ts (resumen): la función cacheada delega en la fuente elegida
+// (fixtures | db), que devuelve un tipo de vista (ProductView), nunca un modelo de Prisma.
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
-import { db } from "@/server/db";
 import { TAGS } from "@/lib/cache-tags";
+import { dataSource } from "./source";
 
-export async function getProductBySlug(slug: string) {
+async function cachedGetProduct(categorySlug: string, slug: string) {
   "use cache";
   cacheLife("max");
-  cacheTag(TAGS.products, TAGS.product(slug));
-  return db.product.findFirst({ where: { slug, published: true }, include: { variants: true, specs: true } });
+  cacheTag(TAGS.product(slug), TAGS.category(categorySlug), TAGS.products, TAGS.categories);
+  return (await dataSource()).getProduct(categorySlug, slug);
 }
 ```
 
@@ -163,14 +175,15 @@ sequenceDiagram
   UI-->>C: Diálogo de éxito con folio, vacía la cotización
   SA-)M: Correo a Ventas + confirmación al cliente (sin bloquear)
   SA-)ERP: createLead(quote) (sin bloquear)
-  ERP--)DB: erpStatus = enviada | error
-  Note over DB,ERP: Un job reintenta las que quedaron en error
+  ERP--)DB: erpStatus = enviada | omitida | pendiente | error
+  Note over DB,ERP: Un job reintenta las que quedaron pendientes
 ```
 
 Puntos clave:
 - El folio se genera **dentro de la transacción** con la tabla `FolioSequence` (ver doc 05).
 - El usuario recibe respuesta en cuanto se guarda en la BD; correo y ERP van después (`after()` de Next o promesa no esperada con registro de errores).
 - Si la BD falla, el diálogo de error ofrece reintentar y un enlace de WhatsApp con el contenido de la cotización.
+- **`erpStatus`** (BD-035, `server/erp/send-quote.ts`): `enviada` (SAP la recibió; `erpRef` = referencia), `omitida` (ERP apagado), `pendiente` (SMART-K66 caído o lento: el gateway ya reintentó 3 veces con backoff y la tarea `retry:erp` la vuelve a mandar) o `error` (rechazo 4xx, clave no aceptada o respuesta fuera del contrato: reintentar no lo arregla, la revisa una persona). Cada envío suma 1 a `erpAttempts` (aunque por dentro sean hasta 4 peticiones) y deja el motivo en `erpLastError`, sin datos personales. Antes de mandar, la cotización se reclama: dos procesos nunca la mandan a la vez y nada baja a una `enviada`.
 
 ## 6. Sincronización del catálogo con SAP
 
@@ -205,7 +218,9 @@ flowchart LR
   L --> IIS[IIS sirve archivo<br/>Cache-Control: public, max-age=31536000, immutable]
 ```
 
-Los nombres de archivo llevan un hash corto (`-a1b2c3`) para que la caché de un año sea segura.
+Los nombres de archivo llevan un hash corto del contenido y de los parámetros (`-a1b2c3d4`) para que la caché de un año sea segura.
+
+Implementado en BD-034: `server/media/process-image.ts` (sharp) genera los 6 anchos de `lib/image-loader.ts` sin agrandar, endereza por EXIF, convierte a sRGB y no copia metadatos (ni la ubicación GPS); no acepta HEIC, SVG, GIF ni animaciones; `server/data/media.ts` registra `MediaAsset`; `pnpm import:media` carga fotos en lote. En el servidor, IIS sirve `/media` desde `D:\bolik\media`; donde no hay IIS (desarrollo, `start:local`, CI), lo sirve `app/media/[...path]/route.ts` desde `MEDIA_DIR`, con las mismas cabeceras.
 
 ## 8. Seguridad
 
@@ -229,7 +244,10 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXX
 NEXT_PUBLIC_CLARITY_ID=xxxxxxx
 APP_ENV=production            # development | staging | production
 
-# Base de datos
+# Datos: fixtures (ejemplo, sin base) | db (SQL Server). Producción solo db.
+DATA_SOURCE=db
+
+# Base de datos (obligatoria con DATA_SOURCE=db)
 DATABASE_URL="sqlserver://HOST:1433;database=BolikDigital;user=bolik_app;password=***;encrypt=true;trustServerCertificate=true"
 
 # Sesión del admin (iron-session)

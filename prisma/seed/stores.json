@@ -1,0 +1,102 @@
+[
+  {
+    "slug": "walmart",
+    "name": "Walmart",
+    "type": "cadena",
+    "departmentSlug": "guatemala",
+    "onlineShopUrl": "https://www.walmart.com.gt"
+  },
+  {
+    "slug": "la-torre",
+    "name": "La Torre",
+    "type": "cadena",
+    "departmentSlug": "guatemala",
+    "onlineShopUrl": "https://www.latorre.com.gt"
+  },
+  { "slug": "unimarck", "name": "Unimarck", "type": "cadena", "departmentSlug": "guatemala" },
+  { "slug": "econosuper", "name": "Econosuper", "type": "cadena", "departmentSlug": "guatemala" },
+  { "slug": "la-barata", "name": "La Barata", "type": "cadena", "departmentSlug": "guatemala" },
+  {
+    "slug": "librerias-progreso",
+    "name": "Librerías Progreso",
+    "type": "libreria",
+    "departmentSlug": "guatemala"
+  },
+  { "slug": "fatima", "name": "Fátima", "type": "libreria", "departmentSlug": "guatemala" },
+  { "slug": "platino", "name": "Platino", "type": "libreria", "departmentSlug": "guatemala" },
+  { "slug": "marlon", "name": "Marlon", "type": "libreria", "departmentSlug": "guatemala" },
+  {
+    "slug": "paper-distribuciones",
+    "name": "Paper Distribuciones",
+    "type": "distribuidor",
+    "departmentSlug": "guatemala"
+  },
+  {
+    "slug": "ariana",
+    "name": "Ariana",
+    "type": "libreria",
+    "departmentSlug": "guatemala"
+  },
+  { "slug": "baluc", "name": "Baluc", "type": "libreria", "departmentSlug": "guatemala" },
+  { "slug": "gala", "name": "Gala", "type": "libreria", "departmentSlug": "guatemala" },
+  {
+    "slug": "tulan-quetzaltenango",
+    "name": "Tulán",
+    "type": "libreria",
+    "departmentSlug": "quetzaltenango"
+  },
+  {
+    "slug": "san-bartolome",
+    "name": "San Bartolomé",
+    "type": "libreria",
+    "departmentSlug": "quetzaltenango"
+  },
+  {
+    "slug": "victoria",
+    "name": "Victoria",
+    "type": "libreria",
+    "departmentSlug": "quetzaltenango"
+  },
+  {
+    "slug": "nueva-esperanza",
+    "name": "Nueva Esperanza",
+    "type": "libreria",
+    "departmentSlug": "quetzaltenango"
+  },
+  {
+    "slug": "san-miguel",
+    "name": "San Miguel",
+    "type": "libreria",
+    "departmentSlug": "quetzaltenango"
+  },
+  {
+    "slug": "cano-recinos",
+    "name": "Cano Recinos",
+    "type": "libreria",
+    "departmentSlug": "huehuetenango"
+  },
+  { "slug": "milita", "name": "Milita", "type": "libreria", "departmentSlug": "chiquimula" },
+  { "slug": "xocomil", "name": "Xocomil", "type": "libreria", "departmentSlug": "solola" },
+  { "slug": "rayo-de-luz", "name": "Rayo de Luz", "type": "libreria", "departmentSlug": "solola" },
+  {
+    "slug": "a-y-m",
+    "name": "A y M",
+    "type": "libreria",
+    "departmentSlug": "suchitepequez",
+    "municipality": "Mazatenango"
+  },
+  {
+    "slug": "tulan-mazatenango",
+    "name": "Tulán",
+    "type": "libreria",
+    "departmentSlug": "suchitepequez",
+    "municipality": "Mazatenango"
+  },
+  {
+    "slug": "cervantes",
+    "name": "Cervantes",
+    "type": "libreria",
+    "departmentSlug": "el-salvador",
+    "municipality": "San Salvador"
+  }
+]

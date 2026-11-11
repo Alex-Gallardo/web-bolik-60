@@ -45,10 +45,23 @@ export const feedback = {
   },
   forms: {
     invalid: { tone: "warning" as ToastTone, title: "Revisa los campos marcados" },
+    /** Mensajes de error de campo (doc 17 §5): los usan los esquemas de lib/form-schemas.ts. */
+    errors: {
+      required: "Este dato es necesario",
+      phone: "Escribe un teléfono de 8 dígitos, por ejemplo 5555 1234",
+      email: "Revisa tu correo, por ejemplo nombre@correo.com",
+      phoneOrEmail: "Déjanos al menos un teléfono o un correo",
+      qtyMin: "La cantidad mínima es 1",
+      qtyMax: "Para más de 9,999, escríbenos por WhatsApp",
+      nit: 'Escribe tu NIT o "CF"',
+      tooLong: (max: number) => `Usa como máximo ${max.toLocaleString("es-GT")} caracteres`,
+    },
     tooFast: { tone: "warning" as ToastTone, title: "Dale un momento más antes de enviar" },
     rateLimited: {
       title: "Recibimos varias solicitudes seguidas",
       body: "Espera unos minutos e inténtalo de nuevo. Si es urgente, escríbenos por WhatsApp.",
+      primary: "Escribir por WhatsApp",
+      secondary: "Entendido",
     },
     schoolSent: (folio: string, school: string) => ({
       title: `¡Qué emoción, ${school}!`,
@@ -112,7 +125,12 @@ export const feedback = {
     genericError: {
       title: "Algo salió mal de nuestro lado",
       body: "Ya quedó registrado. Inténtalo de nuevo en un momento o escríbenos por WhatsApp.",
+      /** Mientras no haya número de WhatsApp (ajuste whatsapp_number), sin prometerlo. */
+      bodyNoWhatsapp: "Ya quedó registrado. Inténtalo de nuevo en un momento o llámanos.",
       primary: "Intentar de nuevo",
+      /** Enlaces de contacto de la pantalla de error (BD-046); WhatsApp solo si hay número. */
+      whatsapp: "Escríbenos por WhatsApp",
+      call: (phone: string) => `Llámanos al ${phone}`,
       /** Se muestra para que el visitante lo comparta con Ventas y se busque en el log. */
       reference: (code: string) => `Código de referencia: ${code}`,
     },

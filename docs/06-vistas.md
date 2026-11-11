@@ -39,7 +39,7 @@ flowchart TB
 │ Header sticky: Logo · Menú · Buscar ·        │
 │ Mi cotización (contador) · Cotizar           │
 ├──────────────────────────────────────────────┤
-│ <main id="contenido"> (template.tsx A-02)    │
+│ <main id="contenido"> (PageEnter A-02)       │
 │   Breadcrumbs (excepto home)                 │
 │   Secciones de la página                     │
 │   CTA final de página                        │
@@ -65,8 +65,10 @@ flowchart TB
 - Redes sociales, enlaces legales, "Hecho en Guatemala desde 1966".
 
 ### Flotantes
-- **WhatsApp (desktop):** botón circular abajo a la derecha; abre `WhatsAppSheet` con mensaje contextual (página/producto actual).
-- **Barra móvil:** fija abajo con 2 botones: WhatsApp y Cotizar (o "Mi cotización (3)" cuando hay líneas). Respeta `safe-area-inset-bottom`. Se oculta cuando el teclado está abierto.
+- **WhatsApp (desktop):** botón circular abajo a la derecha; abre `WhatsAppSheet` con mensaje contextual (página/producto actual). Hasta BD-067 es un enlace a `wa.me` con el mensaje general prellenado.
+- **Barra móvil:** fija abajo con 2 botones: WhatsApp y Cotizar. Respeta `safe-area-inset-bottom`. Se oculta cuando el teclado o un sheet están abiertos. «Mi cotización (3)» en lugar de «Cotizar» queda para BD-071 si el presupuesto de JS lo permite (el contador ya está siempre en el header).
+- **Volver arriba:** botón redondo pasada una pantalla (encima del de WhatsApp o de la barra) y enlace en el pie.
+- El pie reserva abajo el alto de los flotantes: al final de la página nada queda debajo de ellos.
 - **Drawer de cotización:** desde la derecha en desktop, desde abajo (bottom sheet) en móvil.
 
 ## 3. Vistas públicas
@@ -238,8 +240,8 @@ Datos NAP, horario, mapa estático de la planta (imagen, no iframe), formulario 
 Privacidad y términos en Markdown (`src/content/legal`). Indexables, enlazadas en el pie y en formularios.
 
 ### 3.19 `404` y `500`
-- **404:** ilustración amable (lapicero sin tinta), "No encontramos esta página", buscador, enlaces a Catálogo, Dónde comprar, Inicio. Registra la ruta en `NotFoundLog`.
-- **500 / error:** "Algo salió mal de nuestro lado", botón "Intentar de nuevo" (`reset()`), WhatsApp y teléfono.
+- **404** (BD-046): ilustración amable (lapicero sin tinta), textos de doc 17, enlaces a Inicio, Catálogo y Dónde comprar, y las líneas de producto. Estática; registra la ruta en `NotFoundLog` con un aviso desde el navegador. El buscador se agrega con BD-066. Las URLs con redirección nunca llegan aquí (`proxy.ts`, 301).
+- **500 / error** (BD-046): "Algo salió mal de nuestro lado", botón "Intentar de nuevo", WhatsApp (si hay número) y teléfono, que el layout deja en `data-contact-*` del contenedor de la página. En `global-error` (sin layout), solo reintentar.
 
 ### 3.20 `/styleguide`
 **noindex.** Ver `docs/08-styleguide.md#vista-styleguide`.

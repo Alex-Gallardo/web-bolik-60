@@ -1,25 +1,15 @@
 import "server-only";
-import { PrismaMssql } from "@prisma/adapter-mssql";
-import { env } from "@/env";
-import { PrismaClient } from "@/generated/prisma/client";
+import type { PrismaClient } from "@/generated/prisma/client";
+import { createPrismaClient } from "./db-client";
 
 /**
- * Cliente de Prisma único (docs/05 §3) con el adaptador de SQL Server. Solo se importa desde
- * src/server (regla de lint): las páginas leen datos a través de src/server/data.
- * El pool de mssql cierra las conexiones inactivas a los 30 s (valor por defecto).
+ * Cliente de Prisma único de la app (docs/05 §3). Solo se importa desde src/server (regla de lint):
+ * las páginas leen datos a través de src/server/data. proxy.ts no lo usa: tiene el suyo
+ * (server/data/proxy-db.ts), porque se compila en otro bundle y sus clases de error de Prisma no
+ * serían las de la app (los errores de Prisma se distinguen por `code`, nunca por `instanceof`).
  */
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-function createClient(): PrismaClient {
-  // Con SKIP_ENV_VALIDATION (CI) la variable puede faltar: mejor un error claro que uno del driver.
-  if (!env.DATABASE_URL) throw new Error("DATABASE_URL no está definida: no hay conexión a la BD.");
-  const adapter = new PrismaMssql(env.DATABASE_URL);
-  return new PrismaClient({
-    adapter,
-    log: env.APP_ENV === "development" ? ["warn", "error"] : ["error"],
-  });
-}
-
 // Guardado en globalThis también en producción: si el bundler carga este módulo más de una vez
 // (recarga en caliente, bundles distintos), se reutiliza el mismo pool en lugar de abrir otro.
-export const db = (globalForPrisma.prisma ??= createClient());
+export const db = (globalForPrisma.prisma ??= createPrismaClient());

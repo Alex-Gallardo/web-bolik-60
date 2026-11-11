@@ -54,7 +54,7 @@ export default defineConfig({
 });
 ```
 
-`.mts` para que Node la cargue como ESM. El umbral se aplica en `pnpm test:coverage`, que corre en el `pre-push` y en CI.
+`.mts` para que Node la cargue como ESM. El umbral se aplica en `pnpm test:coverage`, que corre en el `pre-push` y en CI. El `pre-push` la corre con `--maxWorkers=2`: por defecto Vitest abre un proceso por núcleo menos uno, y con poca memoria libre esos procesos no alcanzan a arrancar y el hook falla aunque el código esté bien (la CI no cambia).
 
 Integración en un proyecto aparte (`vitest.integration.config.mts`, `environment: "node"`, `include: ["tests/integration/**/*.test.ts"]`) con `TEST_DATABASE_URL` apuntando a la base `BolikDigital_Test`, a la que `tests/integration/global-setup.ts` aplica las migraciones pendientes (`prisma migrate deploy`, nunca borra) antes de la suite; cada prueba limpia los datos que crea. Para dejarla en cero, una persona corre `pnpm db:reset:test` (se niega si la base no termina en `_Test`); Prisma bloquea `migrate reset` cuando lo lanza un agente de IA. Ojo: con `NODE_ENV=test`, `@next/env` no carga `.env.local`; la configuración de integración debe leer `TEST_DATABASE_URL` de forma explícita (por ejemplo, cargando `.env.local` con `loadEnvConfig` y pasando esa URL como `DATABASE_URL` a la suite).
 
@@ -64,7 +64,7 @@ SQL Server local para desarrollo y pruebas (BD-017): **SQL Server 2022 Express**
 powershell -ExecutionPolicy Bypass -File scripts\dev\sqlserver-local.ps1
 ```
 
-En la CI (BD-014) se usa un contenedor de SQL Server 2022 Express con la misma intercalación (`scripts/ci/sqlserver.sh`): crea `BolikDigital_Test` y el login `bolik_app` con contraseñas aleatorias en cada corrida, ocultas del log; el repo no guarda ningún secreto.
+En la CI (BD-014) se usa un contenedor de SQL Server 2022 Express con la misma intercalación (`scripts/ci/sqlserver.sh`): crea `BolikDigital_Test` y el login `bolik_app` con contraseñas aleatorias en cada corrida, ocultas del log; el repo no guarda ningún secreto. Cada intento de conexión tiene su límite (`timeout 15` en `docker exec`, `-l 5` en `sqlcmd`; el resto de las llamadas, 180 s, porque crear la primera base en un servidor recién arrancado tarda) y la espera total, 120 s (`SQLSERVER_WAIT_SECONDS`); si el contenedor se detiene, falla en el acto. En todos los casos muestra el log del contenedor, y el paso tiene `timeout-minutes: 5` como red de seguridad.
 
 ### CI (`.github/workflows/ci.yml`)
 
@@ -73,7 +73,7 @@ Corre en cada PR y cada push a `develop` y `master`, en máquinas de GitHub (gra
 | Trabajo | Qué hace |
 |---|---|
 | **Calidad** | `pnpm typecheck`, `pnpm lint`, `pnpm test:coverage` |
-| **Integración** | SQL Server en contenedor + `pnpm test:int` (aplica migraciones con `migrate deploy`) |
+| **Integración** | SQL Server en contenedor + `pnpm test:int` (aplica migraciones con `migrate deploy`); después `pnpm db:seed --profile e2e`, `pnpm build` con `DATA_SOURCE=db` y `scripts/ci/smoke-db-build.sh`, que sirve ese build con la base desconectada (las páginas no la consultan por petición, BD-032) |
 | **Build** | Instala con `--config.node-linker=hoisted` (`node_modules` plano, sin los enlaces de pnpm), `pnpm build` y el paquete de docs/15 §5 (`scripts/ci/package.sh`), publicado como artefacto `bolik-standalone` (tar.gz, 90 días) |
 | **Artefacto en Windows** | En una máquina Windows extrae el paquete con `tar` y lo arranca con `node server.js`: el servidor de producción es Windows |
 | **Lighthouse** | Corre `pnpm lhci` contra el artefacto y comenta el resumen en el PR (§7) |
@@ -97,7 +97,7 @@ Helpers en `tests/e2e/helpers.ts` (las specs importan `test` y `expect` de ahí,
 - `expectNoA11yViolations(page)`: axe con WCAG 2.0/2.1 A y AA; adjunta el resultado y falla con violaciones serias o críticas.
 - `collectConsoleErrors(page)`: errores de consola y excepciones, sin los avisos conocidos de `KNOWN_CONSOLE_ERRORS` (cada uno dice en qué ticket se quita).
 
-Datos E2E: `pnpm db:seed --profile e2e` carga categorías, 6 productos (incluye Bolik Ultra con sus 3 variantes), 2 departamentos con 4 tiendas, 1 kit y FAQs. `ERP_MODE=noop` y `SMTP_MODE=file` (los correos se escriben en `tmp/mails/*.eml` para poder verificarlos).
+Datos E2E: `pnpm db:seed --profile e2e` carga lo mismo que `dev`: todos los JSON de `prisma/seed`, con los ejemplos, que son los datos que ven las E2E con `DATA_SOURCE=fixtures` (BD-031). `ERP_MODE=noop` y `SMTP_MODE=file` (los correos se escriben en `tmp/mails/*.eml` para poder verificarlos).
 
 El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` en un `addInitScript` (fixture `page` de `tests/e2e/helpers.ts`), salvo en su prueba específica.
 
@@ -113,6 +113,7 @@ El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` e
 | `lib/format.ts` · `lib/slug.ts` | números y fechas `es-GT` (hora de Guatemala); teléfonos GT (`normalizeGtPhone`, `formatPhone`); `slugify` con tildes y ñ |
 | `lib/whatsapp.ts` | mensaje prellenado con producto, SKU, empaque y URL; codificación correcta |
 | `lib/image-loader.ts` | elige el ancho generado más cercano hacia arriba; nunca un ancho inexistente |
+| `server/data/fixtures/*` | los JSON de `prisma/seed` pasan su esquema (slugs y SKU únicos, relaciones válidas, ejemplos con `EJ-…`); batería de contrato de datos |
 | `content/feedback.ts` | todas las funciones devuelven título y texto no vacíos (prueba de humo) |
 | `components/motion/count-up.tsx` | con `prefers-reduced-motion` muestra el valor final sin animar |
 
@@ -121,9 +122,10 @@ El splash se desactiva en E2E con `sessionStorage.setItem("bolik_splash","1")` e
 | Server action / módulo | Casos |
 |---|---|
 | `submitQuote` | crea `QuoteRequest` + `QuoteItem`; folio `COT-2026-000001` y consecutivo; dos envíos simultáneos no duplican folio (`Promise.all` de 20); envía correo interno y acuse; con `ERP_MODE=smartk66` y API caída deja `erpStatus = "pendiente"` sin fallar al usuario |
+| `sendQuoteToErp` (BD-035) | con SMART-K66 simulado con MSW: caída → `pendiente` con intento y motivo; 201 → `enviada` con `erpRef` y no se reenvía; 4xx → `error`; `noop` → `omitida` (`tests/integration/erp.test.ts`). El cliente: reintentos, timeout, 4xx sin reintento, respuestas fuera del contrato (`src/server/erp/smartk66.test.ts`) |
 | `submitSchoolVisit`, `submitDistributor`, `submitContact` | validación servidor; folio `ESC`/`DIS`; límite de 5 envíos por IP en 10 min |
-| `server/folio.ts` | cambio de año reinicia el consecutivo |
-| `server/data/*` | solo devuelve `published = true`; orden; relaciones |
+| `server/folio.ts` (BD-033) | 20 transacciones en paralelo que retienen el bloqueo quedan en fila y dan 20 folios distintos y consecutivos; el tope de 999 999 no avanza el contador; el 1 de enero en hora de Guatemala reinicia (el 31 de diciembre a las 23:59 sigue en el año que termina); cada prefijo lleva su consecutivo; si la solicitud falla, el número no se gasta (`tests/integration/folio.test.ts`; lo puro en `src/lib/folio.test.ts`) |
+| `server/data/*` | la batería de contrato (`server/data/contract.ts`) contra Prisma sobre la base sembrada: la misma que pasa la fuente de ejemplo en las unitarias (BD-037); solo `published = true`; orden; relaciones |
 | Acciones del admin | sin sesión → error; rol `ventas` no edita productos; guarda `AuditLog`; llama `updateTag` (mock) y `enqueueIndexNow` |
 | `scripts/sync-catalog.ts` | con API simulada (MSW): crea, actualiza, desactiva variantes; registra `SyncRun`; no pisa campos editoriales |
 | Subida de medios | genera 6 anchos + blur; rechaza > 10 MB y tipos no permitidos |
@@ -135,7 +137,7 @@ Etiqueta `@critico` = corre también en iPhone y bloquea el release.
 | Archivo | Flujo | Verificaciones clave |
 |---|---|---|
 | `home.spec.ts` @critico | Abrir `/` | H1 visible; hero con póster; capítulos navegables con teclado; CTA "Cotizar" abre drawer; sin errores de consola |
-| `splash.spec.ts` | Primera visita a `/` | `html[data-splash="on"]` y desaparece en ≤ 2.3 s; segunda visita sin splash; `Escape` lo salta; en `/productos` nunca aparece; con UA `Googlebot` nunca aparece |
+| `splash.spec.ts` | Primera visita a `/` | `html[data-splash="on"]` y desaparece en ≤ 2.3 s sin CLS; segunda visita sin splash; `Escape` y un clic lo saltan; en otra ruta nunca aparece; con UA `Googlebot` nunca aparece; con movimiento reducido dura ≤ 0.7 s; sin JavaScript no aparece. Las reglas finas (bots, ajuste apagado, rueda, storage bloqueado) están en `src/app/head-script.test.ts` |
 | `catalogo.spec.ts` | `/productos` → filtro → categoría → ficha | filtros sin recarga; URL con `?uso=`; breadcrumbs; JSON-LD presente |
 | `ficha.spec.ts` @critico | Ficha Bolik Ultra | cambiar color cambia imagen y SKU visible; elegir empaque; agregar a cotización muestra toast y badge; WhatsApp abre con mensaje correcto |
 | `cotizacion.spec.ts` @critico | Agregar 2 productos → `/cotizacion` → enviar | validaciones amigables; diálogo de éxito con folio; `/cotizacion/enviada`; carrito vacío; correo en `tmp/mails` |

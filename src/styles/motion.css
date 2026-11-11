@@ -11,6 +11,7 @@
   --dur-splash: 2000ms; /* splash completo */
   --dur-shake: 360ms; /* error de campo */
   --dur-shimmer: 1200ms; /* brillo del skeleton (bucle) */
+  --dur-spin: 800ms; /* una vuelta del spinner (bucle) */
 
   /* Curvas */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* entradas: rápido al inicio, suave al final */
@@ -25,6 +26,12 @@
 }
 
 /* ── Keyframes base ── */
+/* "spinner" y no "spin": no choca con animate-spin de Tailwind (1 s, fuera de los tokens). */
+@keyframes spinner {
+  to {
+    transform: rotate(1turn);
+  }
+}
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -78,6 +85,20 @@
     transform: translateX(6px);
   }
 }
+@keyframes shake-again {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
 @keyframes draw {
   from {
     stroke-dashoffset: var(--path-length, 1000);
@@ -113,23 +134,64 @@
   }
 }
 
-/* ── Entrada de página (template.tsx) A-02 ── */
+/* ── Entrada de página A-02, BD-044 ──
+   PageEnter (page-enter.tsx) pone la clase en el contenedor de la página solo al cambiar de ruta
+   dentro del sitio y la quita al terminar: la primera carga no se anima (no retrasa el LCP) y sin
+   JS nunca. */
 .page-enter {
   animation: fade-up var(--dur-base) var(--ease-out) both;
 }
 
-/* ── Reveal al hacer scroll A-21 ──
-   Solo se oculta si hay JS (clase .js en <html>) y el elemento aún no fue visto.
-   Sin JS o con movimiento reducido, todo es visible. */
-.js [data-reveal]:not([data-revealed]) {
+/* ── Reveal al hacer scroll A-21, BD-044 ──
+   Solo se oculta cuando RevealObserver está listo (data-reveal-ready en <html>): antes revela lo que
+   ya está en pantalla. Sin JS, mientras el JS carga o con movimiento reducido, todo es visible.
+   Escalonado con --i: como mucho 8 pasos (doc 09 §6), después el mismo retraso. Lo que ya estaba
+   a la vista se revela con data-revealed="instant", sin transición. data-reveal va en un envoltorio,
+   no en la tarjeta con .lift: esta transición le ganaría a la del hover. */
+html[data-reveal-ready] [data-reveal]:not([data-revealed]) {
   opacity: 0;
   transform: translateY(var(--rise-md));
 }
-.js [data-reveal] {
+html[data-reveal-ready] [data-reveal] {
   transition:
     opacity var(--dur-slow) var(--ease-out),
     transform var(--dur-slow) var(--ease-out);
-  transition-delay: calc(var(--i, 0) * var(--stagger));
+  transition-delay: calc(min(var(--i, 0), 7) * var(--stagger));
+}
+html[data-reveal-ready] [data-reveal][data-revealed="instant"] {
+  transition: none;
+}
+/* Al imprimir sale todo, sin quedar a media transición. */
+@media print {
+  html[data-reveal-ready] [data-reveal]:not([data-revealed]) {
+    opacity: 1;
+    transform: none;
+  }
+  html[data-reveal-ready] [data-reveal] {
+    transition: none;
+  }
+}
+
+/* ── Conteo de cifras A-20, BD-044 (count-up.tsx) ──
+   La copia invisible del número final reserva el ancho; el número animado va encima, alineado a la
+   derecha: al contar no se mueve nada alrededor (CLS 0). */
+.count-up {
+  display: inline-grid;
+}
+.count-up__ghost,
+.count-up__value {
+  grid-area: 1 / 1;
+}
+.count-up__ghost {
+  visibility: hidden;
+}
+.count-up__value {
+  justify-self: end;
+}
+
+/* ── Spinner de carga (botones, BD-021) ── */
+.spin {
+  animation: spinner var(--dur-spin) linear infinite;
 }
 
 /* ── Interacciones ── */
@@ -139,12 +201,38 @@
 .press:active {
   transform: scale(0.97);
 }
+/* A-30: sube 4 px y aparece la sombra por opacidad de una capa (no se anima box-shadow).
+   Solo con hover real: en pantallas táctiles no hay efecto. */
 .lift {
+  position: relative;
   transition: transform var(--dur-fast) var(--ease-out);
+}
+.lift::after {
+  content: "";
+  position: absolute;
+  /* -2px: la sombra sale del borde exterior (las tarjetas llevan border-2), no del interior. */
+  inset: -2px;
+  border-radius: inherit;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+/* Flecha que avanza al pasar por su tarjeta (.group), p. ej. AudienceCard. */
+.nudge {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  .group:hover .nudge {
+    transform: translateX(var(--space-1));
+  }
 }
 @media (hover: hover) {
   .lift:hover {
     transform: translateY(-4px);
+  }
+  .lift:hover::after {
+    opacity: 1;
   }
 }
 .badge-pop {
@@ -152,6 +240,11 @@
 }
 .shake {
   animation: shake var(--dur-shake) var(--ease-in-out);
+}
+/* Mismo movimiento con otro nombre: alternar .shake / .shake-again reinicia la animación en cada
+   envío con error sin volver a montar el campo (perdería el foco). Lo usa Field (BD-022). */
+.shake-again {
+  animation: shake-again var(--dur-shake) var(--ease-in-out);
 }
 
 /* ── Trazo de tinta (subrayados, logo) A-11 ── */
@@ -180,6 +273,458 @@
   animation: shimmer var(--dur-shimmer) linear infinite;
 }
 
+/* ── Header (A-07), BD-041 ──
+   Sticky con su altura reservada (--header-h): al compactarse no cambia el espacio que ocupa
+   (sin CLS). Pasados 80 px de scroll (data-scrolled en <html>, header-scroll.tsx) el fondo se
+   encoge con scaleY hasta 60 px, el contenido sube 6 px y la sombra aparece con opacidad. */
+.site-header {
+  position: sticky;
+  top: env(safe-area-inset-top, 0);
+  z-index: var(--z-header);
+  height: var(--header-h);
+  isolation: isolate;
+  /* Compactado, el fondo mide 60 px pero el header ocupa 72: esa franja deja pasar los clics al
+     contenido; solo los controles del header los reciben. */
+  pointer-events: none;
+}
+.site-header__bar > * {
+  pointer-events: auto;
+}
+.site-header::before,
+.site-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform-origin: top;
+  transition: transform var(--dur-base) var(--ease-out);
+  pointer-events: none;
+}
+.site-header::before {
+  background: var(--paper);
+  border-bottom: 2px solid var(--line);
+}
+.site-header::after {
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
+}
+.site-header__bar {
+  transition: transform var(--dur-base) var(--ease-out);
+}
+[data-scrolled] .site-header::before,
+[data-scrolled] .site-header::after {
+  /* 60 / 72: la altura compacta (--header-h-compact) sobre la normal. */
+  transform: scaleY(0.8333);
+}
+[data-scrolled] .site-header::after {
+  opacity: 1;
+}
+[data-scrolled] .site-header__bar {
+  transform: translateY(-0.375rem);
+}
+
+/* ── Flotantes (BD-042, docs/06 §2) ──
+   Barra de acciones abajo en móvil, botón de WhatsApp en escritorio (≥ 1024 px) y «Volver arriba»
+   pasada una pantalla (data-scrolled-far, header-scroll.tsx). Aparecen y se van con opacidad y
+   transform; visibility los saca del orden de tabulación mientras están ocultos. */
+.floating-item {
+  position: fixed;
+  z-index: var(--z-fab);
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out),
+    visibility 0s linear 0s;
+}
+.mobile-bar {
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  gap: var(--space-2);
+  min-height: calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px));
+  align-items: center;
+  padding: var(--space-2) var(--gutter) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  background: var(--paper);
+  border-top: 2px solid var(--line);
+}
+.floating-whatsapp,
+.floating-top {
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+}
+.floating-whatsapp {
+  display: none;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  width: 3.75rem;
+  height: 3.75rem;
+  background: var(--whatsapp);
+  color: var(--paper);
+}
+.floating-whatsapp:hover {
+  background: var(--whatsapp-700);
+}
+/* La sombra de elevación reemplazaría el anillo oscuro del foco (globals.css): se suman los dos. */
+.floating-whatsapp:focus-visible,
+.floating-top:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--ink),
+    var(--shadow-md);
+}
+/* «Volver arriba» oculto hasta bajar una pantalla (sin JS nunca aparece: el pie tiene el suyo). */
+.floating-top {
+  right: var(--gutter);
+  bottom: calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px) + var(--space-3));
+  width: 2.75rem;
+  height: 2.75rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--line-strong);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(var(--rise-sm));
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out),
+    visibility 0s linear var(--dur-base);
+}
+.floating-top:hover {
+  background: var(--soft);
+}
+@media (width >= 64rem) {
+  .mobile-bar {
+    display: none;
+  }
+  .floating-whatsapp {
+    display: grid;
+  }
+  .floating-top {
+    right: calc(var(--space-6) + 0.5rem);
+    bottom: var(--space-6);
+  }
+  /* Con el botón de WhatsApp, «Volver arriba» va encima de él. */
+  .floating-actions:has(.floating-whatsapp) .floating-top {
+    bottom: calc(var(--space-6) + 3.75rem + var(--space-3));
+  }
+}
+/* El pie reserva abajo el alto de los flotantes: al final de la página nada queda debajo de ellos.
+   Móvil: barra + «Volver arriba»; escritorio: «Volver arriba» y, si hay, el botón de WhatsApp. */
+.site-footer {
+  padding-bottom: calc(var(--mobile-bar-h) + env(safe-area-inset-bottom, 0px) + 3.5rem);
+}
+@media (width >= 64rem) {
+  .site-footer {
+    padding-bottom: 5rem;
+  }
+  body:has(.floating-whatsapp) .site-footer {
+    padding-bottom: 9rem;
+  }
+}
+[data-scrolled-far] .floating-top {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+/* Con un sheet, drawer o diálogo abierto (Radix pone data-scroll-locked en <body>) se ocultan. */
+body[data-scroll-locked] .floating-item {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(var(--rise-md));
+  transition:
+    opacity var(--dur-fast) var(--ease-in),
+    transform var(--dur-fast) var(--ease-in),
+    visibility 0s linear var(--dur-fast);
+}
+/* Teclado en pantalla abierto (un campo de texto con foco en pantallas táctiles o angostas): se
+   ocultan para no tapar el campo ni el botón de enviar. Casillas, radios y botones no abren teclado. */
+@media (width < 64rem), (pointer: coarse) {
+  html:has(
+      :is(
+        input:not(
+          [type="checkbox"],
+          [type="radio"],
+          [type="range"],
+          [type="button"],
+          [type="submit"],
+          [type="reset"],
+          [type="file"],
+          [type="color"],
+          [type="hidden"],
+          [type="image"]
+        ),
+        textarea,
+        select,
+        [contenteditable]:not([contenteditable="false"])
+      ):focus
+    )
+    .floating-item {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(var(--rise-md));
+    transition:
+      opacity var(--dur-fast) var(--ease-in),
+      transform var(--dur-fast) var(--ease-in),
+      visibility 0s linear var(--dur-fast);
+  }
+}
+/* Al imprimir no salen. */
+@media print {
+  .floating-actions {
+    display: none;
+  }
+}
+
+/* ── Splash (A-01), BD-043 ──
+   El script de <head> (app/head-script.ts) pone data-splash en <html>: «on» (2 s), «reduced»
+   (movimiento reducido: el logo quieto 500 ms, sin transiciones), «out» (lo saltaron: fundido corto
+   y ya no captura clics). Sin el atributo no existe. No bloquea el scroll (overflow hidden movería
+   el ancho de la página al quitarse): la rueda o un scroll también lo saltan. El script termina con
+   el animationend del overlay. Coreografía: el wordmark sube (fade-up), el trazo amarillo se dibuja
+   y todo sale con opacidad. La salida al saltarlo usa su propio keyframe (splash-out): con el mismo
+   nombre que la de «on» la animación no se reiniciaría y el overlay desaparecería de golpe. */
+.splash {
+  display: none;
+}
+html[data-splash] .splash {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-splash);
+  display: grid;
+  place-items: center;
+  background: var(--navy);
+  color: var(--paper);
+  animation: fade-out var(--dur-slow) var(--ease-in) calc(var(--dur-splash) - var(--dur-slow)) both;
+}
+html[data-splash="reduced"] .splash {
+  animation: none;
+}
+html[data-splash="out"] .splash {
+  pointer-events: none;
+  animation: splash-out var(--dur-base) var(--ease-in) both;
+}
+@keyframes splash-out {
+  to {
+    opacity: 0;
+  }
+}
+.splash__inner {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+}
+.splash__ink path {
+  fill: none;
+  stroke: var(--yellow);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+/* También en «out»: si lo saltan a media entrada, el logo no brinca a su estado final. */
+html[data-splash]:not([data-splash="reduced"]) .splash__word {
+  animation: fade-up var(--dur-slow) var(--ease-out) both;
+}
+html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
+  --path-length: 1;
+  animation: draw var(--dur-slower) var(--ease-out) var(--dur-base) both;
+}
+
+/* Aviso de sin conexión (FeedbackHost, BD-024): aparece con opacidad. */
+.notice-in {
+  animation: fade-in var(--dur-base) var(--ease-out) both;
+}
+
+/* ── FriendlyDialog (A-09) y éxito (A-60), BD-024 ──
+   Radix pone data-state="open|closed" y espera a que termine la animación de salida. Móvil: bottom
+   sheet (A-08: 420 ms al entrar, 240 ms al salir); desde sm, centrado con scale + opacidad. */
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes scale-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@keyframes confetti {
+  from {
+    opacity: 1;
+    transform: rotate(var(--angle)) translateY(0) scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateY(-5.5rem) rotate(200deg) scale(1);
+  }
+}
+.dialog-overlay[data-state="open"] {
+  animation: fade-in var(--dur-base) var(--ease-out);
+}
+.dialog-overlay[data-state="closed"] {
+  animation: fade-out var(--dur-base) var(--ease-in);
+}
+.dialog-content[data-state="open"] {
+  animation: sheet-in var(--dur-slow) var(--ease-out);
+}
+.dialog-content[data-state="closed"] {
+  animation: sheet-out var(--dur-base) var(--ease-in);
+}
+@media (min-width: 40rem) {
+  .dialog-content[data-state="open"] {
+    animation: scale-in var(--dur-base) var(--ease-out);
+  }
+  .dialog-content[data-state="closed"] {
+    animation: scale-out var(--dur-base) var(--ease-in);
+  }
+}
+/* Círculo del ícono con rebote; el check se dibuja después (pathLength=1). */
+.dialog-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop-in var(--dur-slow) var(--ease-spring) both;
+}
+.dialog-check {
+  stroke-dasharray: 1;
+  /* A-60 ≈ 600 ms: 160 ms de espera + 420 ms de trazo. */
+  animation: draw var(--dur-slow) var(--ease-out) var(--dur-fast) both;
+  --path-length: 1;
+}
+.confetti-piece {
+  position: absolute;
+  left: calc(50% - 0.25rem);
+  top: 0;
+  width: 0.5rem;
+  height: 0.75rem;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti var(--dur-slower) var(--ease-out) var(--delay, 0ms) both;
+}
+
+/* ── Sheet (A-08), BD-025 ──
+   Desliza desde su lado: 420 ms al entrar, 240 ms al salir. `auto`: abajo en móvil, derecha
+   desde md. El fondo usa .dialog-overlay. */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes slide-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes slide-out-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+.sheet-content[data-side="bottom"][data-state="open"],
+.sheet-content[data-side="auto"][data-state="open"] {
+  animation: sheet-in var(--dur-slow) var(--ease-out);
+}
+.sheet-content[data-side="bottom"][data-state="closed"],
+.sheet-content[data-side="auto"][data-state="closed"] {
+  animation: sheet-out var(--dur-base) var(--ease-in);
+}
+.sheet-content[data-side="right"][data-state="open"] {
+  animation: slide-in-right var(--dur-slow) var(--ease-out);
+}
+.sheet-content[data-side="right"][data-state="closed"] {
+  animation: slide-out-right var(--dur-base) var(--ease-in);
+}
+.sheet-content[data-side="left"][data-state="open"] {
+  animation: slide-in-left var(--dur-slow) var(--ease-out);
+}
+.sheet-content[data-side="left"][data-state="closed"] {
+  animation: slide-out-left var(--dur-base) var(--ease-in);
+}
+@media (min-width: 48rem) {
+  .sheet-content[data-side="auto"][data-state="open"] {
+    animation: slide-in-right var(--dur-slow) var(--ease-out);
+  }
+  .sheet-content[data-side="auto"][data-state="closed"] {
+    animation: slide-out-right var(--dur-base) var(--ease-in);
+  }
+}
+
+/* ── Popover, BD-025: opacidad y escala corta desde el lado del Trigger ── */
+.popover-content {
+  transform-origin: var(--radix-popover-content-transform-origin);
+}
+.popover-content[data-state="open"] {
+  animation: scale-in var(--dur-fast) var(--ease-out);
+}
+.popover-content[data-state="closed"] {
+  animation: scale-out var(--dur-fast) var(--ease-in);
+}
+
+/* ── Acordeón (A-35), BD-025 ──
+   El ícono + rota a ×. La apertura de <details> se anima con ::details-content (block-size con
+   interpolate-size): como grid-template-rows en docs/09, es la excepción permitida solo para el
+   acordeón. Donde el navegador no lo soporta, la regla se ignora y abre al instante. */
+.accordion-icon {
+  transition: transform var(--dur-base) var(--ease-in-out);
+}
+.accordion-item[open] .accordion-icon,
+.accordion-icon[data-open] {
+  transform: rotate(45deg);
+}
+.accordion-item {
+  interpolate-size: allow-keywords;
+}
+.accordion-item::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition:
+    block-size var(--dur-base) var(--ease-in-out),
+    content-visibility var(--dur-base) allow-discrete;
+}
+.accordion-item[open]::details-content {
+  block-size: auto;
+}
+
+/* ── Tabs, BD-025 ──
+   Sin JS se ven todos los paneles. Con JS (clase .js puesta antes de pintar): en escritorio solo
+   el activo; en el acordeón móvil, solo el abierto. */
+@media (min-width: 48rem) {
+  .js [data-tab-panel]:not([data-active]) {
+    display: none;
+  }
+}
+@media (width < 48rem) {
+  .js [data-tabs="tabs"] [data-tab-panel]:not([data-active]),
+  .js [data-tabs="accordion"] [data-tab-panel]:not([data-open]) {
+    display: none;
+  }
+}
+
 /* ── Movimiento reducido: sin desplazamientos, solo opacidad breve ── */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -191,13 +736,109 @@
     transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
-  .js [data-reveal]:not([data-revealed]) {
+  html[data-reveal-ready] [data-reveal]:not([data-revealed]) {
     opacity: 1;
     transform: none;
+  }
+  /* Sin giro: el spinner queda quieto y el texto anuncia la carga. */
+  .spin {
+    animation: none;
   }
   /* El brillo correría 1 vez y quedaría congelado a la mitad: se oculta. */
   .skeleton::after {
     animation: none;
     opacity: 0;
   }
+  /* La tarjeta no sube: solo aparece la sombra (opacidad). */
+  .lift:hover {
+    transform: none;
+  }
+  .group:hover .nudge {
+    transform: none;
+  }
+  /* Diálogo: aparece y se va solo con opacidad; el ícono queda quieto y sin confeti. */
+  .dialog-content[data-state="open"] {
+    animation-name: fade-in;
+  }
+  .dialog-content[data-state="closed"] {
+    animation-name: fade-out;
+  }
+  .dialog-pop,
+  .dialog-check {
+    animation: none;
+  }
+  .confetti {
+    display: none;
+  }
+  /* Sheet y Popover: aparecen y se van solo con opacidad. */
+  /* El * de arriba no alcanza ::details-content: el acordeón abre al instante. */
+  .accordion-item::details-content {
+    transition: none;
+  }
+  /* Misma especificidad que las reglas por lado ([data-side]): gana por ir después. */
+  .sheet-content[data-side][data-state="open"],
+  .popover-content[data-state="open"] {
+    animation-name: fade-in;
+  }
+  .sheet-content[data-side][data-state="closed"],
+  .popover-content[data-state="closed"] {
+    animation-name: fade-out;
+  }
+}
+
+/* ── Movimiento reducido simulado (BD-026) ──
+   El interruptor «Simular movimiento reducido» de /styleguide pone data-reduced-motion en <html>.
+   Mismas reglas que el bloque @media de arriba: una prueba (motion-css.test.ts) exige que tengan
+   los mismos selectores. No se usa una variante de Tailwind: envolvería los selectores en :is() y
+   perdería los pseudo-elementos (::before, ::details-content). */
+[data-reduced-motion],
+[data-reduced-motion] *,
+[data-reduced-motion] *::before,
+[data-reduced-motion] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) {
+  opacity: 1;
+  transform: none;
+}
+[data-reduced-motion] .spin {
+  animation: none;
+}
+[data-reduced-motion] .skeleton::after {
+  animation: none;
+  opacity: 0;
+}
+[data-reduced-motion] .lift:hover {
+  transform: none;
+}
+[data-reduced-motion] .group:hover .nudge {
+  transform: none;
+}
+[data-reduced-motion] .dialog-content[data-state="open"] {
+  animation-name: fade-in;
+}
+[data-reduced-motion] .dialog-content[data-state="closed"] {
+  animation-name: fade-out;
+}
+[data-reduced-motion] .dialog-pop,
+[data-reduced-motion] .dialog-check {
+  animation: none;
+}
+[data-reduced-motion] .confetti {
+  display: none;
+}
+[data-reduced-motion] .accordion-item::details-content {
+  transition: none;
+}
+[data-reduced-motion] .sheet-content[data-side][data-state="open"],
+[data-reduced-motion] .popover-content[data-state="open"] {
+  animation-name: fade-in;
+}
+[data-reduced-motion] .sheet-content[data-side][data-state="closed"],
+[data-reduced-motion] .popover-content[data-state="closed"] {
+  animation-name: fade-out;
 }

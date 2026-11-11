@@ -39,12 +39,12 @@ Plan para construir el MVP en **tickets pequeños**, cada uno con pasos, criteri
 
 ## 2. Equipo y capacidad
 
-La suma de todos los tickets es **87.25 días-persona** (Must 77.5 · Should 8.5 · Could 1.25). Entre el 28 de octubre y el 8 de enero hay **50 días hábiles** por persona (descontando feriados de fin de año).
+La suma de todos los tickets es **89.75 días-persona** (Must 80 · Should 8.5 · Could 1.25). Entre el 28 de octubre y el 8 de enero hay **50 días hábiles** por persona (descontando feriados de fin de año).
 
 | Escenario | Viable para el 11 de enero | Cómo |
 |---|---|---|
 | **Recomendado: 2 desarrolladores** (pista A y pista B) + apoyo puntual de TI (servidor, DNS, BD) | **Sí**, con margen para imprevistos | Cada sprint tiene ~20 días de capacidad (2 × 10). Ver tabla §3. |
-| **1 desarrollador** | **No** con este alcance | Aun recortando al **núcleo** (§7, ~71 días) el lanzamiento realista sería alrededor del **10 de febrero de 2027**. |
+| **1 desarrollador** | **No** con este alcance | Aun recortando al **núcleo** (§7, ~74 días) el lanzamiento realista sería alrededor del **10 de febrero de 2027**. |
 
 Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: sumar un segundo desarrollador desde S1, o mover la fecha y lanzar el núcleo. **No** se recortan pruebas ni rendimiento para ganar tiempo: es mejor lanzar con menos páginas que con un sitio lento o con errores.
 
@@ -53,8 +53,8 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 | Sprint | Fechas | Objetivo | Días (A / B) |
 |---|---|---|---|
 | **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
-| **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 15.25 (9.25 / 6) |
-| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 19.5 (11.25 / 8.25) |
+| **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 16.25 (9.25 / 7) |
+| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 21 (11.25 / 9.75) |
 | **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 20.5 (10 / 10.5) |
 | **S4** | lun 21 dic – vie 8 ene 2027 | Estabilización, pruebas, contenido, producción · feriados 24-25 dic y 31 dic-1 ene · **código congelado el 6 ene** | 19.25 (7.5 / 11.75) |
 | **S5** | lun 11 ene – vie 22 ene 2027 | **Lanzamiento** e hipercuidado | 3 (1 / 2) |
@@ -120,6 +120,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | Textos, fotos, videos del hero, tiendas verificadas, datos de kits | Otras áreas | BD-150 (mientras tanto: seed provisional) | 18 dic |
 | Acceso a Search Console, GA4, DNS de bolik66.com | TI / dueño de la cuenta | BD-096, BD-125, BD-152 | 18 dic |
 | Exportación de URLs con tráfico del sitio actual | Dueño de Search Console | BD-094 | 4 dic |
+| Exportación de artículos de SAP (código PT, descripción, código de barras) | Sistemas | BD-038 | 23 nov |
 
 ## 5. Resumen por épica
 
@@ -127,7 +128,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 |---|---|---|---|
 | E0 | Fundaciones del repositorio | 17 | 9.25 |
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
-| E2 | Datos, medios e integración base | 7 | 7.5 |
+| E2 | Datos, medios e integración base | 9 | 10 |
 | E3 | Estructura global, splash y movimiento | 7 | 3.75 |
 | E4 | Inicio | 6 | 4 |
 | E5 | Catálogo, fichas y búsqueda | 8 | 7.5 |
@@ -141,7 +142,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **118** | **87.25** |
+| | **Total** | **120** | **89.75** |
 
 ## 6. Tickets
 
@@ -411,11 +412,29 @@ Un lugar real donde probar desde la primera semana (con apoyo de TI).
 2. Servicio Windows `BolikDigital-Staging` (NSSM o PM2) ejecutando `node server.js`.
 3. BD `BolikDigital_Stg`; carpeta `D:\bolik-stg\media`.
 4. Build en el agente interno (o a mano) con las variables de staging, armado según doc 15 §5, y despliegue manual. El artefacto de la CI (BD-014) no sirve: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` fijo.
+5. Revisión previa de solo lectura del servidor (`staging-preflight.ps1`), que comparte máquina con SQL Server y SMART-K66.
 
 **Criterios de aceptación**
 
 - [ ] `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
 - [ ] `X-Robots-Tag: noindex` presente en staging.
+
+**Avance (10 nov 2026)**
+
+El código está listo. Los criterios se cumplen al ejecutarlo en `K66-APPS`, que hace TI. El Issue se cierra con el resultado del `curl` de doc 15 §12.
+
+- Cuatro scripts en `scripts/deploy/`:
+  - `staging-preflight.ps1`: solo lectura y sin credenciales.
+  - `staging-setup.ps1`, que ahora acepta `-AllowedIps`.
+  - `staging-build.ps1`: migra, siembra, construye y empaca con el `staging.env` del servicio.
+  - `staging-deploy.ps1`: release nuevo, prueba de humo en Node y en IIS, y vuelta atrás automática.
+  El procedimiento está en doc 15 §12.
+- **Datos de ejemplo en staging hasta BD-038:** `pnpm db:seed --profile dev --allow-sample-data`. Solo corre con `APP_ENV=staging` y la base `BolikDigital_Stg` (no otra `…_Stg`, porque el SQL Server se comparte con SMART-K66); nunca en producción ni con los perfiles `e2e` o `prod`.
+  - Este perfil sincroniza con los JSON y pisa lo editado en el admin de staging.
+  - Al llegar el catálogo real, el DBA recrea `BolikDigital_Stg` y se siembra con `--profile prod`.
+- **Servidor compartido.** ARR se configura para todo el servidor (`responseBufferLimit=0`, `preserveHostHeader`). El preflight lista los sitios que ya hacen proxy, como la API de SMART-K66, para confirmarlo con TI antes del setup.
+- **DNS.** `bolik66.com` tiene un comodín público: `staging.bolik66.com` ya resuelve al hosting actual (10 nov 2026). Hace falta un registro propio, interno o público, hacia `K66-APPS`.
+- **Fuera de esta PC.** Desde aquí no se llega a `K66-APPS` (ni DNS ni el puerto 1433). El paquete se construye en el propio servidor.
 
 #### BD-017 · Base de datos local de desarrollo (SQL Server 2022 Express)
 
@@ -462,8 +481,8 @@ Botón único con variantes para todo el sitio.
 
 **Pasos**
 
-1. `components/ui/button.tsx` con `cva`: primary, secondary, outline, ghost, whatsapp, danger; tamaños sm, md, lg; `loading`; `asChild`.
-2. Clase `.press` (A-01) y foco visible.
+1. `components/ui/button.tsx` con `cva` y las variantes de doc 08 §2 (primary, accent, dark, outline, ghost-light, whatsapp, link) más `danger` para el admin; tamaños sm, md, lg; `block`; íconos; `loading`; `asChild`.
+2. Clase `.press` (A-03) y foco visible.
 
 **Criterios de aceptación**
 
@@ -479,7 +498,7 @@ Patrón único de formularios con React Hook Form y Zod.
 **Pasos**
 
 1. `Field` (label, ayuda, error con `aria-describedby`), `Input`, `Textarea`, `Select`, `RadioCards`, `Checkbox`, `PhoneInput` (+502, teclado numérico), `QuantityStepper`.
-2. Error con animación `.shake` (A-12) y foco al primer error.
+2. Error con animación `.shake` (A-04) y foco al primer error.
 
 **Criterios de aceptación**
 
@@ -518,6 +537,10 @@ Toda acción del usuario tiene un mensaje claro y amable.
 **Criterios de aceptación**
 
 - [ ] Cada fila de la matriz del doc 08 §4 tiene un ejemplo en `/styleguide`.
+
+**Notas de BD-027**
+
+- `components/brand/illustration.tsx` tiene éxito, error/404 (lapicero), vacío, sin resultados y sin conexión. Doc 08 §4 pide además para `FriendlyDialog` una nube con gota roja (error) y un signo de pregunta amarillo (confirmación): agregarlas aquí si el diálogo las usa.
 - [ ] Toasts anunciados con `aria-live`.
 
 #### BD-025 · Overlays: Sheet, Dialog, Tabs, Accordion
@@ -528,8 +551,9 @@ Componentes de Radix/shadcn con nuestras animaciones.
 
 **Pasos**
 
-1. Agregar con `pnpm dlx shadcn@latest add dialog sheet tabs accordion popover`.
-2. Reemplazar sus animaciones por los presets del doc 09.
+1. Dialog, Sheet y Popover sobre Radix, con la estructura de shadcn escrita a mano (sin `tailwind-merge`).
+2. Tabs propio y Accordion con `<details>`: contenido en el HTML y visible sin JS (docs/11 §1). Decisión aprobada en BD-025.
+3. Animaciones con los presets del doc 09.
 
 **Criterios de aceptación**
 
@@ -561,12 +585,12 @@ Logo como componente SVG y las ilustraciones de los diálogos.
 
 **Pasos**
 
-1. `components/brand/logo.tsx` con variantes `full`, `mark`, `mono`, `inverse`.
-2. Ilustraciones SVG en línea (éxito, error, vacío, sin conexión) optimizadas con SVGO.
+1. `components/brand/logo.tsx` con el logo oficial de Mercadeo: variantes `full`, `inverse` y `wordmark` (BOLIK® en un color; el logo no tiene isotipo, así que no hay `mark`). Archivos optimizados con SVGO en `public/brand`.
+2. Ilustraciones SVG en línea (éxito, error, vacío, sin resultados, sin conexión).
 
 **Criterios de aceptación**
 
-- [ ] Cada SVG pesa < 4 KB.
+- [ ] Cada ilustración y el wordmark pesan < 4 KB; el archivo del logo completo, ≤ 25 KB (7 KB gzip: el trazo de crayón oficial no baja más sin perder detalle).
 - [ ] El logo tiene `aria-label="Bolik"`.
 
 ### E2 · Datos, medios e integración base
@@ -590,20 +614,30 @@ Todas las tablas del MVP.
 
 #### BD-031 · Seeds con datos reales
 
-**Sprint** S1 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 05 §7, 17
+**Sprint** S1 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-030, BD-037 · **Docs** 05 §6, 17
 
 Datos reales para desarrollar y probar (nada de lorem).
 
 **Pasos**
 
-1. `prisma/seed/*.json`: categorías, productos (Bolik Ultra y su ficha), variantes y empaques, tiendas reales, departamentos, FAQs, contenido de la home, admin inicial.
-2. Perfiles `--profile dev` y `--profile e2e`.
-3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e` (con Cache Components el build prerenderiza leyendo la BD; hoy ninguna página la lee).
+1. Cargar en la base los `prisma/seed/*.json` de BD-037 (categorías, productos, variantes y empaques, tiendas, departamentos, FAQs, contenido de la home) más el admin inicial. Lo marcado `sample` no se carga en producción.
+2. Perfiles `--profile dev` y `--profile e2e` (cargan también lo `sample`) y `--profile prod` (staging con base y producción: sin lo `sample` ni relaciones hacia ello).
+3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e`, cuando la CI construya con `DATA_SOURCE=db` (con Cache Components el build prerenderiza leyendo la BD; con la fuente de ejemplo de BD-037 no la necesita). *Pasó a BD-032, que es cuando la CI construye con `db`; aquí el seed se prueba en el trabajo Integración.*
 4. El seed es idempotente (`upsert`).
+
+**Cómo quedó (6 nov 2026)**
+
+- `pnpm db:seed [--profile dev|e2e|prod]` (`scripts/db-seed.mts`): `dev` y `e2e` cargan todo y **sincronizan** con los JSON (actualizan, quitan las partes que ya no están y despublican los ejemplos y variantes que salieron; nunca borran variantes); `prod` **solo crea lo que falta**, sin ejemplos ni relaciones, FAQs o líneas de kit hacia ellos, no pisa lo editado en el admin y omite (con aviso) un producto cuyo SKU ya pertenece a otro. `dev`/`e2e` solo siembran bases `…_Dev` o `…_Test` y nunca con `APP_ENV` `staging` o `production`. La única excepción es staging hasta el catálogo real: `--profile dev --allow-sample-data` funciona con `APP_ENV=staging` y la base `BolikDigital_Stg` (BD-016).
+- `prod` vuelve a crear lo que se **borró** en el admin (y duplica lo renombrado con slug nuevo): el admin despublica en lugar de borrar (BD-116 a BD-118, BD-121).
+- `e2e` carga lo mismo que `dev` (lo que ya prueban las E2E con `fixtures`), no un subconjunto.
+- Admin inicial desde `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD` (≥ 12 caracteres, bcrypt coste 12), sin `admin.json`; se crea una sola vez y volver a sembrar no cambia su contraseña.
+- Migración `seed_claves_naturales`: claves únicas en `ProductSpec`, `ProductBenefit`, `ProductImage` (`productId` + `mediaId`), `KitItem` (`kitId` + `description`) y `key` en `Faq`, `HistoryMilestone` y `SchoolActivity`; `isSample` en `Product`, `Kit` y `SchoolActivity`.
+- El esquema de los seeds valida el dígito verificador de cada código de barras (`src/lib/gtin.ts`). El UPC del PT00060 sale del catálogo 2026-2027: 759364663115.
 
 **Notas de la revisión de BD-030**
 
 - Sin clave natural única (no admiten `upsert`): `ProductSpec`, `ProductBenefit`, `ProductImage`, `KitItem`, `Faq`, `HistoryMilestone`, `SchoolActivity`. Agregar en este ticket una migración con, por ejemplo, `@@unique([productId, groupName, label])`, `@@unique([productId, iconKey])` y una columna `key` única en `Faq`, `HistoryMilestone` y `SchoolActivity`; si no, volver a sembrar duplica filas o pisa lo editado en el admin.
+- Columna `sample` (o `isSample`, `Boolean @default(false)`) en `Product`, `SchoolActivity` y `Kit`, igual que en los JSON de BD-037: el perfil de producción no carga lo marcado y omite las relaciones (`ProductRelation`, `related`) hacia productos de ejemplo. Sin ella, la fuente `db` no puede distinguir los ejemplos.
 
 **Criterios de aceptación**
 
@@ -612,15 +646,25 @@ Datos reales para desarrollar y probar (nada de lorem).
 
 #### BD-032 · Capa de datos con Cache Components
 
-**Sprint** S1 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-031 · **Docs** 03 §5
+**Sprint** S1 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-031, BD-037 · **Docs** 03 §5
 
 Consultas de lectura cacheadas con tags.
 
 **Pasos**
 
-1. `server/data/{products,categories,stores,content,faqs,sitemap,llms,search}.ts`.
+1. La interfaz, los tipos de vista y las funciones cacheadas de `server/data/` ya existen (BD-037): este ticket agrega la fuente `db` con Prisma y las funciones que falten (`sitemap`, `llms`, `search`).
 2. Cada función con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`.
 3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.
+4. La batería de contrato de BD-037 pasa contra `BolikDigital_Test`.
+5. CI (paso 3 de BD-031): el trabajo Integración siembra la base de pruebas, construye con `DATA_SOURCE=db` y sirve ese build con la base desconectada.
+
+**Cómo quedó (6 nov 2026)**
+
+- `server/data/db/source.ts` con las reglas de la fuente de ejemplo; pasa la batería de contrato contra `BolikDigital_Test` y da exactamente las mismas vistas que `fixtures` con los mismos datos. `settings-view.ts` comparte el mapeo de ajustes (un ajuste obligatorio que falte da un error claro).
+- Nuevas: `listSitemapEntries()` (fechas reales: la ficha toma la más reciente entre producto y variantes, la categoría la de sus productos; sin fechas con `fixtures`; solo departamentos con tiendas), `getLlmsData()` (con `listPublishedFaqs()`: nunca FAQs de un producto o categoría oculta) y `getSearchIndex()`, con sus tags.
+- Un ajuste opcional guardado vacío cuenta como ausente (no tumba el sitio).
+- `serverExternalPackages: ["@prisma/adapter-mssql"]`: Turbopack no puede empaquetar la cadena del driver. «Artefacto en Windows» comprueba que el adaptador (con `mssql` y `tedious`) carga desde el paquete.
+- CI (paso 5): en lugar de Build y E2E (el trabajo E2E corre dentro del contenedor de Playwright, sin Docker), el trabajo **Integración** siembra la base de pruebas, hace `pnpm build` con `DATA_SOURCE=db` y sirve ese build con la base desconectada (`scripts/ci/smoke-db-build.sh`). Build, E2E y Lighthouse siguen con `fixtures`: las dos fuentes cumplen el mismo contrato.
 
 **Criterios de aceptación**
 
@@ -629,19 +673,24 @@ Consultas de lectura cacheadas con tags.
 
 #### BD-033 · Folios consecutivos
 
-**Sprint** S1 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 05 §5
+**Sprint** S1 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 05 §4
 
 COT/ESC/DIS-AAAA-NNNNNN sin duplicados.
 
 **Pasos**
 
-1. Copiar `starter/src/server/folio.ts`.
+1. Copiar `starter/src/server/folio.ts`. *(Versión vigente: `src/server/folio.ts`; la del starter toma el año del reloj del servidor.)*
 2. Prueba de concurrencia: 20 envíos simultáneos.
 
 **Criterios de aceptación**
 
 - [ ] 20 folios distintos y consecutivos.
 - [ ] El 1 de enero reinicia el consecutivo.
+
+**Cómo quedó (8 nov 2026)**
+
+- `src/server/folio.ts` (`nextFolio(tx, prefijo)`, MERGE con HOLDLOCK dentro de la transacción de la solicitud) y `src/lib/folio.ts` (formato, regex, prefijos y año). Cambios frente al starter: el año sale de la **hora de Guatemala** (`folioYear`), no del reloj del servidor; se valida el prefijo y el tope de 999 999 por año.
+- Integración: 20 en paralelo (hasta 10 a la vez, el pool de mssql) que retienen el bloqueo 100 ms tras el MERGE: quedan en fila, sin interbloqueos (*deadlocks*) y con 20 folios distintos y consecutivos; cambio de año, prefijos independientes, sin huecos cuando la solicitud falla y el tope de 999 999 sin avanzar el contador.
 
 #### BD-034 · Procesamiento de imágenes
 
@@ -654,16 +703,27 @@ Imágenes rápidas: se procesan una sola vez al subir.
 1. `server/media/process-image.ts`: sharp → WebP en 320/480/640/960/1280/1920 + `blurDataURL` + hash.
 2. Guardar en `MEDIA_DIR` y registrar `MediaAsset`.
 3. `lib/image-loader.ts` (starter) y `images.loaderFile` en `next.config.ts`.
-4. Script `scripts/import-media.ts` para cargar en lote las fotos actuales.
+4. Script `scripts/import-media.mts` para cargar en lote las fotos actuales.
 
 **Criterios de aceptación**
 
 - [ ] Una foto de 4 MB genera 6 archivos y la de 640 pesa < 60 KB.
 - [ ] `next/image` pide el ancho correcto según `sizes`.
 
+**Cómo quedó (9 nov 2026)**
+
+- `src/server/media/process-image.ts` (sharp 0.35.5): decodifica el original una sola vez y de ese maestro saca 6 WebP calidad 75 sin agrandar (si la foto es más chica, los anchos mayores quedan del tamaño original), `blurDataURL`, medidas enderezadas por EXIF y color dominante (sobre blanco, para los PNG transparentes); convierte a sRGB; sin metadatos en la salida (ni GPS). Clave con hash de 8 dígitos del contenido y de los parámetros (`products/bolik-ultra-azul-a1b2c3d4`): si cambian la calidad o los anchos, cambia la clave. Si los 6 archivos ya existen no los reescribe; cada archivo se escribe con otro nombre y se renombra, y si algo falla borra lo que creó. Rechaza con `MediaError` lo que no es imagen o está dañado (JPEG cortado), HEIC, SVG, GIF y animaciones, más de 25 MB y más de 50 MP. `src/server/data/media.ts` registra `MediaAsset` (idempotente; no pisa el alt editado).
+- `pnpm import:media <carpeta> [--folder products] [--remoto]` (`scripts/import-media.mts`): por defecto solo corre contra una base `…_Dev` o `…_Test` con `APP_ENV=development`; para staging o producción se corre en ese servidor (con su `MEDIA_DIR`) y con `--remoto`, para que archivos y filas queden en el mismo entorno.
+- sharp en el paquete: Next lo copia al standalone, pero con el binario de la máquina que construye. `supportedArchitectures` (pnpm) instala también el de Windows y `outputFileTracingIncludes` lo mete al paquete; el trabajo «Artefacto en Windows» genera un WebP con sharp desde el paquete.
+- `src/app/media/[...path]/route.ts`: sirve `/media` desde `MEDIA_DIR` donde no hay IIS (desarrollo, `start:local`, CI), solo los WebP que genera el procesador (`…-{ancho}.webp`, en minúsculas), sin salir de la carpeta ni seguir enlaces simbólicos, y en *streaming*; en el servidor lo sirve IIS. `start:local` resuelve un `MEDIA_DIR` relativo antes de cambiar de carpeta.
+- Criterios: una foto de ~4 MB da 6 archivos y la de 640 pesa < 60 KB (prueba con sharp); `next/image` pide el ancho correcto (prueba con `getImageProps` y, en Chromium, 360 px DPR 2 → 960 y 1280 px → 640).
+- Las fotos de ejemplo (del catálogo 2026-2027) se importan solo a `./.media` y a la base local: nunca al repo.
+
+**Nota de BD-031:** `ProductImage` es única por `[productId, mediaId]`: una misma foto no se repite dentro de un producto (para varias variantes, una fila por foto con `variantId` nulo). Fotos de ejemplo: las del catálogo 2026-2027, solo en `MEDIA_DIR` local, nunca en el repo.
+
 #### BD-035 · Gateway del ERP
 
-**Sprint** S1 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 03 §6, 05 §9
+**Sprint** S1 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 03 §5, 05 §8
 
 La web nunca depende de que SAP o SMART-K66 estén arriba.
 
@@ -677,6 +737,12 @@ La web nunca depende de que SAP o SMART-K66 estén arriba.
 
 - [ ] Con `ERP_MODE=noop` todo funciona.
 - [ ] Con la API simulada caída, la cotización se guarda con `erpStatus = pendiente`.
+
+**Cómo quedó (7 nov 2026)**
+
+- `server/erp/types.ts` (interfaz: `createLead`, `listArticles`; devuelven resultado y nunca lanzan), `noop.ts`, `smartk66.ts` y `gateway.ts` (`getErpGateway()` por `ERP_MODE`). El cliente: timeout de 8 s por intento (encabezados y cuerpo), 3 reintentos con backoff exponencial y azar solo para lo pasajero (red caída, timeout, corte a media respuesta, 5xx, 429, 408 y 409); 401/403 es `unauthorized` (clave vencida: aviso a operación), otro 4xx es `rejected`, y un JSON mal formado `invalid-response`, sin reintento; `Idempotency-Key` con el folio; sin seguir redirecciones; respuestas validadas con Zod; mensajes fijos, sin datos personales ni la clave. `ERP_BASE_URL` solo admite `http`/`https`.
+- `server/erp/send-quote.ts` → `sendQuoteToErp(quoteId)`: lee la cotización (`server/data/quote-erp.ts`), la manda y guarda el resultado. `erpStatus`: `enviada` (con `erpRef`), `omitida` (noop), **`pendiente`** (fallo pasajero: la reintenta la tarea) o **`error`** (rechazo o respuesta fuera del contrato: la revisa una persona). Antes de llamar, la cotización se **reclama** (compare-and-set sobre `erpAttempts`): dos procesos nunca la mandan a la vez, y nada baja a una `enviada`. `erpAttempts` cuenta envíos, no peticiones HTTP (un envío son hasta 4).
+- Pruebas con MSW (`msw@3.0.3`): unitarias del cliente y de integración de `sendQuoteToErp` contra `BolikDigital_Test`.
 
 #### BD-036 · Sincronización del catálogo con SAP
 
@@ -695,6 +761,46 @@ Códigos, nombres, códigos de barras y estado activo vienen de SAP.
 - [ ] Un artículo inactivo en SAP se marca `inactivo` y sale del sitio.
 - [ ] El resultado aparece en `/admin/sincronizacion`.
 
+#### BD-037 · Fuente de datos de ejemplo
+
+**Sprint** S1 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-030 · **Docs** 03, 05 §6, 17 · *Ticket nuevo (3 nov 2026)*
+
+El frontend avanza sin esperar la base: las páginas leen de `src/server/data`, que hoy sirve datos de ejemplo y después SQL Server, sin cambiar ninguna página.
+
+**Pasos**
+
+1. `DATA_SOURCE=fixtures|db` en `src/env.schema.ts` y `.env.example`: `fixtures` por defecto; `db` exige `DATABASE_URL`; en producción solo se permite `db`.
+2. Tipos de vista en `src/server/data/types.ts` (`ProductView`, `ProductCardView`, `CategoryView`, `StoreView`, `DepartmentView`, `FaqView`, contenido de la home y ajustes), nunca modelos de Prisma.
+3. Datos en `prisma/seed/*.json` con el formato del seed (BD-031), validados con Zod: el Bolik Ultra completo (doc 05 §6 y doc 17), categorías, departamentos, tiendas, FAQs, hero, cifras, historia, actividades, kits y ajustes. Lo que no está en doc 17 sale de la demo (`docs/referencia/demo`) y queda marcado `sample` o `isVerified = false`.
+4. Funciones de lectura en `src/server/data/` con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`, que delegan en la fuente elegida.
+5. Pruebas de contrato: la misma batería corre contra la fuente de ejemplo (unitarias) y, en BD-032, contra Prisma (integración).
+
+**Criterios de aceptación**
+
+- [ ] Con `DATA_SOURCE=fixtures`, `pnpm build` y las páginas funcionan sin SQL Server.
+- [ ] `APP_ENV=production` con `DATA_SOURCE=fixtures` no arranca.
+- [ ] La batería de contrato pasa con la fuente de ejemplo.
+
+#### BD-038 · Catálogo real 2026-2027
+
+**Sprint** S2 · **Días** 1.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-031 · **Docs** 05 §6, 17 · *Ticket nuevo (6 nov 2026)*
+
+Los productos reales del catálogo impreso 2026-2027 reemplazan a los 24 productos de ejemplo de la demo.
+
+**Pasos**
+
+1. Transcribir del catálogo (PDF de Mercadeo, fuera del repo) los ~50 productos y ~140 variantes de color: nombre, línea, colores, códigos de barras y unidades de empaque. Cada código pasa la validación del dígito verificador.
+2. Emparejar cada variante con su código SAP (PT…) usando el código de barras como puente, con la exportación de artículos de SAP. Sin código SAP no se carga como real: no se inventa.
+3. Ampliar `PACKAGING_CODES` con las presentaciones del catálogo (estuche, bolsa, bote, tubo, blíster de 4, six pack…) y revisar las categorías contra las líneas del catálogo.
+4. Decidir cómo se muestran las marcas del grupo (Fabik, Coloreto, EcoBol, K-Pen).
+5. Quitar los productos de ejemplo que el catálogo real ya cubre (el seed `dev` los despublica en las bases que ya los tienen).
+6. Con el perfil `prod`, una categoría sin productos reales no debe quedar publicada (página vacía en el sitemap).
+
+**Criterios de aceptación**
+
+- [ ] Cada producto del catálogo con su código SAP está en `products.json` sin `sample`.
+- [ ] Todos los códigos de barras pasan la validación y `pnpm db:seed` dos veces no duplica datos.
+
 ### E3 · Estructura global, splash y movimiento
 
 #### BD-040 · Layout raíz del sitio
@@ -712,7 +818,7 @@ HTML base, metadatos raíz y proveedores mínimos.
 **Criterios de aceptación**
 
 - [ ] Una sola etiqueta `<main>` por página.
-- [ ] JS compartido ≤ 90 KB gzip.
+- [ ] JS inicial dentro del presupuesto de docs/12 §2 (home ≤ 165 KB, resto ≤ 150 KB; lo vigila Lighthouse CI). El criterio original de 90 KB compartidos no es alcanzable con Next 16 + React 19 (~132 KB de runtime); BD-040 no suma JS: 140.6 KB compartidos antes y después.
 
 #### BD-041 · Header y menú móvil
 
@@ -722,7 +828,7 @@ Navegación principal con acceso a buscar y a la cotización.
 
 **Pasos**
 
-1. Header fijo que se compacta al bajar (A-20) y se oculta/aparece por dirección de scroll en móvil.
+1. Header fijo que se compacta al bajar (A-07). Nunca se oculta (docs/06 §2: la cotización siempre a mano; decisión de BD-041).
 2. Badge de cotización con `badge-pop` (A-05).
 3. Menú móvil en `Sheet` con enlaces grandes y CTA de WhatsApp.
 
@@ -739,8 +845,9 @@ Pie con datos de la empresa y flotantes de WhatsApp y volver arriba.
 
 **Pasos**
 
-1. Footer con dirección, teléfono, redes, enlaces legales, razón social desde `SiteSetting`.
-2. Botón WhatsApp flotante (se oculta cuando el drawer o el teclado están abiertos).
+1. Footer con dirección, teléfono, redes, enlaces legales, razón social desde `SiteSetting` (Server Component, sin JS; el NAP completo del doc 06 en `settings.json`, el mismo de `/contacto` y el JSON-LD).
+2. Botón WhatsApp flotante (escritorio) y barra de acciones abajo (móvil: WhatsApp y Cotizar), con el mensaje general prellenado. Se ocultan con CSS cuando el drawer o el teclado están abiertos. «Cotizar» de la barra es fijo: el contador ya está en el header (decisión de BD-042, por presupuesto de JS).
+3. «Volver arriba»: enlace en el pie y flotante pasada una pantalla (`data-scrolled-far` de `header-scroll.tsx`).
 
 **Criterios de aceptación**
 
@@ -755,8 +862,8 @@ Animación del logo antes del hero, sin afectar SEO ni LCP.
 
 **Pasos**
 
-1. Copiar `starter/src/components/layout/splash.tsx`.
-2. Inyectar el script en `<head>` y el SVG al inicio del `<body>`.
+1. Adaptar `starter/src/components/layout/splash.tsx` a la marca: wordmark oficial y trazo amarillo, sin el «cuadro azul» ni texto (decisión de BD-043; docs/09 §3).
+2. Inyectar el script en `<head>` (`app/head-script.ts`, junto a la clase `js`) y el SVG al inicio del `<body>`. Se salta con toque, clic, tecla o rueda; no bloquea el scroll.
 3. Leer `splash_enabled` de `SiteSetting` en `data-splash-enabled`.
 
 **Criterios de aceptación**
@@ -772,8 +879,8 @@ Movimiento suave hecho con CSS.
 
 **Pasos**
 
-1. Copiar `reveal-observer.tsx` y `count-up.tsx`.
-2. Transición de entrada de página con `.page-enter`.
+1. `reveal-observer.tsx` y `count-up.tsx` desde el starter, con las mejoras de BD-044 (docs/09 §6): ocultar solo con `data-reveal-ready`, `MutationObserver`, sin la red de 2.5 s; cifra sin CLS.
+2. Transición de entrada de página con `.page-enter`: `PageEnter` en `(site)/layout.tsx` al cambiar de ruta, sin animar la primera carga (docs/09 §4; no `template.tsx`).
 
 **Criterios de aceptación**
 
@@ -788,8 +895,8 @@ Motion solo donde CSS no alcanza.
 
 **Pasos**
 
-1. `components/motion/provider.tsx` con `LazyMotion` + `domAnimation` (carga diferida) y presets.
-2. Solo `m.*` en componentes.
+1. `components/motion/motion-provider.tsx` con `LazyMotion strict` + `domAnimation` (o `domMax` con `layout`) por `import()`, `MotionConfig reducedMotion` y presets en `lib/motion.ts` con los tokens de `motion.css` (Motion 14.6.0, BD-045).
+2. Solo `m.*` en componentes, desde `components/motion/m.ts` (regla de ESLint). Guardián E2E: la home no descarga Motion.
 
 **Criterios de aceptación**
 
@@ -797,13 +904,13 @@ Motion solo donde CSS no alcanza.
 
 #### BD-046 · Páginas 404 y 500
 
-**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-040, BD-032 · **Docs** 06 §3.19, 10 §6
+**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-040, BD-037 · **Docs** 06 §3.19, 10 §6
 
 Errores amables que ayudan a seguir navegando.
 
 **Pasos**
 
-1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías.
+1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías. Conserva su `<MainContent>` (BD-040: queda fuera de los layouts de grupo) y revisa que no salga el `<title>` de Next en inglés.
 2. `error.tsx` con WhatsApp y "Reintentar".
 
 **Criterios de aceptación**
@@ -811,11 +918,18 @@ Errores amables que ayudan a seguir navegando.
 - [ ] Una URL vieja registrada en `Redirect` responde 301.
 - [ ] Las demás registran el 404 con contador.
 
+**Cómo quedó (7 nov 2026)**
+
+- Redirecciones en `proxy.ts` con **301** (o el estado guardado) en un solo salto: el mapa vive en memoria (`server/seo/redirects.ts`), se recarga cada 60 s sin bloquear peticiones (tras arrancar, las peticiones esperan juntas la primera carga, como mucho 5 s), resuelve cadenas y descarta ciclos, destinos externos y claves repetidas. `permanentRedirect()` en la 404 daba 308 y la volvía dinámica. Rutas normalizadas en `lib/redirect-path.ts`: minúsculas, sin barra final, acentos codificados siempre igual, query ordenada y sin parámetros de seguimiento (`utm_*`, `gclid`, `fbclid`…) ni `_rsc`; si la query no está en la tabla, se busca la ruta sola. La barra final la quita el proxy después de la tabla (`skipTrailingSlashRedirect`): `/viejo/` va al destino en un salto. El proxy lee `Redirect` con su propio cliente de Prisma (`server/data/proxy-db.ts`): se compila en otro bundle y no comparte el de la app; los errores de Prisma se distinguen por `code`, nunca por `instanceof`.
+- 404 estática: leer la petición en ella volvía «prerender parcial» **todas** las rutas (la 404 forma parte del árbol de cada una). Por eso registra con un script mínimo (`app/not-found-beacon.ts`) que avisa a `/api/not-found`; los 404 y los usos de cada redirección se cuentan en memoria y se escriben en lote cada 30 s (`server/seo/hit-log.ts`, tope de 500 rutas por lote; la limpieza de `NotFoundLog` va con BD-145). `/api/not-found` solo cuenta avisos del mismo sitio (`Sec-Fetch-Site`), con cuerpo de hasta 4 KB, y del referer guarda solo origen y ruta. Una navegación en el cliente (`<Link>`) a una ruta inexistente no ejecuta el script: esos 404 internos no se cuentan.
+- 404 con enlaces a Inicio, Catálogo, Dónde comprar y las líneas de producto; el buscador queda para BD-066. Un solo `<meta name="robots">` (el de Next).
+- 500 con reintentar, WhatsApp (si hay número) y teléfono (`data-contact-*` del layout de `(site)`); sin número, el texto no promete WhatsApp. La 404 dice «Revisa el catálogo…» hasta que BD-066 traiga el buscador (doc 17).
+
 ### E4 · Inicio
 
 #### BD-050 · Hero con video por capítulos
 
-**Sprint** S2 · **Días** 1.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-032, BD-034, BD-044 · **Docs** 06 §3.1, 09
+**Sprint** S2 · **Días** 1.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-037, BD-034, BD-044 · **Docs** 06 §3.1, 09
 
 El hero de la demo, llevado a producción.
 
@@ -826,6 +940,10 @@ El hero de la demo, llevado a producción.
 3. Póster del capítulo 1 con `priority` (es el LCP).
 4. Video solo tras `load`, en ocioso y sin Save-Data/2g/3g/movimiento reducido.
 
+**Notas de BD-037**
+
+- Doc 17 §2 define un CTA secundario por capítulo («Nuestra historia», «Bolik en tu escuela»…) que ni `HeroChapter` ni `HeroChapterView` tienen: agregar el campo en el modelo, en `content.json` y en la vista en este ticket. Los `hint` y `eyebrow` de `content.json` vienen de la demo y están por validar.
+
 **Criterios de aceptación**
 
 - [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil: bajar `largest-contentful-paint` de la home de 2500 a 2000 en `lighthouse.config.cjs` (hasta BD-050 tolera 2.5 s; el marcador actual mide ~2.05 s).
@@ -835,7 +953,7 @@ El hero de la demo, llevado a producción.
 
 #### BD-051 · Soluciones por público y categorías
 
-**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-023, BD-032 · **Docs** 06 §3.1
+**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-023, BD-037 · **Docs** 06 §3.1
 
 Accesos rápidos a lo que busca cada visitante.
 
@@ -859,6 +977,10 @@ Bolik Ultra destacado y cifras de la empresa.
 
 1. Bloque del Ultra con colores, empaques y CTA "Cotizar" / "Dónde comprar".
 2. Cifras desde `SiteStat` con `CountUp`.
+
+**Notas de BD-037**
+
+- Los beneficios del Ultra en `products.json` siguen doc 05 §6; doc 17 §2 lista otros (incluye «Cuerpo hexagonal que no rueda»). Conciliar con Mercadeo antes de mostrarlos en la home.
 
 **Criterios de aceptación**
 
@@ -918,7 +1040,7 @@ La home cumple los presupuestos.
 
 #### BD-060 · Catálogo /productos
 
-**Sprint** S2 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-023, BD-032 · **Docs** 06 §3.2
+**Sprint** S2 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-023, BD-037 · **Docs** 06 §3.2
 
 Todos los productos con filtros por uso.
 
@@ -1034,6 +1156,8 @@ Búsqueda instantánea por nombre, código o código de barras.
 - [ ] "ultra", "pt00058", "759364663092" y "crayon" encuentran resultados.
 - [ ] Sin resultados: sugerencias + WhatsApp.
 
+**Nota de BD-046:** agregar el buscador a la página 404 (`app/not-found.tsx`), sin volverla dinámica.
+
 #### BD-067 · WhatsApp contextual
 
 **Sprint** S2 · **Días** 0.25 · **Prioridad** Must · **Pista** A · **Depende de** BD-009 · **Docs** 07
@@ -1060,7 +1184,7 @@ Lista de productos a cotizar que se guarda en el navegador.
 **Pasos**
 
 1. Copiar `starter/src/features/quote/store.ts`.
-2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header.
+2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header: `useQuoteCount` (`features/quote/quote-count.ts`) pasa de leer `localStorage` a un selector del store, sin tocar el header (BD-041).
 
 **Criterios de aceptación**
 
@@ -1075,8 +1199,9 @@ Ver y editar la cotización sin salir de la página.
 
 **Pasos**
 
-1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso.
+1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso. Ojo (BD-045): Motion pesa ≈ 50 KB gzip al primer uso; con el criterio de 30 KB, el drawer usa el `Sheet` con CSS (A-08) y Motion queda para A-36, o se revisa el criterio (docs/09 §7).
 2. Editar cantidades, quitar con deshacer (toast), ir a enviar.
+3. Si el presupuesto de JS lo permite, «Cotizar» de la barra móvil (BD-042) pasa a «Mi cotización (n)» y abre el drawer.
 
 **Criterios de aceptación**
 
@@ -1094,6 +1219,10 @@ Formulario corto para pedir la cotización.
 1. Tipo de cliente (librería, empresa, institución, otro) que ajusta los campos.
 2. Borrador del formulario guardado en `sessionStorage`.
 3. Esquema Zod compartido cliente/servidor (`features/quote/schema.ts`).
+
+**Notas de BD-022 (peso)**
+
+- Medido en `/styleguide/componentes`: React Hook Form + resolver + Zod completo suman **53 KB gzip** en el navegador (Zod es la mayor parte). Sobre la base de ~146 KB, una página con formulario quedaría cerca de 200 KB, por encima del presupuesto de 150 KB (CLAUDE.md, docs/12 §2). Antes de construir este formulario, decidir y medir con `pnpm lhci`: (a) cargar la isla del formulario con `dynamic()` al interactuar o al hacerse visible, (b) pasar las piezas de `lib/form-schemas.ts` a `zod/mini` en el cliente, o (c) validar en el cliente con las reglas de React Hook Form y dejar Zod solo en el servidor. Aplica igual a BD-076 (escuelas, distribuidores, contacto).
 
 **Criterios de aceptación**
 
@@ -1121,7 +1250,12 @@ Guardar, notificar y enviar a SAP sin hacer esperar al visitante.
 **Criterios de aceptación**
 
 - [ ] Respuesta en < 800 ms con SMTP y ERP lentos.
+
 - [ ] Pruebas de integración del doc 13 §4.
+
+**Nota de BD-033:** el folio se pide dentro de la misma `db.$transaction` que crea la cotización y sus líneas (`nextFolio(tx, "COT")`, `src/server/folio.ts`); la validación de un folio que llega de la URL (`/cotizacion/enviada/[folio]`) pasa el texto a mayúsculas y usa `FOLIO_REGEX` de `src/lib/folio.ts`. El bloqueo del contador dura hasta el commit: pedir el folio justo antes del `create` (después de validar y leer), nada de correo ni ERP dentro de la transacción y `db.$transaction(fn, { maxWait: 5_000, timeout: 10_000 })`; no atrapar los errores de `nextFolio` dentro de la transacción.
+
+**Nota de BD-035:** después de guardar, `after(() => sendQuoteToErp(quote.id))` (`server/erp/send-quote.ts`), solo si el ajuste `erp_enabled` no es `"false"` (interruptor del admin; con él apagado, `erpStatus = omitida`). El gateway solo mira `ERP_MODE`. Una llamada puede tardar hasta ~36 s con SMART-K66 caído (4 intentos de 8 s más esperas): no bloquea al visitante porque va en `after()` y no retiene transacción ni conexión de Prisma.
 
 #### BD-074 · Correos de notificación
 
@@ -1191,7 +1325,7 @@ Proteger formularios sin captcha molesto.
 
 #### BD-080 · Dónde comprar: lista y filtros
 
-**Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-032, BD-023 · **Docs** 06 §3.7
+**Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-037, BD-023 · **Docs** 06 §3.7
 
 Encontrar una tienda cercana en segundos.
 
@@ -1261,7 +1395,7 @@ Medir cuántas personas van a una tienda o cadena.
 
 #### BD-090 · Metadatos en todas las rutas
 
-**Sprint** S2 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-032 · **Docs** 10 §3
+**Sprint** S2 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-037 · **Docs** 10 §3
 
 Título, descripción, canonical y Open Graph correctos.
 
@@ -1300,6 +1434,7 @@ Mapa del sitio con fechas reales y reglas para bots.
 **Pasos**
 
 1. Copiar `app/sitemap.ts` y `app/robots.ts`.
+2. `robots.txt` con `Disallow: /styleguide` y `Disallow: /admin`; ninguno de los dos en el sitemap (BD-026).
 
 **Criterios de aceptación**
 
@@ -1332,6 +1467,8 @@ No perder el posicionamiento ganado por el sitio actual.
 1. Rastrear el sitio actual (Screaming Frog o script) y exportar URLs con tráfico desde Search Console.
 2. Completar `features/seo/legacy-redirects.ts` y la tabla `Redirect`.
 3. `scripts/check-redirects.ts`: verifica 301 y destino 200.
+
+**Nota de BD-046:** el mapa estático va en el mismo `proxy.ts`, antes de la consulta a la tabla, con las mismas rutas normalizadas (`lib/redirect-path.ts`). El matcher ya incluye extensiones (imágenes viejas); para las que no tienen equivalente, el proxy puede responder 410. El destino sale de `SITE.url` (`NEXT_PUBLIC_SITE_URL`): en staging debe ser la URL de staging, o `check:redirects` terminaría verificando producción.
 
 **Criterios de aceptación**
 
@@ -1601,6 +1738,7 @@ Inicio de sesión seguro para el equipo interno.
 2. `/admin/login` con server action, bloqueo tras 5 intentos.
 3. `requireRole()` en cada página y acción; `proxy.ts` redirige sin cookie.
 4. Script `pnpm admin:create` para el primer usuario.
+5. `canViewStyleguide()` (`src/server/auth/styleguide-access.ts`) suma la sesión de admin: en producción /styleguide se ve con sesión (BD-026).
 
 **Criterios de aceptación**
 
@@ -1641,6 +1779,10 @@ Crear y editar fichas completas sin tocar código.
 - [ ] Publicar un producto lo muestra en el sitio en < 1 min sin redeploy.
 - [ ] Toast en cada guardado; confirmación al despublicar.
 
+**Nota de BD-031:** despublicar en lugar de borrar (productos, variantes, FAQs, tiendas, hitos y actividades): `pnpm db:seed --profile prod` vuelve a crear lo que falte por su clave natural.
+
+**Nota de BD-034:** subir imágenes con `processImage` (`server/media/process-image.ts`) y `saveMediaAsset` (`server/data/media.ts`); su `MediaError` (`too-large`, `unsupported`, `too-many-pixels`, `invalid-folder`) va a un mensaje de `feedback.ts` (HEIC de iPhone: «guárdala como JPEG»). Cualquier otro error es del disco o de la base. Al guardar `ProductImage`, las fuentes de datos dejan de devolver `image: null`: armar el `ImageView` (`src` = `/media/` + `key`, ancho, alto, `blurDataUrl`, `alt`) en `db/source.ts` y en los JSON de ejemplo.
+
 #### BD-117 · Categorías y FAQs
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-115 · **Docs** 06 §4
@@ -1654,6 +1796,8 @@ Textos SEO de categorías y preguntas frecuentes.
 **Criterios de aceptación**
 
 - [ ] Cambios invalidan los tags correctos.
+
+**Nota de BD-031:** `Faq.key` es obligatoria y única: el formulario la genera con `slugify` de la pregunta (y no la cambia al editar).
 
 #### BD-118 · Tiendas
 
@@ -1712,6 +1856,8 @@ Hero, cifras, historia, actividades, fondos por sección y ajustes.
 2. Apariencia: fondo por sección con vista previa.
 3. Ajustes: WhatsApp, teléfonos, redes, correos, splash on/off, pedido mínimo.
 
+*Nota de BD-031:* `HistoryMilestone.key` y `SchoolActivity.key` son obligatorias y únicas: el formulario las genera con `slugify` del título.
+
 **Criterios de aceptación**
 
 - [ ] Apagar el splash desde ajustes lo desactiva en la siguiente visita.
@@ -1730,6 +1876,8 @@ Subir y reutilizar imágenes y videos.
 
 - [ ] Archivo inválido → mensaje amable; nunca se guarda.
 
+**Nota de BD-034:** la subida reutiliza `processImage` y `saveMediaAsset`; la misma foto con el mismo nombre da la misma clave (no se duplica ni se reescribe). El procesamiento usa todos los núcleos unos segundos: si compite con el sitio, limitar con `sharp.concurrency()`. Videos y PDF no pasan por sharp: necesitan su propio camino (y la ruta `/media` de Node hoy solo sirve imágenes).
+
 #### BD-123 · Redirecciones y 404
 
 **Sprint** S4 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-046, BD-115 · **Docs** 10 §6
@@ -1743,6 +1891,8 @@ Corregir enlaces rotos sin desplegar.
 **Criterios de aceptación**
 
 - [ ] Una redirección creada funciona de inmediato.
+
+**Nota de BD-046:** el mapa de redirecciones vive en memoria y se recarga cada 60 s. Es una sola instancia por proceso (en `globalThis`), así que la acción del admin puede llamar `redirectStore.invalidate()` de `server/seo/redirects.ts`, que lanza una carga nueva y descarta la que estuviera en curso: funciona de inmediato con una sola instancia de Node (doc 15). Validar `fromPath`/`toPath` con `lib/redirect-path.ts` (destino interno). La lista de 404 sale de `NotFoundLog`.
 
 #### BD-124 · Usuarios, auditoría y sincronización
 
@@ -1826,6 +1976,11 @@ Cuando TI publique la API, activar el modo real.
 
 - [ ] Una cotización de staging crea el prospecto en SAP de pruebas.
 - [ ] Si la API no está lista, queda en `noop` y el ticket pasa a Fase 1.1.
+
+**Nota de BD-035:** el contrato del doc 05 §8 es una propuesta; la API real de SMART-K66 vive en K66-APPS bajo `/k66api/api/` (`ERP_BASE_URL`): ajustar rutas y campos en `server/erp/smartk66.ts` y sus pruebas, y confirmar con TI que respeta `Idempotency-Key`. `scripts/retry-erp.ts` reenvía con `sendQuoteToErp` las cotizaciones `pendiente` y define el límite de intentos (`erpAttempts`) a partir del cual pasan a `error`.
+- La tarea solo toma `pendiente` con `erpAttempts > 0` o creadas hace más de unos minutos (las nuevas las está mandando su `after()`), sale de inmediato si `getErpGateway().mode === "noop"` (si no, todas pasarían a `omitida`), usa su propio cliente con `retries: 0` (`sendQuoteToErp(id, gateway)`), corta el lote en el primer `unavailable` y nunca corre dos veces a la vez: con SMART-K66 caído, cada envío con reintentos tarda hasta ~36 s.
+- Con `unauthorized` (clave vencida) todas fallan igual: avisar a operación y reponerlas a `pendiente` cuando se cambie la clave.
+- Pendiente de acordar con TI: `Retry-After` en 429/503, y si el prospecto lleva `unitLabel` y `municipality` (hoy no viajan; las líneas de kit van sin `itemCode`).
 
 ### E13 · Calidad y pruebas
 
@@ -1962,6 +2117,7 @@ Proteger el sitio sin romper la analítica.
 2. HSTS en IIS.
 3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.
 4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).
+5. Si `script-src` deja `'unsafe-inline'` (nonce o hashes), agregar el `sha256` del script de `<head>` (`HEAD_SCRIPT` de `src/app/head-script.ts`, constante): sin él no corre ni la clase `js` ni el splash (BD-043). Igual con `NOT_FOUND_BEACON` (`src/app/not-found-beacon.ts`, el registro de 404 de BD-046). Las páginas estáticas no pueden llevar nonce.
 
 **Criterios de aceptación**
 
@@ -2016,6 +2172,10 @@ Procesos que corren solos.
 **Criterios de aceptación**
 
 - [ ] Cada tarea registra su resultado; fallas generan alerta.
+
+**Nota de BD-046:** incluir la limpieza de `NotFoundLog` (por ejemplo, borrar las rutas con pocas visitas y sin verse en 90 días): el registro en lote limita las filas nuevas por lote, no el tamaño de la tabla.
+
+**Nota de BD-035:** `retry:erp` cada 15 min con candado (no dos a la vez) y las reglas de la nota de BD-128.
 
 ### E15 · Lanzamiento e hipercuidado
 
@@ -2093,7 +2253,7 @@ Aprender y ordenar lo que sigue.
 
 ## 7. Escenario de un solo desarrollador: el núcleo
 
-El núcleo suma **71.25 días** (93 tickets): con dos desarrolladores es el plan de contingencia si algo se atrasa; con uno solo es el alcance mínimo para lanzar. Se posponen a las semanas 2–4 después del lanzamiento:
+El núcleo suma **74.25 días** (96 tickets): con dos desarrolladores es el plan de contingencia si algo se atrasa; con uno solo es el alcance mínimo para lanzar. Se posponen a las semanas 2–4 después del lanzamiento:
 
 | Ticket | Qué se pospone | Mientras tanto |
 |---|---|---|

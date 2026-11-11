@@ -59,7 +59,8 @@ BD-015,E0,Fundaciones del repositorio,Lighthouse CI con presupuestos,S0,0.5,Must
 BD-016,E0,Fundaciones del repositorio,Entorno de staging en IIS,S0,1,Must,B,BD-004 BD-014,15,Un lugar real donde probar desde la primera semana (con apoyo de TI).,"1. Sitio IIS `staging-bolik` (solo red interna o con IP permitida) con ARR + URL Rewrite hacia `localhost:3100`.
 2. Servicio Windows `BolikDigital-Staging` (NSSM o PM2) ejecutando `node server.js`.
 3. BD `BolikDigital_Stg`; carpeta `D:\bolik-stg\media`.
-4. Build en el agente interno (o a mano) con las variables de staging, armado según doc 15 §5, y despliegue manual. El artefacto de la CI (BD-014) no sirve: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` fijo.","- `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
+4. Build en el agente interno (o a mano) con las variables de staging, armado según doc 15 §5, y despliegue manual. El artefacto de la CI (BD-014) no sirve: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` fijo.
+5. Revisión previa de solo lectura del servidor (`staging-preflight.ps1`), que comparte máquina con SQL Server y SMART-K66.","- `https://staging.bolik66.com` (o la URL interna) muestra la app con HTTPS.
 - `X-Robots-Tag: noindex` presente en staging.",Sí
 BD-017,E0,Fundaciones del repositorio,Base de datos local de desarrollo (SQL Server 2022 Express),S0,0.5,Must,B,,"05, 13","Ticket nuevo: la base real llega al final del proyecto; base local con el mismo motor para no bloquear la ruta crítica.","1. `scripts/dev/sqlserver-local.ps1` (admin, una vez, idempotente): instala SQL Server 2022 Express, autenticación mixta, TCP 1433.
 2. Crea BolikDigital_Dev, _Shadow y _Test, el login bolik_app y desactiva sa.
@@ -70,11 +71,11 @@ BD-020,E1,Sistema de diseño y /styleguide,Componente Section con fondos configu
 2. Props: `bg` (9 presets), `tone`, `spacing`, `id`, `as`.
 3. Leer la apariencia por sección desde `SectionAppearance` cuando exista `appearanceKey`.","- Los 9 fondos se ven en `/styleguide`.
 - Cambiar el fondo en BD cambia la sección sin tocar código.",Sí
-BD-021,E1,Sistema de diseño y /styleguide,Botones,S1,0.5,Must,A,BD-007,08 §2,Botón único con variantes para todo el sitio.,"1. `components/ui/button.tsx` con `cva`: primary, secondary, outline, ghost, whatsapp, danger; tamaños sm, md, lg; `loading`; `asChild`.
-2. Clase `.press` (A-01) y foco visible.","- Contraste AA en todas las variantes.
+BD-021,E1,Sistema de diseño y /styleguide,Botones,S1,0.5,Must,A,BD-007,08 §2,Botón único con variantes para todo el sitio.,"1. `components/ui/button.tsx` con `cva` y las variantes de doc 08 §2 (primary, accent, dark, outline, ghost-light, whatsapp, link) más `danger` para el admin; tamaños sm, md, lg; `block`; íconos; `loading`; `asChild`.
+2. Clase `.press` (A-03) y foco visible.","- Contraste AA en todas las variantes.
 - `loading` deshabilita y anuncia ""Enviando…"" a lectores de pantalla.",Sí
 BD-022,E1,Sistema de diseño y /styleguide,Controles de formulario,S1,1,Must,A,BD-021,08 §2,Patrón único de formularios con React Hook Form y Zod.,"1. `Field` (label, ayuda, error con `aria-describedby`), `Input`, `Textarea`, `Select`, `RadioCards`, `Checkbox`, `PhoneInput` (+502, teclado numérico), `QuantityStepper`.
-2. Error con animación `.shake` (A-12) y foco al primer error.","- Navegable solo con teclado.
+2. Error con animación `.shake` (A-04) y foco al primer error.","- Navegable solo con teclado.
 - Errores en español desde `feedback.forms`.",Sí
 BD-023,E1,Sistema de diseño y /styleguide,"Tarjetas, badges, chips y skeletons",S1,1,Must,A,BD-021,08 §2,Piezas de catálogo y listas.,"1. `ProductCard`, `CategoryCard`, `AudienceCard`, `StoreCard`, `Badge`, `Chip`, `Skeleton`.
 2. Imágenes con proporción fija y `sizes` correctos.","- CLS 0 al cargar una grilla de 12 tarjetas.
@@ -84,38 +85,41 @@ BD-024,E1,Sistema de diseño y /styleguide,Alertas amigables: Toaster y Friendly
 3. Hook `useFeedback()` que toma los textos de `content/feedback.ts`.
 4. Aviso de ""sin conexión"" y ""conexión recuperada"".","- Cada fila de la matriz del doc 08 §4 tiene un ejemplo en `/styleguide`.
 - Toasts anunciados con `aria-live`.",Sí
-BD-025,E1,Sistema de diseño y /styleguide,"Overlays: Sheet, Dialog, Tabs, Accordion",S1,0.5,Must,A,BD-021,"08, 09",Componentes de Radix/shadcn con nuestras animaciones.,"1. Agregar con `pnpm dlx shadcn@latest add dialog sheet tabs accordion popover`.
-2. Reemplazar sus animaciones por los presets del doc 09.","- Escape cierra; el foco vuelve al disparador.
+BD-025,E1,Sistema de diseño y /styleguide,"Overlays: Sheet, Dialog, Tabs, Accordion",S1,0.5,Must,A,BD-021,"08, 09",Componentes de Radix/shadcn con nuestras animaciones.,"1. Dialog, Sheet y Popover sobre Radix, con la estructura de shadcn escrita a mano (sin `tailwind-merge`).
+2. Tabs propio y Accordion con `<details>`: contenido en el HTML y visible sin JS (docs/11 §1). Decisión aprobada en BD-025.
+3. Animaciones con los presets del doc 09.","- Escape cierra; el foco vuelve al disparador.
 - Con `prefers-reduced-motion` aparecen sin desplazamiento.",Sí
 BD-026,E1,Sistema de diseño y /styleguide,Vista /styleguide,S1,1,Must,A,BD-020 BD-021 BD-022 BD-023 BD-024 BD-025,08 §6,Vitrina interna con todos los componentes reales.,"1. `app/(site)/styleguide/page.tsx` con las 13 secciones del doc 08 §6.
 2. `noindex`, fuera del sitemap, bloqueada en robots.
 3. En producción solo visible con sesión de admin.","- Todas las secciones renderizan sin errores de consola.
 - En producción sin sesión responde 404.",Sí
-BD-027,E1,Sistema de diseño y /styleguide,Logo e ilustraciones,S1,0.5,Must,A,BD-007,02,Logo como componente SVG y las ilustraciones de los diálogos.,"1. `components/brand/logo.tsx` con variantes `full`, `mark`, `mono`, `inverse`.
-2. Ilustraciones SVG en línea (éxito, error, vacío, sin conexión) optimizadas con SVGO.","- Cada SVG pesa < 4 KB.
+BD-027,E1,Sistema de diseño y /styleguide,Logo e ilustraciones,S1,0.5,Must,A,BD-007,02,Logo como componente SVG y las ilustraciones de los diálogos.,"1. `components/brand/logo.tsx` con el logo oficial de Mercadeo: variantes `full`, `inverse` y `wordmark` (BOLIK® en un color; el logo no tiene isotipo, así que no hay `mark`). Archivos optimizados con SVGO en `public/brand`.
+2. Ilustraciones SVG en línea (éxito, error, vacío, sin resultados, sin conexión).","- Cada ilustración y el wordmark pesan < 4 KB; el archivo del logo completo, ≤ 25 KB (7 KB gzip: el trazo de crayón oficial no baja más sin perder detalle).
 - El logo tiene `aria-label=""Bolik""`.",No
 BD-030,E2,"Datos, medios e integración base",Esquema completo y migraciones,S0,0.5,Must,B,BD-010,05,Todas las tablas del MVP.,"1. Usar `starter/prisma/schema.prisma` completo.
 2. `pnpm db:migrate --name schema_mvp`.
 3. Revisar índices del doc 05 §6.","- `prisma validate` OK.
 - La migración se aplica en una BD vacía y en staging.",Sí
-BD-031,E2,"Datos, medios e integración base",Seeds con datos reales,S1,1.5,Must,B,BD-030,"05 §7, 17",Datos reales para desarrollar y probar (nada de lorem).,"1. `prisma/seed/*.json`: categorías, productos (Bolik Ultra y su ficha), variantes y empaques, tiendas reales, departamentos, FAQs, contenido de la home, admin inicial.
-2. Perfiles `--profile dev` y `--profile e2e`.
-3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e` (con Cache Components el build prerenderiza leyendo la BD; hoy ninguna página la lee).
+BD-031,E2,"Datos, medios e integración base",Seeds con datos reales,S1,1.5,Must,B,BD-030 BD-037,"05 §6, 17",Datos reales para desarrollar y probar (nada de lorem).,"1. Cargar en la base los `prisma/seed/*.json` de BD-037 (categorías, productos, variantes y empaques, tiendas, departamentos, FAQs, contenido de la home) más el admin inicial. Lo marcado `sample` no se carga en producción.
+2. Perfiles `--profile dev` y `--profile e2e` (cargan también lo `sample`) y `--profile prod` (staging con base y producción: sin lo `sample` ni relaciones hacia ello).
+3. CI: levantar `scripts/ci/sqlserver.sh` también en los trabajos Build y E2E, con `migrate deploy` y `pnpm db:seed --profile e2e`, cuando la CI construya con `DATA_SOURCE=db` (con Cache Components el build prerenderiza leyendo la BD; con la fuente de ejemplo de BD-037 no la necesita). Pasó a BD-032; aquí el seed se prueba en el trabajo Integración.
 4. El seed es idempotente (`upsert`).","- `pnpm db:seed` dos veces seguidas no duplica datos.
 - El Bolik Ultra tiene PT00058/59/60 con sus códigos de barras.",Sí
-BD-032,E2,"Datos, medios e integración base",Capa de datos con Cache Components,S1,1.5,Must,B,BD-031,03 §5,Consultas de lectura cacheadas con tags.,"1. `server/data/{products,categories,stores,content,faqs,sitemap,llms,search}.ts`.
+BD-032,E2,"Datos, medios e integración base",Capa de datos con Cache Components,S1,1.5,Must,B,BD-031 BD-037,03 §5,Consultas de lectura cacheadas con tags.,"1. La interfaz, los tipos de vista y las funciones cacheadas de `server/data/` ya existen (BD-037): este ticket agrega la fuente `db` con Prisma y las funciones que falten (`sitemap`, `llms`, `search`).
 2. Cada función con `'use cache'`, `cacheLife('max')` y `cacheTag` de `lib/cache-tags.ts`.
-3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.","- El build prerenderiza las páginas públicas sin consultar la BD en cada petición.
+3. Devolver tipos de vista (`ProductView`, `StoreView`) en lugar de modelos de Prisma.
+4. La batería de contrato de BD-037 pasa contra `BolikDigital_Test`.
+5. CI (paso 3 de BD-031): el trabajo Integración siembra la base de pruebas, construye con `DATA_SOURCE=db` y sirve ese build con la base desconectada.","- El build prerenderiza las páginas públicas sin consultar la BD en cada petición.
 - Pruebas de integración de las funciones.",Sí
-BD-033,E2,"Datos, medios e integración base",Folios consecutivos,S1,0.5,Must,B,BD-030,05 §5,COT/ESC/DIS-AAAA-NNNNNN sin duplicados.,"1. Copiar `starter/src/server/folio.ts`.
+BD-033,E2,"Datos, medios e integración base",Folios consecutivos,S1,0.5,Must,B,BD-030,05 §4,COT/ESC/DIS-AAAA-NNNNNN sin duplicados.,"1. Copiar `starter/src/server/folio.ts`.
 2. Prueba de concurrencia: 20 envíos simultáneos.","- 20 folios distintos y consecutivos.
 - El 1 de enero reinicia el consecutivo.",Sí
 BD-034,E2,"Datos, medios e integración base",Procesamiento de imágenes,S1,1.5,Must,B,BD-030,03 §7,Imágenes rápidas: se procesan una sola vez al subir.,"1. `server/media/process-image.ts`: sharp → WebP en 320/480/640/960/1280/1920 + `blurDataURL` + hash.
 2. Guardar en `MEDIA_DIR` y registrar `MediaAsset`.
 3. `lib/image-loader.ts` (starter) y `images.loaderFile` en `next.config.ts`.
-4. Script `scripts/import-media.ts` para cargar en lote las fotos actuales.","- Una foto de 4 MB genera 6 archivos y la de 640 pesa < 60 KB.
+4. Script `scripts/import-media.mts` para cargar en lote las fotos actuales.","- Una foto de 4 MB genera 6 archivos y la de 640 pesa < 60 KB.
 - `next/image` pide el ancho correcto según `sizes`.",Sí
-BD-035,E2,"Datos, medios e integración base",Gateway del ERP,S1,1,Must,B,BD-030,"03 §6, 05 §9",La web nunca depende de que SAP o SMART-K66 estén arriba.,"1. `server/erp/gateway.ts` (interfaz), `noop.ts`, `smartk66.ts` (fetch con timeout 8 s y 3 reintentos con backoff).
+BD-035,E2,"Datos, medios e integración base",Gateway del ERP,S1,1,Must,B,BD-030,"03 §5, 05 §8",La web nunca depende de que SAP o SMART-K66 estén arriba.,"1. `server/erp/gateway.ts` (interfaz), `noop.ts`, `smartk66.ts` (fetch con timeout 8 s y 3 reintentos con backoff).
 2. Seleccionar por `ERP_MODE`.
 3. Mocks con MSW para pruebas.","- Con `ERP_MODE=noop` todo funciona.
 - Con la API simulada caída, la cotización se guarda con `erpStatus = pendiente`.",Sí
@@ -123,36 +127,50 @@ BD-036,E2,"Datos, medios e integración base",Sincronización del catálogo con 
 2. Registra `SyncRun` con conteos.
 3. Llama `revalidateTag(tag, 'max')` en lo que cambió.","- Un artículo inactivo en SAP se marca `inactivo` y sale del sitio.
 - El resultado aparece en `/admin/sincronizacion`.",No
+BD-037,E2,"Datos, medios e integración base",Fuente de datos de ejemplo,S1,1,Must,B,BD-030,"03, 05 §6, 17","Ticket nuevo: el frontend avanza sin esperar la base; las páginas leen de src/server/data, que hoy sirve datos de ejemplo y después SQL Server.","1. `DATA_SOURCE=fixtures|db` en el esquema de entorno; en producción solo `db`.
+2. Tipos de vista en `src/server/data/types.ts`.
+3. Datos en `prisma/seed/*.json` (formato del seed de BD-031), validados con Zod; lo que no está en doc 17 sale de la demo y queda marcado `sample` o `isVerified = false`.
+4. Funciones de lectura cacheadas que delegan en la fuente elegida.
+5. Pruebas de contrato para la fuente de ejemplo y, en BD-032, para Prisma.","- Con `DATA_SOURCE=fixtures`, `pnpm build` y las páginas funcionan sin SQL Server.
+- `APP_ENV=production` con `DATA_SOURCE=fixtures` no arranca.
+- La batería de contrato pasa con la fuente de ejemplo.",Sí
+BD-038,E2,"Datos, medios e integración base",Catálogo real 2026-2027,S2,1.5,Must,B,BD-031,"05 §6, 17","Ticket nuevo: los productos reales del catálogo impreso 2026-2027 reemplazan a los productos de ejemplo de la demo.","1. Transcribir del catálogo (PDF de Mercadeo, fuera del repo) los ~50 productos y ~140 variantes: nombre, línea, colores, códigos de barras y empaques; cada código pasa la validación del dígito verificador.
+2. Emparejar cada variante con su código SAP (PT…) usando el código de barras como puente, con la exportación de artículos de SAP; sin código SAP no se carga como real.
+3. Ampliar `PACKAGING_CODES` con las presentaciones del catálogo y revisar las categorías.
+4. Decidir cómo se muestran las marcas del grupo (Fabik, Coloreto, EcoBol, K-Pen).
+5. Quitar los productos de ejemplo que el catálogo real ya cubre.","- Cada producto del catálogo con su código SAP está en `products.json` sin `sample`.
+- Todos los códigos de barras pasan la validación y `pnpm db:seed` dos veces no duplica datos.",Sí
 BD-040,E3,"Estructura global, splash y movimiento",Layout raíz del sitio,S1,0.5,Must,A,BD-008 BD-024,06 §2,"HTML base, metadatos raíz y proveedores mínimos.","1. `app/layout.tsx`: `<html lang=""es-GT"">`, fuentes, `rootMetadata`, enlace ""Saltar al contenido"".
 2. `app/(site)/layout.tsx`: Header, `<main id=""contenido"">`, Footer, Toaster, RevealObserver.
 3. Script del splash en `<head>`.","- Una sola etiqueta `<main>` por página.
-- JS compartido ≤ 90 KB gzip.",Sí
-BD-041,E3,"Estructura global, splash y movimiento",Header y menú móvil,S1,1,Must,A,BD-040 BD-025,06 §2,Navegación principal con acceso a buscar y a la cotización.,"1. Header fijo que se compacta al bajar (A-20) y se oculta/aparece por dirección de scroll en móvil.
+- JS inicial dentro del presupuesto de docs/12 §2 (home ≤ 165 KB, resto ≤ 150 KB; lo vigila Lighthouse CI). El criterio original de 90 KB compartidos no es alcanzable con Next 16 + React 19 (~132 KB de runtime); BD-040 no suma JS: 140.6 KB compartidos antes y después.",Sí
+BD-041,E3,"Estructura global, splash y movimiento",Header y menú móvil,S1,1,Must,A,BD-040 BD-025,06 §2,Navegación principal con acceso a buscar y a la cotización.,"1. Header fijo que se compacta al bajar (A-07). Nunca se oculta (docs/06 §2: la cotización siempre a mano; decisión de BD-041).
 2. Badge de cotización con `badge-pop` (A-05).
 3. Menú móvil en `Sheet` con enlaces grandes y CTA de WhatsApp.","- Sin CLS al compactarse.
 - El menú se cierra al navegar y devuelve el foco.",Sí
 BD-042,E3,"Estructura global, splash y movimiento",Footer y botones flotantes,S1,0.5,Must,A,BD-040,06 §2,Pie con datos de la empresa y flotantes de WhatsApp y volver arriba.,"1. Footer con dirección, teléfono, redes, enlaces legales, razón social desde `SiteSetting`.
-2. Botón WhatsApp flotante (se oculta cuando el drawer o el teclado están abiertos).","- Teléfono con `tel:` y WhatsApp con mensaje prellenado.
+2. Botón WhatsApp flotante (escritorio) y barra de acciones abajo (móvil: WhatsApp y Cotizar), con el mensaje general prellenado. Se ocultan con CSS cuando el drawer o el teclado están abiertos. «Cotizar» de la barra es fijo: el contador ya está en el header (decisión de BD-042, por presupuesto de JS).
+3. «Volver arriba»: enlace en el pie y flotante pasada una pantalla (`data-scrolled-far` de `header-scroll.tsx`).","- Teléfono con `tel:` y WhatsApp con mensaje prellenado.
 - Los flotantes no tapan el CTA principal en móvil.",Sí
-BD-043,E3,"Estructura global, splash y movimiento",Splash de 2 segundos,S1,0.5,Must,A,BD-040,09 §splash,"Animación del logo antes del hero, sin afectar SEO ni LCP.","1. Copiar `starter/src/components/layout/splash.tsx`.
-2. Inyectar el script en `<head>` y el SVG al inicio del `<body>`.
+BD-043,E3,"Estructura global, splash y movimiento",Splash de 2 segundos,S1,0.5,Must,A,BD-040,09 §splash,"Animación del logo antes del hero, sin afectar SEO ni LCP.","1. Adaptar `starter/src/components/layout/splash.tsx` a la marca: wordmark oficial y trazo amarillo, sin el «cuadro azul» ni texto (decisión de BD-043; docs/09 §3).
+2. Inyectar el script en `<head>` (`app/head-script.ts`, junto a la clase `js`) y el SVG al inicio del `<body>`. Se salta con toque, clic, tecla o rueda; no bloquea el scroll.
 3. Leer `splash_enabled` de `SiteSetting` en `data-splash-enabled`.","- Prueba E2E `splash.spec.ts` en verde.
 - Lighthouse no cambia el LCP con splash activo vs. inactivo (± 100 ms).",Sí
-BD-044,E3,"Estructura global, splash y movimiento","Revelado al hacer scroll, cifras y transiciones",S1,0.5,Must,A,BD-040,09,Movimiento suave hecho con CSS.,"1. Copiar `reveal-observer.tsx` y `count-up.tsx`.
-2. Transición de entrada de página con `.page-enter`.","- Sin JS el contenido se ve completo.
+BD-044,E3,"Estructura global, splash y movimiento","Revelado al hacer scroll, cifras y transiciones",S1,0.5,Must,A,BD-040,09,Movimiento suave hecho con CSS.,"1. `reveal-observer.tsx` y `count-up.tsx` desde el starter, con las mejoras de BD-044 (docs/09 §6): ocultar solo con `data-reveal-ready`, `MutationObserver`, sin la red de 2.5 s; cifra sin CLS.
+2. Transición de entrada de página con `.page-enter`: `PageEnter` en `(site)/layout.tsx` al cambiar de ruta, sin animar la primera carga (docs/09 §4; no `template.tsx`).","- Sin JS el contenido se ve completo.
 - Con movimiento reducido no hay animaciones.",Sí
-BD-045,E3,"Estructura global, splash y movimiento",MotionProvider diferido,S1,0.25,Must,A,BD-040,09,Motion solo donde CSS no alcanza.,"1. `components/motion/provider.tsx` con `LazyMotion` + `domAnimation` (carga diferida) y presets.
-2. Solo `m.*` en componentes.",- Motion no aparece en el JS inicial de la home (bundle analyzer).,Sí
-BD-046,E3,"Estructura global, splash y movimiento",Páginas 404 y 500,S2,0.5,Must,B,BD-040 BD-032,"06 §3.19, 10 §6",Errores amables que ayudan a seguir navegando.,"1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías.
+BD-045,E3,"Estructura global, splash y movimiento",MotionProvider diferido,S1,0.25,Must,A,BD-040,09,Motion solo donde CSS no alcanza.,"1. `components/motion/motion-provider.tsx` con `LazyMotion strict` + `domAnimation` (o `domMax` con `layout`) por `import()`, `MotionConfig reducedMotion` y presets en `lib/motion.ts` con los tokens de `motion.css` (Motion 14.6.0, BD-045).
+2. Solo `m.*` en componentes, desde `components/motion/m.ts` (regla de ESLint). Guardián E2E: la home no descarga Motion.",- Motion no aparece en el JS inicial de la home (bundle analyzer).,Sí
+BD-046,E3,"Estructura global, splash y movimiento",Páginas 404 y 500,S2,0.5,Must,B,BD-040 BD-037,"06 §3.19, 10 §6",Errores amables que ayudan a seguir navegando.,"1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías. Conserva su `<MainContent>` (BD-040: queda fuera de los layouts de grupo) y revisa que no salga el `<title>` de Next en inglés.
 2. `error.tsx` con WhatsApp y ""Reintentar"".","- Una URL vieja registrada en `Redirect` responde 301.
 - Las demás registran el 404 con contador.",Sí
-BD-050,E4,Inicio,Hero con video por capítulos,S2,1.5,Must,A,BD-032 BD-034 BD-044,"06 §3.1, 09","El hero de la demo, llevado a producción.","1. Copiar `starter/src/components/hero/video-hero.tsx`.
+BD-050,E4,Inicio,Hero con video por capítulos,S2,1.5,Must,A,BD-037 BD-034 BD-044,"06 §3.1, 09","El hero de la demo, llevado a producción.","1. Copiar `starter/src/components/hero/video-hero.tsx`.
 2. Datos desde `HeroChapter` (título, texto, CTA, póster, video).
 3. Póster del capítulo 1 con `priority` (es el LCP).
 4. Video solo tras `load`, en ocioso y sin Save-Data/2g/3g/movimiento reducido.","- LCP de la home ≤ 2.0 s en Lighthouse móvil.
 - Capítulos navegables con flechas del teclado.
 - El video se pausa fuera de pantalla.",Sí
-BD-051,E4,Inicio,Soluciones por público y categorías,S2,0.5,Must,A,BD-023 BD-032,06 §3.1,Accesos rápidos a lo que busca cada visitante.,"1. ""Un Bolik para cada etapa"": 5 tarjetas (Colegios, Universidades, Empresas, Librerías, Distribuidores) y 8 categorías con buscador grande (doc 06 §3.1, secciones 3–4).
+BD-051,E4,Inicio,Soluciones por público y categorías,S2,0.5,Must,A,BD-023 BD-037,06 §3.1,Accesos rápidos a lo que busca cada visitante.,"1. ""Un Bolik para cada etapa"": 5 tarjetas (Colegios, Universidades, Empresas, Librerías, Distribuidores) y 8 categorías con buscador grande (doc 06 §3.1, secciones 3–4).
 2. Eventos `solution_click` y `category_click`.","- Las tarjetas enlazan a rutas reales.
 - Revelado escalonado (A-30).",Sí
 BD-052,E4,Inicio,Producto estrella y cifras,S2,0.5,Must,A,BD-051,06 §3.1,Bolik Ultra destacado y cifras de la empresa.,"1. Bloque del Ultra con colores, empaques y CTA ""Cotizar"" / ""Dónde comprar"".
@@ -168,7 +186,7 @@ BD-054,E4,Inicio,"FAQ, CTA final y apariencia por sección",S2,0.5,Must,A,BD-051
 BD-055,E4,Inicio,Ajuste de rendimiento de la home,S2,0.5,Must,A,BD-050 BD-054,12,La home cumple los presupuestos.,"1. Bundle analyzer; mover a carga diferida lo que no se ve arriba.
 2. Lighthouse móvil 3 corridas.","- JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
 - Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.",Sí
-BD-060,E5,"Catálogo, fichas y búsqueda",Catálogo /productos,S2,1,Must,A,BD-023 BD-032,06 §3.2,Todos los productos con filtros por uso.,"1. Server Component con la grilla completa.
+BD-060,E5,"Catálogo, fichas y búsqueda",Catálogo /productos,S2,1,Must,A,BD-023 BD-037,06 §3.2,Todos los productos con filtros por uso.,"1. Server Component con la grilla completa.
 2. Isla cliente para filtros (uso, línea, color) que actualiza la URL (`?uso=oficina`) sin recargar.
 3. Estado vacío amigable.","- Filtrar no hace peticiones al servidor.
 - La URL con filtros se puede compartir.",Sí
@@ -198,10 +216,11 @@ BD-066,E5,"Catálogo, fichas y búsqueda",Buscador,S2,1.5,Must,B,BD-032 BD-025,"
 BD-067,E5,"Catálogo, fichas y búsqueda",WhatsApp contextual,S2,0.25,Must,A,BD-009,07,Mensajes prellenados según dónde esté el visitante.,"1. `lib/whatsapp.ts` con plantillas (producto, cotización, general) y número desde `SiteSetting`.","- El mensaje incluye producto, SKU, empaque y URL.
 - Evento `whatsapp_open`.",Sí
 BD-070,E6,Cotización y formularios,Estado de la cotización,S2,0.5,Must,A,BD-024,07 §2.3,Lista de productos a cotizar que se guarda en el navegador.,"1. Copiar `starter/src/features/quote/store.ts`.
-2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header.","- Recargar la página conserva la lista.
+2. Acciones: agregar, quitar, cambiar cantidad, vaciar; badge en el header: `useQuoteCount` (`features/quote/quote-count.ts`) pasa de leer `localStorage` a un selector del store, sin tocar el header (BD-041).","- Recargar la página conserva la lista.
 - Pruebas unitarias del doc 13 §3.",Sí
-BD-071,E6,Cotización y formularios,Drawer de cotización,S2,1,Must,A,BD-070 BD-045,"06, 09",Ver y editar la cotización sin salir de la página.,"1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso.
-2. Editar cantidades, quitar con deshacer (toast), ir a enviar.","- Abrir el drawer no carga más de 30 KB adicionales.
+BD-071,E6,Cotización y formularios,Drawer de cotización,S2,1,Must,A,BD-070 BD-045,"06, 09",Ver y editar la cotización sin salir de la página.,"1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso. Ojo (BD-045): Motion pesa ≈ 50 KB gzip al primer uso; con el criterio de 30 KB, el drawer usa el `Sheet` con CSS (A-08) y Motion queda para A-36, o se revisa el criterio (docs/09 §7).
+2. Editar cantidades, quitar con deshacer (toast), ir a enviar.
+3. Si el presupuesto de JS lo permite, «Cotizar» de la barra móvil (BD-042) pasa a «Mi cotización (n)» y abre el drawer.","- Abrir el drawer no carga más de 30 KB adicionales.
 - Deshacer restaura la línea.",Sí
 BD-072,E6,Cotización y formularios,Página /cotizacion y formulario,S2,1,Must,A,BD-071 BD-022,06 §3.16,Formulario corto para pedir la cotización.,"1. Tipo de cliente (librería, empresa, institución, otro) que ajusta los campos.
 2. Borrador del formulario guardado en `sessionStorage`.
@@ -223,7 +242,7 @@ BD-076,E6,Cotización y formularios,"Formularios de escuelas, distribuidores y c
 BD-077,E6,Cotización y formularios,Anti-spam compartido,S3,0.5,Must,B,BD-073,03 §8,Proteger formularios sin captcha molesto.,"1. `server/rate-limit.ts`: 5 envíos/10 min por hash de IP (memoria + respaldo en BD).
 2. Honeypot y tiempo mínimo de 3 s.","- El sexto envío en 10 min recibe un mensaje amable.
 - Un bot que llena el honeypot recibe éxito falso y no se guarda.",Sí
-BD-080,E7,Dónde comprar,Dónde comprar: lista y filtros,S3,1,Must,A,BD-032 BD-023,06 §3.7,Encontrar una tienda cercana en segundos.,"1. Selector de departamento, lista de tiendas, cadenas con compra en línea.
+BD-080,E7,Dónde comprar,Dónde comprar: lista y filtros,S3,1,Must,A,BD-037 BD-023,06 §3.7,Encontrar una tienda cercana en segundos.,"1. Selector de departamento, lista de tiendas, cadenas con compra en línea.
 2. ""Cómo llegar"" abre Maps con coordenadas.","- Funciona sin JS (lista completa).
 - Eventos `store_filter`, `maps_click`, `retailer_click`.",Sí
 BD-081,E7,Dónde comprar,"Mapa y ""cerca de mí""",S3,1,Should,A,BD-080,06 §3.7,Mapa interactivo que no pesa en la carga inicial.,"1. `react-leaflet` cargado cuando el mapa entra en pantalla.
@@ -235,13 +254,14 @@ BD-082,E7,Dónde comprar,Páginas por departamento,S3,0.5,Must,A,BD-080,"06 §3.
 BD-083,E7,Dónde comprar,Registro de clics salientes,S3,0.5,Must,A,BD-030,12 §4,Medir cuántas personas van a una tienda o cadena.,"1. `/api/beacon` (POST, `sendBeacon`) → `OutboundClick` con destino, producto, departamento.
 2. Sin datos personales; responde 204.","- Un clic a Walmart crea una fila.
 - El endpoint rechaza cuerpos > 2 KB.",Sí
-BD-090,E8,SEO técnico,Metadatos en todas las rutas,S2,1,Must,B,BD-032,10 §3,"Título, descripción, canonical y Open Graph correctos.","1. Copiar `features/seo/metadata.ts`; `generateMetadata` en cada página.
+BD-090,E8,SEO técnico,Metadatos en todas las rutas,S2,1,Must,B,BD-037,10 §3,"Título, descripción, canonical y Open Graph correctos.","1. Copiar `features/seo/metadata.ts`; `generateMetadata` en cada página.
 2. `opengraph-image` por producto y categoría (imagen generada con el nombre y la foto).","- Títulos y descripciones únicos en todo el sitio (prueba `seo.spec.ts`).
 - Canonical absoluto con `www`.",Sí
 BD-091,E8,SEO técnico,Datos estructurados JSON-LD,S2,0.5,Must,B,BD-090,10 §4,Datos que Google y las IA entienden.,"1. Copiar `features/seo/jsonld.tsx` y usarlo en cada plantilla.
 2. Validar con la Prueba de resultados enriquecidos y validator.schema.org.","- 0 errores en las plantillas: home, categoría, ficha, FAQ, dónde comprar.
 - Capturas de la validación adjuntas al ticket.",Sí
-BD-092,E8,SEO técnico,sitemap.xml y robots.txt,S2,0.25,Must,B,BD-032,10 §5,Mapa del sitio con fechas reales y reglas para bots.,1. Copiar `app/sitemap.ts` y `app/robots.ts`.,"- El sitemap solo incluye páginas publicadas e indexables.
+BD-092,E8,SEO técnico,sitemap.xml y robots.txt,S2,0.25,Must,B,BD-032,10 §5,Mapa del sitio con fechas reales y reglas para bots.,1. Copiar `app/sitemap.ts` y `app/robots.ts`.
+2. `robots.txt` con `Disallow: /styleguide` y `Disallow: /admin`; ninguno de los dos en el sitemap (BD-026).,"- El sitemap solo incluye páginas publicadas e indexables.
 - En staging robots bloquea todo.",Sí
 BD-093,E8,SEO técnico,Migas de pan y enlazado interno,S2,0.5,Must,B,BD-061,10 §7,Ayuda a usuarios y buscadores a entender la jerarquía.,"1. Componente `Breadcrumbs` visible + `BreadcrumbList`.
 2. Bloques de enlaces relacionados (categorías hermanas, productos relacionados, departamentos).",- Ninguna página pública queda a más de 3 clics de la home.,Sí
@@ -289,7 +309,8 @@ BD-112,E10,Páginas por público e institucionales,Páginas legales,S3,0.25,Must
 BD-114,E11,Panel administrativo,Acceso al admin (iron-session),S2,1,Must,B,BD-030,"03 §8, 01 ADR-08",Inicio de sesión seguro para el equipo interno.,"1. Copiar `starter/src/server/auth/*`.
 2. `/admin/login` con server action, bloqueo tras 5 intentos.
 3. `requireRole()` en cada página y acción; `proxy.ts` redirige sin cookie.
-4. Script `pnpm admin:create` para el primer usuario.","- Sin sesión, `/admin/*` redirige a login.
+4. Script `pnpm admin:create` para el primer usuario.
+5. `canViewStyleguide()` (`src/server/auth/styleguide-access.ts`) suma la sesión de admin: en producción /styleguide se ve con sesión (BD-026).","- Sin sesión, `/admin/*` redirige a login.
 - Rol `ventas` no puede editar productos (prueba).
 - Cookie `httpOnly`, `secure`, `sameSite=lax`.",Sí
 BD-115,E11,Panel administrativo,Layout del admin y dashboard,S3,1,Must,A,BD-114,"06 §4, 12 §6",Panel con indicadores principales.,"1. Menú lateral/inferior, encabezado con usuario.
@@ -341,7 +362,8 @@ BD-141,E14,Despliegue y operación,Pipeline de despliegue,S3,1,Must,B,BD-014 BD-
 BD-142,E14,Despliegue y operación,Cabeceras de seguridad y CSP,S3,0.5,Must,B,BD-004,15 §6,Proteger el sitio sin romper la analítica.,"1. Cabeceras y CSP del doc 15 §6 en `next.config.ts` (primero como Report-Only en staging).
 2. HSTS en IIS.
 3. Revisar la consola en todas las plantillas con GA4, Clarity y el mapa activos.
-4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).","- securityheaders.com: nota A.
+4. Agregar un destino de reportes (`Reporting-Endpoints` + `report-to`) o pasar a `Content-Security-Policy`, y quitar la excepción de `KNOWN_CONSOLE_ERRORS` en `tests/e2e/helpers.ts` (Safari avisa que una Report-Only sin `report-to` no tiene efecto; visto en BD-013).
+5. Si `script-src` deja `'unsafe-inline'` (nonce o hashes), agregar el `sha256` del script de `<head>` (`HEAD_SCRIPT` de `src/app/head-script.ts`, constante): sin él no corre ni la clase `js` ni el splash (BD-043). Igual con `NOT_FOUND_BEACON` (`src/app/not-found-beacon.ts`, el registro de 404 de BD-046). Las páginas estáticas no pueden llevar nonce.","- securityheaders.com: nota A.
 - Sin errores de CSP en consola.",Sí
 BD-143,E14,Despliegue y operación,Respaldos y prueba de restauración,S4,0.5,Must,B,BD-140,15 §7,Poder recuperar datos y medios.,"1. Respaldos de BD (DBA) y de `D:\bolik\media` (robocopy nocturno).
 2. Restaurar en staging y verificar.",- Restauración documentada con tiempos reales.,Sí

@@ -53,6 +53,8 @@
 /* Trazo de tinta decorativo en una esquina (SVG inline como data URI, < 1 KB) */
 [data-bg="ink"] {
   background: var(--paper);
+  /* El trazo sale 40 px por la derecha: se recorta para no dar scroll horizontal. */
+  overflow-x: clip;
 }
 [data-bg="ink"]::before {
   content: "";
@@ -94,6 +96,14 @@
   --muted: var(--on-dark-muted);
   --line: color-mix(in srgb, var(--paper) 16%, transparent);
 }
-[data-tone="dark"] :where(h1, h2, h3) {
+[data-tone="dark"] :where(h1, h2, h3, h4) {
   color: var(--paper);
+}
+/* Enlaces de texto (los botones llevan clases y su propio color) */
+[data-tone="dark"] :where(a:not([class])) {
+  color: var(--paper);
+  text-decoration: underline;
+}
+[data-tone="dark"] :where(a:not([class])):hover {
+  color: var(--on-dark);
 }

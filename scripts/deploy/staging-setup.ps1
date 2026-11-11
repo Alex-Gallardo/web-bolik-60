@@ -27,7 +27,8 @@
   powershell -ExecutionPolicy Bypass -File scripts\deploy\staging-setup.ps1 `
     -HostName staging.bolik66.com -ServiceAccount ".\svc-bolik" -CertThumbprint "<huella>"
 #>
-[CmdletBinding()]
+# Sin parámetros por posición: un valor suelto (p. ej. una IP separada por espacio) caería en -Base.
+[CmdletBinding(PositionalBinding = $false)]
 param(
   [string]$HostName = "staging.bolik66.com",
   # Sin espacios: PowerShell 5.1 no conserva comillas dentro de los argumentos que recibe NSSM.
@@ -40,6 +41,10 @@ param(
   [string]$CertThumbprint = "",
   # Vuelve a pedir la contraseña de la cuenta aunque el servicio ya corra con ella.
   [switch]$ResetPassword,
+  # IPv4 o redes CIDR que pueden entrar al sitio (p. ej. "10.0.0.0/8,192.168.10.25"); el resto
+  # recibe 403. Siempre se agrega el loopback (127.0.0.1 y ::1) para la prueba de humo, no la IP de
+  # red del servidor. Reemplaza la lista anterior; sin él no se toca; "none" quita la restricción.
+  [string[]]$AllowedIps = @(),
   [string]$Node = "C:\Program Files\nodejs\node.exe",
   [string]$Nssm = "nssm"
 )
@@ -93,6 +98,40 @@ foreach ($module in @("RewriteModule", "ApplicationRequestRouting")) {
 $Thumb = ($CertThumbprint -replace '[^0-9A-Fa-f]', '').ToUpper()
 if ($Thumb -and -not (Test-Path "Cert:\LocalMachine\My\$Thumb")) {
   throw "No está el certificado $Thumb en LocalMachine\My."
+}
+# -AllowedIps llega como un solo texto con comas cuando el script se corre con -File.
+$IpRules = New-Object System.Collections.Generic.List[object]
+$ipEntries = @($AllowedIps | ForEach-Object { $_ -split '[,\s]+' } | Where-Object { $_ })
+$RemoveIpRestriction = $ipEntries.Count -eq 1 -and $ipEntries[0] -eq "none"
+if ($ipEntries.Count -and -not $RemoveIpRestriction) {
+  if (-not (Get-WebGlobalModule -Name "IpRestrictionModule")) {
+    throw "-AllowedIps necesita la característica 'IP and Domain Restrictions' de IIS (Web-IP-Security)."
+  }
+  $seen = @{}
+  # El loopback siempre entra: staging-deploy.ps1 hace la prueba de humo a través de IIS.
+  foreach ($entry in @("127.0.0.1", "::1") + $ipEntries) {
+    $ip = $null
+    $mask = ""
+    if ($entry -match '^(\d{1,3}(?:\.\d{1,3}){3})(?:/(\d{1,2}))?$') {
+      # Formato estricto: TryParse acepta '1.2.3' (→ 1.2.0.3) o '10' sin avisar.
+      if (-not [Net.IPAddress]::TryParse($Matches[1], [ref]$ip)) { throw "-AllowedIps: '$entry' no es una IPv4 válida." }
+      $prefix = $Matches[2]
+      if ($prefix) {
+        $bits = [int]$prefix
+        if ($bits -lt 8 -or $bits -gt 32) { throw "-AllowedIps: el prefijo de '$entry' debe ir de /8 a /32." }
+        $value = [uint32]([math]::Pow(2, 32) - [math]::Pow(2, 32 - $bits))
+        $mask = (([BitConverter]::GetBytes($value))[3..0] | ForEach-Object { $_ }) -join "."
+      }
+    } elseif ($entry -match '^[0-9A-Fa-f:]+$' -and $entry.Contains(":") -and [Net.IPAddress]::TryParse($entry, [ref]$ip)) {
+      # IPv6 solo como direcciones sueltas.
+    } else {
+      throw "-AllowedIps: '$entry' no es una IPv4, una red IPv4 CIDR ni una IPv6 suelta."
+    }
+    $key = "$($ip.ToString())/$mask"
+    if ($seen.ContainsKey($key)) { continue }  # repetida: IIS rechazaría la clave duplicada
+    $seen[$key] = $true
+    $IpRules.Add(@{ Ip = $ip.ToString(); Mask = $mask })
+  }
 }
 $nodeVersion = [version]((& $Node --version).TrimStart("v"))
 if ($nodeVersion -lt [version]"22.12.0") { throw "Node $nodeVersion es muy viejo: se necesita 22.12 o más (engines de package.json)." }
@@ -275,7 +314,31 @@ foreach ($dir in @(@{ Path = "/_next/static"; Physical = (Join-Path $Current ".n
   }
 }
 Write-Host "Sitio $SiteName apuntando a $IisRoot (proxy a 127.0.0.1:$Port)."
-Write-Warning "Staging es solo para la red interna: limita el acceso por IP (firewall o 'IP and Domain Restrictions')."
+if ($IpRules.Count) {
+  # La sección ipSecurity está bloqueada a nivel de sitio por defecto: se escribe en
+  # applicationHost.config con -location, no en el web.config del sitio.
+  $ipFilter = "system.webServer/security/ipSecurity"
+  # Se borra la sección del sitio entera (lista y allowUnlisted) y se vuelve a escribir.
+  Clear-WebConfiguration -pspath $apphost -location $SiteName -filter $ipFilter -ErrorAction SilentlyContinue
+  # Primero se cierra el sitio: si una entrada falla a mitad, queda cerrado, nunca abierto.
+  Set-WebConfigurationProperty -pspath $apphost -location $SiteName -filter $ipFilter -name "allowUnlisted" -value "False"
+  try {
+    foreach ($rule in $IpRules) {
+      $entry = @{ ipAddress = $rule.Ip; allowed = "True" }
+      if ($rule.Mask) { $entry.subnetMask = $rule.Mask }
+      Add-WebConfigurationProperty -pspath $apphost -location $SiteName -filter $ipFilter -name "." -value $entry
+    }
+  } catch {
+    throw "No se pudo completar la lista de IP ($($_.Exception.Message)): el sitio quedó cerrado salvo las entradas ya agregadas. Corrige -AllowedIps y vuelve a correr el script."
+  }
+  Write-Host "Acceso solo desde: $(($IpRules | ForEach-Object { if ($_.Mask) { "$($_.Ip)/$($_.Mask)" } else { $_.Ip } }) -join ', ')."
+  Write-Host "Si un firewall con NAT reescribe el origen, IIS ve la IP del firewall: limita ahí en lugar de aquí."
+} elseif ($RemoveIpRestriction) {
+  Clear-WebConfiguration -pspath $apphost -location $SiteName -filter "system.webServer/security/ipSecurity" -ErrorAction SilentlyContinue
+  Write-Warning "Se quitó la restricción por IP del sitio ${SiteName}: queda abierto a quien llegue al servidor."
+} else {
+  Write-Warning "Staging es solo para la red interna: limita el acceso por IP con -AllowedIps (o con el firewall)."
+}
 
 Write-Step "5/5 Servicio $ServiceName"
 if (-not (Get-Service $ServiceName -ErrorAction SilentlyContinue)) {

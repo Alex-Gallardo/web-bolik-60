@@ -16,10 +16,10 @@ Voz (doc 02 §8): **tú**, cálido y directo, frases cortas, orgullo guatemaltec
 | Botón flotante | Escríbenos por WhatsApp |
 | Pie, frase | Útiles para escribir la historia de Guatemala desde 1966. |
 | Pie, columnas | Productos · Para ti (Familias, Escuelas, Librerías, Empresas) · Bolik (Nuestra historia, Preguntas frecuentes, Contacto) · Legal |
-| Pie, datos | Industrias Bolik, S.A. **(validar razón social)** · San José Villa Nueva, Guatemala · +502 6628 2600 · Lunes a viernes, 7:30 a 16:30 **(validar horario)** |
+| Pie, datos | Industrias Bolik, S.A. **(validar razón social)** · 6a. Avenida 6-31, zona 2, San José Villa Nueva, Guatemala · +502 6628 2600 · Lunes a viernes, 7:30 a 16:30 **(validar horario)** · Facebook: facebook.com/universoBolik **(validar)** |
 | Pie, legal | © {año} Bolik. Hecho en Guatemala. |
 | Saltar al contenido | Saltar al contenido |
-| Splash (`aria-label`) | Bolik, desde 1966 |
+| Splash | Sin texto: es decorativo (`aria-hidden`, docs/09 §3) y solo muestra el wordmark BOLIK® (BD-043). «Bolik, desde 1966» queda como frase de marca disponible. |
 
 ## 2. Inicio
 
@@ -46,13 +46,13 @@ Chip: **60 años · Hecho en Guatemala**
 
 ### Soluciones · "Un Bolik para cada etapa"
 
-| Tarjeta | Texto | Enlace |
-|---|---|---|
-| Colegios | Útiles y actividades para que escribir sea divertido. | `/escuelas` |
-| Universidades | Bolígrafos con el logo de tu facultad o asociación. | `/empresas` |
-| Empresas | Lapiceros personalizados para eventos y equipos. | `/empresas` |
-| Librerías | Precio de fábrica por cajilla y fardo. | `/mayoreo` |
-| Distribuidores | Lleva Bolik a tu municipio. | `/mayoreo#distribuidor` |
+| Tarjeta | Texto | Enlace | Color |
+|---|---|---|---|
+| Colegios | Útiles y actividades para que escribir sea divertido. | `/escuelas` | Amarillo (texto tinta) |
+| Universidades | Bolígrafos con el logo de tu facultad o asociación. | `/empresas` | Navy |
+| Empresas | Lapiceros personalizados para eventos y equipos. | `/empresas` | Azul |
+| Librerías | Precio de fábrica por cajilla y fardo. | `/mayoreo` | Verde |
+| Distribuidores | Lleva Bolik a tu municipio. | `/mayoreo#distribuidor` | Rojo |
 
 ### Catálogo destacado
 - Título: **Encuentra lo que necesitas**
@@ -104,6 +104,8 @@ Chip: **60 años · Hecho en Guatemala**
 | Filtros | Uso: Escolar · Oficina · Arte y manualidades · Promocional |
 | Contador | {n} productos |
 | Tarjeta, botón | Ver producto |
+| Tarjeta, colores | Color: {color} · Colores: {a}, {b} y {c} (en minúscula; +{n} si no caben los puntos) |
+| Tarjeta de categoría | 1 producto · {n} productos |
 | Sin resultados con filtros | No hay productos con esos filtros. · Quitar filtros |
 
 Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa el admin):
@@ -184,7 +186,10 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Intro: Encuentra librerías, supermercados y cadenas con productos Bolik en tu departamento.
 - Botón de ubicación: Usar mi ubicación
 - Lista: {n} tiendas en {departamento}
-- Tarjeta de tienda: Cómo llegar · Llamar
+- Tarjeta de tienda: Cómo llegar · Llamar · Comprar en línea (solo si la tienda tiene tienda en línea https)
+- Tipo de tienda: Cadena · Librería · Distribuidor
+- Tienda sin verificar por Ventas: Datos por confirmar (sin dirección; «Cómo llegar» busca por nombre y municipio)
+- Lector de pantalla: «Cómo llegar a {tienda} (se abre en otra pestaña)», «Llamar a {tienda}», «Comprar en línea en {tienda}»
 - En línea: Compra en línea en Walmart Guatemala y La Torre.
 - `/donde-comprar/[dep]` `h1`: Dónde comprar Bolik en {departamento}
 
@@ -206,8 +211,8 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Botones: Escribir por WhatsApp con mi folio · Seguir viendo productos
 
 ### 404 y 500
-- 404: **Esta página se borró como lápiz.** Puede que la dirección haya cambiado. Busca un producto o vuelve al inicio.
-- 500: **Algo salió mal de nuestro lado.** Ya lo estamos revisando. Intenta de nuevo o escríbenos por WhatsApp.
+- 404: **Esta página se borró como lápiz.** Puede que la dirección haya cambiado. Busca un producto o vuelve al inicio. *(Hasta que el buscador llegue a la 404 con BD-066: «Revisa el catálogo o vuelve al inicio».)*
+- 500: **Algo salió mal de nuestro lado.** Ya lo estamos revisando. Intenta de nuevo o escríbenos por WhatsApp. *(Sin número de WhatsApp: «Inténtalo de nuevo en un momento o llámanos».)*
 
 <a id="microcopy"></a>
 ## 5. Microcopy
@@ -224,6 +229,9 @@ La fuente única de toasts y diálogos es `src/content/feedback.ts` (starter). E
 | Cantidad mínima | La cantidad mínima es 1 |
 | Cantidad máxima | Para más de 9,999, escríbenos por WhatsApp |
 | NIT | Escribe tu NIT o "CF" |
+| Texto muy largo | Usa como máximo {max} caracteres |
+| Cantidad, botones (lector de pantalla) | Quitar uno · Agregar uno |
+| Teléfono, prefijo (lector de pantalla) | Código de país +502, Guatemala |
 | Sin JavaScript (formularios) | Para enviar este formulario activa JavaScript o escríbenos por WhatsApp al {numero}. |
 | Buscador vacío | Escribe al menos 2 letras |
 | Buscador, sugerencias | Prueba con: Bolik Ultra · crayones · marcador de pizarra |

@@ -11,7 +11,7 @@ bolik-digital/
 ├─ prisma/
 │  ├─ schema.prisma
 │  ├─ migrations/
-│  └─ seed/                     # seed.ts + datos JSON (productos, tiendas, contenido)
+│  └─ seed/                     # datos JSON + schema.ts (Zod); los lee DATA_SOURCE=fixtures y los carga seed.ts
 ├─ public/
 │  ├─ brand/                    # logo SVG, favicon, íconos de app
 │  ├─ og/                       # imagen OG por defecto
@@ -19,10 +19,15 @@ bolik-digital/
 │  └─ site.webmanifest
 ├─ scripts/
 │  ├─ sync-catalog.ts           # SMART-K66 → BD
+│  ├─ import-media.mts          # fotos en lote → MEDIA_DIR + MediaAsset (BD-034)
 │  ├─ retry-erp.ts              # reintenta envíos fallidos
 │  ├─ build-search-index.ts     # índice JSON del buscador (también en runtime)
 │  ├─ check-redirects.ts        # valida el mapa de redirecciones de Joomla
-│  └─ deploy/staging-setup.ps1  # prepara el servidor de staging (BD-016, doc 15 §12)
+│  └─ deploy/                   # staging en IIS (BD-016, doc 15 §12)
+│     ├─ staging-preflight.ps1  # revisa el servidor (solo lectura)
+│     ├─ staging-setup.ps1      # carpetas, staging.env, ARR, sitio IIS y servicio
+│     ├─ staging-build.ps1      # migra, siembra, construye y empaca
+│     └─ staging-deploy.ps1     # release nuevo, prueba de humo y vuelta atrás
 ├─ tests/
 │  ├─ e2e/                      # Playwright
 │  ├─ fixtures/
@@ -36,7 +41,6 @@ bolik-digital/
 │  │  ├─ llms.txt/route.ts · llms-full.txt/route.ts
 │  │  ├─ (site)/                # grupo público (no cambia la URL)
 │  │  │  ├─ layout.tsx          # header, footer, drawer de cotización, WhatsApp
-│  │  │  ├─ template.tsx        # animación de entrada por página
 │  │  │  ├─ page.tsx            # home
 │  │  │  ├─ productos/
 │  │  │  │  ├─ page.tsx
@@ -63,7 +67,7 @@ bolik-digital/
 │  │  │  │  ├─ page.tsx
 │  │  │  │  └─ enviada/[folio]/page.tsx
 │  │  │  ├─ legal/[slug]/page.tsx
-│  │  │  └─ styleguide/page.tsx
+│  │  │  └─ styleguide/        # page.tsx (13 secciones) · _sections/ · _demos/ · _components/ · datos/
 │  │  ├─ (admin)/admin/
 │  │  │  ├─ layout.tsx          # verifica sesión, menú lateral
 │  │  │  ├─ login/page.tsx
@@ -79,12 +83,13 @@ bolik-digital/
 │  │     ├─ public/catalog.json/route.ts  # catálogo público para IA
 │  │     └─ admin/media/route.ts          # subida de imágenes
 │  ├─ components/
-│  │  ├─ ui/                    # primitivas (shadcn/Radix): button, dialog, sheet, tabs, accordion…
+│  │  ├─ ui/                    # primitivas: button, dialog, sheet, popover (Radix), tabs (propio), accordion (<details>)…
 │  │  ├─ layout/                # header, mobile-nav, footer, splash, section, container, breadcrumbs
-│  │  ├─ feedback/              # friendly-dialog, toaster, empty-state, inline-alert
-│  │  ├─ motion/                # reveal, count-up, ink-stroke, lazy-motion-provider
+│  │  ├─ feedback/              # feedback-host (en el layout), use-feedback, friendly-dialog y toaster (al primer uso), empty-state, inline-alert
+│  │  ├─ motion/                # reveal, count-up, page-enter, on-route-change, motion-provider, m
 │  │  ├─ hero/                  # video-hero, chapter-tabs
-│  │  ├─ catalog/               # product-card, category-card, filters, color-swatches, pack-selector, specs, dimensions
+│  │  ├─ catalog/               # product-card (+ skeleton), category-card, filters, color-swatches, pack-selector, specs, dimensions
+│  │  ├─ home/                  # audience-card (tarjetas por público de la home)
 │  │  ├─ quote/                 # quote-drawer, quote-button, quote-line, quote-form
 │  │  ├─ stores/                # store-list, store-map (lazy), department-picker
 │  │  ├─ schools/               # activity-card, school-form, kids-decor
@@ -102,24 +107,33 @@ bolik-digital/
 │  │  ├─ analytics/(events.ts, track.ts)
 │  │  └─ seo/      (metadata.ts, jsonld.ts, indexnow.ts, llms.ts)
 │  ├─ server/                   # solo servidor ("server-only")
-│  │  ├─ db.ts                  # PrismaClient singleton
-│  │  ├─ data/                  # consultas con caché + tags
-│  │  ├─ erp/                   # gateway.ts, smartk66.ts, noop.ts
+│  │  ├─ db.ts · db-client.ts   # PrismaClient de la app (singleton) y la fábrica que comparte con el proxy
+│  │  ├─ data/                  # funciones con caché + tags, tipos de vista y fuente (fixtures | db: BD-037, BD-032)
+│  │  │  ├─ fixtures/ · db/      # las dos fuentes; settings-view.ts comparte el mapeo de ajustes
+│  │  │  ├─ sitemap.ts · llms.ts · search.ts   # datos del sitemap, /llms.txt y el buscador
+│  │  │  └─ redirects.ts · proxy-db.ts · seo-logs.ts   # tabla Redirect para proxy.ts (cliente propio) y escrituras de NotFoundLog/hits (BD-046)
+│  │  ├─ seo/                   # redirects.ts (mapa en memoria), hit-log.ts (conteo en lote), not-found-log.ts (BD-046)
+│  │  ├─ erp/                   # types.ts, gateway.ts, smartk66.ts, noop.ts, send-quote.ts (BD-035; datos en data/quote-erp.ts)
 │  │  ├─ mail/                  # transport.ts, templates/
 │  │  ├─ auth/                  # session.ts (iron-session), password.ts, guards.ts (requireRole)
-│  │  ├─ media/                 # process-image.ts (sharp)
+│  │  ├─ media/                 # process-image.ts (sharp, BD-034); el registro en data/media.ts
 │  │  ├─ folio.ts · rate-limit.ts · audit.ts
 │  ├─ lib/                      # utilidades puras
 │  │  ├─ constants.ts           # estados, tipos, presets (reemplazan enums)
-│  │  ├─ cache-tags.ts · slug.ts · format.ts · cn.ts · image-loader.ts
+│  │  ├─ cache-tags.ts · slug.ts · format.ts · cn.ts · image-loader.ts · contrast.ts
+│  │  ├─ redirect-path.ts       # rutas normalizadas y mapa de redirecciones (BD-046)
+│  │  ├─ folio.ts               # formato, regex y año (hora de Guatemala) de los folios (BD-033)
+│  │  ├─ form-schemas.ts        # piezas de Zod compartidas (teléfono GT, correo, NIT, cantidad)
 │  ├─ content/                  # textos de interfaz
 │  │  ├─ feedback.ts            # todos los mensajes de toasts y diálogos
+│  │  ├─ ui.ts                  # textos de interfaz que no son feedback (Enviando…, Guardando…)
+│  │  ├─ footer.ts · not-found.ts   # textos que solo leen Server Components (no viajan en el JS)
 │  │  ├─ navigation.ts          # menú y pie
 │  │  └─ legal/*.md
 │  ├─ styles/
 │  │  ├─ tokens.css · backgrounds.css · motion.css · base.css
 │  ├─ env.ts                    # variables validadas con Zod
-│  └─ proxy.ts | middleware.ts  # redirecciones legadas + protección admin
+│  └─ proxy.ts                 # redirecciones (tabla Redirect, BD-046; mapa de Joomla, BD-094) + protección admin (BD-115)
 ├─ next.config.ts
 ├─ tailwind/postcss config
 ├─ vitest.config.mts · vitest.integration.config.mts · playwright.config.ts
@@ -169,7 +183,7 @@ flowchart LR
 ```
 
 Reglas:
-1. `components/*` no importa `server/*` (los datos llegan como props desde páginas Server Components).
+1. `components/*` no importa `server/*` (los datos llegan como props desde páginas Server Components). Excepción: `import type` de los tipos de vista de `src/server/data/types.ts` (se borra al compilar; no arrastra código de servidor).
 2. Todo archivo en `server/` empieza con `import "server-only"`.
 3. `features/*/actions.ts` son la única puerta de escritura desde el sitio público.
 4. `lib/*` no tiene efectos secundarios ni imports de React.
@@ -198,8 +212,14 @@ Reglas:
 6. `src/lib/cache-tags.ts` — nombres de tags.
 7. `src/server/db.ts` — cliente Prisma.
 8. `src/components/layout/section.tsx` — contenedor de sección con fondo configurable.
-9. `src/components/feedback/*` — toasts y diálogos.
-10. `src/app/(site)/styleguide/page.tsx` — vitrina de todo lo anterior.
+9. `src/components/feedback/*` — toasts y diálogos. Desde un componente cliente: `const { toast, dialog } = useFeedback()` y `toast(feedback.quote.added(...), { onAction })`. `FeedbackHost` (en el layout) carga sonner y Radix Dialog al primer uso: nunca importes `sonner` directo en una página.
+10. `src/components/ui/{dialog,sheet,popover}.tsx` — overlays sobre Radix (~10 KB gzip el Dialog). En piezas de todas las páginas (menú móvil del header, BD-041) se cargan al primer uso, como el toaster; en una sola página (filtros, mapa) se importan donde se usan. La clase `js` de `<html>` (script del layout raíz) indica que hay JS: lo que se oculta o anima solo con JS depende de ella. Ojo: un Sheet o Dialog modal pone `aria-hidden` a todo lo de fuera, incluidas las regiones `aria-live` de `FeedbackHost`; un toast lanzado con un sheet abierto (drawer de cotización, BD-071) debe probarse con lector de pantalla.
+11. `src/app/layout.tsx` — raíz (BD-040): `lang="es-GT"`, `rootMetadata` de `features/seo/metadata.ts`, «Saltar al contenido» y un solo script en `<head>` (`app/head-script.ts`): la clase `js` y la decisión del splash (BD-043), que lee `data-splash-enabled` de `<html>` (ajuste `splash_enabled`). El overlay (`components/layout/splash.tsx`) va al inicio de `<body>`, decorativo; su CSS está en `motion.css`. El script se escribe a mano como texto (no con `Function.toString()`) y tiene pruebas unitarias en jsdom; sus constantes (`SPLASH_KEY`, duraciones) están en `lib/splash.ts`. Cada grupo pone su `<main id="contenido">` con `components/layout/main-content.tsx`; fuera de los grupos, `not-found.tsx` y `global-error.tsx` ponen el suyo. Las páginas no usan `<main>`.
+12. `src/components/layout/header.tsx` — header (BD-041): Server Component con islas cliente pequeñas (`header-scroll`, `products-menu`, `quote-link`, `mobile-menu`). El Sheet del menú móvil (`mobile-menu-sheet.tsx`) se descarga al primer toque. Los datos (categorías, WhatsApp) los pasa `(site)/layout.tsx`. Presupuesto: el header suma ~2.2 KB gzip; las páginas de 150 KB quedan con ~1.3 KB de margen, así que una isla nueva en el header se mide antes (tras BD-044, ~0.7 KB).
+13. `src/components/layout/footer.tsx` y `floating-actions.tsx` — pie y flotantes (BD-042): Server Components sin JS. El NAP, el teléfono (`tel:`), Facebook y WhatsApp salen de `SiteSetting` vía `(site)/layout.tsx`. Los flotantes se ocultan solo con CSS (`motion.css`: `body[data-scroll-locked]` con un sheet abierto, `:has(input:focus)` con el teclado) y el pie reserva su alto. Sus textos van en `content/footer.ts` y no en `content/ui.ts`: `ui.ts` lo importan islas cliente y todo su contenido viaja en el JS de cada página; un texto que solo usa un Server Component va en su propio archivo.
+14. `src/components/motion/*` — movimiento de todas las páginas (BD-044): `RevealObserver` (reveals A-21; marcado `data-reveal` y `--i`; el CSS oculta solo con `data-reveal-ready`), `PageEnter` (entrada A-02 al cambiar de ruta, en `(site)/layout.tsx`; no hay `template.tsx`) y `CountUp` (cifras A-20, solo donde se use). Los dos primeros van en todas las páginas: +0.6 KB gzip (146.3 → 146.9 KB). **Reaccionar a un cambio de ruta = `OnRouteChange`** (`components/motion/on-route-change.tsx`), nunca `usePathname` suelto en algo que envuelva contenido: con Cache Components se suspende en rutas con parámetros que no conoce el build y, sin `Suspense`, el build falla. Lo usan `PageEnter` y los menús del header.
+15. `src/components/motion/motion-provider.tsx` y `m.ts` — Motion diferido (BD-045, docs/09 §7): `LazyMotion strict` con las funciones por `import()`, `m.*` y `AnimatePresence` desde `m.ts`, presets en `src/lib/motion.ts`. Solo en lo que se carga al interactuar (drawer, grilla); `tests/e2e/motion-lazy.spec.ts` comprueba que la home no descarga Motion.
+16. `src/app/(site)/styleguide/page.tsx` — vitrina de todo lo anterior (BD-026): una sección por archivo en `_sections/` (carpetas con `_`: privadas, sin ruta), demos cliente en `_demos/`. Una pieza nueva del sistema se agrega a su sección en el mismo PR; si aún no existe, la sección muestra `<Pending>` con su ticket. En producción responde 404 sin sesión de admin (`server/auth/styleguide-access.ts`).
 
 ## 5. package.json (scripts)
 
@@ -220,7 +240,7 @@ Reglas:
     "lhci": "lhci autorun --config=lighthouse.config.cjs",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:seed": "tsx prisma/seed/seed.ts",
+    "db:seed": "tsx scripts/db-seed.mts",
     "db:status": "prisma migrate status",
     "db:generate": "prisma generate",
     "db:reset:test": "node scripts/db-reset-test.mjs",

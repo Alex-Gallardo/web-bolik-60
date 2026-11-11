@@ -33,7 +33,7 @@ Se diseña y prueba primero a **360 px**. Ninguna página hace scroll horizontal
 | Tarjeta infantil | color kids | ninguno | 28 | `--shadow-kids` + rotación ±1.5° |
 | Bloque destacado | `--soft` | ninguno | `xl` | ninguna |
 | Modal / drawer | `--paper` | ninguno | `xl` (arriba en bottom sheet) | `lg` |
-| Input | `--paper` | 2 px `--line-strong` → `--blue` al foco | `md` | ninguna |
+| Input | `--paper` | 2 px `--line-control` (3:1 sobre blanco, WCAG 1.4.11) → `--blue` al foco | `md` | ninguna |
 
 Regla: el borde, la sombra y el radio grande se usan para separar **un** objeto; no todo lleva sombra.
 
@@ -67,11 +67,12 @@ Tamaños: `sm` 40 px (solo admin y desktop), `md` **48–52 px** (por defecto), 
 | `Stepper` | − / número / +, mínimo 1, valores sugeridos por presentación |
 | `ColorSwatches` | Selección de color con círculo, nombre y SKU; `role="radiogroup"` |
 | `PackSelector` | Presentaciones (blister x1/x3/x5, cajilla, fardo) como `radiogroup` |
-| `Tabs` | Radix Tabs; en móvil se convierten en acordeón |
-| `Accordion` | Radix Accordion para FAQs; ícono + que rota a × (A-35) |
-| `Sheet` / `Drawer` | Radix Dialog en modo lateral o inferior (A-08) |
+| `Tabs` | Propio (patrón WAI-ARIA, sin Radix): todos los paneles en el HTML y visibles sin JS (los inactivos se ocultan con la clase `js` de `<html>`); en móvil se convierten en acordeón con los mismos paneles (BD-025) |
+| `Accordion` | `<details>` nativo (sin JS, contenido en el HTML, la búsqueda del navegador lo abre) para FAQs; ícono + que rota a × (A-35) (BD-025) |
+| `Sheet` / `Drawer` | Radix Dialog en modo lateral o inferior (A-08); lado `auto`: abajo en móvil, derecha desde md |
+| `Dialog` / `Popover` | Radix Dialog (A-09) y Radix Popover |
 | `FriendlyDialog` | Diálogo de éxito, error o confirmación (ver §4) |
-| `Toaster` | `sonner` configurado con colores y posición (abajo al centro en móvil, abajo a la derecha en desktop) |
+| `Toaster` | `sonner` configurado con colores y posición (abajo al centro bajo 1024 px, sobre la barra de acciones; abajo a la derecha desde 1024 px, sobre el botón de WhatsApp) |
 | `Breadcrumbs` | Con JSON-LD `BreadcrumbList` generado del mismo arreglo |
 | `Section` | Contenedor de sección con `background` y `tone` configurables (§3) |
 | `EmptyState` | Ilustración pequeña SVG, título, texto y acción |
@@ -92,7 +93,8 @@ Ayuda opcional (14 px, --muted)
 ⚠ Error (14 px, --danger, ícono + texto) → aria-live
 ```
 
-- Validación con Zod compartida cliente/servidor (`features/*/schemas.ts`).
+- Validación con Zod compartida cliente/servidor (`features/*/schemas.ts`), armada con las piezas de `lib/form-schemas.ts` (teléfono GT, correo, NIT, cantidad y `withPhoneOrEmail`). Los mensajes salen de `feedback.forms.errors`.
+- Componentes (`components/ui`): `Field` (etiqueta, ayuda y error, une `aria-describedby` y `aria-invalid` con su hijo), `Input`, `Textarea`, `Select` nativo, `Checkbox`, `RadioCards` (radios nativos en tarjetas), `PhoneInput` (+502) y `QuantityStepper`. El hijo directo de `Field` debe ser el control: con un `Controller` de React Hook Form, `Field` va dentro de su `render`.
 - Valida al salir del campo y al enviar. En error: borde rojo + mensaje + `shake` sutil del campo (A-04) solo al enviar.
 - Botón de envío nunca deshabilitado por "formulario inválido": se deja enviar y se muestran los errores (más claro para el usuario).
 - Honeypot: campo `website` oculto con CSS (no `display:none` en el input directamente; dentro de un contenedor fuera de pantalla), `tabIndex={-1}`, `autoComplete="off"`.
@@ -152,7 +154,7 @@ En la página: `const look = await getSectionAppearance("home.solutions")` → `
 | Filtros sin resultados | Estado vacío + "Quitar filtros" | Inline | `catalog.filtersEmpty` |
 | Descargar PDF | Toast "Descargando la ficha técnica" | Toast | `catalog.pdfReady` |
 | Usar mi ubicación | Toast "Buscando…" → "Encontramos N tiendas" o "No pasa nada, elige tu departamento" | Toast | `stores.*` |
-| Sin conexión / reconexión | Toast persistente / toast de éxito | Toast | `system.offline/online` |
+| Sin conexión / reconexión | Aviso persistente arriba (lo dibuja `FeedbackHost`: funciona sin red) / toast de éxito | Toast | `system.offline/online` |
 | Error inesperado | Página de error amable con reintento | Página | `system.genericError` |
 | Admin: guardar | Toast "Cambios guardados y publicados · Ver en el sitio" | Toast | `admin.saved` |
 | Admin: eliminar | Confirmación → toast con "Deshacer" | Dialog + Toast | `admin.confirmDelete`, `admin.deleted` |
@@ -211,3 +213,12 @@ Secciones (con índice lateral fijo en desktop y menú desplegable en móvil):
 13. **Iconos:** set de Lucide usado + íconos de beneficios propios.
 
 Reglas: la página usa datos ficticios **fijos** (nada aleatorio, para que las capturas no cambien), y cada sección tiene `id` para enlazarla.
+
+Implementación (BD-026):
+- Una sola página; `/styleguide/datos` (visor de los datos de ejemplo, BD-037) queda aparte y se enlaza desde el índice.
+- Lo que aún no existe muestra «llega con BD-xxx»: nada de maquetas inventadas.
+- «Simular movimiento reducido» pone `data-reduced-motion` en `<html>` y activa un bloque de `motion.css` con las mismas reglas que `@media (prefers-reduced-motion)`; una prueba (`src/styles/motion-css.test.ts`) exige que no se desincronicen. Al agregar una regla de movimiento reducido, va en los dos bloques.
+- La simulación cubre las reglas de `motion.css` (por eso las animaciones del sitio van ahí y no en variantes `motion-safe:` de Tailwind); no alcanza la regla propia de sonner ni lo que lea `matchMedia` en JavaScript.
+- Los contrastes se calculan en el navegador con los valores reales de los tokens.
+- Fondos: sin selector de tono. El tono se deduce del fondo (BD-020): el admin elige solo el fondo y el contraste queda garantizado.
+- En producción, sin sesión de admin, responde 404 (la sesión llega con BD-114).

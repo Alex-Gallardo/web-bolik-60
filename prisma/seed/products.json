@@ -1,0 +1,713 @@
+[
+  {
+    "slug": "bolik-ultra",
+    "name": "Bolik Ultra",
+    "categorySlug": "boligrafos",
+    "tagline": "Bolígrafo hexagonal de punta mediana 1.0 mm.",
+    "shortDescription": "Bolígrafo hexagonal de punta mediana 1.0 mm con tinta de baja viscosidad: escribe suave y no se corre con el agua.",
+    "description": "Bolígrafo fabricado con tintas elásticas para un deslizamiento suave en el papel. Su punta de níquel permite que la bola de carburo de tungsteno ruede mejor, trazo tras trazo.",
+    "keyFacts": [
+      "Fabricado por Industrias Bolik, S.A. en Guatemala.",
+      "Bolígrafo de cuerpo hexagonal con punta mediana de 1.0 mm.",
+      "Tinta de baja viscosidad, resistente al agua y a la luz.",
+      "Colores: azul (PT00058), negro (PT00059) y rojo (PT00060).",
+      "Se vende en blister de 1, 3 y 5; cajilla de 12; fardo de 100 cajillas."
+    ],
+    "safetyWarning": "Uso bajo supervisión de un adulto con niños menores de 3 años. Contiene partes pequeñas que pueden ser ingeridas o inhaladas. Evitar temperaturas superiores a 45 °C y la exposición directa al sol. Almacenar en un lugar seco y ventilado.",
+    "featured": true,
+    "published": true,
+    "uses": ["escolar", "oficina", "arte-y-manualidades"],
+    "related": ["bolik-ultra-fino", "fabik-pizarra", "lapiz-de-grafito-triangular"],
+    "variants": [
+      {
+        "sku": "PT00058",
+        "barcode": "759364663092",
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE",
+        "isDefault": true
+      },
+      {
+        "sku": "PT00059",
+        "barcode": "759364663108",
+        "colorKey": "negro",
+        "colorName": "Negro",
+        "colorHex": "#111318"
+      },
+      {
+        "sku": "PT00060",
+        "barcode": "759364663115",
+        "colorKey": "rojo",
+        "colorName": "Rojo",
+        "colorHex": "#D42A22"
+      }
+    ],
+    "specs": [
+      {
+        "groupName": "General",
+        "label": "Tipo de punta",
+        "value": "Mediana 1.0 mm"
+      },
+      {
+        "groupName": "General",
+        "label": "Forma",
+        "value": "Hexagonal"
+      },
+      {
+        "groupName": "General",
+        "label": "Origen",
+        "value": "Fabricado y empacado por Industrias Bolik, S.A., Guatemala"
+      },
+      {
+        "groupName": "Tinta",
+        "label": "Viscosidad",
+        "value": "Baja"
+      },
+      {
+        "groupName": "Tinta",
+        "label": "Resistencia",
+        "value": "Al agua y a la luz"
+      },
+      {
+        "groupName": "Materiales",
+        "label": "Punta",
+        "value": "Níquel, con bola de carburo de tungsteno"
+      },
+      {
+        "groupName": "Materiales",
+        "label": "Cuerpo",
+        "value": "Resina plástica"
+      }
+    ],
+    "dimensions": [
+      {
+        "partKey": "body",
+        "label": "Largo del cuerpo",
+        "valueMm": 145.83
+      },
+      {
+        "partKey": "cap",
+        "label": "Largo de la tapa",
+        "valueMm": 60.15
+      },
+      {
+        "partKey": "tip_length",
+        "label": "Largo de la punta",
+        "valueMm": 4.35
+      },
+      {
+        "partKey": "tip_diameter",
+        "label": "Diámetro de la punta",
+        "valueMm": 2.69
+      },
+      {
+        "partKey": "mark",
+        "label": "Largo de la marca",
+        "valueMm": 8.27,
+        "tolerance": "±1"
+      }
+    ],
+    "packagings": [
+      {
+        "code": "blister1",
+        "name": "Blister de 1",
+        "unitsPerPack": 1
+      },
+      {
+        "code": "blister3",
+        "name": "Blister de 3",
+        "unitsPerPack": 3
+      },
+      {
+        "code": "blister5",
+        "name": "Blister de 5",
+        "unitsPerPack": 5
+      },
+      {
+        "code": "cajilla12",
+        "name": "Cajilla de 12",
+        "unitsPerPack": 12,
+        "lengthMm": 161.52,
+        "widthMm": 67.7,
+        "heightMm": 21.98,
+        "weightG": 90,
+        "isWholesale": true
+      },
+      {
+        "code": "fardo",
+        "name": "Fardo (100 cajillas)",
+        "unitsPerPack": 1200,
+        "innerPacks": 100,
+        "lengthMm": 354,
+        "widthMm": 225,
+        "heightMm": 340,
+        "isWholesale": true
+      }
+    ],
+    "benefits": [
+      {
+        "iconKey": "new-tip",
+        "title": "Punta de última generación"
+      },
+      {
+        "iconKey": "vented-cap",
+        "title": "Tapa ventilada"
+      },
+      {
+        "iconKey": "low-viscosity",
+        "title": "Baja viscosidad"
+      },
+      {
+        "iconKey": "water-resistant",
+        "title": "Resistente al agua y a la luz"
+      }
+    ]
+  },
+  {
+    "slug": "bolik-ultra-fino",
+    "name": "Bolik Ultra Fino",
+    "categorySlug": "boligrafos",
+    "sample": true,
+    "shortDescription": "Bolígrafo de punta fina para escritura precisa.",
+    "published": true,
+    "uses": ["escolar", "oficina"],
+    "variants": [
+      {
+        "sku": "EJ-0001",
+        "barcode": null,
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE",
+        "isDefault": true
+      },
+      {
+        "sku": "EJ-0002",
+        "barcode": null,
+        "colorKey": "negro",
+        "colorName": "Negro",
+        "colorHex": "#111318"
+      },
+      {
+        "sku": "EJ-0003",
+        "barcode": null,
+        "colorKey": "rojo",
+        "colorName": "Rojo",
+        "colorHex": "#D42A22"
+      }
+    ]
+  },
+  {
+    "slug": "lapiz-de-grafito-triangular",
+    "name": "Lápiz de grafito triangular",
+    "categorySlug": "lapices-y-lapices-de-colores",
+    "sample": true,
+    "shortDescription": "Lápiz de grafito con cuerpo triangular para un buen agarre.",
+    "published": true,
+    "uses": ["escolar"],
+    "variants": [
+      {
+        "sku": "EJ-0004",
+        "barcode": null,
+        "colorKey": "grafito",
+        "colorName": "Grafito",
+        "colorHex": "#4B5368",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "lapices-de-colores-x12",
+    "name": "Lápices de colores x12",
+    "categorySlug": "lapices-y-lapices-de-colores",
+    "sample": true,
+    "shortDescription": "Doce colores para dibujar y colorear.",
+    "published": true,
+    "uses": ["escolar", "arte-y-manualidades"],
+    "variants": [
+      {
+        "sku": "EJ-0005",
+        "barcode": null,
+        "colorKey": "surtido",
+        "colorName": "Surtido",
+        "colorHex": "#FFC72C",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "lapices-de-colores-x24",
+    "name": "Lápices de colores x24",
+    "categorySlug": "lapices-y-lapices-de-colores",
+    "sample": true,
+    "shortDescription": "Veinticuatro colores para proyectos más completos.",
+    "published": true,
+    "uses": ["escolar", "arte-y-manualidades"],
+    "variants": [
+      {
+        "sku": "EJ-0006",
+        "barcode": null,
+        "colorKey": "surtido",
+        "colorName": "Surtido",
+        "colorHex": "#FFC72C",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "crayon-de-cera-jumbo",
+    "name": "Crayón de cera Jumbo",
+    "categorySlug": "crayones-de-cera",
+    "sample": true,
+    "shortDescription": "Crayones gruesos, fáciles de tomar para manos pequeñas.",
+    "published": true,
+    "uses": ["escolar", "arte-y-manualidades"],
+    "variants": [
+      {
+        "sku": "EJ-0007",
+        "barcode": null,
+        "colorKey": "surtido",
+        "colorName": "Surtido",
+        "colorHex": "#FFC72C",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "crayones-x12",
+    "name": "Crayones x12",
+    "categorySlug": "crayones-de-cera",
+    "sample": true,
+    "shortDescription": "Doce crayones de cera de colores intensos.",
+    "published": true,
+    "uses": ["escolar", "arte-y-manualidades"],
+    "variants": [
+      {
+        "sku": "EJ-0008",
+        "barcode": null,
+        "colorKey": "surtido",
+        "colorName": "Surtido",
+        "colorHex": "#FFC72C",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "crayones-x24",
+    "name": "Crayones x24",
+    "categorySlug": "crayones-de-cera",
+    "sample": true,
+    "shortDescription": "Veinticuatro crayones de cera para colorear sin límites.",
+    "published": true,
+    "uses": ["escolar", "arte-y-manualidades"],
+    "variants": [
+      {
+        "sku": "EJ-0009",
+        "barcode": null,
+        "colorKey": "surtido",
+        "colorName": "Surtido",
+        "colorHex": "#FFC72C",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "fabik-pizarra",
+    "name": "Fabik Pizarra",
+    "categorySlug": "marcadores",
+    "sample": true,
+    "shortDescription": "Marcador para pizarra blanca que se borra fácil.",
+    "published": true,
+    "uses": ["escolar", "oficina"],
+    "variants": [
+      {
+        "sku": "EJ-0010",
+        "barcode": null,
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE",
+        "isDefault": true
+      },
+      {
+        "sku": "EJ-0011",
+        "barcode": null,
+        "colorKey": "negro",
+        "colorName": "Negro",
+        "colorHex": "#111318"
+      },
+      {
+        "sku": "EJ-0012",
+        "barcode": null,
+        "colorKey": "rojo",
+        "colorName": "Rojo",
+        "colorHex": "#D42A22"
+      },
+      {
+        "sku": "EJ-0013",
+        "barcode": null,
+        "colorKey": "verde",
+        "colorName": "Verde",
+        "colorHex": "#0E7C52"
+      }
+    ]
+  },
+  {
+    "slug": "fabik-permanente",
+    "name": "Fabik Permanente",
+    "categorySlug": "marcadores",
+    "sample": true,
+    "shortDescription": "Marcador permanente para casi cualquier superficie.",
+    "published": true,
+    "uses": ["oficina"],
+    "variants": [
+      {
+        "sku": "EJ-0014",
+        "barcode": null,
+        "colorKey": "negro",
+        "colorName": "Negro",
+        "colorHex": "#111318",
+        "isDefault": true
+      },
+      {
+        "sku": "EJ-0015",
+        "barcode": null,
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE"
+      },
+      {
+        "sku": "EJ-0016",
+        "barcode": null,
+        "colorKey": "rojo",
+        "colorName": "Rojo",
+        "colorHex": "#D42A22"
+      }
+    ]
+  },
+  {
+    "slug": "marcador-fluorescente",
+    "name": "Marcador fluorescente",
+    "categorySlug": "marcadores",
+    "sample": true,
+    "shortDescription": "Resalta lo importante en tus apuntes.",
+    "published": true,
+    "uses": ["escolar", "oficina"],
+    "variants": [
+      {
+        "sku": "EJ-0017",
+        "barcode": null,
+        "colorKey": "amarillo",
+        "colorName": "Amarillo",
+        "colorHex": "#FFC72C",
+        "isDefault": true
+      },
+      {
+        "sku": "EJ-0018",
+        "barcode": null,
+        "colorKey": "verde",
+        "colorName": "Verde",
+        "colorHex": "#0E7C52"
+      }
+    ]
+  },
+  {
+    "slug": "marcador-recargable",
+    "name": "Marcador recargable",
+    "categorySlug": "marcadores",
+    "sample": true,
+    "shortDescription": "Marcador que se recarga con tinta, para usarlo más tiempo.",
+    "published": true,
+    "uses": ["oficina"],
+    "variants": [
+      {
+        "sku": "EJ-0019",
+        "barcode": null,
+        "colorKey": "negro",
+        "colorName": "Negro",
+        "colorHex": "#111318",
+        "isDefault": true
+      },
+      {
+        "sku": "EJ-0020",
+        "barcode": null,
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE"
+      }
+    ]
+  },
+  {
+    "slug": "tinta-para-recargar",
+    "name": "Tinta para recargar",
+    "categorySlug": "marcadores",
+    "sample": true,
+    "shortDescription": "Tinta para recargar marcadores de pizarra.",
+    "published": true,
+    "uses": ["oficina"],
+    "variants": [
+      {
+        "sku": "EJ-0021",
+        "barcode": null,
+        "colorKey": "negro",
+        "colorName": "Negro",
+        "colorHex": "#111318",
+        "isDefault": true
+      },
+      {
+        "sku": "EJ-0022",
+        "barcode": null,
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE"
+      }
+    ]
+  },
+  {
+    "slug": "goma-escolar",
+    "name": "Goma escolar",
+    "categorySlug": "pegamentos-y-silicon",
+    "sample": true,
+    "shortDescription": "Pegamento blanco para tareas y manualidades.",
+    "published": true,
+    "uses": ["escolar", "arte-y-manualidades"],
+    "variants": [
+      {
+        "sku": "EJ-0023",
+        "barcode": null,
+        "colorKey": "blanco",
+        "colorName": "Blanco",
+        "colorHex": "#FFFFFF",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "goma-en-barra",
+    "name": "Goma en barra",
+    "categorySlug": "pegamentos-y-silicon",
+    "sample": true,
+    "shortDescription": "Pegamento en barra, limpio y fácil de usar.",
+    "published": true,
+    "uses": ["escolar", "oficina"],
+    "variants": [
+      {
+        "sku": "EJ-0024",
+        "barcode": null,
+        "colorKey": "blanco",
+        "colorName": "Blanco",
+        "colorHex": "#FFFFFF",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "silicon-liquido",
+    "name": "Silicón líquido",
+    "categorySlug": "pegamentos-y-silicon",
+    "sample": true,
+    "shortDescription": "Silicón líquido para proyectos que necesitan más fuerza.",
+    "published": true,
+    "uses": ["arte-y-manualidades"],
+    "variants": [
+      {
+        "sku": "EJ-0025",
+        "barcode": null,
+        "colorKey": "transparente",
+        "colorName": "Transparente",
+        "colorHex": "#E3E7F0",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "borrador-blanco",
+    "name": "Borrador blanco",
+    "categorySlug": "borradores-y-sacapuntas",
+    "sample": true,
+    "shortDescription": "Borra limpio sin manchar el papel.",
+    "published": true,
+    "uses": ["escolar"],
+    "variants": [
+      {
+        "sku": "EJ-0026",
+        "barcode": null,
+        "colorKey": "blanco",
+        "colorName": "Blanco",
+        "colorHex": "#FFFFFF",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "sacapuntas-con-deposito",
+    "name": "Sacapuntas con depósito",
+    "categorySlug": "borradores-y-sacapuntas",
+    "sample": true,
+    "shortDescription": "Sacapuntas que guarda las virutas.",
+    "published": true,
+    "uses": ["escolar"],
+    "variants": [
+      {
+        "sku": "EJ-0027",
+        "barcode": null,
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE",
+        "isDefault": true
+      },
+      {
+        "sku": "EJ-0028",
+        "barcode": null,
+        "colorKey": "rojo",
+        "colorName": "Rojo",
+        "colorHex": "#D42A22"
+      }
+    ]
+  },
+  {
+    "slug": "tijera-escolar-punta-roma",
+    "name": "Tijera escolar punta roma",
+    "categorySlug": "tijeras-reglas-y-geometria",
+    "sample": true,
+    "shortDescription": "Tijera de punta redondeada para el aula.",
+    "published": true,
+    "uses": ["escolar"],
+    "variants": [
+      {
+        "sku": "EJ-0029",
+        "barcode": null,
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE",
+        "isDefault": true
+      },
+      {
+        "sku": "EJ-0030",
+        "barcode": null,
+        "colorKey": "rojo",
+        "colorName": "Rojo",
+        "colorHex": "#D42A22"
+      }
+    ]
+  },
+  {
+    "slug": "regla-de-30-cm",
+    "name": "Regla de 30 cm",
+    "categorySlug": "tijeras-reglas-y-geometria",
+    "sample": true,
+    "shortDescription": "Regla transparente de 30 centímetros.",
+    "published": true,
+    "uses": ["escolar", "oficina"],
+    "variants": [
+      {
+        "sku": "EJ-0031",
+        "barcode": null,
+        "colorKey": "transparente",
+        "colorName": "Transparente",
+        "colorHex": "#E3E7F0",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "juego-de-geometria",
+    "name": "Juego de geometría",
+    "categorySlug": "tijeras-reglas-y-geometria",
+    "sample": true,
+    "shortDescription": "Regla, escuadras y transportador para clase.",
+    "published": true,
+    "uses": ["escolar"],
+    "variants": [
+      {
+        "sku": "EJ-0032",
+        "barcode": null,
+        "colorKey": "transparente",
+        "colorName": "Transparente",
+        "colorHex": "#E3E7F0",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "tabla-para-escritura",
+    "name": "Tabla para escritura",
+    "categorySlug": "tijeras-reglas-y-geometria",
+    "sample": true,
+    "shortDescription": "Tabla con prensa para escribir donde sea.",
+    "published": true,
+    "uses": ["escolar", "oficina"],
+    "variants": [
+      {
+        "sku": "EJ-0033",
+        "barcode": null,
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "boligrafo-personalizado",
+    "name": "Bolígrafo personalizado",
+    "categorySlug": "articulos-publicitarios",
+    "sample": true,
+    "shortDescription": "Bolígrafo con el logo de tu empresa o institución.",
+    "published": true,
+    "uses": ["promocional"],
+    "variants": [
+      {
+        "sku": "EJ-0034",
+        "barcode": null,
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE",
+        "isDefault": true
+      },
+      {
+        "sku": "EJ-0035",
+        "barcode": null,
+        "colorKey": "negro",
+        "colorName": "Negro",
+        "colorHex": "#111318"
+      }
+    ]
+  },
+  {
+    "slug": "kit-de-bienvenida",
+    "name": "Kit de bienvenida",
+    "categorySlug": "articulos-publicitarios",
+    "sample": true,
+    "shortDescription": "Útiles con tu marca para recibir a tu equipo.",
+    "published": true,
+    "uses": ["promocional"],
+    "variants": [
+      {
+        "sku": "EJ-0036",
+        "barcode": null,
+        "colorKey": "surtido",
+        "colorName": "Surtido",
+        "colorHex": "#FFC72C",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "slug": "estuche-con-logo",
+    "name": "Estuche con logo",
+    "categorySlug": "articulos-publicitarios",
+    "sample": true,
+    "shortDescription": "Estuche personalizado para eventos y ferias.",
+    "published": true,
+    "uses": ["promocional"],
+    "variants": [
+      {
+        "sku": "EJ-0037",
+        "barcode": null,
+        "colorKey": "azul",
+        "colorName": "Azul",
+        "colorHex": "#1D3FCE",
+        "isDefault": true
+      }
+    ]
+  }
+]

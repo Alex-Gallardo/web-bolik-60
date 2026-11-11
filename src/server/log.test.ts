@@ -81,9 +81,11 @@ describe("logError", () => {
     }
   });
 
-  it("el código sale intacto en la línea del log", () => {
+  // 200 errores: con el error de antes (1 de cada 43 códigos oculto) falla el 99 % de las veces; la
+  // prueba de 5 000 códigos de arriba cubre el resto. Margen propio: con cobertura, pino es lento.
+  it("el código sale intacto en la línea del log", { timeout: 15_000 }, () => {
     const { logger, lines } = memoryLogger();
-    const ids = Array.from({ length: 500 }, () => logError(new Error("fallo"), {}, logger));
+    const ids = Array.from({ length: 200 }, () => logError(new Error("fallo"), {}, logger));
     expect(lines.map((line) => line.requestId)).toEqual(ids);
   });
 

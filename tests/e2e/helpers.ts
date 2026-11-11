@@ -1,8 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test as base, expect, type Page, type TestInfo } from "@playwright/test";
 
-/** Clave de sessionStorage con la que el splash (BD-04x) sabe que ya se mostró en la sesión. */
-export const SPLASH_KEY = "bolik_splash";
+import { SPLASH_KEY } from "../../src/lib/splash";
+
+/** Clave de sessionStorage con la que el splash (BD-043) sabe que ya se mostró en la sesión. */
+export { SPLASH_KEY };
 
 /** Marca el splash como ya visto antes de que cargue la página (docs/13 §2). */
 export async function skipSplash(page: Page) {
@@ -39,6 +41,14 @@ const BLOCKING_IMPACTS = new Set(["serious", "critical"]);
  * reporte y falla solo con violaciones serias o críticas, nombrando la regla y los nodos.
  */
 export async function expectNoA11yViolations(page: Page, testInfo: TestInfo = test.info()) {
+  // Reveals (BD-044): se analiza el estado final. A media transición la opacidad baja el contraste
+  // medido y el resultado dependería de cuándo corre axe.
+  await page.addStyleTag({ content: "[data-reveal] { transition: none !important; }" });
+  await page.evaluate(() =>
+    document
+      .querySelectorAll("[data-reveal]")
+      .forEach((el) => el.setAttribute("data-revealed", "")),
+  );
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();

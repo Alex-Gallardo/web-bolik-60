@@ -24,7 +24,7 @@ Está escrita para un **desarrollador junior que trabaja con Claude Code**. Cada
 bolik-digital-guia/
 ├─ README.md               este archivo
 ├─ CLAUDE.md               reglas del repo para Claude Code (va en la raíz del repo)
-├─ tickets.csv             118 tickets (117 del plan original + nuevos)
+├─ tickets.csv             119 tickets (117 del plan original + nuevos)
 ├─ docs/                   01–18 (ver tabla)
 └─ starter/                archivos base para copiar y adaptar
    ├─ .claude/             settings.json, skills (ticket, perf-check), agents (revisor)

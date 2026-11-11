@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 const { error } = vi.hoisted(() => ({ error: vi.fn() }));
 vi.mock("./server/log", async (importOriginal) => ({
@@ -17,6 +17,12 @@ const context = {
   routePath: "/buscar",
   routeType: "render",
 } as ContextArg;
+
+// onRequestError importa ./server/log (pino) la primera vez que corre. Con la cobertura activa y la
+// máquina ocupada esa carga pasa de los 5 s por prueba: se hace antes, con su propio margen.
+beforeAll(async () => {
+  await import("./server/log");
+}, 30_000);
 
 afterEach(() => {
   vi.unstubAllEnvs();

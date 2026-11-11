@@ -15,7 +15,7 @@ La documentación completa está en `/docs`. Si una instrucción de este archivo
 
 - **Next.js 16** (App Router, `cacheComponents: true`, `output: "standalone"`) + **React 19** + **TypeScript** estricto. En Next 16 el middleware se llama `proxy.ts`; la caché se declara con `'use cache'` + `cacheLife` + `cacheTag`. Verifica en la documentación oficial cualquier API que recuerdes de versiones anteriores; la de la versión instalada está en `node_modules/next/dist/docs/` (ver `AGENTS.md`, que `next dev` regenera).
 - **Tailwind CSS v4** con tokens en `src/styles/tokens.css` (nunca colores sueltos en componentes). La paleta por defecto de Tailwind está desactivada: solo existen los colores de marca (`bg-blue`, `text-ink`…); `pnpm check:colors` vigila hex sueltos y variables autorreferentes.
-- **Radix UI** (vía shadcn/ui, código copiado en `src/components/ui`) para diálogos, tabs, acordeones, popovers.
+- **Radix UI** (estructura de shadcn/ui, escrita a mano en `src/components/ui`) para diálogos, sheets y popovers. Tabs propio y acordeón con `<details>` nativo: su contenido va en el HTML y se ve sin JavaScript (BD-025).
 - **Motion** (`motion/react`) solo con `LazyMotion` + `m`, y solo donde CSS no alcanza (drawer, modales, listas que se reordenan).
 - **Prisma** + **SQL Server** (BD `BolikDigital`).
 - **Zod** para toda validación; **React Hook Form** en formularios.
@@ -48,7 +48,8 @@ pnpm db:deploy        # aplica migraciones pendientes (despliegue)
 pnpm db:status        # ¿la base está al día con las migraciones?
 pnpm db:generate      # regenera el cliente (también corre en pnpm install)
 pnpm db:reset:test    # borra y recrea BolikDigital_Test (manual; nunca lo corre un agente)
-pnpm db:seed          # datos iniciales
+pnpm db:seed          # datos iniciales: --profile dev (por defecto) | e2e | prod (solo crea lo que falta, sin ejemplos)
+pnpm import:media     # procesa en lote las fotos de una carpeta (WebP 320…1920) y las registra en MediaAsset
 pnpm sync:catalog     # sincroniza artículos desde SMART-K66
 ```
 
@@ -119,7 +120,7 @@ Detalle en `docs/04-estructura-proyecto.md`.
 - Archivos y carpetas en `kebab-case`; componentes exportan `PascalCase`.
 - Un componente por archivo. Props tipadas con `type`, no `interface`, salvo extensión.
 - Server Actions en `features/<dominio>/actions.ts`, con `"use server"` y retorno `{ ok: true, data } | { ok: false, error }`.
-- Consultas de BD solo en `src/server/data/*`, envueltas en caché con tags (`TAGS` en `src/lib/cache-tags.ts`).
+- Consultas de BD solo en `src/server/data/*`, envueltas en caché con tags (`TAGS` en `src/lib/cache-tags.ts`). Las páginas leen solo de ahí y reciben tipos de vista; la fuente la elige `DATA_SOURCE` (`fixtures` = `prisma/seed/*.json` sin base; `db` = SQL Server, obligatorio en producción). Datos nuevos de ejemplo van en esos JSON, nunca escritos en un componente.
 - Mutaciones del admin: `requireRole`, validan con Zod, escriben, registran en `AuditLog`, llaman `updateTag(...)` con los tags de `lib/cache-tags.ts` y encolan IndexNow. Scripts y route handlers usan `revalidateTag(tag, "max")`.
 - Commits con Conventional Commits en español y el ID del ticket: `feat(catalogo): filtros por línea [BD-060]`.
 - Textos visibles en español con tildes correctas. Nada de "Lorem ipsum": usa `docs/17-copys.md`.
@@ -132,7 +133,7 @@ Detalle en `docs/04-estructura-proyecto.md`.
 - Release: `release/vX.Y.Z` desde `develop` → PR a `master` → tag `vX.Y.Z` en `master` → `master` de vuelta a `develop`.
 - Hotfix: `hotfix/vX.Y.Z` desde `master` → `master` (tag) y `develop`.
 - Backlog maestro: `docs/14-plan-de-accion.md` y `docs/tickets.csv`. En GitHub solo se abren como Issues los tickets del sprint en curso (milestone por sprint). Un ticket nuevo usa un hueco de numeración de su épica y se agrega al doc 14 en el mismo PR.
-- Alcance: se implementa el plan **completo** (los 117 tickets y los que surjan); no hay "núcleo" ni Fase posterior para recortar.
+- Alcance: se implementa el plan **completo** (los 120 tickets y los que surjan); no hay "núcleo" ni Fase posterior para recortar.
 - Repo público: nunca subas `.env*` reales, credenciales, cadenas de conexión ni datos de clientes.
 
 ## Definición de terminado (por ticket)

@@ -49,6 +49,17 @@ const nextConfig: NextConfig = {
   cacheComponents: true, // 'use cache' + cacheLife + cacheTag (docs/03 §5)
   partialPrefetching: true,
   typedRoutes: true,
+  // Adaptador de SQL Server (BD-032): se carga de node_modules en el servidor, sin empaquetar.
+  // Turbopack no puede seguir su cadena (mssql → tedious → @azure/identity → open → powershell-utils);
+  // fuera del bundle, el trazado del standalone copia el paquete con sus dependencias.
+  serverExternalPackages: ["@prisma/adapter-mssql"],
+  // La barra final la quita proxy.ts después de las redirecciones (BD-046): la de Next corre antes
+  // del proxy y una URL vieja con barra daba dos saltos.
+  skipTrailingSlashRedirect: true,
+  // sharp (BD-034) carga un binario por plataforma. El trazado solo copia el de la máquina que
+  // construye (Linux en la CI): se agrega el de Windows, donde corre el servidor (IIS). Con la
+  // estructura de pnpm en local el patrón no encuentra nada, y no hace falta.
+  outputFileTracingIncludes: { "/*": ["./node_modules/@img/sharp-win32-x64/**/*"] },
   poweredByHeader: false,
   reactStrictMode: true,
   images: {
