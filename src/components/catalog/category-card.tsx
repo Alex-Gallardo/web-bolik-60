@@ -17,16 +17,17 @@ type CategoryCardProps = {
   headingLevel?: 2 | 3 | 4;
   /** Prefetch del Link; false donde la página todavía no existe. */
   prefetch?: boolean;
-};
+} & { [key: `data-${string}`]: string | undefined };
 
 /**
  * Tarjeta de categoría (docs/06 §3.1 y §3.2, BD-023): color de la línea, nombre, texto corto y
  * cuántos productos tiene. Toda la tarjeta es un solo enlace.
  */
-export function CategoryCard({ category, headingLevel = 3, prefetch }: CategoryCardProps) {
+export function CategoryCard({ category, headingLevel = 3, prefetch, ...data }: CategoryCardProps) {
   const Heading = `h${headingLevel}` as const;
   return (
     <Link
+      {...data}
       href={category.href as Route}
       prefetch={prefetch}
       className="lift group flex h-full flex-col rounded-lg border-2 border-line bg-paper text-ink no-underline"
