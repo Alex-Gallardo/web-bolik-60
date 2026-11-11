@@ -1,6 +1,6 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { FAQ_SCOPES, type PackagingCode } from "@/lib/constants";
+import { FAQ_SCOPES, MEDIA_IMAGE_KINDS, type PackagingCode } from "@/lib/constants";
 import { db } from "@/server/db";
 import { toSiteSettings } from "../settings-view";
 import type {
@@ -8,6 +8,7 @@ import type {
   DataSource,
   DepartmentView,
   FaqView,
+  ImageView,
   KitView,
   LineGroup,
   ProductCardView,
@@ -340,6 +341,31 @@ export const dbSource: DataSource = {
       where: { published: true },
       orderBy: bySortOrder,
     });
+    // posterKey no es una relación: se busca en MediaAsset y, si no está, el capítulo va sin póster.
+    const keys = rows.flatMap((h) => (h.posterKey ? [h.posterKey] : []));
+    const assets = keys.length
+      ? await db.mediaAsset.findMany({
+          where: { key: { in: keys }, kind: { in: [...MEDIA_IMAGE_KINDS] } },
+        })
+      : [];
+    const posters = new Map(
+      assets.flatMap((m): [string, ImageView][] =>
+        m.width && m.height
+          ? [
+              [
+                m.key,
+                {
+                  src: `/media/${m.key}`,
+                  alt: m.defaultAlt ?? "",
+                  width: m.width,
+                  height: m.height,
+                  blurDataUrl: m.blurDataUrl,
+                },
+              ],
+            ]
+          : [],
+      ),
+    );
     return rows.map((h) => ({
       key: h.key,
       label: h.label,
@@ -355,9 +381,13 @@ export const dbSource: DataSource = {
                 "empresa" | "libreria",
             }
           : { kind: "link" as const, label: h.ctaLabel, href: h.ctaHref ?? "/" },
+      secondaryCta:
+        h.secondaryCtaLabel && h.secondaryCtaHref
+          ? { label: h.secondaryCtaLabel, href: h.secondaryCtaHref }
+          : null,
       videoDesktop: h.videoDesktop,
       videoMobile: h.videoMobile,
-      posterKey: h.posterKey,
+      poster: (h.posterKey && posters.get(h.posterKey)) || null,
     }));
   },
 

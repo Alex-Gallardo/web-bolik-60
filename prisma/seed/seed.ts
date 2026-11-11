@@ -183,6 +183,25 @@ export async function seedDatabase(
     });
   }
 
+  // Imágenes ya procesadas (media.json, BD-050): la fila de MediaAsset que resuelve el póster del
+  // hero. Los archivos los pone `pnpm media:samples` en MEDIA_DIR; en prod no hay ejemplos.
+  for (const m of data.media) {
+    const row = {
+      kind: "image",
+      originalName: m.originalName,
+      mime: "image/webp",
+      width: m.width,
+      height: m.height,
+      bytes: m.bytes,
+      defaultAlt: m.alt,
+    };
+    await db.mediaAsset.upsert({
+      where: { key: m.key },
+      create: { key: m.key, ...row },
+      update: updateFor(mode, row),
+    });
+  }
+
   await seedContent(db, data.content, mode);
 
   const skuIds = new Map(
@@ -421,6 +440,8 @@ async function seedContent(db: Db, content: SeedData["content"], mode: SeedMode)
       ctaKind: h.ctaKind,
       ctaHref: h.ctaHref ?? null,
       ctaQuoteType: h.ctaQuoteType ?? null,
+      secondaryCtaLabel: h.secondaryCtaLabel ?? null,
+      secondaryCtaHref: h.secondaryCtaHref ?? null,
       videoDesktop: h.videoDesktop ?? null,
       videoMobile: h.videoMobile ?? null,
       posterKey: h.posterKey ?? null,

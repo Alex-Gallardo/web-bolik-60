@@ -58,7 +58,10 @@ export function seedTargetProblem(
   return null;
 }
 
-/** Los datos que carga un perfil: en prod, sin ejemplos ni relaciones, FAQs o líneas de kit hacia ellos. */
+/**
+ * Los datos que carga un perfil: en prod, sin ejemplos ni relaciones, FAQs o líneas de kit hacia
+ * ellos, y sin los pósters y videos de la demo en el hero (BD-050).
+ */
 export function dataForProfile(data: SeedData, profile: SeedProfile): SeedData {
   if (profile !== "prod") return data;
 
@@ -76,7 +79,19 @@ export function dataForProfile(data: SeedData, profile: SeedProfile): SeedData {
     content: {
       ...data.content,
       activities: data.content.activities.filter((a) => !a.sample),
+      heroChapters: data.content.heroChapters.map((h) =>
+        h.sampleMedia
+          ? {
+              ...h,
+              posterKey: undefined,
+              videoDesktop: undefined,
+              videoMobile: undefined,
+              sampleMedia: false,
+            }
+          : h,
+      ),
     },
+    media: data.media.filter((m) => !m.sample),
     kits: data.kits
       .filter((k) => !k.sample)
       .map((k) => ({

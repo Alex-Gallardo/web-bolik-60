@@ -5,6 +5,7 @@ import type {
   CategoryView,
   DataSource,
   DepartmentView,
+  ImageView,
   ProductCardView,
   ProductView,
   SpecGroupView,
@@ -24,6 +25,14 @@ type Product = SeedData["products"][number];
 
 const categoryHref = (slug: string) => `/productos/${slug}`;
 const productHref = (categorySlug: string, slug: string) => `/productos/${categorySlug}/${slug}`;
+
+/** Imagen del manifiesto media.json (BD-050), con la misma forma que la de MediaAsset. */
+function mediaImage(key: string): ImageView | null {
+  const m = seedData().media.find((asset) => asset.key === key);
+  return m
+    ? { src: `/media/${m.key}`, alt: m.alt, width: m.width, height: m.height, blurDataUrl: null }
+    : null;
+}
 
 /** Productos visibles: publicados y de una categoría publicada. */
 function visibleProducts(data: SeedData): Product[] {
@@ -252,9 +261,13 @@ export const fixturesSource: DataSource = {
             ? // El esquema exige ctaQuoteType con quote y ctaHref con link.
               { kind: "quote" as const, label: h.ctaLabel, quoteType: h.ctaQuoteType! }
             : { kind: "link" as const, label: h.ctaLabel, href: h.ctaHref! },
+        secondaryCta:
+          h.secondaryCtaLabel && h.secondaryCtaHref
+            ? { label: h.secondaryCtaLabel, href: h.secondaryCtaHref }
+            : null,
         videoDesktop: h.videoDesktop ?? null,
         videoMobile: h.videoMobile ?? null,
-        posterKey: h.posterKey ?? null,
+        poster: h.posterKey ? mediaImage(h.posterKey) : null,
       }));
   },
 

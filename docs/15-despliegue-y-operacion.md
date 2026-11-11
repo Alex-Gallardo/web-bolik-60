@@ -446,6 +446,16 @@ Aunque las páginas se generen en el build, el servicio necesita la base disponi
 
 **Datos de ejemplo (BD-016, hasta BD-038).** Con `-SampleData`, staging muestra el catálogo de ejemplo en lugar de solo el Bolik Ultra. La bandera `--allow-sample-data` solo funciona con el perfil `dev`, `APP_ENV=staging` y la base `BolikDigital_Stg`; nunca en producción ni en otra base del mismo SQL Server. Cuando llegue el catálogo real, el DBA recrea `BolikDigital_Stg` vacía y se construye sin `-SampleData`. El perfil `prod` no borra los ejemplos que ya estén.
 
+Los pósters y videos de ejemplo del hero (BD-050) tampoco van en el paquete. Con `-SampleData` (o `DATA_SOURCE=fixtures`), se ponen una vez en el `MEDIA_DIR` de staging desde la carpeta de la demo:
+
+```powershell
+$env:MEDIA_DIR = "D:olik-stgmedia"
+pnpm media:samples "<carpeta de la demo>ideos"
+Remove-Item Env:MEDIA_DIR
+```
+
+Sin ellos, IIS responde 404 al póster y a los videos, y el hero queda sin imagen.
+
 El artefacto de la CI no sirve aquí: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` y no tiene `APP_ENV=staging`.
 
 ### 3. Desplegar

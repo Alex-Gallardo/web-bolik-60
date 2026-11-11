@@ -56,12 +56,14 @@ module.exports = {
     assert: {
       assertMatrix: [
         {
-          // Home: ≥ 90 en rendimiento por el video, JS ≤ 165 KB. LCP 2.5 s hasta BD-050 (luego 2.0 s).
+          // Home: ≥ 90 en rendimiento por el video, JS ≤ 165 KB y LCP ≤ 2.0 s: el LCP es el póster
+          // del capítulo 1 (BD-050). Lighthouse móvil no pide video: sin video vertical, el hero
+          // de móvil se queda con el póster (hero.spec.ts lo comprueba).
           matchingUrlPattern: "^https?://[^/]+/$",
           assertions: {
             ...common,
             "categories:performance": ["error", { minScore: 0.9 }],
-            "largest-contentful-paint": ["error", { maxNumericValue: 2500 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 2000 }],
             "total-blocking-time": ["error", { maxNumericValue: 200 }],
             "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
           },

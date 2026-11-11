@@ -951,6 +951,23 @@ El hero de la demo, llevado a producción.
 - [ ] Capítulos navegables con flechas del teclado.
 - [ ] El video se pausa fuera de pantalla.
 
+**Cómo quedó (10 nov 2026)**
+
+- **Componentes.** `components/hero/video-hero.tsx` (servidor) arma el chip, el único h1 con el subrayado A-11 y los atributos de cada póster con `getImageProps`. El póster 1 lleva `<link rel="preload" fetchpriority="high">` (`preload` de react-dom) e `<img loading="eager" fetchpriority="high">`: el `preload` de `next/image` en Next 16 no pone prioridad y Chrome lo pedía como *Low*. `hero-player.tsx` (cliente) maneja capas, video, texto y pestañas. Detalle en doc 09 §5.
+- **Video.** Llega tras `load` y en tiempo ocioso; nunca con movimiento reducido, Save-Data ni 2g/3g (`video-policy.ts`). En móvil solo hay video si el capítulo trae el vertical; sin él, solo el póster. Hay un solo `<video>`, el del capítulo actual. Un video que falla deja el póster. Botón de pausa solo cuando el capítulo tiene video, absoluto (no mueve el diseño). Pausa fuera de pantalla. Si se activa el movimiento reducido con la página abierta, el video se va. El corte entre móvil y escritorio es `md` (48rem), el mismo del diseño.
+- **Pestañas.** Patrón ARIA con flechas, Inicio y Fin, contadas desde la pestaña que tiene el foco. Los cuatro paneles (texto y CTA) están en el HTML: sin JS se ven todos; con JS, solo el activo (`.js .hero-chapter`). Con el foco dentro del hero, el video no avanza solo, así el foco no se pierde (WCAG 2.4.3). Sin `aria-live`: con el avance automático anunciaría cada capítulo.
+- **CTA secundario.** Migración `hero_cta_secundario`: `secondaryCtaLabel` y `secondaryCtaHref`, siempre un enlace interno, en el seed, en las dos fuentes y en `HeroChapterView`. El CTA de cotización enlaza a `/cotizacion?tipo=…` hasta el drawer (BD-071). Los CTA llevan `data-event="hero_cta_click"` y las pestañas `hero_chapter_view`, para conectarlos con la analítica.
+- **Medios de ejemplo.** Las ilustraciones y videos de la demo no van al repo.
+  - `prisma/seed/media.json` guarda solo claves y medidas. El seed (`dev` y `e2e`) registra MediaAsset; `prod` quita póster y videos marcados `sampleMedia`.
+  - `pnpm media:samples <carpeta>` pone los archivos en `MEDIA_DIR`.
+  - `scripts/ci/sample-media.mjs` deja reemplazos con la misma clave en la CI (`serve-artifact.sh`) y en `start:local`.
+  - La ruta `/media` de Node sirve también `video/*.mp4` con `Range` (`lib/http-range.ts`); en el servidor los sirve IIS.
+- **JS de la home: 163.7 KB** (presupuesto de 165). Para caber, los pósters no usan el componente `Image` (que pesa en el navegador) y el hero usa `buttonVariants` sin `Button asChild`; las variantes pasaron a `ui/button-variants.ts`.
+- **LCP medido en local** (Lighthouse móvil, mejor de 3):
+  - home con el marcador de texto (`develop`): 2.33 s;
+  - con el hero: 2.90 s.
+  - El resto del tiempo es de Lantern: la descarga compartida con 160 KB de JS y dos fuentes precargadas, y el JS que corre antes del primer pintado. Eso es el alcance de BD-055 (ajuste de rendimiento de la home).
+
 #### BD-051 · Soluciones por público y categorías
 
 **Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-023, BD-037 · **Docs** 06 §3.1
@@ -1035,6 +1052,11 @@ La home cumple los presupuestos.
 
 - [ ] JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
 - [ ] Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.
+
+**Nota de BD-050:** tras el hero, la home queda en **163.7 KB** de JS: solo hay 1.3 KB de margen para BD-051 a 054. El LCP (el póster del capítulo 1) medido en local con Lantern sale de 2.9 s (2.3 s con el marcador de texto de `develop`). Ese tiempo no viene del póster, que se pide primero con prioridad alta y pesa ~13 KB en móvil:
+- la descarga compite con ~160 KB de JS y dos fuentes precargadas (~78 KB);
+- y el JS que corre antes del primer pintado alarga el render.
+Puntos a revisar: `preload` de las fuentes (¿solo la del h1?), qué JS de la home puede cargarse después, y el splash.
 
 ### E5 · Catálogo, fichas y búsqueda
 
@@ -1876,7 +1898,11 @@ Subir y reutilizar imágenes y videos.
 
 - [ ] Archivo inválido → mensaje amable; nunca se guarda.
 
-**Nota de BD-034:** la subida reutiliza `processImage` y `saveMediaAsset`; la misma foto con el mismo nombre da la misma clave (no se duplica ni se reescribe). El procesamiento usa todos los núcleos unos segundos: si compite con el sitio, limitar con `sharp.concurrency()`. Videos y PDF no pasan por sharp: necesitan su propio camino (y la ruta `/media` de Node hoy solo sirve imágenes).
+**Nota de BD-034:** la subida reutiliza `processImage` y `saveMediaAsset`; la misma foto con el mismo nombre da la misma clave (no se duplica ni se reescribe). El procesamiento usa todos los núcleos unos segundos: si compite con el sitio, limitar con `sharp.concurrency()`. Videos y PDF no pasan por sharp: necesitan su propio camino. Desde BD-050 la ruta `/media` de Node sirve también `video/*.mp4` (con `Range`), pero con caché de un día porque sus nombres no llevan hash.
+
+**Nota de BD-050:**
+- Al subir un video, ponerle un hash en el nombre, como a las imágenes. Así los videos pueden ir con caché de un año, que es lo que ya hace IIS con todo `/media`; sin hash, un video reemplazado seguiría viéndose viejo.
+- Cambiar un `MediaAsset` (alt, medidas, archivo) debe invalidar `TAGS.content`: el póster del hero se resuelve desde ahí.
 
 #### BD-123 · Redirecciones y 404
 

@@ -118,6 +118,23 @@ export function describeDataSourceContract(name: string, getSource: () => DataSo
         href: "/productos",
       });
       expect(chapters[3]!.cta).toMatchObject({ kind: "quote", quoteType: "libreria" });
+      // CTA secundario de doc 17 §2 y póster de ejemplo resuelto desde MediaAsset (BD-050).
+      expect(chapters.map((c) => c.secondaryCta?.href)).toEqual([
+        "/nuestra-historia",
+        "/escuelas",
+        "/empresas",
+        "/mayoreo#distribuidor",
+      ]);
+      expect(chapters[0]!.poster).toEqual({
+        src: "/media/hero/planta-c6dcd764",
+        alt: expect.stringContaining("Bolik Ultra") as string,
+        width: 1280,
+        height: 720,
+        blurDataUrl: null,
+      });
+      expect(chapters.every((c) => c.poster && c.videoDesktop?.startsWith("/media/video/"))).toBe(
+        true,
+      );
     });
 
     it("solo muestra cifras publicadas e hitos verificados", async () => {
