@@ -1012,7 +1012,7 @@ Bolik Ultra destacado y cifras de la empresa.
 
 **Pasos**
 
-1. Bloque del Ultra con colores, empaques y CTA "Cotizar" / "Dónde comprar".
+1. Bloque del Ultra con colores, empaques y CTA «Ver ficha» / «Dónde comprar» (doc 17; decía «Cotizar»).
 2. Cifras desde `SiteStat` con `CountUp`.
 
 **Notas de BD-037**
@@ -1022,9 +1022,25 @@ Bolik Ultra destacado y cifras de la empresa.
 **Criterios de aceptación**
 
 - [ ] El servidor renderiza los números finales (SEO).
-- [ ] Solo se muestran cifras con `isVerified = true`.
+- [ ] Solo se muestran cifras validadas: `SiteStat.published = true`. *(Decía `isVerified`, que `SiteStat` no tiene: su validación es `published`, y las «(validar)» de doc 17 están en `false`.)*
+
+**Cómo quedó (11 nov 2026)**
+
+- **`components/home/stats-band.tsx`: franja de cifras** sobre el azul de marca, justo después del hero (orden de doc 06).
+  - Muestra las cifras publicadas con `CountUp` (A-20); el número final va en el HTML.
+  - Con menos de 4 quedan centradas: hoy solo «60 años escribiendo con Guatemala». Sin ninguna, no hay franja.
+- **`components/home/product-spotlight.tsx`: el producto `featured` (Bolik Ultra)** después del catálogo destacado.
+  - Eyebrow «Nuestro bolígrafo estrella»: «El favorito de Guatemala» está por validar.
+  - Chips de color con su código («Azul · PT00058»), fijos: el cambio de color A-31 va en la ficha (BD-062), cuando haya fotos.
+  - Presentaciones y CTA «Ver ficha» y «Dónde comprar» (doc 17).
+  - Los beneficios son los 3 en que coinciden `products.json` y doc 17. El cuarto («Baja viscosidad» o «Cuerpo hexagonal que no rueda») espera a Mercadeo; se agrega en `spotlight.benefitKeys`.
+  - Sin foto, una ilustración SVG con los colores de las variantes. Cuando haya foto, `<img>` con `getImageProps`, sin JS de `Image`.
+- **JS de la home: 164.3 KB** (`CountUp` sumó 0.4 KB). Queda menos de 1 KB de margen para BD-053 y BD-054.
+- **Orden de la home:** hero, cifras, soluciones, catálogo y Ultra. Se ajusta en BD-056.
 
 #### BD-053 · Dónde comprar, escuelas e historia en la home
+
+> **Nota de BD-052:** la home está en 164.3 KB de JS (presupuesto de 165). Este ticket va con Server Components y sin JS nuevo; medir con `pnpm lhci` antes del PR.
 
 **Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-051 · **Docs** 06 §3.1
 
@@ -1041,6 +1057,8 @@ Resúmenes que llevan a las páginas internas.
 - [ ] Los enlaces externos llevan `rel="noopener"` y registran `retailer_click`.
 
 #### BD-054 · FAQ, CTA final y apariencia por sección
+
+> **Nota de BD-052:** la home está en 164.3 KB de JS (presupuesto de 165). El acordeón de las FAQ es `<details>` nativo (sin JS); medir con `pnpm lhci` antes del PR.
 
 **Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-051, BD-020 · **Docs** 06 §3.1
 
