@@ -172,7 +172,7 @@ BD-050,E4,Inicio,Hero con video por capítulos,S2,1.5,Must,A,BD-037 BD-034 BD-04
 - El video se pausa fuera de pantalla.",Sí
 BD-051,E4,Inicio,Soluciones por público y categorías,S2,0.5,Must,A,BD-023 BD-037,06 §3.1,Accesos rápidos a lo que busca cada visitante.,"1. ""Un Bolik para cada etapa"": 5 tarjetas (Colegios, Universidades, Empresas, Librerías, Distribuidores) y 8 categorías con buscador grande (doc 06 §3.1, secciones 3–4).
 2. Eventos `solution_click` y `category_click`.","- Las tarjetas enlazan a rutas reales.
-- Revelado escalonado (A-30).",Sí
+- Revelado escalonado (A-21) y elevación al pasar el mouse (A-30).",Sí
 BD-052,E4,Inicio,Producto estrella y cifras,S2,0.5,Must,A,BD-051,06 §3.1,Bolik Ultra destacado y cifras de la empresa.,"1. Bloque del Ultra con colores, empaques y CTA ""Cotizar"" / ""Dónde comprar"".
 2. Cifras desde `SiteStat` con `CountUp`.","- El servidor renderiza los números finales (SEO).
 - Solo se muestran cifras con `isVerified = true`.",Sí

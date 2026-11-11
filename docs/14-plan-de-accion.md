@@ -983,8 +983,26 @@ Accesos rápidos a lo que busca cada visitante.
 
 **Criterios de aceptación**
 
-- [ ] Las tarjetas enlazan a rutas reales.
-- [ ] Revelado escalonado (A-30).
+- [ ] Las tarjetas enlazan a rutas reales. *(Los enlaces apuntan a las rutas definitivas, pero las páginas llegan con su ticket y hasta entonces dan 404: `/productos`, `/productos/[categoria]` y `?linea=` en BD-060 y BD-061, `/buscar` en BD-066 y `/escuelas`, `/empresas` y `/mayoreo` con las páginas por público de E10. Se marca cuando existan.)*
+- [ ] Revelado escalonado (A-21) y elevación al pasar el mouse (A-30). *(Decía «A-30»; en doc 09 el escalonado es A-21 y A-30 la elevación: doc 06 pide los dos.)*
+
+**Cómo quedó (11 nov 2026)**
+
+- `components/home/solutions-section.tsx`: «Un Bolik para cada etapa». Un h2 y las 5 `AudienceCard` (h3) con sus rutas de doc 17. En móvil es un carrusel con `scroll-snap` que no desborda la página; desde `lg`, 3 columnas, y desde `xl`, 5 (a 1024 px «Universidades» no cabía).
+- `components/home/catalog-section.tsx`: «Encuentra lo que necesitas».
+  - Buscador grande: `<form role="search" action="/buscar" method="get">` con `<label>` real, `name="q"` y el placeholder de doc 17. Funciona sin JS; `/buscar` llega con BD-066.
+  - Chips de las líneas que tienen categorías, enlazados a `/productos?linea=…` (filtro de BD-060).
+  - Las 8 `CategoryCard`: 2 columnas en móvil, 4 desde `lg`.
+  - «Ver todo el catálogo».
+- **«Más de 150 útiles»** solo aparece cuando Mercadeo publica la cifra `productos` (SiteStat). Mientras tanto: «Útiles para la escuela, la oficina y la casa.».
+- **Animación y eventos:**
+  - Revelado A-21 en cada `<li>` y elevación A-30 en las tarjetas.
+  - En el carrusel de móvil, el revelado no es escalonado: la tarjeta que entra al deslizar no espera su turno. Es escalonado desde `lg`.
+  - `data-event` (`solution_click`, `category_click`, `search_open`) queda listo para la analítica, con claves estables (`data-audience="colegios"`). `AudienceCard` y `CategoryCard` aceptan `data-*`.
+- **Validación del buscador:** la búsqueda vacía o corta la resuelve `/buscar` (BD-066) con su propio mensaje; el formulario no usa la validación nativa del navegador.
+- **Fondos editables desde el admin:** `home.solutions` (paper) y `home.catalog` (soft).
+- **Sin JS nuevo:** todo son Server Components y un formulario HTML.
+- **Orden provisional:** hero, soluciones y catálogo. Se ajusta en BD-056.
 
 #### BD-052 · Producto estrella y cifras
 
