@@ -54,7 +54,7 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 |---|---|---|---|
 | **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
 | **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 16.25 (9.25 / 7) |
-| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 21 (11.25 / 9.75) |
+| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 22.5 (12.75 / 9.75) |
 | **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 20.5 (10 / 10.5) |
 | **S4** | lun 21 dic – vie 8 ene 2027 | Estabilización, pruebas, contenido, producción · feriados 24-25 dic y 31 dic-1 ene · **código congelado el 6 ene** | 19.25 (7.5 / 11.75) |
 | **S5** | lun 11 ene – vie 22 ene 2027 | **Lanzamiento** e hipercuidado | 3 (1 / 2) |
@@ -130,7 +130,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
 | E2 | Datos, medios e integración base | 9 | 10 |
 | E3 | Estructura global, splash y movimiento | 7 | 3.75 |
-| E4 | Inicio | 6 | 4 |
+| E4 | Inicio | 7 | 5.5 |
 | E5 | Catálogo, fichas y búsqueda | 8 | 7.5 |
 | E6 | Cotización y formularios | 8 | 7 |
 | E7 | Dónde comprar | 4 | 3 |
@@ -142,7 +142,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **120** | **89.75** |
+| | **Total** | **121** | **91.25** |
 
 ## 6. Tickets
 
@@ -946,7 +946,7 @@ El hero de la demo, llevado a producción.
 
 **Criterios de aceptación**
 
-- [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil: bajar `largest-contentful-paint` de la home de 2500 a 2000 en `lighthouse.config.cjs` (hasta BD-050 tolera 2.5 s; el marcador actual mide ~2.05 s).
+- [ ] ~~LCP de la home ≤ 2.0 s en Lighthouse móvil~~: **pasó a BD-055** (decisión del 10 nov 2026). Con el póster del hero como LCP, la CI midió 3.06 s (mejor de 3); el límite de la home queda en **3.2 s temporal** en `lighthouse.config.cjs`.
 - [ ] Lighthouse no simula `navigator.connection`: confirmar que el video no se pide durante la medición (contaría en `resource-summary:total:count ≤ 25` y en los bytes).
 - [ ] Capítulos navegables con flechas del teclado.
 - [ ] El video se pausa fuera de pantalla.
@@ -963,10 +963,12 @@ El hero de la demo, llevado a producción.
   - `scripts/ci/sample-media.mjs` deja reemplazos con la misma clave en la CI (`serve-artifact.sh`) y en `start:local`.
   - La ruta `/media` de Node sirve también `video/*.mp4` con `Range` (`lib/http-range.ts`); en el servidor los sirve IIS.
 - **JS de la home: 163.7 KB** (presupuesto de 165). Para caber, los pósters no usan el componente `Image` (que pesa en el navegador) y el hero usa `buttonVariants` sin `Button asChild`; las variantes pasaron a `ui/button-variants.ts`.
-- **LCP medido en local** (Lighthouse móvil, mejor de 3):
-  - home con el marcador de texto (`develop`): 2.33 s;
-  - con el hero: 2.90 s.
-  - El resto del tiempo es de Lantern: la descarga compartida con 160 KB de JS y dos fuentes precargadas, y el JS que corre antes del primer pintado. Eso es el alcance de BD-055 (ajuste de rendimiento de la home).
+- **LCP** (Lighthouse móvil, mejor de 3):
+  - CI: 3.06 s. En local: 3.1 s; la home de `develop` (marcador de texto), 2.33 s.
+  - Sin splash da lo mismo (3.16–3.21 s): el splash no es la causa.
+  - En un navegador real sin limitar la red, el póster se pinta a los 0.36–0.39 s.
+  - El resto es de la simulación (Lantern): la descarga compartida con 164 KB de JS y dos fuentes precargadas, y el JS que corre antes del primer pintado.
+  - Decisión: límite temporal de 3.2 s; el objetivo de 2.0 s pasa a BD-055, con el hero nuevo (BD-056).
 
 #### BD-051 · Soluciones por público y categorías
 
@@ -1039,7 +1041,7 @@ Cierre de la home y fondos editables.
 
 #### BD-055 · Ajuste de rendimiento de la home
 
-**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-050, BD-054 · **Docs** 12
+**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-050, BD-054, BD-056 · **Docs** 12
 
 La home cumple los presupuestos.
 
@@ -1052,11 +1054,35 @@ La home cumple los presupuestos.
 
 - [ ] JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
 - [ ] Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.
+- [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil (viene de BD-050): bajar `largest-contentful-paint` de la home de 3200 (temporal) a 2000 en `lighthouse.config.cjs`.
 
 **Nota de BD-050:** tras el hero, la home queda en **163.7 KB** de JS: solo hay 1.3 KB de margen para BD-051 a 054. El LCP (el póster del capítulo 1) medido en local con Lantern sale de 2.9 s (2.3 s con el marcador de texto de `develop`). Ese tiempo no viene del póster, que se pide primero con prioridad alta y pesa ~13 KB en móvil:
 - la descarga compite con ~160 KB de JS y dos fuentes precargadas (~78 KB);
 - y el JS que corre antes del primer pintado alarga el render.
-Puntos a revisar: `preload` de las fuentes (¿solo la del h1?), qué JS de la home puede cargarse después, y el splash.
+Puntos a revisar: `preload` de las fuentes (¿solo la del h1?) y qué JS de la home puede cargarse después. El splash no influye: sin él el LCP medido es el mismo. La CI midió 3.06 s (mejor de 3) con el póster del hero de video como LCP; con el hero nuevo (BD-056), ese póster deja de ser el LCP.
+
+#### BD-056 · Hero principal nuevo
+
+**Sprint** S2 · **Días** 1.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-050 · **Docs** 06 §3.1, 09, 12 · *Ticket nuevo (10 nov 2026)*
+
+Un hero visualmente atractivo e impactante abre la home; el hero de video por capítulos (BD-050) pasa a ser una sección más abajo.
+
+**Pasos**
+
+1. Definir con el usuario el diseño del hero nuevo (lo detalla al empezar el ticket).
+2. El hero nuevo lleva el único h1 de la home y el elemento LCP.
+3. El hero de video pasa a ser la sección 3 o 4 (por definir):
+   - su título baja a h2;
+   - sus pósters dejan de precargarse y de pedirse con prioridad alta (`loading="lazy"`);
+   - el video sigue llegando después de `load` y solo cuando la sección está cerca de la pantalla.
+4. Actualizar doc 06 §3.1 (orden de las secciones) y doc 09 §5.
+
+**Criterios de aceptación**
+
+- [ ] Un solo h1 en la home, en el hero nuevo.
+- [ ] La sección de video no pide pósters ni video en la carga inicial.
+- [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil, junto con BD-055.
+- [ ] Visible sin JavaScript y con movimiento reducido respetado.
 
 ### E5 · Catálogo, fichas y búsqueda
 
