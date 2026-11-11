@@ -13,6 +13,32 @@ export const hero = {
   quoteHref: (type: string) => `/cotizacion?tipo=${encodeURIComponent(type)}`,
 } as const;
 
+/** Franja de cifras (docs/17 §2 «Cifras», docs/06 §3.1 sección 2, BD-052). */
+export const stats = {
+  /** Título para lector de pantalla: la franja se lee como su propia sección. */
+  title: "Bolik en cifras",
+} as const;
+
+/** Producto estrella (docs/17 §2 «Bolik Ultra», docs/06 §3.1 sección 5, BD-052). */
+export const spotlight = {
+  /** «El favorito de Guatemala» está por validar: se usa la alternativa de docs/17. */
+  eyebrow: "Nuestro bolígrafo estrella",
+  colorsLabel: "Colores",
+  packagingsLabel: "Presentaciones",
+  benefitsLabel: "Beneficios",
+  /**
+   * products.json (docs/05 §6) y docs/17 coinciden en estos tres; el cuarto («Baja viscosidad» o
+   * «Cuerpo hexagonal que no rueda») espera a Mercadeo (nota de BD-037).
+   */
+  benefitKeys: ["new-tip", "vented-cap", "water-resistant"],
+  /** Código SAP del color: «Azul · PT00058». */
+  colorChip: (name: string, sku: string) => `${name} · ${sku}`,
+  viewProduct: "Ver ficha",
+  /** Para lector de pantalla: «Ver ficha del Bolik Ultra» en la lista de enlaces. */
+  viewProductOf: (name: string) => `del ${name}`,
+  whereToBuy: { label: "Dónde comprar", href: "/donde-comprar" },
+} as const;
+
 /** Sección «Un Bolik para cada etapa» (docs/17 §2, docs/06 §3.1 sección 3, BD-051). */
 export const solutions = {
   title: "Un Bolik para cada etapa",

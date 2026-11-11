@@ -98,7 +98,7 @@ flowchart TB
 | 11 | **Preguntas frecuentes** | 6 preguntas (scope `home`) en acordeón | — | Centrado 860 px | A-35 acordeón |
 | 12 | **CTA final** | "¿Compras por mayor?" + Cotizar + WhatsApp | — | — | — |
 
-**Eventos:** `hero_chapter_view`, `hero_cta_click`, `solution_click`, `category_click`, `search_open`, `retailer_click`, `quote_open`.
+**Eventos:** `hero_chapter_view`, `hero_cta_click`, `solution_click`, `category_click`, `search_open`, `spotlight_click` (Ver ficha del producto estrella), `retailer_click`, `quote_open`.
 
 ### 3.2 `/productos` Catálogo
 **Busca posicionar:** "útiles escolares Bolik", "catálogo Bolik".

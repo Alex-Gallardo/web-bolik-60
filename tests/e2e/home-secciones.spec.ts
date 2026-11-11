@@ -112,3 +112,51 @@ test.describe("home sin JavaScript (BD-051)", () => {
     ).toHaveCount(8);
   });
 });
+
+// Cifras y producto estrella (BD-052).
+test.describe("home: cifras y Bolik Ultra (BD-052)", () => {
+  test("cifras publicadas con el número final y el Ultra con sus CTA, pasa axe", async ({
+    page,
+  }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto("/");
+    const stats = page.getByRole("region", { name: "Bolik en cifras" });
+    // Solo «60 años» está publicada en prisma/seed/content.json; las «(validar)» de docs/17 no
+    // salen. Si Mercadeo publica otra cifra, este número cambia.
+    await expect(stats.getByRole("listitem")).toHaveCount(1);
+    await expect(stats).toContainText("años escribiendo con Guatemala");
+    await expect(stats).not.toContainText("puntos de venta");
+
+    const ultra = page.getByRole("region", { name: "Bolik Ultra" });
+    await ultra.scrollIntoViewIfNeeded();
+    for (const chip of ["Azul · PT00058", "Negro · PT00059", "Rojo · PT00060"]) {
+      await expect(ultra.getByText(chip)).toBeVisible();
+    }
+    await expect(ultra.getByRole("link", { name: "Ver ficha del Bolik Ultra" })).toHaveAttribute(
+      "href",
+      "/productos/boligrafos/bolik-ultra",
+    );
+    await expect(ultra.getByRole("link", { name: "Dónde comprar" })).toHaveAttribute(
+      "href",
+      "/donde-comprar",
+    );
+    await expectNoA11yViolations(page);
+    expect(errors, "errores en la consola").toEqual([]);
+  });
+});
+
+test.describe("cifras sin JavaScript (BD-052)", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("el número final se ve sin JS", async ({ page }) => {
+    await page.goto("/");
+    const stats = page.getByRole("region", { name: "Bolik en cifras" });
+    await expect(stats.locator(".sr-only", { hasText: /^60$/ })).toHaveCount(1);
+    await expect(stats.getByText("años escribiendo con Guatemala")).toBeVisible();
+    await expect(
+      page
+        .getByRole("region", { name: "Bolik Ultra" })
+        .getByRole("link", { name: "Ver ficha del Bolik Ultra" }),
+    ).toBeVisible();
+  });
+});
