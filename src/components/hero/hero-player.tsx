@@ -37,7 +37,7 @@ type HeroPlayerProps = {
   chapters: HeroChapterView[];
   /** Un póster por capítulo, en el mismo orden (null si el capítulo no tiene). */
   posters: (PosterProps | null)[];
-  /** Chip y h1: los arma el servidor (VideoHero) y no cambian con el capítulo. */
+  /** El h2 de la sección: lo arma el servidor (VideoHero) y no cambia con el capítulo. */
   children: ReactNode;
 };
 
@@ -55,12 +55,21 @@ const isMobileNow = () => window.matchMedia(HERO_MOBILE_QUERY).matches;
 const isMobileOnServer = () => false;
 
 /**
- * Hero con capítulos (A-10 a A-13, BD-050; docs/09 §5). El HTML del servidor trae el póster del
- * capítulo 1 (la imagen LCP), el texto y los CTA de los cuatro capítulos (sin JS se ven todos;
- * con JS, solo el activo: .js .hero-chapter en motion.css) y las pestañas.
- * - El video llega después de `load` y en tiempo ocioso, nunca con movimiento reducido (también si
- *   se activa después), ahorro de datos ni conexión lenta (video-policy.ts). En móvil solo hay
- *   video si el capítulo trae el vertical; si no, se queda el póster.
+ * El póster y el video se piden al entrar la sección en pantalla, sin margen: la sección empieza
+ * justo debajo del pliegue (hero a pantalla completa + cifras) y con margen se pedirían al abrir.
+ */
+const IN_VIEW_MARGIN = "0px";
+
+/**
+ * Video por capítulos (A-10 a A-13, BD-050; docs/09 §5), sección 3 de la home desde BD-056. El
+ * HTML del servidor trae el texto y los CTA de los cuatro capítulos (sin JS se ven todos; con JS,
+ * solo el activo: .js .hero-chapter en motion.css) y las pestañas, sobre fondo navy.
+ * - Nada se pide en la carga inicial: el póster y el video esperan a `load` y a que la sección
+ *   entre en pantalla (IntersectionObserver sin margen, que empieza a mirar después de `load`).
+ *   Sin JS queda el fondo navy.
+ * - El video llega además después de `load` y en tiempo ocioso, nunca con movimiento reducido
+ *   (también si se activa después), ahorro de datos ni conexión lenta (video-policy.ts). En móvil
+ *   solo hay video si el capítulo trae el vertical; si no, se queda el póster.
  * - Solo existe el <video> del capítulo actual (preload solo de ese). Los pósters de los demás
  *   capítulos se montan al visitarlos, y el del siguiente mientras corre un video, para que el
  *   cambio (A-10) no espere la descarga. Nada de eso se pide durante la carga inicial.
@@ -78,6 +87,7 @@ export function HeroPlayer({ chapters, posters, children }: HeroPlayerProps) {
   const [current, setCurrent] = useState(0);
   const [changed, setChanged] = useState(false);
   const [visited, setVisited] = useState<ReadonlySet<number>>(() => new Set([0]));
+  const [inView, setInView] = useState(false);
   const [videoOn, setVideoOn] = useState(false);
   const [paused, setPaused] = useState(false);
   const [failed, setFailed] = useState<ReadonlySet<number>>(() => new Set());
@@ -98,9 +108,33 @@ export function HeroPlayer({ chapters, posters, children }: HeroPlayerProps) {
   const currentVideo = videoFor(current);
   const next = (current + 1) % count;
 
-  // El video solo después de load + tiempo ocioso: el póster ya es el LCP. Si después se activa
+  // Después de load, la sección en pantalla: una sola vez (luego se monta lo que haga falta).
+  // Antes de load nada compite con el LCP de la página.
+  useEffect(() => {
+    const element = root.current;
+    if (!element || inView) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: IN_VIEW_MARGIN },
+    );
+    const watch = () => observer.observe(element);
+    if (document.readyState === "complete") watch();
+    else window.addEventListener("load", watch, { once: true });
+    return () => {
+      window.removeEventListener("load", watch);
+      observer.disconnect();
+    };
+  }, [inView]);
+
+  // El video solo con la sección en pantalla, después de load y en tiempo ocioso. Si después se activa
   // el movimiento reducido, el video se va.
   useEffect(() => {
+    if (!inView) return;
     const reduced = window.matchMedia(REDUCED_MOTION_QUERY);
     const stop = () => {
       if (reduced.matches) setVideoOn(false);
@@ -126,7 +160,7 @@ export function HeroPlayer({ chapters, posters, children }: HeroPlayerProps) {
       if (idle) window.cancelIdleCallback(idle);
       window.clearTimeout(timer);
     };
-  }, []);
+  }, [inView]);
 
   // Reproduce o pausa según la pausa del usuario y si el hero está en pantalla.
   useEffect(() => {
@@ -208,12 +242,13 @@ export function HeroPlayer({ chapters, posters, children }: HeroPlayerProps) {
           focusInside.current = false;
         }
       }}
-      className="relative isolate flex min-h-[clamp(36rem,84svh,51rem)] flex-col overflow-hidden bg-navy text-paper"
+      className="relative isolate flex min-h-[clamp(34rem,80svh,48rem)] flex-col overflow-hidden bg-navy text-paper"
     >
       <div className="absolute inset-0 -z-10" aria-hidden="true">
         {chapters.map((c, index) => {
           const showPoster =
-            visited.has(index) || (Boolean(currentVideo) && index === next) || index === 0;
+            inView &&
+            (visited.has(index) || (Boolean(currentVideo) && index === next) || index === 0);
           const src = index === current ? currentVideo : null;
           const poster = posters[index];
           return (
@@ -307,6 +342,7 @@ export function HeroPlayer({ chapters, posters, children }: HeroPlayerProps) {
                     className={primaryCta}
                     data-event="hero_cta_click"
                     data-chapter={c.key}
+                    data-cta="principal"
                   >
                     {c.cta.label}
                   </Link>
@@ -317,6 +353,7 @@ export function HeroPlayer({ chapters, posters, children }: HeroPlayerProps) {
                       className={secondaryCta}
                       data-event="hero_cta_click"
                       data-chapter={c.key}
+                      data-cta="secundario"
                     >
                       {c.secondaryCta.label}
                     </Link>

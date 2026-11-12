@@ -257,6 +257,13 @@ html[data-reveal-ready] [data-reveal][data-revealed="instant"] {
   animation-delay: var(--dur-slow);
 }
 
+/* ── Ilustración del hero principal A-14, BD-056 ──
+   Sube con fade-up después del título; solo con JS (sin JS se ve quieta desde el inicio). No es
+   el LCP (el LCP es el texto del h1). */
+.js .hero-art {
+  animation: fade-up var(--dur-slower) var(--ease-out) var(--dur-base) both;
+}
+
 /* ── Hero con video (A-10, A-12, A-13), BD-050 ──
    A-10: las capas (póster + video) están apiladas y solo cambia su opacidad.
    A-12: el texto del capítulo entra con fade-up, solo al cambiar de capítulo (data-enter lo pone
@@ -860,6 +867,11 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   .ink-draw-late {
     animation-delay: 0ms;
   }
+  /* Ilustración del hero: solo opacidad, sin subir. */
+  .js .hero-art {
+    animation-name: fade-in;
+    animation-delay: 0ms;
+  }
   /* Sheet y Popover: aparecen y se van solo con opacidad. */
   /* El * de arriba no alcanza ::details-content: el acordeón abre al instante. */
   .accordion-item::details-content {
@@ -932,6 +944,10 @@ html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) 
   display: none;
 }
 [data-reduced-motion] .ink-draw-late {
+  animation-delay: 0ms;
+}
+.js[data-reduced-motion] .hero-art {
+  animation-name: fade-in;
   animation-delay: 0ms;
 }
 [data-reduced-motion] .accordion-item::details-content {

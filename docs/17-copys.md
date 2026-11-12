@@ -23,10 +23,16 @@ Voz (doc 02 §8): **tú**, cálido y directo, frases cortas, orgullo guatemaltec
 
 ## 2. Inicio
 
-### Hero (4 capítulos)
+### Hero principal (BD-056)
 
-`h1` fijo: **De la materia prima a tu primer trazo.**
+`h1`: **De la materia prima a tu primer trazo.**
 Chip: **60 años · Hecho en Guatemala**
+Texto: Útiles escolares y de oficina fabricados en Guatemala desde 1966. *(primera frase de la descripción de la home, §6)*
+Botones: Ver productos · Cotizar por mayor
+
+### Video por capítulos (sección 3)
+
+`h2`: **Así nace un Bolik**
 
 | Capítulo | Pestaña | Texto | CTA principal | CTA secundario |
 |---|---|---|---|---|

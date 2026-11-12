@@ -149,7 +149,7 @@ export function describeDataSourceContract(name: string, getSource: () => DataSo
     });
 
     it("una sección sin apariencia guardada usa la del código", async () => {
-      expect(await source().getSectionAppearance("home.hero")).toBeNull();
+      expect(await source().getSectionAppearance("prueba.sin-registro")).toBeNull();
     });
 
     it("los ajustes traen el teléfono y nunca un WhatsApp inventado", async () => {

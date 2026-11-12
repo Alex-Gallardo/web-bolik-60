@@ -16,7 +16,7 @@ const CARD_TONE: Record<SchoolActivityView["colorKey"], string> = {
 };
 
 /**
- * «Bolik en tu escuela» (docs/06 §3.1 sección 6, BD-053): estilo infantil con el fondo sun, las
+ * «Bolik en tu escuela» (docs/06 §3.1 sección 7, BD-053): estilo infantil con el fondo sun, las
  * actividades en tarjetas inclinadas ±1.5° que se enderezan al pasar el mouse (A-40, .kids-tilt) y
  * un garabato que se dibuja al entrar en pantalla (A-41, .scribble; docs/09 pide 1.2 s y se usa
  * --dur-slower, 700 ms, el token más cercano). Con la tipografía de títulos de siempre: la home ya usa dos

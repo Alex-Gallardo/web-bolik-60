@@ -6,7 +6,7 @@ import { finalCta } from "@/content/home";
 import { ui } from "@/content/ui";
 
 /**
- * Cierre de la home (docs/06 §3.1 sección 12, BD-054): «¿Compras por mayor?» con Armar mi
+ * Cierre de la home (docs/06 §3.1 sección 13, BD-054): «¿Compras por mayor?» con Armar mi
  * cotización (quote_open; /cotizacion hasta el drawer de BD-071) y WhatsApp. Sin número válido
  * en los ajustes (whatsappUrl = null) no hay botón de WhatsApp, como en el header.
  */

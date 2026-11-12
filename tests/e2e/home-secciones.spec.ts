@@ -184,10 +184,11 @@ test.describe("home: escuelas, mayoreo, dónde comprar e historia (BD-053)", () 
         name: "Lleva Bolik a tu escuela",
       }),
     ).toHaveAttribute("href", "/escuelas");
-    await expect(page.getByRole("link", { name: "Cotizar por mayor" })).toHaveAttribute(
-      "href",
-      "/mayoreo",
-    );
+    await expect(
+      page.getByRole("region", { name: "Mayoreo y empresas" }).getByRole("link", {
+        name: "Cotizar por mayor",
+      }),
+    ).toHaveAttribute("href", "/mayoreo");
     // Solo los hitos verificados de prisma/seed/content.json (1966 y 2026).
     const history = page.getByRole("region", { name: "60 años escribiendo con Guatemala" });
     await expect(history.getByRole("listitem")).toHaveCount(2);

@@ -18,7 +18,7 @@ type CatalogSectionProps = {
 };
 
 /**
- * Catálogo destacado (docs/06 §3.1 sección 4, BD-051): buscador grande, chips de línea y las
+ * Catálogo destacado (docs/06 §3.1 sección 5, BD-051): buscador grande, chips de línea y las
  * categorías. Todo sin JS: el buscador es un <form> GET a /buscar (BD-066) y los chips enlazan al
  * filtro por línea del catálogo (BD-060). Las tarjetas entran con A-21 y elevan con A-30;
  * data-event queda listo para la analítica (category_click).

@@ -8,7 +8,7 @@ import type { ProductView } from "@/server/data/types";
 import { UltraIllustration } from "./ultra-illustration";
 
 /**
- * Producto estrella (docs/06 §3.1 sección 5, BD-052): el producto `featured` (el Bolik Ultra) con
+ * Producto estrella (docs/06 §3.1 sección 6, BD-052): el producto `featured` (el Bolik Ultra) con
  * sus colores y código SAP, presentaciones, beneficios y CTA «Ver ficha» y «Dónde comprar»
  * (docs/17). Server Component sin JS: la foto, cuando exista, sale con getImageProps (como el
  * hero); mientras tanto, una ilustración. Los chips de color son fijos: el cambio de foto por

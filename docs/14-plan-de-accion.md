@@ -1143,6 +1143,8 @@ La home cumple los presupuestos.
 - y el JS que corre antes del primer pintado alarga el render.
 Puntos a revisar: `preload` de las fuentes (¿solo la del h1?) y qué JS de la home puede cargarse después. El splash no influye: sin él el LCP medido es el mismo. La CI midió 3.06 s (mejor de 3) con el póster del hero de video como LCP; con el hero nuevo (BD-056), ese póster deja de ser el LCP.
 
+**Nota de BD-056:** el LCP ya es el texto del h1 del hero principal y no hay imagen precargada. Aun así, Lantern da unos 3.04 s, contra un LCP observado de 0.49 s (igual al FCP): el 84 % es «render delay» (2.57 s), porque todo lo que se pide antes del LCP observado (JS de la página y las dos fuentes precargadas, ~240 KB) comparte el ancho de banda simulado. Lo que mueve el número es pedir menos antes del primer pintado: precargar solo la fuente del h1 (o ninguna, el h1 pinta con la de reserva por `display: swap`) y diferir el JS que no hace falta arriba.
+
 #### BD-056 · Hero principal nuevo
 
 **Sprint** S2 · **Días** 1.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-050 · **Docs** 06 §3.1, 09, 12 · *Ticket nuevo (10 nov 2026)*
@@ -1165,6 +1167,21 @@ Un hero visualmente atractivo e impactante abre la home; el hero de video por ca
 - [ ] La sección de video no pide pósters ni video en la carga inicial.
 - [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil, junto con BD-055.
 - [ ] Visible sin JavaScript y con movimiento reducido respetado.
+
+**Implementado (BD-056)**
+
+Diseño elegido con el usuario: tipográfico con ilustración, el video como sección 3 y el mismo h1.
+
+- **`components/home/main-hero.tsx` · hero principal** (sección 1). Server Component sin JS, sobre `brand` (`home.hero`) y a pantalla completa menos el header.
+  - Chip, el único h1 con el subrayado de tinta (A-11), el texto de marca (primera frase de la descripción de la home) y los CTA «Ver productos» y «Cotizar por mayor» (`hero_cta_click` con `data-cta`).
+  - El Bolik Ultra ilustrado (`UltraIllustration`, los colores de sus variantes), decorativo. Entra con fade-up solo con JS (`.js .hero-art`); con movimiento reducido, solo opacidad.
+  - El LCP es el texto del h1: no se precarga ninguna imagen.
+- **`components/hero/video-hero.tsx` · «Así nace un Bolik»** (sección 3, después de las cifras).
+  - El título es un h2; el chip y el subrayado pasaron al hero principal. Sin capítulos publicados, la sección no se dibuja.
+  - Pósters con `loading="lazy"`, sin `fetchpriority` ni `preload`.
+  - `hero-player.tsx` monta póster y video solo después de `load` y cuando la sección entra en pantalla (`IntersectionObserver` sin margen). Con 300 px de margen la sección ya estaba «cerca» al abrir, porque empieza justo debajo del pliegue. E2E: sin desplazarse no se pide nada de `/media/hero/` ni `/media/video/`; al llegar a la sección, sí.
+  - Sin JS, la sección queda sobre navy, sin póster, con los cuatro capítulos y sus CTA.
+- **LCP:** Lighthouse móvil da 3.04 a 3.34 s (representativo 3.04 s); en el navegador real es de 0.49 s, igual al FCP. Lantern lo estima alto por el «render delay» (2.57 s): el h1 comparte el ancho de banda con unos 164 KB de JS y las dos fuentes precargadas. El límite temporal de 3.2 s sigue; el criterio de 2.0 s se cierra en BD-055.
 
 ### E5 · Catálogo, fichas y búsqueda
 
@@ -1992,7 +2009,7 @@ Hero, cifras, historia, actividades, fondos por sección y ajustes.
 
 *Nota de BD-031:* `HistoryMilestone.key` y `SchoolActivity.key` son obligatorias y únicas: el formulario las genera con `slugify` del título.
 
-*Nota de BD-054:* las claves de la home son `home.stats`, `home.solutions`, `home.catalog`, `home.spotlight`, `home.schools`, `home.wholesale`, `home.where`, `home.kits`, `home.history`, `home.faq` y `home.final-cta` (el hero de video no tiene fondo editable). Guardar la apariencia llama a `updateTag(TAGS.appearance)`; así se cumple el criterio pendiente de BD-054 («cambiar el fondo en el admin se refleja en la home tras guardar»). El tono se deduce del fondo: el formulario no necesita pedirlo.
+*Nota de BD-054 y BD-056:* las claves de la home son `home.hero` (hero principal; solo fondos oscuros, `brand` o `navy`: el chip y el subrayado son amarillos y sobre un fondo claro o `sun` no se ven), `home.stats`, `home.solutions`, `home.catalog`, `home.spotlight`, `home.schools`, `home.wholesale`, `home.where`, `home.kits`, `home.history`, `home.faq` y `home.final-cta` (la sección de video por capítulos no tiene fondo editable: su fondo es el póster o navy). Guardar la apariencia llama a `updateTag(TAGS.appearance)`; así se cumple el criterio pendiente de BD-054 («cambiar el fondo en el admin se refleja en la home tras guardar»). El tono se deduce del fondo: el formulario no necesita pedirlo.
 
 **Criterios de aceptación**
 

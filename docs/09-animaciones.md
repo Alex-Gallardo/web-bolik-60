@@ -30,6 +30,7 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 | A-11 | Subrayado de tinta | `h1` del hero, títulos destacados | `stroke-dashoffset` de SVG | 700 ms out, 400 ms de retraso | Subrayado fijo |
 | A-12 | Texto del capítulo | Hero | `fade-up` del bloque de texto (se fuerza con `key`) | 240 ms out | Solo opacidad |
 | A-13 | Progreso del capítulo | Pestañas del hero | `transform: scaleX(progreso)` | lineal, por `timeupdate` | Barra oculta |
+| A-14 | Entrada de la ilustración del hero principal (BD-056) | Bolik Ultra del hero | `fade-up` con `--dur-slower` y `--dur-base` de retraso, solo con JS (`.js .hero-art`) | 700 ms out | Solo opacidad, sin retraso |
 | A-20 | Conteo de cifras | Franja de cifras, escuelas | Número de 0 al valor con `requestAnimationFrame` (ease-out cúbica) | 1100 ms | Número final directo |
 | A-21 | Reveal escalonado | Tarjetas de secciones | `fade-up` con retraso `--i × 60 ms` al entrar en pantalla | 420 ms out | Visible directo |
 | A-22 | Reordenar grilla | Filtros del catálogo | Motion `layout` en las tarjetas (FLIP) | 320 ms out | Sin layout animation |
@@ -93,6 +94,10 @@ Decisiones:
 4. **View Transitions (opcional, mejora progresiva):** para la imagen del producto (tarjeta del catálogo → galería de la ficha) se puede usar la integración de View Transitions de React/Next si está estable en la versión instalada. Si no lo está, no se implementa: A-02 es suficiente.
 
 ## 5. Hero con video (A-10 a A-13)
+
+> **Desde BD-056** el video por capítulos es la sección 3 de la home («Así nace un Bolik», con `h2`) y el hero principal (`MainHero`, tipográfico, con el `h1`) abre la página. El póster ya no es el LCP: ningún póster se precarga ni se pide con prioridad alta, y póster y video se montan después de `load` y solo cuando la sección entra en pantalla (`IntersectionObserver` sin margen: la sección empieza justo debajo del pliegue y con margen se pediría al abrir). Sin JS, la sección queda sobre navy, sin póster. El diagrama y la lista de abajo describen BD-050; lo del LCP del póster ya no aplica.
+>
+> En la primera visita a `/` el splash tapa la página unos 2 s: el subrayado (A-11) y la entrada de la ilustración (A-14) terminan debajo de él. Se acepta: en las visitas siguientes no hay splash y se ven.
 
 Código de referencia: `starter/src/components/hero/video-hero.tsx`.
 

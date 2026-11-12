@@ -7,7 +7,7 @@
 type JsonLdObject = { "@context": "https://schema.org"; "@type": string } & Record<string, unknown>;
 
 /**
- * Serializa para un <script> en línea: `<` va como <, así un texto con «</script>» no cierra
+ * Serializa para un <script> en línea: `<` va como \u003c, así un texto con «</script>» no cierra
  * la etiqueta (ni abre HTML). JSON.parse lo lee igual.
  */
 export function serializeJsonLd(data: JsonLdObject): string {

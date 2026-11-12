@@ -13,7 +13,7 @@ const card = cva("flex h-full flex-col gap-3 rounded-xl p-8", {
 });
 
 /**
- * «Mayoreo y empresas» (docs/06 §3.1 sección 7; se sumó a BD-053): dos tarjetas grandes, librerías
+ * «Mayoreo y empresas» (docs/06 §3.1 sección 8; se sumó a BD-053): dos tarjetas grandes, librerías
  * y distribuidores (azul) y empresas y universidades (navy), con sus textos de docs/17. El CTA
  * lleva a /mayoreo y /empresas, que tienen su formulario de cotización.
  */
