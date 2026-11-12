@@ -1056,6 +1056,31 @@ Resúmenes que llevan a las páginas internas.
 
 - [ ] Los enlaces externos llevan `rel="noopener"` y registran `retailer_click`.
 
+**Cómo quedó (12 nov 2026)**
+
+Las cuatro secciones son Server Components sin JS nuevo: la home sigue en 164.3 KB y el LCP local da 3.11 s.
+
+- **`components/home/schools-section.tsx` · «Bolik en tu escuela»** (sección 6).
+  - Fondo `sun`, texto y botón de doc 17, y botón a `/escuelas`.
+  - Actividades en tarjetas inclinadas ±1.5° que se enderezan al pasar el mouse (A-40, `.kids-tilt`; sin rotación con movimiento reducido), con texto AA por color.
+  - Un garabato que se dibuja al entrar en pantalla (A-41, `.scribble`). doc 09 pide 1.2 s; se usa `--dur-slower` (700 ms), el token más cercano.
+  - Sobre `sun` el anillo de foco es de tinta (`--focus` en `backgrounds.css`): el amarillo no se veía.
+  - Sin Baloo 2: la home ya usa dos familias (CLAUDE.md), así que Baloo queda para `/escuelas`.
+  - Sin las «3 cifras» de doc 06: no hay datos.
+  - Las actividades de la demo son `sample`: en producción el bloque queda con texto y botón.
+- **`components/home/wholesale-section.tsx` · «Mayoreo y empresas»** (sección 7, que no estaba en ningún ticket y se sumó aquí). Dos tarjetas con los textos de doc 17 y CTA a `/mayoreo` y `/empresas` (`solution_click` con `data-audience`, como las tarjetas de público).
+- **Pendiente aparte:** varias secciones de BD-051 a BD-053 fijan colores de texto (`text-ink`, `text-blue`) que no se adaptan si el admin elige un fondo oscuro en `SectionAppearance`. Se resuelve junto con el editor de apariencia (BD-054 paso 4).
+- **`components/home/where-to-buy-section.tsx` · «Bolik está cerca de ti»** (sección 8).
+  - Selector de departamento: formulario GET a `/donde-comprar?departamento=…` (sin JS).
+  - «Comprar en Walmart» y «Comprar en La Torre», con la URL de los datos de las tiendas (solo `https://`): `target="_blank"`, `rel="noopener noreferrer"`, aviso para lector de pantalla y `data-event="retailer_click"` con `data-retailer` (doc 12 §4). El clic se marca; registrarlo es trabajo del beacon de analítica (BD-083 y E12).
+  - «Ver todas las tiendas».
+  - Sin las «4 tiendas destacadas»: no hay campo para marcarlas. Va en un ticket de datos cuando Ventas las elija.
+- **`components/home/history-section.tsx` · «60 años escribiendo con Guatemala»** (sección 10).
+  - Solo los hitos verificados (hoy 1966 y 2026).
+  - Línea de tiempo vertical en móvil y horizontal desde `md` (como mucho 3 columnas en `md`), trazada al revelarse (A-50, `.timeline-line`; completa sin JS o con movimiento reducido).
+  - El año va dentro del h3 del hito.
+  - Botón «Conoce nuestra historia».
+
 #### BD-054 · FAQ, CTA final y apariencia por sección
 
 > **Nota de BD-052:** la home está en 164.3 KB de JS (presupuesto de 165). El acordeón de las FAQ es `<details>` nativo (sin JS); medir con `pnpm lhci` antes del PR.
@@ -1408,6 +1433,8 @@ Proteger formularios sin captcha molesto.
 ### E7 · Dónde comprar
 
 #### BD-080 · Dónde comprar: lista y filtros
+
+> **Nota de BD-053:** el selector de la home es un formulario GET a `/donde-comprar?departamento=<slug>`, para que funcione sin JS. Esta página lleva ese parámetro a `/donde-comprar/<slug>` (BD-082) con un 308, o filtra la lista.
 
 **Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-037, BD-023 · **Docs** 06 §3.7
 

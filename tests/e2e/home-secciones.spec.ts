@@ -160,3 +160,84 @@ test.describe("cifras sin JavaScript (BD-052)", () => {
     ).toBeVisible();
   });
 });
+
+// Escuelas, mayoreo, dónde comprar e historia (BD-053).
+test.describe("home: escuelas, mayoreo, dónde comprar e historia (BD-053)", () => {
+  // Con movimiento reducido todo está revelado: axe mide el contraste de cada tarjeta, no una a
+  // media transición.
+  test.use({ reducedMotion: "reduce" });
+
+  test("enlaces de compra en línea seguros y con retailer_click, pasa axe", async ({ page }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto("/");
+    const where = page.getByRole("region", { name: "Bolik está cerca de ti" });
+    await where.scrollIntoViewIfNeeded();
+    for (const name of ["Walmart", "La Torre"]) {
+      const link = where.getByRole("link", { name: new RegExp(`^Comprar en ${name}`) });
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+      await expect(link).toHaveAttribute("data-event", "retailer_click");
+      await expect(link).toHaveAttribute("href", /^https:\/\//);
+    }
+    await expect(
+      page.getByRole("region", { name: "Bolik en tu escuela" }).getByRole("link", {
+        name: "Lleva Bolik a tu escuela",
+      }),
+    ).toHaveAttribute("href", "/escuelas");
+    await expect(page.getByRole("link", { name: "Cotizar por mayor" })).toHaveAttribute(
+      "href",
+      "/mayoreo",
+    );
+    // Solo los hitos verificados de prisma/seed/content.json (1966 y 2026).
+    const history = page.getByRole("region", { name: "60 años escribiendo con Guatemala" });
+    await expect(history.getByRole("listitem")).toHaveCount(2);
+    await expectNoA11yViolations(page);
+    expect(errors, "errores en la consola").toEqual([]);
+  });
+
+  test("el selector de departamento manda a /donde-comprar con el departamento", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const where = page.getByRole("region", { name: "Bolik está cerca de ti" });
+    await where.getByRole("combobox", { name: "Elige tu departamento" }).selectOption("guatemala");
+    await where.getByRole("button", { name: "Ver tiendas" }).click();
+    // /donde-comprar llega con BD-080: hoy se comprueba solo la URL que arma el formulario.
+    await expect(page).toHaveURL(/\/donde-comprar\?departamento=guatemala$/);
+  });
+
+  test("el foco se ve sobre el fondo sun de escuelas", async ({ page }) => {
+    await page.goto("/");
+    const cta = page.getByRole("link", { name: "Lleva Bolik a tu escuela" });
+    await cta.focus();
+    const { outline, background } = await cta.evaluate((el) => ({
+      outline: getComputedStyle(el).outlineColor,
+      background: getComputedStyle(el.closest("section")!).backgroundColor,
+    }));
+    expect(outline).not.toBe(background);
+    expect(outline).toBe("rgb(17, 19, 24)"); // --ink
+  });
+});
+
+test.describe("secciones de la home sin JavaScript (BD-053)", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("actividades, mayoreo, formulario e hitos con la línea completa", async ({ page }) => {
+    await page.goto("/");
+    await expect(
+      page.getByRole("region", { name: "Bolik en tu escuela" }).getByRole("article"),
+    ).toHaveCount(4);
+    await expect(
+      page.getByRole("region", { name: "Mayoreo y empresas" }).getByRole("link", {
+        name: "Cotizar por mayor",
+      }),
+    ).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Elige tu departamento" })).toBeVisible();
+    const history = page.getByRole("region", { name: "60 años escribiendo con Guatemala" });
+    await expect(history.getByRole("listitem")).toHaveCount(2);
+    const transform = await history
+      .locator(".timeline-line")
+      .evaluate((el) => getComputedStyle(el).transform);
+    expect(transform).toBe("none");
+  });
+});
