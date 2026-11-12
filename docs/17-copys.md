@@ -79,7 +79,8 @@ Chip: **60 años · Hecho en Guatemala**
 ### Dónde comprar
 - Título: **Bolik está cerca de ti**
 - Texto: Encuéntranos en librerías, supermercados y cadenas de todo el país, o compra en línea.
-- Selector: Elige tu departamento
+- Selector: Elige tu departamento · Botón: Ver tiendas
+- Subtítulo de los botones de tiendas: Compra en línea
 - Botones: Comprar en Walmart · Comprar en La Torre · Ver todas las tiendas
 
 ### Kits escolares 2027

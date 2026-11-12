@@ -88,6 +88,8 @@
 [data-bg="sun"] {
   background: var(--sun);
   color: var(--ink);
+  /* El anillo de foco amarillo no se ve sobre sun (1.1:1): en esta sección es de tinta. */
+  --focus: var(--ink);
 }
 
 /* Tono: ajusta textos y bordes para fondos oscuros */

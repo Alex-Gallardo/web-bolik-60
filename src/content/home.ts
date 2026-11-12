@@ -39,6 +39,62 @@ export const spotlight = {
   whereToBuy: { label: "Dónde comprar", href: "/donde-comprar" },
 } as const;
 
+/** «Bolik en tu escuela» (docs/17 §2, docs/06 §3.1 sección 6, BD-053). */
+export const schools = {
+  title: "Bolik en tu escuela",
+  text: "Visitamos colegios con talleres de escritura, dibujo y creatividad. Tú pones las ganas; nosotros, los útiles.",
+  cta: { label: "Lleva Bolik a tu escuela", href: "/escuelas" },
+  activitiesLabel: "Actividades para escuelas",
+} as const;
+
+/** «Mayoreo y empresas» (docs/17 §2, docs/06 §3.1 sección 7, BD-053). */
+export const wholesale = {
+  /** Solo para lector de pantalla: cada tarjeta lleva su propio título. */
+  title: "Mayoreo y empresas",
+  cards: [
+    {
+      key: "mayoreo",
+      eyebrow: "Librerías y distribuidores",
+      title: "Compra directo de fábrica.",
+      text: "Precio por cajilla y fardo, ejecutivo por zona y preventa escolar.",
+      cta: "Cotizar por mayor",
+      href: "/mayoreo",
+      tone: "blue",
+    },
+    {
+      key: "empresas",
+      eyebrow: "Empresas y universidades",
+      title: "Tu logo, en manos de todos.",
+      text: "Bolígrafos personalizados para eventos, ferias y kits de bienvenida.",
+      cta: "Cotizar personalizados",
+      href: "/empresas",
+      tone: "navy",
+    },
+  ],
+} as const;
+
+/** «Dónde comprar» (docs/17 §2, docs/06 §3.1 sección 8, BD-053). */
+export const whereToBuy = {
+  title: "Bolik está cerca de ti",
+  text: "Encuéntranos en librerías, supermercados y cadenas de todo el país, o compra en línea.",
+  selectLabel: "Elige tu departamento",
+  submit: "Ver tiendas",
+  /**
+   * Formulario GET sin JS: /donde-comprar (BD-080) lleva ?departamento=x a /donde-comprar/x
+   * (BD-082).
+   */
+  action: "/donde-comprar",
+  onlineLabel: "Compra en línea",
+  buyAt: (name: string) => `Comprar en ${name}`,
+  allStores: { label: "Ver todas las tiendas", href: "/donde-comprar" },
+} as const;
+
+/** Historia (docs/17 §2, docs/06 §3.1 sección 10, BD-053). */
+export const history = {
+  title: "60 años escribiendo con Guatemala",
+  cta: { label: "Conoce nuestra historia", href: "/nuestra-historia" },
+} as const;
+
 /** Sección «Un Bolik para cada etapa» (docs/17 §2, docs/06 §3.1 sección 3, BD-051). */
 export const solutions = {
   title: "Un Bolik para cada etapa",

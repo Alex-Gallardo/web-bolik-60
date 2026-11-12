@@ -288,6 +288,46 @@ html[data-reveal-ready] [data-reveal][data-revealed="instant"] {
   transition: transform var(--dur-base) linear;
 }
 
+/* ── Línea de tiempo A-50, BD-053 ──
+   La línea se traza desde el origen cuando su bloque (data-reveal) se revela: scaleY en móvil
+   (vertical) y scaleX desde md (horizontal). Sin JS o con movimiento reducido se ve completa. */
+.timeline-line {
+  transform-origin: left top;
+  transition: transform var(--dur-slower) var(--ease-out) var(--dur-base);
+}
+html[data-reveal-ready] [data-reveal]:not([data-revealed]) .timeline-line {
+  transform: scaleY(0);
+}
+@media (min-width: 48rem) {
+  html[data-reveal-ready] [data-reveal]:not([data-revealed]) .timeline-line {
+    transform: scaleX(0);
+  }
+}
+
+/* ── Tarjetas infantiles A-40, BD-053 ──
+   Inclinadas ±1.5° (--tilt en el elemento); al pasar el mouse se enderezan y crecen un poco. Con
+   movimiento reducido, sin rotación. */
+.kids-tilt {
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform var(--dur-base) var(--ease-out);
+}
+@media (hover: hover) {
+  .kids-tilt:hover {
+    transform: rotate(0deg) scale(1.03);
+  }
+}
+
+/* ── Garabato A-41, BD-053 ──
+   Se dibuja (stroke-dashoffset) cuando su envoltorio data-reveal entra en pantalla, no al cargar:
+   la sección está lejos del inicio. Sin JS se ve completo. */
+.scribble path {
+  stroke-dasharray: 1;
+  transition: stroke-dashoffset var(--dur-slower) var(--ease-out) var(--dur-base);
+}
+html[data-reveal-ready] [data-reveal]:not([data-revealed]) .scribble path {
+  stroke-dashoffset: 1;
+}
+
 /* ── Skeleton ── */
 .skeleton {
   position: relative;
@@ -775,6 +815,17 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
     opacity: 1;
     transform: none;
   }
+  /* Línea de tiempo y garabato completos desde el inicio; tarjetas infantiles sin rotación. */
+  html[data-reveal-ready] [data-reveal]:not([data-revealed]) .timeline-line {
+    transform: none;
+  }
+  html[data-reveal-ready] [data-reveal]:not([data-revealed]) .scribble path {
+    stroke-dashoffset: 0;
+  }
+  .kids-tilt,
+  .kids-tilt:hover {
+    transform: none;
+  }
   /* Sin giro: el spinner queda quieto y el texto anuncia la carga. */
   .spin {
     animation: none;
@@ -842,6 +893,16 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
 }
 html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) {
   opacity: 1;
+  transform: none;
+}
+html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) .timeline-line {
+  transform: none;
+}
+html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) .scribble path {
+  stroke-dashoffset: 0;
+}
+[data-reduced-motion] .kids-tilt,
+[data-reduced-motion] .kids-tilt:hover {
   transform: none;
 }
 [data-reduced-motion] .spin {
