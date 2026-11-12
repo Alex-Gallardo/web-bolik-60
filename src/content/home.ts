@@ -1,11 +1,22 @@
 /**
- * Hero (docs/17 §2, docs/06 §3.1, BD-050): lo fijo. El texto de cada capítulo viene de HeroChapter.
- * El h1 es el único de la home; `emphasis` lleva el subrayado de tinta (A-11).
+ * Hero principal (docs/17 §2, docs/06 §3.1 sección 1, BD-056): abre la home con el único h1;
+ * `emphasis` lleva el subrayado de tinta (A-11). El texto es la primera frase de la descripción de
+ * la home (docs/17 §6).
  */
-export const hero = {
-  label: "Bolik, de la materia prima a tu primer trazo",
+export const mainHero = {
   chip: "60 años · Hecho en Guatemala",
   title: { lead: "De la materia prima a", emphasis: "tu primer trazo." },
+  text: "Útiles escolares y de oficina fabricados en Guatemala desde 1966.",
+  primary: { label: "Ver productos", href: "/productos" },
+  secondary: { label: "Cotizar por mayor", href: "/mayoreo" },
+} as const;
+
+/**
+ * Sección de video por capítulos (docs/17 §2, docs/06 §3.1 sección 3; BD-050, bajó con BD-056):
+ * lo fijo. El texto de cada capítulo viene de HeroChapter.
+ */
+export const hero = {
+  title: "Así nace un Bolik",
   tabsLabel: "Elige tu mundo Bolik",
   pause: "Pausar video",
   play: "Reproducir video",
@@ -19,7 +30,7 @@ export const stats = {
   title: "Bolik en cifras",
 } as const;
 
-/** Producto estrella (docs/17 §2 «Bolik Ultra», docs/06 §3.1 sección 5, BD-052). */
+/** Producto estrella (docs/17 §2 «Bolik Ultra», docs/06 §3.1 sección 6, BD-052). */
 export const spotlight = {
   /** «El favorito de Guatemala» está por validar: se usa la alternativa de docs/17. */
   eyebrow: "Nuestro bolígrafo estrella",
@@ -39,7 +50,7 @@ export const spotlight = {
   whereToBuy: { label: "Dónde comprar", href: "/donde-comprar" },
 } as const;
 
-/** «Bolik en tu escuela» (docs/17 §2, docs/06 §3.1 sección 6, BD-053). */
+/** «Bolik en tu escuela» (docs/17 §2, docs/06 §3.1 sección 7, BD-053). */
 export const schools = {
   title: "Bolik en tu escuela",
   text: "Visitamos colegios con talleres de escritura, dibujo y creatividad. Tú pones las ganas; nosotros, los útiles.",
@@ -47,7 +58,7 @@ export const schools = {
   activitiesLabel: "Actividades para escuelas",
 } as const;
 
-/** «Mayoreo y empresas» (docs/17 §2, docs/06 §3.1 sección 7, BD-053). */
+/** «Mayoreo y empresas» (docs/17 §2, docs/06 §3.1 sección 8, BD-053). */
 export const wholesale = {
   /** Solo para lector de pantalla: cada tarjeta lleva su propio título. */
   title: "Mayoreo y empresas",
@@ -73,7 +84,7 @@ export const wholesale = {
   ],
 } as const;
 
-/** «Dónde comprar» (docs/17 §2, docs/06 §3.1 sección 8, BD-053). */
+/** «Dónde comprar» (docs/17 §2, docs/06 §3.1 sección 9, BD-053). */
 export const whereToBuy = {
   title: "Bolik está cerca de ti",
   text: "Encuéntranos en librerías, supermercados y cadenas de todo el país, o compra en línea.",
@@ -89,18 +100,18 @@ export const whereToBuy = {
   allStores: { label: "Ver todas las tiendas", href: "/donde-comprar" },
 } as const;
 
-/** Historia (docs/17 §2, docs/06 §3.1 sección 10, BD-053). */
+/** Historia (docs/17 §2, docs/06 §3.1 sección 11, BD-053). */
 export const history = {
   title: "60 años escribiendo con Guatemala",
   cta: { label: "Conoce nuestra historia", href: "/nuestra-historia" },
 } as const;
 
-/** Sección «Un Bolik para cada etapa» (docs/17 §2, docs/06 §3.1 sección 3, BD-051). */
+/** Sección «Un Bolik para cada etapa» (docs/17 §2, docs/06 §3.1 sección 4, BD-051). */
 export const solutions = {
   title: "Un Bolik para cada etapa",
 } as const;
 
-/** Catálogo destacado (docs/17 §2, docs/06 §3.1 sección 4, BD-051). */
+/** Catálogo destacado (docs/17 §2, docs/06 §3.1 sección 5, BD-051). */
 export const featuredCatalog = {
   title: "Encuentra lo que necesitas",
   /**
@@ -163,7 +174,7 @@ export const audiences = [
   },
 ] as const;
 
-/** Kits escolares (docs/17 §2, docs/06 §3.1 sección 9, BD-054). */
+/** Kits escolares (docs/17 §2, docs/06 §3.1 sección 10, BD-054). */
 export const kits = {
   title: "Kits escolares 2027",
   text: "Todo lo de la lista, en un solo paquete, por grado.",
@@ -180,7 +191,7 @@ export const kits = {
   limit: 3,
 } as const;
 
-/** Preguntas frecuentes (docs/17 §7, docs/06 §3.1 sección 11, BD-054). */
+/** Preguntas frecuentes (docs/17 §7, docs/06 §3.1 sección 12, BD-054). */
 export const homeFaq = {
   title: "Preguntas frecuentes",
   /** Seis preguntas de scope «home» (docs/06): las publicadas, en el orden del seed. */
@@ -188,7 +199,7 @@ export const homeFaq = {
   cta: { label: "Ver todas las preguntas", href: "/preguntas-frecuentes" },
 } as const;
 
-/** CTA final (docs/17 §2, docs/06 §3.1 sección 12, BD-054). */
+/** CTA final (docs/17 §2, docs/06 §3.1 sección 13, BD-054). */
 export const finalCta = {
   title: "¿Compras por mayor?",
   text: "Arma tu lista en minutos y recibe precio de fábrica en un día hábil.",

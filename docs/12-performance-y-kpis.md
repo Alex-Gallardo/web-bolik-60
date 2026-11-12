@@ -67,7 +67,7 @@ Nombres en `snake_case`. Implementación en `src/features/analytics/track.ts` co
 | Evento | Cuándo | Parámetros |
 |---|---|---|
 | `hero_chapter_view` | Cambia el capítulo del hero (por clic) | `chapter` |
-| `hero_cta_click` | Clic en CTA del hero | `chapter`, `cta` |
+| `hero_cta_click` | Clic en CTA del hero principal o de la sección de video | `chapter` (`principal` en el hero principal; la clave del capítulo en el video), `cta` (`productos`/`mayoreo` en el hero principal; `principal`/`secundario` en el video) |
 | `solution_click` | Tarjeta de público en home | `audience` |
 | `category_click` | Tarjeta de categoría | `category` |
 | `search_open` / `search` / `search_no_results` | Buscador | `query`, `results` |

@@ -7,7 +7,7 @@ import { history } from "@/content/home";
 import type { MilestoneView } from "@/server/data/types";
 
 /**
- * Historia (docs/06 §3.1 sección 10, BD-053): solo los hitos verificados (listMilestones ya
+ * Historia (docs/06 §3.1 sección 11, BD-053): solo los hitos verificados (listMilestones ya
  * filtra) en una línea de tiempo, vertical en móvil y horizontal desde md. La línea se traza al
  * revelarse (A-50: scaleY/scaleX desde el origen, .timeline-line en motion.css); con movimiento
  * reducido aparece al instante. «Conoce nuestra historia» lleva a /nuestra-historia.

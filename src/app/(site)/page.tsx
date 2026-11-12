@@ -4,6 +4,7 @@ import { FaqSection } from "@/components/home/faq-section";
 import { FinalCtaSection } from "@/components/home/final-cta-section";
 import { HistorySection } from "@/components/home/history-section";
 import { KitsSection } from "@/components/home/kits-section";
+import { MainHero } from "@/components/home/main-hero";
 import { ProductSpotlight } from "@/components/home/product-spotlight";
 import { SchoolsSection } from "@/components/home/schools-section";
 import { SolutionsSection } from "@/components/home/solutions-section";
@@ -33,10 +34,10 @@ export const metadata = buildMetadata({
 });
 
 /**
- * Home (docs/06 §3.1), en el orden del doc: hero (BD-050), cifras (BD-052), soluciones por
- * público y catálogo destacado (BD-051), producto estrella (BD-052), escuelas, mayoreo y empresas,
- * dónde comprar e historia (BD-053), kits, preguntas frecuentes y el cierre (BD-054). El orden
- * final se ajusta con el hero nuevo (BD-056). Cada sección lee su fondo de SectionAppearance.
+ * Home (docs/06 §3.1), en el orden del doc: hero principal con el h1 (BD-056), cifras (BD-052),
+ * video por capítulos (BD-050), soluciones por público y catálogo destacado (BD-051), producto
+ * estrella (BD-052), escuelas, mayoreo y empresas, dónde comprar (BD-053), kits, historia,
+ * preguntas frecuentes y el cierre (BD-054). Cada sección lee su fondo de SectionAppearance.
  */
 export default async function HomePage() {
   const [
@@ -72,8 +73,9 @@ export default async function HomePage() {
     : null;
   return (
     <>
-      <VideoHero chapters={chapters} />
+      <MainHero colors={featured?.variants.map((variant) => variant.color) ?? []} />
       <StatsBand items={stats} />
+      <VideoHero chapters={chapters} />
       <SolutionsSection />
       <CatalogSection categories={categories} productCount={productCount} />
       {featured && <ProductSpotlight product={featured} />}

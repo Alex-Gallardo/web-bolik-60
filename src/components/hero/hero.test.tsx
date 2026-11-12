@@ -57,12 +57,27 @@ let media: { mobile: boolean; reduced: boolean };
 let connection: { saveData?: boolean; effectiveType?: string } | undefined;
 class FakeIO {
   static last: FakeIO | undefined;
-  constructor(public callback: (entries: Partial<IntersectionObserverEntry>[]) => void) {
+  static all: FakeIO[] = [];
+  constructor(
+    public callback: (entries: Partial<IntersectionObserverEntry>[]) => void,
+    public options?: IntersectionObserverInit,
+  ) {
     FakeIO.last = this;
+    FakeIO.all.push(this);
   }
-  observe() {}
+  observing = false;
+  observe() {
+    this.observing = true;
+  }
   disconnect() {}
 }
+/** La sección entra en pantalla (el observador de cercanía, con rootMargin, BD-056). */
+const approach = () =>
+  act(() =>
+    FakeIO.all
+      .filter((o) => o.options?.rootMargin)
+      .forEach((o) => o.callback([{ isIntersecting: true }])),
+  );
 const play = vi.fn(() => Promise.resolve());
 const pause = vi.fn();
 
@@ -70,6 +85,7 @@ beforeEach(() => {
   media = { mobile: false, reduced: false };
   connection = undefined;
   FakeIO.last = undefined;
+  FakeIO.all = [];
   play.mockClear();
   pause.mockClear();
   vi.stubGlobal("matchMedia", (query: string) => ({
@@ -96,25 +112,28 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-/** Como los calcula VideoHero con getImageProps: el 1 con prioridad alta, los demás diferidos. */
-const posters: (PosterProps | null)[] = chapters.map((c, index) =>
+/** Como los calcula VideoHero con getImageProps: desde BD-056, todos diferidos y sin prioridad. */
+const posters: (PosterProps | null)[] = chapters.map((c) =>
   c.poster
     ? {
         src: `${c.poster.src}-1920.webp`,
         srcSet: `${c.poster.src}-640.webp 640w`,
         sizes: "100vw",
-        loading: index === 0 ? "eager" : "lazy",
-        fetchPriority: index === 0 ? "high" : undefined,
+        loading: "lazy",
       }
     : null,
 );
 
-const renderPlayer = () =>
-  render(
+/** Monta el reproductor y, salvo { near: false }, acerca la sección a la pantalla. */
+const renderPlayer = ({ near = true } = {}) => {
+  const result = render(
     <HeroPlayer chapters={chapters} posters={posters}>
-      <h1>Título</h1>
+      <h2>Título</h2>
     </HeroPlayer>,
   );
+  if (near) approach();
+  return result;
+};
 const tabs = () => screen.getAllByRole("tab");
 const selected = () => tabs().findIndex((t) => t.getAttribute("aria-selected") === "true");
 const video = () => document.querySelector("video");
@@ -138,14 +157,35 @@ describe("video-policy (BD-050)", () => {
 });
 
 describe("HeroPlayer (BD-050)", () => {
-  it("el capítulo 1 sale con su póster (prioridad alta), su texto y sus CTA", () => {
-    media.reduced = true; // sin video: solo lo del HTML del servidor
+  it("lejos de la pantalla (carga inicial): texto y CTA, sin póster ni video (BD-056)", () => {
+    renderPlayer({ near: false });
+    expect(document.querySelector("img")).toBeNull();
+    expect(video()).toBeNull();
+    expect(activePanel().textContent).toContain("En Villa Nueva fabricamos.");
+    // Un observador espera a que la sección entre en pantalla.
+    expect(FakeIO.all.some((o) => o.options?.rootMargin)).toBe(true);
+  });
+
+  it("con la página cargando, no mira la sección hasta `load` (BD-056)", () => {
+    const readyState = vi.spyOn(document, "readyState", "get").mockReturnValue("loading");
+    renderPlayer({ near: false });
+    const observer = FakeIO.all.find((o) => o.options?.rootMargin)!;
+    expect(observer.observing).toBe(false);
+    readyState.mockReturnValue("complete");
+    act(() => {
+      window.dispatchEvent(new Event("load"));
+    });
+    expect(observer.observing).toBe(true);
+  });
+
+  it("al acercarse, el capítulo 1 sale con su póster diferido, su texto y sus CTA", () => {
+    media.reduced = true; // sin video
     renderPlayer();
     const images = document.querySelectorAll("img");
     expect(images).toHaveLength(1);
     expect(images[0]!.getAttribute("src")).toBe("/media/hero/planta-a1b2c3d4-1920.webp");
-    expect(images[0]!.getAttribute("fetchpriority")).toBe("high");
-    expect(images[0]!.getAttribute("loading")).toBe("eager");
+    expect(images[0]!.getAttribute("fetchpriority")).toBeNull();
+    expect(images[0]!.getAttribute("loading")).toBe("lazy");
     expect(images[0]!.getAttribute("alt")).toBe("");
     expect(activePanel().textContent).toContain("En Villa Nueva fabricamos.");
     expect(screen.getByRole("link", { name: "Ver productos" }).getAttribute("href")).toBe(
@@ -316,25 +356,25 @@ describe("HeroPlayer (BD-050)", () => {
   });
 });
 
-describe("VideoHero (BD-050)", () => {
-  it("un solo h1 con el subrayado de tinta, también sin capítulos", () => {
+describe("VideoHero (BD-050, sección 3 desde BD-056)", () => {
+  it("un h2 «Así nace un Bolik» (sin h1) y pósters diferidos; sin capítulos, nada", () => {
     media.reduced = true;
     const { unmount } = render(<VideoHero chapters={chapters} />);
-    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toContain(
-      "De la materia prima a tu primer trazo.",
-    );
-    expect(document.querySelector("h1 .ink-draw")).not.toBeNull();
-    expect(screen.getByRole("region", { name: /primer trazo/ })).toBeTruthy();
-    // El póster 1 sale con los atributos de next/image (srcset y sizes), con prioridad alta.
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+    const region = screen.getByRole("region", { name: "Así nace un Bolik" });
+    expect(region.querySelector("h2")!.textContent).toBe("Así nace un Bolik");
+    // En el HTML del servidor no hay póster: llega al acercarse la sección.
+    expect(document.querySelector("img")).toBeNull();
+    approach();
+    // Atributos de next/image (srcset y sizes), diferido y sin prioridad alta.
     const img = document.querySelector("img")!;
     expect(img.getAttribute("srcset")).toContain("planta-a1b2c3d4");
     expect(img.getAttribute("sizes")).toBe("100vw");
-    expect(img.getAttribute("fetchpriority")).toBe("high");
+    expect(img.getAttribute("loading")).toBe("lazy");
+    expect(img.getAttribute("fetchpriority")).toBeNull();
     unmount();
 
-    render(<VideoHero chapters={[]} />);
-    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-    expect(screen.queryByRole("tablist")).toBeNull();
+    const { container } = render(<VideoHero chapters={[]} />);
+    expect(container.innerHTML).toBe("");
   });
 });

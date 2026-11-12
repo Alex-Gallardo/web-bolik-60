@@ -7,7 +7,7 @@ import { kits as text } from "@/content/home";
 import type { KitView } from "@/server/data/types";
 
 /**
- * Kits escolares (docs/06 §3.1 sección 9, BD-054): solo con los kits activos en los ajustes
+ * Kits escolares (docs/06 §3.1 sección 10, BD-054): solo con los kits activos en los ajustes
  * (kits_enabled, el mismo que decide «Familias» en el pie) y kits publicados; si no, no se dibuja.
  * Tres tarjetas con nivel, descripción y contenido; sin precio (lo muestra /kits-escolares cuando
  * Mercadeo lo apruebe). En móvil es un carrusel con scroll-snap (sin JS); desde md, 3 columnas.

@@ -85,18 +85,19 @@ flowchart TB
 
 | # | Sección | Contenido y componentes | Móvil | Desktop | Animación |
 |---|---|---|---|---|---|
-| 1 | **Hero con capítulos de video** | `VideoHero`: video de fondo + capa oscura; chip "60 años · Hecho en Guatemala"; `h1` "De la materia prima a tu primer trazo." con subrayado de tinta; texto y CTA que cambian por capítulo; 4 pestañas Planta · Aula · Oficina · Librería con barra de progreso | Video vertical 4:5 o solo póster; pestañas con scroll horizontal; CTA a ancho completo | Video 16:9; texto a la izquierda, pestañas abajo | A-10 crossfade, A-11 subrayado, A-12 cambio de texto, A-13 progreso |
+| 1 | **Hero principal** (BD-056) | `MainHero` sobre `brand`, a pantalla completa: chip "60 años · Hecho en Guatemala"; el único `h1` "De la materia prima a tu primer trazo." con subrayado de tinta; texto de marca; CTA "Ver productos" y "Cotizar por mayor"; el Bolik Ultra ilustrado (SVG). El LCP es el texto del `h1` | Texto y CTA arriba, ilustración debajo | Texto a la izquierda, ilustración a la derecha | A-11 subrayado, entrada de la ilustración |
 | 2 | **Cifras** | `StatsBand` sobre `--blue`: 60 años · 150+ productos · 1,800+ puntos de venta · 22 departamentos (desde `SiteStat`) | 2 × 2 | 4 columnas | A-20 conteo |
-| 3 | **Soluciones** | "Un Bolik para cada etapa": 5 tarjetas de color (Colegios, Universidades, Empresas, Librerías, Distribuidores) que llevan a su página o abren cotización | Carrusel con *scroll snap* | 5 columnas | A-21 reveal escalonado, A-30 hover |
-| 4 | **Catálogo destacado** | Buscador grande + chips de línea + 8 `CategoryCard` | 2 columnas | 4 columnas | A-21, A-30 |
-| 5 | **Bolik Ultra** | `ProductSpotlight`: ilustración/foto, 4 beneficios, chips de color con código, CTAs "Ver ficha" y "Dónde comprar" | Apilado | 2 columnas | A-31 cambio de color |
-| 6 | **Bolik en tu escuela** (estilo infantil) | Fondo `sun`, título en Baloo 2, 3 cifras, 4 actividades en tarjetas inclinadas, CTA "Lleva Bolik a tu escuela" | 1 columna | 4 columnas | A-40 tarjetas, A-41 garabatos |
-| 7 | **Mayoreo y empresas** | 2 tarjetas grandes: Librerías y distribuidores (azul) · Empresas y universidades (navy) | Apiladas | 2 columnas | A-21 |
-| 8 | **Dónde comprar** | Selector de departamento (lleva a `/donde-comprar/[dep]`), botones Walmart y La Torre, 4 tiendas destacadas | Apilado | 2 columnas | A-21 |
-| 9 | **Kits escolares 2027** | 3 `KitCard` (si están publicados) | Carrusel | 3 columnas | A-21 |
-| 10 | **Historia** | 4 hitos verificados + enlace "Conoce nuestra historia" | Línea vertical | Línea horizontal | A-50 trazo de línea |
-| 11 | **Preguntas frecuentes** | 6 preguntas (scope `home`) en acordeón | — | Centrado 860 px | A-35 acordeón |
-| 12 | **CTA final** | "¿Compras por mayor?" + Cotizar + WhatsApp | — | — | — |
+| 3 | **Así nace un Bolik** (video por capítulos, BD-050) | `VideoHero`: `h2` "Así nace un Bolik"; video de fondo + capa oscura; texto y CTA que cambian por capítulo; 4 pestañas Planta · Aula · Oficina · Librería con barra de progreso. Póster y video se piden después de `load` y al entrar la sección en pantalla | Video vertical 4:5 o solo póster; pestañas con scroll horizontal; CTA a ancho completo | Video 16:9; texto a la izquierda, pestañas abajo | A-10 crossfade, A-12 cambio de texto, A-13 progreso |
+| 4 | **Soluciones** | "Un Bolik para cada etapa": 5 tarjetas de color (Colegios, Universidades, Empresas, Librerías, Distribuidores) que llevan a su página o abren cotización | Carrusel con *scroll snap* | 5 columnas | A-21 reveal escalonado, A-30 hover |
+| 5 | **Catálogo destacado** | Buscador grande + chips de línea + 8 `CategoryCard` | 2 columnas | 4 columnas | A-21, A-30 |
+| 6 | **Bolik Ultra** | `ProductSpotlight`: ilustración/foto, 4 beneficios, chips de color con código, CTAs "Ver ficha" y "Dónde comprar" | Apilado | 2 columnas | A-31 cambio de color |
+| 7 | **Bolik en tu escuela** (estilo infantil) | Fondo `sun`, título en Baloo 2, 3 cifras, 4 actividades en tarjetas inclinadas, CTA "Lleva Bolik a tu escuela" | 1 columna | 4 columnas | A-40 tarjetas, A-41 garabatos |
+| 8 | **Mayoreo y empresas** | 2 tarjetas grandes: Librerías y distribuidores (azul) · Empresas y universidades (navy) | Apiladas | 2 columnas | A-21 |
+| 9 | **Dónde comprar** | Selector de departamento (lleva a `/donde-comprar/[dep]`), botones Walmart y La Torre, 4 tiendas destacadas | Apilado | 2 columnas | A-21 |
+| 10 | **Kits escolares 2027** | 3 `KitCard` (si están publicados) | Carrusel | 3 columnas | A-21 |
+| 11 | **Historia** | 4 hitos verificados + enlace "Conoce nuestra historia" | Línea vertical | Línea horizontal | A-50 trazo de línea |
+| 12 | **Preguntas frecuentes** | 6 preguntas (scope `home`) en acordeón | — | Centrado 860 px | A-35 acordeón |
+| 13 | **CTA final** | "¿Compras por mayor?" + Cotizar + WhatsApp | — | — | — |
 
 **Eventos:** `hero_chapter_view`, `hero_cta_click`, `solution_click`, `category_click`, `search_open`, `spotlight_click` (Ver ficha del producto estrella), `retailer_click`, `quote_open`.
 

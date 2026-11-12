@@ -8,7 +8,7 @@ import { JsonLd, faqPageJsonLd } from "@/features/seo/jsonld";
 import type { FaqView } from "@/server/data/types";
 
 /**
- * Preguntas frecuentes de la home (docs/06 §3.1 sección 11, BD-054): las de scope «home» en el
+ * Preguntas frecuentes de la home (docs/06 §3.1 sección 12, BD-054): las de scope «home» en el
  * acordeón nativo (A-35, <details>: las respuestas están en el HTML y se leen sin JS), centrado a
  * 860 px, y su FAQPage con el mismo texto (docs/10 §4). Abre de a una (name del <details>).
  */

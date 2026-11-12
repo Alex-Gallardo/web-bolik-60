@@ -59,7 +59,7 @@ describe("fuente db: lo mismo que la fuente de ejemplo", () => {
       expect(await dbSource.listFaqs({ scope })).toEqual(await fixturesSource.listFaqs({ scope }));
     }
     expect(await dbSource.listPublishedFaqs()).toEqual(await fixturesSource.listPublishedFaqs());
-    for (const key of ["home.hero", "no.existe"]) {
+    for (const key of ["prueba.sin-registro", "no.existe"]) {
       expect(await dbSource.getSectionAppearance(key)).toEqual(
         await fixturesSource.getSectionAppearance(key),
       );

@@ -4,7 +4,7 @@ import { audiences, solutions } from "@/content/home";
 import { AudienceCard } from "./audience-card";
 
 /**
- * «Un Bolik para cada etapa» (docs/06 §3.1 sección 3, BD-051): una tarjeta de color por público.
+ * «Un Bolik para cada etapa» (docs/06 §3.1 sección 4, BD-051): una tarjeta de color por público.
  * En móvil es un carrusel con scroll-snap (sin JS); desde lg, 3 columnas y desde xl, 5 (a 1024 px
  * «Universidades» no cabe en una quinta parte). Cada tarjeta entra con
  * el revelado A-21 (data-reveal en el <li>: la tarjeta con .lift eleva al pasar el mouse, A-30),
