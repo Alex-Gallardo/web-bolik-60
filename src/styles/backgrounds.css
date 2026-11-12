@@ -97,15 +97,32 @@
   --text: var(--on-dark);
   --muted: var(--on-dark-muted);
   --line: color-mix(in srgb, var(--paper) 16%, transparent);
+  --heading: var(--paper);
+  --accent-text: var(--yellow);
 }
+/* --on-dark-muted sobre --blue da 3.97:1 (no llega a AA): sobre brand, el texto secundario es
+   --on-dark (sobre navy sí pasa). */
+[data-bg="brand"][data-tone="dark"] {
+  --muted: var(--on-dark);
+}
+/* Tono claro dentro de uno oscuro (tarjeta blanca sobre navy): vuelven los valores de :root. */
+[data-tone="light"] {
+  --text: var(--text-light);
+  --muted: var(--muted-light);
+  --line: var(--line-light);
+  --heading: var(--ink);
+  --accent-text: var(--blue);
+}
+/* Por variable, no por color fijo: una tarjeta con data-tone="light" dentro de una sección oscura
+   recupera --heading = tinta (BD-054). */
 [data-tone="dark"] :where(h1, h2, h3, h4) {
-  color: var(--paper);
+  color: var(--heading);
 }
 /* Enlaces de texto (los botones llevan clases y su propio color) */
 [data-tone="dark"] :where(a:not([class])) {
-  color: var(--paper);
+  color: var(--heading);
   text-decoration: underline;
 }
 [data-tone="dark"] :where(a:not([class])):hover {
-  color: var(--on-dark);
+  color: var(--text);
 }

@@ -15,7 +15,10 @@ export function SolutionsSection() {
   const titleId = "soluciones-titulo";
   return (
     <Section appearanceKey="home.solutions" aria-labelledby={titleId}>
-      <h2 id={titleId} className="font-display text-[length:var(--fs-h2)] font-extrabold text-ink">
+      <h2
+        id={titleId}
+        className="font-display text-[length:var(--fs-h2)] font-extrabold text-heading"
+      >
         {solutions.title}
       </h2>
       <ul

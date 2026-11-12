@@ -32,7 +32,7 @@ export function CatalogSection({ categories, productCount }: CatalogSectionProps
       <div className="flex max-w-2xl flex-col gap-4">
         <h2
           id={titleId}
-          className="font-display text-[length:var(--fs-h2)] font-extrabold text-ink"
+          className="font-display text-[length:var(--fs-h2)] font-extrabold text-heading"
         >
           {featuredCatalog.title}
         </h2>

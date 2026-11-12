@@ -241,3 +241,90 @@ test.describe("secciones de la home sin JavaScript (BD-053)", () => {
     expect(transform).toBe("none");
   });
 });
+
+// Kits, preguntas frecuentes, CTA final y apariencia por sección (BD-054).
+test.describe("home: kits, FAQ y cierre (BD-054)", () => {
+  test.use({ reducedMotion: "reduce" });
+
+  test("6 preguntas en acordeón con su FAQPage, CTA final y sin kits apagados", async ({
+    page,
+  }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto("/");
+    const faq = page.getByRole("region", { name: "Preguntas frecuentes" });
+    const summaries = faq.locator("details > summary");
+    await expect(summaries).toHaveCount(6);
+    // Se abre de a una (name del <details>).
+    await summaries.nth(0).click();
+    await expect(faq.locator("details").nth(0)).toHaveAttribute("open", "");
+    await summaries.nth(1).click();
+    await expect(faq.locator("details").nth(0)).not.toHaveAttribute("open", "");
+    await expect(faq.locator("details").nth(1)).toHaveAttribute("open", "");
+
+    // Un solo FAQPage, con las mismas preguntas que se ven.
+    const blocks = await page
+      .locator('script[type="application/ld+json"]')
+      .evaluateAll((scripts) => scripts.map((s) => JSON.parse(s.textContent ?? "{}")));
+    const faqPages = blocks.filter((b) => b["@type"] === "FAQPage");
+    expect(faqPages).toHaveLength(1);
+    expect(faqPages[0].mainEntity.map((q: { name: string }) => q.name)).toEqual(
+      await summaries.allTextContents(),
+    );
+
+    const cta = page.getByRole("region", { name: "¿Compras por mayor?" });
+    await expect(cta.getByRole("link", { name: "Armar mi cotización" })).toHaveAttribute(
+      "href",
+      "/cotizacion",
+    );
+    // settings.json no trae número de WhatsApp: sin número no hay botón (nunca uno roto).
+    await expect(cta.getByRole("link", { name: /WhatsApp/ })).toHaveCount(0);
+    // kits_enabled = false en settings.json: la sección de kits no sale.
+    await expect(page.getByRole("region", { name: "Kits escolares 2027" })).toHaveCount(0);
+    await expectNoA11yViolations(page);
+    expect(errors, "errores en la consola").toEqual([]);
+  });
+
+  for (const bg of ["navy", "brand"]) {
+    test(`con fondo ${bg} en todas las secciones (como lo elegiría el admin), se lee y pasa axe`, async ({
+      page,
+    }) => {
+      await page.goto("/");
+      // Lo que hace <Section> con un SectionAppearance oscuro: data-bg y data-tone del fondo guardado.
+      const changed = await page.evaluate((preset) => {
+        const sections = [...document.querySelectorAll("main section[data-bg]")];
+        for (const section of sections) {
+          section.setAttribute("data-bg", preset);
+          section.setAttribute("data-tone", "dark");
+        }
+        return sections.length;
+      }, bg);
+      expect(changed).toBeGreaterThanOrEqual(10);
+      // axe deja un contraste de 1:1 como «incompleto» (texto oculto a propósito): una tarjeta
+      // blanca (data-tone="light") se compara aparte, título contra fondo de la tarjeta.
+      const card = page
+        .getByRole("region", { name: "Encuentra lo que necesitas" })
+        .locator('[data-tone="light"]')
+        .first();
+      const { heading, background } = await card.evaluate((el) => ({
+        heading: getComputedStyle(el.querySelector("h3")!).color,
+        background: getComputedStyle(el).backgroundColor,
+      }));
+      expect(heading).not.toBe(background);
+      expect(heading).toBe("rgb(17, 19, 24)"); // --ink
+      await expectNoA11yViolations(page);
+    });
+  }
+});
+
+test.describe("FAQ de la home sin JavaScript (BD-054)", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("las respuestas están en el HTML y el acordeón abre", async ({ page }) => {
+    await page.goto("/");
+    const faq = page.getByRole("region", { name: "Preguntas frecuentes" });
+    const first = faq.locator("details").first();
+    await expect(first).toContainText("En Guatemala.");
+    await first.locator("summary").click();
+    await expect(first.getByText(/^En Guatemala\./)).toBeVisible();
+  });
+});

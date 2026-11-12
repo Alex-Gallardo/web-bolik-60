@@ -48,7 +48,7 @@ Cada componente vive en `src/components/ui` (primitivas) o en su carpeta de domi
 | `primary` | `--blue` / blanco | Acción principal sobre fondo claro |
 | `accent` | `--yellow` / `--ink` | Acción principal sobre fondo oscuro (hero, navy) |
 | `dark` | `--ink` / blanco | Alternativa sobria |
-| `outline` | transparente / `--ink`, borde 2 px | Secundario sobre claro |
+| `outline` | transparente / `--heading`, borde 2 px | Secundario; sigue el tono de la sección (tinta sobre claro, blanco sobre oscuro) |
 | `ghost-light` | transparente / blanco, borde blanco | Secundario sobre oscuro |
 | `whatsapp` | `--whatsapp` / blanco | Solo WhatsApp |
 | `link` | sin fondo / `--blue` | Acciones terciarias |

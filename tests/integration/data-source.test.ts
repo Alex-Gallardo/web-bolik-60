@@ -237,3 +237,25 @@ describe("fuente db: sitemap", () => {
     expect(contentUpdatedAt).not.toBeNull();
   });
 });
+
+// BD-054: lo que guardará el editor de apariencia (BD-121) es lo que lee <Section appearanceKey>.
+// En el sitio, el guardado llama a updateTag(TAGS.appearance) y la home se regenera con el fondo.
+describe("fuente db: apariencia por sección", () => {
+  it("un fondo guardado para una sección de la home se lee tal cual; sin fila, null", async () => {
+    expect(await dbSource.getSectionAppearance("home.faq")).toBeNull();
+    await withChange(
+      () =>
+        db.sectionAppearance.create({
+          data: { sectionKey: "home.faq", backgroundPreset: "navy", tone: "dark" },
+        }),
+      () => db.sectionAppearance.delete({ where: { sectionKey: "home.faq" } }),
+      async () => {
+        expect(await dbSource.getSectionAppearance("home.faq")).toEqual({
+          backgroundPreset: "navy",
+          tone: "dark",
+        });
+      },
+    );
+    expect(await dbSource.getSectionAppearance("home.faq")).toBeNull();
+  });
+});

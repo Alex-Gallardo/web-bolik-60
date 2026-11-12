@@ -77,7 +77,7 @@ describe("Button", () => {
     const link = screen.getByRole("link", { name: "Ver catálogo" });
     expect(link.getAttribute("href")).toBe("/productos");
     expect(link.getAttribute("type")).toBeNull();
-    expect(link.className).toContain("border-ink");
+    expect(link.className).toContain("border-heading");
     expect(link.contains(screen.getByTestId("icono"))).toBe(true);
   });
 

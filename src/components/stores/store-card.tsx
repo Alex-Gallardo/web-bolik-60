@@ -46,7 +46,11 @@ export function StoreCard({ store, headingLevel = 3 }: StoreCardProps) {
   const place = [store.municipality, store.department.name].filter(Boolean).join(", ");
 
   return (
-    <article className="flex h-full flex-col gap-3 rounded-lg border-2 border-line bg-paper p-5">
+    // Tarjeta blanca: tono claro aunque la sección sea oscura (BD-054).
+    <article
+      data-tone="light"
+      className="flex h-full flex-col gap-3 rounded-lg border-2 border-line bg-paper p-5"
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <Heading className="text-lg leading-tight">{store.name}</Heading>
         <Chip>{ui.cards.storeTypes[store.type]}</Chip>

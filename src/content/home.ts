@@ -162,3 +162,37 @@ export const audiences = [
     tone: "red",
   },
 ] as const;
+
+/** Kits escolares (docs/17 §2, docs/06 §3.1 sección 9, BD-054). */
+export const kits = {
+  title: "Kits escolares 2027",
+  text: "Todo lo de la lista, en un solo paquete, por grado.",
+  levels: {
+    preprimaria: "Preprimaria",
+    primaria: "Primaria",
+    basicos: "Básicos",
+    diversificado: "Diversificado",
+  },
+  itemsLabel: (name: string) => `Contenido del ${name}`,
+  item: (quantity: number, description: string) => `${quantity} × ${description}`,
+  cta: { label: "Ver kits escolares", href: "/kits-escolares" },
+  /** Como en docs/06: tres tarjetas en la home; el resto, en /kits-escolares. */
+  limit: 3,
+} as const;
+
+/** Preguntas frecuentes (docs/17 §7, docs/06 §3.1 sección 11, BD-054). */
+export const homeFaq = {
+  title: "Preguntas frecuentes",
+  /** Seis preguntas de scope «home» (docs/06): las publicadas, en el orden del seed. */
+  limit: 6,
+  cta: { label: "Ver todas las preguntas", href: "/preguntas-frecuentes" },
+} as const;
+
+/** CTA final (docs/17 §2, docs/06 §3.1 sección 12, BD-054). */
+export const finalCta = {
+  title: "¿Compras por mayor?",
+  text: "Arma tu lista en minutos y recibe precio de fábrica en un día hábil.",
+  quote: { label: "Armar mi cotización", href: "/cotizacion" },
+  /** Mensaje: el general del sitio (footer.ts) hasta las plantillas por contexto (BD-067). */
+  whatsapp: "Escribir por WhatsApp",
+} as const;
