@@ -40,7 +40,7 @@ export function WhereToBuySection({ departments, onlineStores }: WhereToBuySecti
               className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end"
             >
               <div className="flex flex-1 flex-col gap-2">
-                <label htmlFor={selectId} className="font-bold text-ink">
+                <label htmlFor={selectId} className="font-bold text-heading">
                   {whereToBuy.selectLabel}
                 </label>
                 <Select id={selectId} name="departamento" defaultValue={departments[0]!.slug}>
@@ -61,7 +61,7 @@ export function WhereToBuySection({ departments, onlineStores }: WhereToBuySecti
         <div className="flex flex-col gap-4">
           {online.length > 0 && (
             <>
-              <h3 className="font-bold text-ink">{whereToBuy.onlineLabel}</h3>
+              <h3 className="font-bold text-heading">{whereToBuy.onlineLabel}</h3>
               <ul className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 {online.map((store) => (
                   <li key={store.slug}>

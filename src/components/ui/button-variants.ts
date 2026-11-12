@@ -30,16 +30,18 @@ export const buttonVariants = cva(
         accent: "border-transparent bg-yellow text-ink hover:bg-yellow-600",
         // Alternativa sobria.
         dark: "border-transparent bg-ink text-paper hover:bg-navy",
-        // Secundario sobre fondo claro.
-        outline: "border-ink text-ink hover:bg-soft",
-        // Secundario sobre fondo oscuro.
+        // Secundario. Sigue el tono de la sección (BD-054): tinta sobre claro, blanco sobre oscuro.
+        // El hover oscuro no aplica dentro de una tarjeta clara (data-tone="light").
+        outline:
+          "border-heading text-heading hover:bg-soft in-data-[tone=dark]:not-in-data-[tone=light]:hover:bg-paper/10",
+        // Secundario sobre fondo oscuro fijo (hero de video, que no es una Section).
         "ghost-light": "border-paper text-paper hover:bg-paper/10",
         // Solo WhatsApp.
         whatsapp: "border-transparent bg-whatsapp text-paper hover:bg-whatsapp-700",
         // Acciones destructivas (admin): borrar, descartar.
         danger: "border-transparent bg-red text-paper hover:bg-red-700",
         // Acciones terciarias.
-        link: "border-transparent text-blue underline-offset-4 hover:underline",
+        link: "border-transparent text-accent-text underline-offset-4 hover:underline",
       },
       // Texto e íconos; el alto y el padding van en compoundVariants (solo variantes con caja).
       size: {

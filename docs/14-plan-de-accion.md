@@ -1069,7 +1069,7 @@ Las cuatro secciones son Server Components sin JS nuevo: la home sigue en 164.3 
   - Sin las «3 cifras» de doc 06: no hay datos.
   - Las actividades de la demo son `sample`: en producción el bloque queda con texto y botón.
 - **`components/home/wholesale-section.tsx` · «Mayoreo y empresas»** (sección 7, que no estaba en ningún ticket y se sumó aquí). Dos tarjetas con los textos de doc 17 y CTA a `/mayoreo` y `/empresas` (`solution_click` con `data-audience`, como las tarjetas de público).
-- **Pendiente aparte:** varias secciones de BD-051 a BD-053 fijan colores de texto (`text-ink`, `text-blue`) que no se adaptan si el admin elige un fondo oscuro en `SectionAppearance`. Se resuelve junto con el editor de apariencia (BD-054 paso 4).
+- **Pendiente aparte (resuelto en BD-054):** varias secciones de BD-051 a BD-053 fijaban colores de texto (`text-ink`, `text-blue`) que no se adaptaban si el admin elegía un fondo oscuro en `SectionAppearance`. BD-054 los cambió por tokens que siguen el tono.
 - **`components/home/where-to-buy-section.tsx` · «Bolik está cerca de ti»** (sección 8).
   - Selector de departamento: formulario GET a `/donde-comprar?departamento=…` (sin JS).
   - «Comprar en Walmart» y «Comprar en La Torre», con la URL de los datos de las tiendas (solo `https://`): `target="_blank"`, `rel="noopener noreferrer"`, aviso para lector de pantalla y `data-event="retailer_click"` con `data-retailer` (doc 12 §4). El clic se marca; registrarlo es trabajo del beacon de analítica (BD-083 y E12).
@@ -1099,6 +1099,27 @@ Cierre de la home y fondos editables.
 **Criterios de aceptación**
 
 - [ ] Cambiar el fondo en el admin se refleja en la home tras guardar.
+
+**Implementado (BD-054)**
+
+Las tres secciones nuevas son Server Components sin JS: la home sigue en 164.3 KB y el LCP local da entre 3.06 y 3.14 s (límite temporal 3.2 s).
+
+- **`components/home/kits-section.tsx` · «Kits escolares 2027»** (sección 9, entre dónde comprar e historia).
+  - Solo si `kits_enabled` está activo (el mismo ajuste que decide «Familias» en el pie) y hay kits publicados. Hoy `kits_enabled = false`: no sale.
+  - Tres tarjetas con nivel, descripción y contenido, sin precio (lo muestra `/kits-escolares` si Mercadeo lo aprueba). Carrusel en móvil y 3 columnas desde `md`. Botón «Ver kits escolares».
+- **`components/home/faq-section.tsx` · «Preguntas frecuentes»** (sección 11).
+  - Las 6 de scope `home` en el acordeón `<details>` (abre de a una), centrado a 860 px, y «Ver todas las preguntas».
+  - JSON-LD `FAQPage` con el mismo texto. `features/seo/jsonld.tsx` nace aquí con `JsonLd` (escapa `<`) y `faqPageJsonLd`; BD-091 lo amplía.
+- **`components/home/final-cta-section.tsx` · «¿Compras por mayor?»** (sección 12), sobre `brand`.
+  - «Armar mi cotización» a `/cotizacion` (`quote_open`; el parámetro `lines` de docs/12 lo pone BD-127 desde el store de la cotización) y «Escribir por WhatsApp» (`whatsapp_open`, `context=general`, mensaje general del sitio hasta BD-067).
+  - Sin número válido en los ajustes no hay botón de WhatsApp, como en el header.
+- **Fondos editables.** Las 11 secciones de la home después del hero tienen `appearanceKey` (nuevas: `home.kits`, `home.faq`, `home.final-cta`).
+  - Tokens por tono en `tokens.css`: `--heading` (títulos y etiquetas) y `--accent-text` (eyebrows, años, íconos). En `data-tone="dark"` pasan a blanco y amarillo.
+  - `data-tone="light"` dentro de una sección oscura restaura los valores claros (`--text-light`, `--muted-light`, `--line-light`): lo usan las tarjetas blancas (categoría, kit, tienda). Las reglas de títulos y enlaces del tono oscuro usan `var(--heading)`, así que la tarjeta clara también los recupera.
+  - Sobre `brand`, `--muted` es `--on-dark`: `--on-dark-muted` sobre azul da 3.97:1.
+  - Se quitaron los colores fijos de BD-051 a BD-053 (`text-ink`, `text-blue`). El botón `outline` y el `link` siguen el tono.
+  - E2E: con todas las secciones en navy y en brand, la home pasa axe y el título de una tarjeta blanca no toma el color de su fondo (axe deja un contraste de 1:1 como «incompleto», por eso se compara aparte).
+- **Criterio «cambiar el fondo en el admin»:** el editor llega con BD-121 (y el login con BD-115). Aquí se prueba la lectura: una prueba de integración guarda un `SectionAppearance` en la base de pruebas y la fuente lo devuelve; la sección lo pinta con su tono (unitaria). Se cierra en BD-121.
 
 #### BD-055 · Ajuste de rendimiento de la home
 
@@ -1536,6 +1557,8 @@ Datos que Google y las IA entienden.
 - [ ] 0 errores en las plantillas: home, categoría, ficha, FAQ, dónde comprar.
 - [ ] Capturas de la validación adjuntas al ticket.
 
+*Nota de BD-054:* `features/seo/jsonld.tsx` ya existe con `JsonLd` (escapa `<`) y `faqPageJsonLd` (la home publica su `FAQPage`). Este ticket suma los demás tipos (Organization, WebSite, ProductGroup…) sobre esa base.
+
 #### BD-092 · sitemap.xml y robots.txt
 
 **Sprint** S2 · **Días** 0.25 · **Prioridad** Must · **Pista** B · **Depende de** BD-032 · **Docs** 10 §5
@@ -1969,6 +1992,8 @@ Hero, cifras, historia, actividades, fondos por sección y ajustes.
 
 *Nota de BD-031:* `HistoryMilestone.key` y `SchoolActivity.key` son obligatorias y únicas: el formulario las genera con `slugify` del título.
 
+*Nota de BD-054:* las claves de la home son `home.stats`, `home.solutions`, `home.catalog`, `home.spotlight`, `home.schools`, `home.wholesale`, `home.where`, `home.kits`, `home.history`, `home.faq` y `home.final-cta` (el hero de video no tiene fondo editable). Guardar la apariencia llama a `updateTag(TAGS.appearance)`; así se cumple el criterio pendiente de BD-054 («cambiar el fondo en el admin se refleja en la home tras guardar»). El tono se deduce del fondo: el formulario no necesita pedirlo.
+
 **Criterios de aceptación**
 
 - [ ] Apagar el splash desde ajustes lo desactiva en la siguiente visita.
@@ -2071,6 +2096,8 @@ Completar la tabla de eventos.
 
 1. Agregar `track()` en cada punto del doc 12 §4.
 2. Prueba E2E que intercepta `track` y valida nombres.
+
+*Nota de BD-054:* el CTA final de la home marca `data-event="quote_open"` sin `lines`: el parámetro se toma del store de la cotización al registrar el evento.
 
 **Criterios de aceptación**
 

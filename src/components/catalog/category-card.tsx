@@ -30,6 +30,8 @@ export function CategoryCard({ category, headingLevel = 3, prefetch, ...data }: 
       {...data}
       href={category.href as Route}
       prefetch={prefetch}
+      // Tarjeta blanca: tono claro aunque la sección sea oscura (el admin elige el fondo).
+      data-tone="light"
       className="lift group flex h-full flex-col rounded-lg border-2 border-line bg-paper text-ink no-underline"
     >
       <span

@@ -46,7 +46,9 @@ export function ProductSpotlight({ product }: { product: ProductView }) {
         </div>
 
         <div className="flex flex-col gap-5">
-          <p className="text-sm font-bold tracking-wide text-blue uppercase">{spotlight.eyebrow}</p>
+          <p className="text-sm font-bold tracking-wide text-accent-text uppercase">
+            {spotlight.eyebrow}
+          </p>
           <h2 id={titleId} className="font-display text-[length:var(--fs-h2)] font-extrabold">
             {product.name}
           </h2>
@@ -77,7 +79,7 @@ export function ProductSpotlight({ product }: { product: ProductView }) {
                 {product.variants.map((variant) => (
                   <li
                     key={variant.sku}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-line px-4 text-sm font-bold text-ink"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-line px-4 text-sm font-bold text-heading"
                   >
                     <span
                       aria-hidden="true"

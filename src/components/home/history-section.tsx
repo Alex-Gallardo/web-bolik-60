@@ -40,7 +40,7 @@ export function HistorySection({ milestones }: { milestones: MilestoneView[] }) 
                 <div className="flex flex-col gap-1">
                   {/* El año va dentro del h3: quien navega por encabezados lo oye. */}
                   <h3 className="flex flex-col gap-1 text-lg leading-tight">
-                    <span className="font-display text-2xl font-extrabold text-blue">
+                    <span className="font-display text-2xl font-extrabold text-accent-text">
                       {milestone.year}
                     </span>
                     {milestone.title}

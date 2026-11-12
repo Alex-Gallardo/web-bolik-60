@@ -86,6 +86,11 @@ Chip: **60 años · Hecho en Guatemala**
 ### Kits escolares 2027
 - Título: **Kits escolares 2027**
 - Texto: Todo lo de la lista, en un solo paquete, por grado.
+- Botón: Ver kits escolares
+
+### Preguntas frecuentes
+- Título: **Preguntas frecuentes**
+- Botón: Ver todas las preguntas
 
 ### Historia
 - Título: **60 años escribiendo con Guatemala**
