@@ -18,7 +18,7 @@ Laboratorio (Lighthouse móvil, throttling por defecto) en CI: **Rendimiento ≥
 |---|---|---|
 | Base (dos fuentes precargadas) | 3.05 s | — |
 | Favicon de 15 KB a 1.4 KB (sin el cuadro de 48 px) | 3.08 s | Se queda (menos bytes, sin efecto en el LCP) |
-| Solo la fuente del h1 precargada | 2.96 s | Se queda |
+| Solo la fuente del h1 precargada | 2.96 s | Se descarta: en la CI, el texto cambia de fuente después del splash (CLS 0.002) y el LCP queda dentro de la variación entre corridas |
 | Ninguna fuente precargada | 2.94 s | Se descarta: 0.02 s menos a cambio de un salto del h1 (CLS 0.023); se prefiere CLS 0 |
 | Fuentes estáticas por peso | — | Se descarta: 4 o 5 archivos por ~18 KB menos |
 | Throttling aplicado (`devtools`) en vez de simulado | 2.2–5.3 s | Se descarta: muy variable |
@@ -65,7 +65,7 @@ Verificación: `pnpm analyze` (bundle analyzer) y `pnpm lhci` con las aserciones
 - [ ] Formato WebP (AVIF opcional), 6 anchos generados al subir; `placeholder="blur"` con `blurDataURL`.
 - [ ] Contenedores con proporción fija (`aspect-ratio`) para evitar CLS.
 - [ ] Video por capítulos (sección 3 desde BD-056): póster y video tras `load` y al entrar la sección en pantalla; sin video con Save-Data o 2g/3g; `preload="none"` en capítulos no activos. El LCP de la home es el texto del h1 del hero principal.
-- [ ] Solo se precarga la fuente de títulos (la del h1); la de texto, no (BD-055).
+- [ ] Se precargan las dos fuentes del sitio (Bricolage y DM Sans); Baloo 2, no (BD-055).
 - [ ] Mapa estático (imagen) en `/contacto`; mapa interactivo solo en `/donde-comprar` y al entrar en pantalla.
 
 ### Interacción (INP)

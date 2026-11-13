@@ -1168,8 +1168,11 @@ Decisión del usuario: la home cierra con una guardia de 3.2 s en Lighthouse y l
 
 - JS de la home: 164.4 KB (≤ 165). Rendimiento 0.91–0.92, SEO 100, CLS 0.
 - **LCP:** ningún ajuste lo bajó de ~2.9 s en Lighthouse móvil (tabla en docs/12 §1). El navegador pinta el h1 a los ~0.5 s; la simulación de Lantern le carga lo que se pide antes del primer pintado (~146 KB de Next/React, el JS de la página y las fuentes).
-  - Se quedan: el favicon de 15 KB a 1.4 KB (los mismos píxeles de los cuadros de 16 y 32 px, en PNG; se quitó el de 48 px) y precargar solo la fuente de títulos.
-  - Se descartaron: ninguna fuente precargada (CLS 0.023 a cambio de 0.02 s: se prefiere CLS 0), fuentes estáticas por peso, throttling aplicado (2.2–5.3 s) y diferir el JS propio (3.8 KB).
+  - Se queda: el favicon de 15 KB a 1.4 KB (los mismos píxeles de los cuadros de 16 y 32 px, en PNG; se quitó el de 48 px).
+  - Se descartaron:
+    - precargar solo la fuente de títulos: en la CI el texto cambió de fuente después del splash (CLS 0.002) y el LCP quedó dentro de la variación;
+    - ninguna fuente precargada (CLS 0.023);
+    - fuentes estáticas por peso, throttling aplicado (2.2–5.3 s) y diferir el JS propio (3.8 KB).
   - Riesgo: la home queda a 0.6 KB del tope de 165 KB de JS. La analítica (BD-125 a 127) debe cargarse diferida.
   - `lighthouse.config.cjs`: el LCP de la home queda en 3200 como guardia de regresión, ya no «temporal».
 - **Pendiente aparte:** el favicon es todavía el de Next.js (la «N»). Uno de Bolik necesita el archivo de marca: ticket BD-028.
@@ -2132,7 +2135,7 @@ Saber cómo carga el sitio en teléfonos reales.
 
 - [ ] LCP, INP, CLS y TTFB llegan a GA4 con la ruta.
 
-*Nota de BD-055:* la meta de LCP ≤ 2.0 s de la home (BD-055 y BD-056) se comprueba aquí, con el p75 móvil de usuarios reales: en Lighthouse la home tiene una guardia de 3.2 s (docs/12 §1). El CLS p75 móvil también valida que DM Sans vaya sin precarga (en Android no hay Arial para el ajuste de métricas de la fuente de reserva).
+*Nota de BD-055:* la meta de LCP ≤ 2.0 s de la home (BD-055 y BD-056) se comprueba aquí, con el p75 móvil de usuarios reales: en Lighthouse la home tiene una guardia de 3.2 s (docs/12 §1).
 
 #### BD-127 · Eventos de analítica en toda la interfaz
 
