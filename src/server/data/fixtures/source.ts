@@ -55,6 +55,7 @@ function toCard(data: SeedData, product: Product): ProductCardView {
   return {
     slug: product.slug,
     name: product.name,
+    brand: product.brand,
     href: productHref(category.slug, product.slug),
     category: { slug: category.slug, name: category.name, lineGroup: category.lineGroup },
     shortDescription: product.shortDescription,

@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Chip } from "@/components/ui/chip";
 import { ui } from "@/content/ui";
+import { BRAND_LABELS } from "@/lib/constants";
 import type { ProductCardView } from "@/server/data/types";
 
 /**
@@ -28,8 +29,8 @@ type ProductCardProps = {
 };
 
 /**
- * Tarjeta de producto (docs/06 §3.2, BD-023): imagen 1:1, chip de línea, nombre, colores y
- * «Ver producto». Toda la tarjeta es un solo enlace. Sin foto (hasta BD-034), el cuadro 1:1
+ * Tarjeta de producto (docs/06 §3.2, BD-023): imagen 1:1, chip de línea (y de marca si no es Bolik,
+ * BD-038), nombre, colores y «Ver producto». Toda la tarjeta es un solo enlace. Sin foto (hasta BD-034), el cuadro 1:1
  * muestra los colores reales del producto: el espacio está reservado y no hay saltos (CLS 0).
  *
  * Sin overflow-hidden en el enlace: recortaría la sombra de .lift. Solo el cuadro de la imagen
@@ -87,9 +88,18 @@ export function ProductCard({
             se ve arriba con order-first. Alturas fijas (título 2 líneas, colores 1 línea) para que
             el skeleton mida lo mismo a 360 px, donde el texto se parte (CLS 0). */}
         <Heading className="line-clamp-2 min-h-[2lh] text-lg leading-tight">{product.name}</Heading>
-        <Chip line={product.category.lineGroup} className="order-first self-start">
-          {product.category.name}
-        </Chip>
+        {/* Una sola fila (sin wrap): el chip recorta su texto y la altura no cambia (CLS 0). */}
+        <div className="order-first flex min-w-0 gap-1.5">
+          <Chip line={product.category.lineGroup} className="min-w-0">
+            {product.category.name}
+          </Chip>
+          {product.brand !== "bolik" ? (
+            <Chip className="shrink-0">
+              <span className="sr-only">{`${ui.cards.brand} `}</span>
+              {BRAND_LABELS[product.brand]}
+            </Chip>
+          ) : null}
+        </div>
         <p className="flex min-h-5 items-center gap-1.5 text-sm text-muted">
           {colors.length > 0 ? (
             <>

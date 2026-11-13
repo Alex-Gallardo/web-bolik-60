@@ -15,6 +15,7 @@ import { ProductCardSkeleton } from "./product-card-skeleton";
 const product: ProductCardView = {
   slug: "bolik-ultra",
   name: "Bolik Ultra",
+  brand: "bolik",
   href: "/productos/boligrafos/bolik-ultra",
   category: { slug: "boligrafos", name: "Bolígrafos", lineGroup: "escritura" },
   shortDescription: "Bolígrafo hexagonal",
@@ -77,6 +78,16 @@ describe("ProductCard", () => {
     unmount();
     render(<ProductCard product={{ ...product, colors: [] }} />);
     expect(screen.queryByText(/^Colores?:/)).toBeNull();
+  });
+
+  it("muestra la marca del grupo solo cuando no es Bolik (BD-038)", () => {
+    const { unmount } = render(<ProductCard product={product} />);
+    expect(screen.queryByText("Fabik")).toBeNull();
+    unmount();
+    render(<ProductCard product={{ ...product, brand: "fabik" }} />);
+    const link = screen.getByRole("link");
+    expect(within(link).getByText("Fabik")).toBeTruthy();
+    expect(within(link).getByText("Bolígrafos")).toBeTruthy();
   });
 
   it("con foto usa su alt y los sizes de la grilla", () => {

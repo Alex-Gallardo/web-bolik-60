@@ -211,7 +211,10 @@ describe("fuente db: sitemap", () => {
     const data = parseSeedData();
     const { categories, products, departments, contentUpdatedAt } =
       await dbSource.listSitemapEntries();
-    expect(categories.map((c) => c.slug)).toEqual(data.categories.map((c) => c.slug));
+    // Solo las publicadas: una categoría sin publicar (tablas-y-estuches, BD-038) no va al sitemap.
+    expect(categories.map((c) => c.slug)).toEqual(
+      data.categories.filter((c) => c.published).map((c) => c.slug),
+    );
     expect(products.find((p) => p.slug === "bolik-ultra")).toMatchObject({
       categorySlug: "boligrafos",
       images: [],

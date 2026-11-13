@@ -60,7 +60,8 @@ export function seedTargetProblem(
 
 /**
  * Los datos que carga un perfil: en prod, sin ejemplos ni relaciones, FAQs o líneas de kit hacia
- * ellos, y sin los pósters y videos de la demo en el hero (BD-050).
+ * ellos, y sin los pósters y videos de la demo en el hero (BD-050). Una categoría sin productos
+ * reales publicados se crea sin publicar (BD-038): no queda una página vacía en el sitemap.
  */
 export function dataForProfile(data: SeedData, profile: SeedProfile): SeedData {
   if (profile !== "prod") return data;
@@ -69,8 +70,13 @@ export function dataForProfile(data: SeedData, profile: SeedProfile): SeedData {
   const productSlugs = new Set(products.map((p) => p.slug));
   const skus = new Set(products.flatMap((p) => p.variants.map((v) => v.sku)));
 
+  const withProducts = new Set(products.filter((p) => p.published).map((p) => p.categorySlug));
+
   return {
     ...data,
+    categories: data.categories.map((c) =>
+      c.published && !withProducts.has(c.slug) ? { ...c, published: false } : c,
+    ),
     products: products.map((p) => ({
       ...p,
       related: p.related.filter((slug) => productSlugs.has(slug)),

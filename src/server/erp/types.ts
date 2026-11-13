@@ -65,6 +65,9 @@ export type ErpArticlesResult =
 export type ErpGateway = {
   readonly mode: "noop" | "smartk66";
   createLead(lead: ErpLead): Promise<ErpLeadResult>;
-  /** Artículos cambiados desde `since` (todos si no se indica). */
-  listArticles(since?: Date): Promise<ErpArticlesResult>;
+  /**
+   * Artículos de una marca (`BOLIK` por defecto; BD-038 pide también las del grupo) cambiados
+   * desde `since` (todos si no se indica).
+   */
+  listArticles(since?: Date, brand?: string): Promise<ErpArticlesResult>;
 };

@@ -107,7 +107,7 @@ flowchart TB
 
 1. Encabezado: breadcrumbs, `h1` "Catálogo Bolik", bajada, buscador.
 2. Barra de filtros sticky bajo el header: **Línea** (Escritura, Escolar, Arte, Oficina), **Uso** (Escolar, Oficina, Manualidades), **Color** (cuando aplica). En móvil, botón "Filtros" que abre un sheet con contador de resultados en vivo.
-3. Resultados: grilla de `ProductCard` (imagen 1:1, chip de línea, nombre, colores disponibles como puntos, "Ver producto"). Contador "12 productos".
+3. Resultados: grilla de `ProductCard` (imagen 1:1, chip de línea y, si no es Bolik, chip de la marca del grupo, nombre, colores disponibles como puntos, "Ver producto"). Contador "12 productos".
 4. Estado vacío amable: "No hay productos con esos filtros" + botón "Quitar filtros".
 5. Bloque SEO al final: texto corto sobre la marca y enlaces a cada categoría.
 

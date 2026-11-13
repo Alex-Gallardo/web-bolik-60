@@ -1,6 +1,12 @@
 import "server-only";
 import type { Prisma } from "@/generated/prisma/client";
-import { FAQ_SCOPES, MEDIA_IMAGE_KINDS, type PackagingCode } from "@/lib/constants";
+import {
+  BRANDS,
+  FAQ_SCOPES,
+  MEDIA_IMAGE_KINDS,
+  type Brand,
+  type PackagingCode,
+} from "@/lib/constants";
 import { db } from "@/server/db";
 import { toSiteSettings } from "../settings-view";
 import type {
@@ -56,10 +62,15 @@ function toVariant(v: CardRow["variants"][number]): VariantView {
   };
 }
 
+/** Una marca desconocida en la base (editada a mano) se muestra como Bolik. */
+const toBrand = (value: string): Brand =>
+  (BRANDS as readonly string[]).includes(value) ? (value as Brand) : "bolik";
+
 function toCard(p: CardRow): ProductCardView {
   return {
     slug: p.slug,
     name: p.name,
+    brand: toBrand(p.brand),
     href: productHref(p.category.slug, p.slug),
     category: {
       slug: p.category.slug,
