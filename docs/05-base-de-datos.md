@@ -125,11 +125,11 @@ Tablas independientes (sin relaciones): `SiteStat`, `SiteSetting`, `SectionAppea
 | `AuditLog` | Bitácora de cambios del admin | `action`, `entity`, `entityId`, `diff` (JSON) | Se escribe en cada mutación |
 | `MediaAsset` | Archivo subido | `key` UK, `width`, `height`, `blurDataUrl` | Los anchos generados se derivan de `key` |
 | `Category` | Línea de producto | `slug` UK, `lineGroup`, `intro` (SEO) | Bolígrafos, Lápices, Marcadores… |
-| `Product` | Producto comercial | `slug` UK, `keyFacts` (JSON array), `safetyWarning`, `isSample` | Contenido editorial; `isSample` = producto de ejemplo (`EJ-…`), nunca en producción |
+| `Product` | Producto comercial | `slug` UK, `brand`, `keyFacts` (JSON array), `safetyWarning`, `isSample` | Contenido editorial; `brand` = marca del grupo (`bolik` por defecto; Fabik, Coloreto, EcoBol, K-Pen, BD-038); `isSample` = producto de ejemplo (`EJ-…`), nunca en producción |
 | `ProductVariant` | Color/SKU de SAP | `sku` UK, `barcode` (índice), `colorKey`, `colorHex`, `erpActive` | `@@unique([productId, colorKey])` |
 | `ProductSpec` | Especificación clave/valor | `groupName`, `label`, `value` | Flexible para cualquier categoría; única por producto + grupo + etiqueta |
 | `ProductDimension` | Medidas para el diagrama | `partKey`, `valueMm`, `tolerance` | body 145.83, cap 60.15… |
-| `Packaging` | Presentaciones | `code`, `unitsPerPack`, `innerPacks`, medidas, peso | blister1/3/5, cajilla12, fardo |
+| `Packaging` | Presentaciones | `code`, `name`, `unitsPerPack`, `innerPacks`, medidas, peso | blister1/3/5, cajilla12, fardo; desde BD-038, genéricas del catálogo (caja, caja máster, bandeja, six pack, estuche, tubo, bolsa, bote, blíster, unidad): la cantidad va en `unitsPerPack` y el texto en `name` («Caja de 24») |
 | `ProductImage` | Imagen de producto | `variantId?`, `kind`, `alt` | `alt` obligatorio |
 | `ProductBenefit` | Beneficio con ícono | `iconKey`, `title` | Tapa ventilada, baja viscosidad… |
 | `UseTag` / `ProductUse` | Usos (Escolar, Oficina, Manualidades) | — | Filtro en catálogo |
@@ -169,7 +169,8 @@ export const CUSTOMER_TYPES = ["libreria", "distribuidor", "colegio", "universid
 export const QUOTE_STATUS = ["nueva", "en_proceso", "cotizada", "ganada", "perdida", "spam"] as const;
 export const ERP_STATUS = ["pendiente", "enviada", "error", "omitida"] as const;
 export const QUOTE_ITEM_TYPES = ["variante", "kit", "categoria", "personalizado"] as const;
-export const PACKAGING_CODES = ["blister1", "blister3", "blister5", "cajilla12", "fardo"] as const;
+export const PACKAGING_CODES = ["blister1", "blister3", "blister5", "cajilla12", "fardo", "caja", "cajamaster", "bandeja", "sixpack", "estuche", "tubo", "bolsa", "bote", "blister", "unidad"] as const;
+export const BRANDS = ["bolik", "fabik", "coloreto", "ecobol", "kpen"] as const;
 export const BACKGROUND_PRESETS = ["paper", "soft", "dots", "grid", "lines", "ink", "brand", "navy", "sun"] as const;
 export const FAQ_SCOPES = ["global", "home", "category", "product", "mayoreo", "escuelas", "empresas", "tiendas"] as const;
 export const CLICK_KINDS = ["whatsapp", "retailer", "maps", "phone", "pdf"] as const;
@@ -244,7 +245,7 @@ const quote = await db.$transaction(async (tx) => {
 | Archivo | Contenido inicial | Fuente |
 |---|---|---|
 | `departments.json` | 22 departamentos de Guatemala + El Salvador con lat/lng | Dato público |
-| `categories.json` | Bolígrafos, Lápices y lápices de colores, Crayones de cera, Marcadores, Pegamentos y silicón, Borradores y sacapuntas, Tijeras/reglas/geometría, Artículos publicitarios | Catálogo actual de bolik66.com |
+| `categories.json` | Bolígrafos, Lápices y lápices de colores, Crayones de cera, Marcadores, Pegamentos y silicón, Borradores y sacapuntas, Tijeras/reglas/geometría, Tablas con clip y estuches (sin publicar hasta tener productos, BD-038), Artículos publicitarios | Catálogo actual de bolik66.com; catálogo 2026-2027 |
 | `products.json` | **Bolik Ultra** con 3 variantes reales: PT00058 azul (UPC 759364663092), PT00059 negro (UPC 759364663108), PT00060 rojo (UPC 759364663115, del catálogo 2026-2027: la ficha técnica repetía el del negro). Especificaciones, medidas y empaques de la ficha técnica | Fichas técnicas de Mercadeo; catálogo 2026-2027 |
 | `stores.json` | Walmart, La Torre, Unimarck, Econosuper, La Barata, Librerías Progreso, Fátima, Platino, Marlon, Paper Distribuciones, almacenes Ariana, Baluc, Gala (Guatemala); Tulán, San Bartolomé, Victoria, Nueva Esperanza, San Miguel (Quetzaltenango); Cano Recinos (Huehuetenango); Milita (Chiquimula); Xocomil, Rayo de Luz (Sololá); A y M, Tulán (Mazatenango); Cervantes (San Salvador). `isVerified = false` hasta que Ventas valide direcciones | Página "Dónde comprar" actual |
 | `content.json` | Capítulos del hero, cifras (con `sourceNote`), hitos (1966 y 2026 verificados; intermedios `isVerified = false`), actividades escolares, apariencia por sección | `docs/17-copys.md`; de la demo (`docs/referencia/demo`, por validar): `hint` y `eyebrow` del hero, la descripción de los hitos, los hitos intermedios y las actividades (`sample`) |
@@ -259,7 +260,7 @@ const quote = await db.$transaction(async (tx) => {
 |---|---|---|---|
 | `dev` (por defecto) | Base local | Todo, incluidos los ejemplos (`isSample = 1`) | **Sincroniza**: la actualiza con el JSON y quita las partes (especificaciones, medidas, empaques, beneficios, usos, relaciones, líneas de kit) que ya no están; nunca borra variantes |
 | `e2e` | CI con `DATA_SOURCE=db` (BD-032) | Lo mismo que `dev` (lo que ven las E2E con `fixtures`) | Sincroniza |
-| `prod` | Staging con base y producción | Sin ejemplos ni relaciones, FAQs o líneas de kit hacia ellos | **Solo crea lo que falta**: no toca lo que existe ni sus partes, así no pisa lo editado en el admin; nunca borra |
+| `prod` | Staging con base y producción | Sin ejemplos ni relaciones, FAQs o líneas de kit hacia ellos; una categoría sin productos reales publicados se crea sin publicar (BD-038) | **Solo crea lo que falta**: no toca lo que existe ni sus partes, así no pisa lo editado en el admin; nunca borra |
 
 `dev` y `e2e` solo siembran bases `…_Dev` o `…_Test` (lo comprueba con `DB_NAME()`) y se niegan a correr con `APP_ENV` `staging` o `production`. En sync, los ejemplos (`isSample`) y las variantes que salen del JSON quedan despublicados, no borrados. En `prod`, un producto cuyo SKU ya pertenece a otro (renombrado en el admin o creado por la sincronización con SAP) se omite con un aviso.
 
@@ -291,7 +292,7 @@ const quote = await db.$transaction(async (tx) => {
 
 ## 8. Mapeo con SAP (vía SMART-K66)
 
-Contrato propuesto para que el equipo de SMART-K66 lo implemente:
+Contrato propuesto para que el equipo de SMART-K66 lo implemente. `pnpm erp:articles <archivo.json> [--marca …]` (BD-038) baja los artículos de cada marca del grupo (`BRAND_ERP_NAMES` en `lib/constants.ts`: `BOLIK`, `FABIK`, `COLORETO`, `ECOBOL`, `K-PEN`, por confirmar cómo las nombra SAP) a un archivo fuera del repo, para emparejar el catálogo por código de barras; usa `ERP_BASE_URL` y `ERP_API_KEY` y nunca las imprime.
 
 ```http
 GET /api/web/articulos?marca=BOLIK&desde=2026-10-01T00:00:00Z
@@ -344,6 +345,8 @@ Idempotency-Key: COT-2027-000123
 | `referencia` (respuesta) | `QuoteRequest.erpRef` |
 
 Reglas del cliente (BD-035, `server/erp/smartk66.ts`): cada intento espera como mucho 8 s; un fallo pasajero (red, timeout, 5xx, 429) se reintenta 3 veces con espera exponencial; un 4xx no se reintenta. Por los reintentos, **SMART-K66 debe tratar `Idempotency-Key` (el folio) como único**: si ya creó el prospecto con ese folio, responde la misma `referencia` en lugar de crear otro (pedirlo a TI en BD-128).
+
+**Presentaciones (BD-038):** el campo `presentacion` de cada línea del prospecto toma los valores de `PACKAGING_CODES`: además de `blister1`, `blister3`, `blister5`, `cajilla12` y `fardo`, ahora `caja`, `cajamaster`, `bandeja`, `sixpack`, `estuche`, `tubo`, `bolsa`, `bote`, `blister` y `unidad`. Un código genérico no dice la cantidad (una «caja» puede ser de 12 o de 24): antes de cargar el catálogo (BD-039) hay que decidir cómo se identifica la presentación (código con cantidad o `code` + `unitsPerPack`) y avisarlo a SMART-K66 (BD-128).
 
 ## 9. Retención y respaldos
 

@@ -49,6 +49,13 @@
     "intro": "Tijeras escolares, reglas y juegos de geometría para clase."
   },
   {
+    "slug": "tablas-y-estuches",
+    "name": "Tablas con clip y estuches",
+    "lineGroup": "escolar",
+    "shortText": "Tablas con clip y estuches escolares del catálogo Bolik 2026-2027.",
+    "published": false
+  },
+  {
     "slug": "articulos-publicitarios",
     "name": "Artículos publicitarios",
     "lineGroup": "oficina",

@@ -141,8 +141,15 @@ BD-038,E2,"Datos, medios e integración base",Catálogo real 2026-2027,S2,1.5,Mu
 2. Emparejar cada variante con su código SAP (PT…) usando el código de barras como puente, con la exportación de artículos de SAP; sin código SAP no se carga como real.
 3. Ampliar `PACKAGING_CODES` con las presentaciones del catálogo y revisar las categorías.
 4. Decidir cómo se muestran las marcas del grupo (Fabik, Coloreto, EcoBol, K-Pen).
-5. Quitar los productos de ejemplo que el catálogo real ya cubre.","- Cada producto del catálogo con su código SAP está en `products.json` sin `sample`.
+5. Quitar los productos de ejemplo que el catálogo real ya cubre.","- ~~Cada producto del catálogo con su código SAP está en `products.json` sin `sample`~~: pasó a BD-039 (sin credenciales de SMART-K66).
 - Todos los códigos de barras pasan la validación y `pnpm db:seed` dos veces no duplica datos.",Sí
+BD-039,E2,"Datos, medios e integración base",Productos reales del catálogo con su código SAP,S3,1,Must,B,BD-038,"05 §6, §8","Ticket nuevo (de BD-038): cargar como reales los productos del catálogo 2026-2027 cuando haya códigos SAP.","1. Fuente: el Excel del catálogo de Mercadeo (69 productos, 122 códigos), fuera del repo.
+2. Códigos SAP con `pnpm erp:articles` (credenciales en `.env.local`) o una exportación de SAP; emparejar por código de barras.
+3. `products.json` con marca, categoría, colores, códigos y presentaciones genéricas.
+4. Mapear las 16 categorías del catálogo a las del sitio y publicar `tablas-y-estuches`.
+5. Quitar los ejemplos cubiertos y ajustar las E2E.
+6. Confirmar con Mercadeo los productos sin código de barras y los nombres repetidos.","- Cada producto del catálogo con su código SAP está en `products.json` sin `sample`.
+- `pnpm db:seed` dos veces no duplica datos.",Sí
 BD-040,E3,"Estructura global, splash y movimiento",Layout raíz del sitio,S1,0.5,Must,A,BD-008 BD-024,06 §2,"HTML base, metadatos raíz y proveedores mínimos.","1. `app/layout.tsx`: `<html lang=""es-GT"">`, fuentes, `rootMetadata`, enlace ""Saltar al contenido"".
 2. `app/(site)/layout.tsx`: Header, `<main id=""contenido"">`, Footer, Toaster, RevealObserver.
 3. Script del splash en `<head>`.","- Una sola etiqueta `<main>` por página.

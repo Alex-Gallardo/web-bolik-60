@@ -1,5 +1,6 @@
 import type {
   BackgroundPreset,
+  Brand,
   FAQ_SCOPES,
   LINE_GROUPS,
   PackagingCode,
@@ -47,6 +48,8 @@ export type ImageView = {
 export type ProductCardView = {
   slug: string;
   name: string;
+  /** Marca del grupo (BD-038): la tarjeta muestra un chip cuando no es Bolik. */
+  brand: Brand;
   href: string;
   category: { slug: string; name: string; lineGroup: LineGroup };
   shortDescription: string;

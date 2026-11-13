@@ -70,6 +70,8 @@ export const ui = {
     products: (n: number) => `${n.toLocaleString("es-GT")} ${n === 1 ? "producto" : "productos"}`,
     colors: (names: string[]) =>
       `${names.length === 1 ? "Color" : "Colores"}: ${LIST.format(names.map((n) => n.toLowerCase()))}`,
+    /** Antes del chip de marca, solo para lector de pantalla: «Marca: Fabik» (BD-038). */
+    brand: "Marca:",
     /** Puntos de color que no caben en la tarjeta: «+3». */
     moreColors: (n: number) => `+${n}`,
     directions: "Cómo llegar",

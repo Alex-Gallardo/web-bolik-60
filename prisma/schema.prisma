@@ -102,6 +102,7 @@ model Product {
   id               Int                @id @default(autoincrement())
   slug             String             @unique @db.VarChar(100)
   name             String             @db.NVarChar(120) // nombre comercial: "Bolik Ultra"
+  brand            String             @default("bolik") @db.VarChar(20) // bolik | fabik | coloreto | ecobol | kpen (BD-038)
   tagline          String?            @db.NVarChar(160) // "El bolígrafo hexagonal de siempre"
   shortDescription String             @db.NVarChar(300)
   description      String?            @db.NVarChar(Max)
@@ -186,7 +187,7 @@ model Packaging {
   id           Int      @id @default(autoincrement())
   productId    Int
   product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  code         String   @db.VarChar(20) // blister1 | blister3 | blister5 | cajilla12 | fardo
+  code         String   @db.VarChar(20) // PACKAGING_CODES de lib/constants.ts (caja, estuche, fardo…)
   name         String   @db.NVarChar(80) // "Cajilla de 12"
   unitsPerPack Int // 12
   innerPacks   Int? // fardo: 100 cajillas

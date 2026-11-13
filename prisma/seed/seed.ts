@@ -297,6 +297,7 @@ async function upsertProduct(
 ): Promise<number> {
   const row = {
     name: p.name,
+    brand: p.brand,
     tagline: p.tagline ?? null,
     shortDescription: p.shortDescription,
     description: p.description ?? null,

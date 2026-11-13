@@ -24,11 +24,24 @@ describe("perfiles del seed (BD-031)", () => {
     expect(prod.products.some((p) => p.sample)).toBe(false);
     expect(prod.kits.some((k) => k.sample)).toBe(false);
     expect(prod.content.activities.some((a) => a.sample)).toBe(false);
-    // Lo demás va completo.
-    expect(prod.categories).toEqual(data.categories);
+    // Lo demás va completo (las categorías, todas; sin publicar las vacías: prueba de abajo).
+    expect(prod.categories.map((c) => c.slug)).toEqual(data.categories.map((c) => c.slug));
     expect(prod.stores).toEqual(data.stores);
     expect(prod.content.milestones).toEqual(data.content.milestones);
     expect(prod.settings).toEqual(data.settings);
+  });
+
+  it("prod deja sin publicar las categorías sin productos reales publicados (BD-038)", () => {
+    const prod = dataForProfile(data, "prod");
+    const published = prod.categories.filter((c) => c.published).map((c) => c.slug);
+    const real = new Set(
+      data.products.filter((p) => !p.sample && p.published).map((p) => p.categorySlug),
+    );
+    expect(published).toContain("boligrafos"); // el Ultra es real
+    expect(prod.categories.find((c) => c.slug === "marcadores")?.published).toBe(false);
+    expect(published.every((slug) => real.has(slug))).toBe(true);
+    // dev y e2e no cambian las categorías (los ejemplos las llenan).
+    expect(dataForProfile(data, "dev").categories).toBe(data.categories);
   });
 
   it("prod quita los pósters y videos de la demo del hero (BD-050)", () => {

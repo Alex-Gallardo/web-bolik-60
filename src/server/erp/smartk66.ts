@@ -189,8 +189,8 @@ export function createSmartK66Gateway({
       return { status: "sent", reference: parsed.data.referencia };
     },
 
-    async listArticles(since?: Date) {
-      const query = new URLSearchParams({ marca: "BOLIK" });
+    async listArticles(since?: Date, brand = "BOLIK") {
+      const query = new URLSearchParams({ marca: brand });
       if (since) query.set("desde", since.toISOString());
       const result = await request(`/api/web/articulos?${query}`, { method: "GET" });
       if (!result.ok) return { status: "failed", failure: result.failure };

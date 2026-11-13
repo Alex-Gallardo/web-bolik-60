@@ -28,7 +28,8 @@
     "media:samples": "tsx scripts/media-samples.mts",
     "db:reset:test": "node scripts/db-reset-test.mjs",
     "prepare": "husky",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "erp:articles": "tsx --conditions=react-server scripts/erp-articles.mts"
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.2",

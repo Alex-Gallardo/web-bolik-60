@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   BACKGROUND_PRESETS,
+  BRANDS,
   FAQ_SCOPES,
   LINE_GROUPS,
   PACKAGING_CODES,
@@ -81,6 +82,8 @@ export const variantSchema = z.object({
 export const productSchema = z.object({
   slug,
   name: text(120),
+  /** Marca del grupo (BD-038); los productos sin marca son Bolik. */
+  brand: z.enum(BRANDS).default("bolik"),
   categorySlug: slug,
   sample,
   tagline: text(160).optional(),

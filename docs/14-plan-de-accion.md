@@ -55,7 +55,7 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 | **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
 | **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 16.25 (9.25 / 7) |
 | **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 22.5 (12.75 / 9.75) |
-| **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 20.5 (10 / 10.5) |
+| **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 21.5 (10 / 11.5) |
 | **S4** | lun 21 dic – vie 8 ene 2027 | Estabilización, pruebas, contenido, producción · feriados 24-25 dic y 31 dic-1 ene · **código congelado el 6 ene** | 19.25 (7.5 / 11.75) |
 | **S5** | lun 11 ene – vie 22 ene 2027 | **Lanzamiento** e hipercuidado | 3 (1 / 2) |
 
@@ -120,7 +120,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | Textos, fotos, videos del hero, tiendas verificadas, datos de kits | Otras áreas | BD-150 (mientras tanto: seed provisional) | 18 dic |
 | Acceso a Search Console, GA4, DNS de bolik66.com | TI / dueño de la cuenta | BD-096, BD-125, BD-152 | 18 dic |
 | Exportación de URLs con tráfico del sitio actual | Dueño de Search Console | BD-094 | 4 dic |
-| Exportación de artículos de SAP (código PT, descripción, código de barras) | Sistemas | BD-038 | 23 nov |
+| Exportación de artículos de SAP (código PT, descripción, código de barras), o `ERP_BASE_URL` y `ERP_API_KEY` para `pnpm erp:articles` | Sistemas | BD-039 | 7 dic |
 
 ## 5. Resumen por épica
 
@@ -128,7 +128,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 |---|---|---|---|
 | E0 | Fundaciones del repositorio | 17 | 9.25 |
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
-| E2 | Datos, medios e integración base | 9 | 10 |
+| E2 | Datos, medios e integración base | 10 | 11 |
 | E3 | Estructura global, splash y movimiento | 7 | 3.75 |
 | E4 | Inicio | 7 | 5.5 |
 | E5 | Catálogo, fichas y búsqueda | 8 | 7.5 |
@@ -142,7 +142,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **121** | **91.25** |
+| | **Total** | **123** | **92.5** |
 
 ## 6. Tickets
 
@@ -429,7 +429,7 @@ El código está listo. Los criterios se cumplen al ejecutarlo en `K66-APPS`, qu
   - `staging-build.ps1`: migra, siembra, construye y empaca con el `staging.env` del servicio.
   - `staging-deploy.ps1`: release nuevo, prueba de humo en Node y en IIS, y vuelta atrás automática.
   El procedimiento está en doc 15 §12.
-- **Datos de ejemplo en staging hasta BD-038:** `pnpm db:seed --profile dev --allow-sample-data`. Solo corre con `APP_ENV=staging` y la base `BolikDigital_Stg` (no otra `…_Stg`, porque el SQL Server se comparte con SMART-K66); nunca en producción ni con los perfiles `e2e` o `prod`.
+- **Datos de ejemplo en staging hasta BD-039:** `pnpm db:seed --profile dev --allow-sample-data`. Solo corre con `APP_ENV=staging` y la base `BolikDigital_Stg` (no otra `…_Stg`, porque el SQL Server se comparte con SMART-K66); nunca en producción ni con los perfiles `e2e` o `prod`.
   - Este perfil sincroniza con los JSON y pisa lo editado en el admin de staging.
   - Al llegar el catálogo real, el DBA recrea `BolikDigital_Stg` y se siembra con `--profile prod`.
 - **Servidor compartido.** ARR se configura para todo el servidor (`responseBufferLimit=0`, `preserveHostHeader`). El preflight lista los sitios que ya hacen proxy, como la API de SMART-K66, para confirmarlo con TI antes del setup.
@@ -772,6 +772,8 @@ Códigos, nombres, códigos de barras y estado activo vienen de SAP.
 2. Registra `SyncRun` con conteos.
 3. Llama `revalidateTag(tag, 'max')` en lo que cambió.
 
+*Nota de BD-038:* la sincronización recorre todas las marcas del grupo (`BRAND_ERP_NAMES` en `lib/constants.ts`, `listArticles(since, brand)`), no solo `BOLIK`.
+
 **Criterios de aceptación**
 
 - [ ] Un artículo inactivo en SAP se marca `inactivo` y sale del sitio.
@@ -814,8 +816,41 @@ Los productos reales del catálogo impreso 2026-2027 reemplazan a los 24 product
 
 **Criterios de aceptación**
 
-- [ ] Cada producto del catálogo con su código SAP está en `products.json` sin `sample`.
+- [ ] ~~Cada producto del catálogo con su código SAP está en `products.json` sin `sample`~~: pasó a BD-039 (decisión del usuario, 13 nov 2026): `.env.local` no tiene `ERP_BASE_URL` ni `ERP_API_KEY` y sin código SAP no se carga nada como real.
 - [ ] Todos los códigos de barras pasan la validación y `pnpm db:seed` dos veces no duplica datos.
+
+**Implementado (BD-038)**
+
+Decisiones del usuario: códigos SAP desde la API de SMART-K66; marcas del grupo como campo con chip; sin códigos SAP disponibles, este PR cierra la estructura y la carga va en BD-039.
+
+- **Fuente:** Mercadeo pasó el catálogo transcrito en Excel (69 productos, 122 códigos de barras, todos válidos y sin repetir). Se cotejaron 9 códigos con el PDF (Ultra 0.7 y marcadores) y coinciden.
+- **SMART-K66:** `listArticles(since, brand)` pide cualquier marca (antes, solo `BOLIK`). `pnpm erp:articles <archivo.json>` baja los artículos de las 5 marcas a un archivo fuera del repo (se niega a escribir dentro) y nunca imprime la clave. No se pudo correr: faltan `ERP_BASE_URL` y `ERP_API_KEY` en `.env.local`.
+- **Marca:** migración `producto_marca` (`Product.brand`, `bolik` por defecto), `BRANDS` y `BRAND_LABELS` en `lib/constants.ts`, en el seed, las dos fuentes y `ProductCardView`. `ProductCard` muestra el chip de la marca cuando no es Bolik.
+- **Presentaciones:** `PACKAGING_CODES` suma las genéricas del catálogo (caja, caja máster, bandeja, six pack, estuche, tubo, bolsa, bote, blíster, unidad) con sus etiquetas; las del MVP siguen.
+- **Categorías:** «Tablas con clip y estuches» (`tablas-y-estuches`, sin publicar hasta tener productos). El mapeo de las 16 categorías del catálogo a las del sitio está en BD-039.
+- **Perfil `prod`:** una categoría sin productos reales publicados se crea sin publicar (prueba en `profiles.test.ts`). Hoy solo Bolígrafos tiene uno (el Ultra).
+
+#### BD-039 · Productos reales del catálogo con su código SAP
+
+**Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-038 · **Docs** 05 §6 y §8 · *Ticket nuevo (13 nov 2026, de BD-038)*
+
+Cargar como reales los productos del catálogo 2026-2027 cuando haya códigos SAP.
+
+**Pasos**
+
+1. Fuente: el Excel «Catalogo_BOLIK_editable» de Mercadeo (hojas «Productos» y «Códigos»: 69 productos y 122 códigos de barras, todos con dígito verificador válido; una muestra se cotejó con el PDF en BD-038). Ni el Excel, ni el PDF, ni sus imágenes van al repo. El .xlsx es un zip de XML: se puede leer sin dependencias nuevas (hojas en `xl/worksheets`, con el prefijo `x:`, y textos en `xl/sharedStrings.xml`).
+2. Códigos SAP: `pnpm erp:articles <archivo fuera del repo>` con `ERP_BASE_URL` y `ERP_API_KEY` en `.env.local` (o una exportación de artículos de SAP). Emparejar por código de barras; sin código SAP no se carga como real.
+3. `products.json`: los productos con su marca (`brand`), categoría, colores, códigos y presentaciones (`PACKAGING_CODES` genéricos con `unitsPerPack` y `name`; «Caja» de 12 = `cajilla12`). Textos solo del catálogo; lo que falte, anotado para Mercadeo (BD-150).
+4. Categorías del catálogo → del sitio: Bolígrafos → `boligrafos`; Lápices de grafito, Lápices de colores y Lápices → `lapices-y-lapices-de-colores`; Crayones de cera → `crayones-de-cera`; Marcadores, Resaltadores y Tintas → `marcadores`; Pegamentos → `pegamentos-y-silicon`; Borradores y Sacapuntas → `borradores-y-sacapuntas`; Geometría, Reglas y Tijeras → `tijeras-reglas-y-geometria`; Tablas con clip y Estuches → `tablas-y-estuches` (publicarla).
+5. Quitar los productos de ejemplo que el catálogo real cubre (el seed `dev` los despublica en las bases que ya los tienen) y ajustar las E2E que cuentan categorías o productos.
+6. Los 11 productos del Excel sin código de barras (casi todos de «Productos nuevos») y los nombres repetidos («Ultra», «Lápices BOLIK»): confirmar con Mercadeo antes de cargarlos.
+7. **Presentaciones:** `Packaging` tiene `@@unique([productId, code])` y los códigos genéricos no dicen la cantidad, así que un producto no puede tener «Estuche de 12» y «Estuche de 24». Decidir antes de cargar: códigos con la cantidad (`estuche12`) o unicidad por `code` + `unitsPerPack` (migración), y qué identificador va en `presentacion` a SMART-K66 (BD-128, doc 05 §8).
+8. El `shortText` de `tablas-y-estuches` no viene de doc 17: validarlo con Mercadeo (BD-150) antes de publicarla.
+
+**Criterios de aceptación**
+
+- [ ] Cada producto del catálogo con su código SAP está en `products.json` sin `sample` (criterio que venía de BD-038).
+- [ ] `pnpm db:seed` dos veces no duplica datos.
 
 ### E3 · Estructura global, splash y movimiento
 
@@ -1260,9 +1295,11 @@ La página más importante para SEO y cotización.
 
 1. Galería (A-40) con zoom en escritorio y deslizamiento en móvil.
 2. Selector de color → cambia imagen, SKU, código de barras y URL (`?color=`).
-3. Selector de empaque (blister 1/3/5, cajilla 12, fardo).
+3. Selector de empaque (las presentaciones de cada producto: blíster, cajilla, estuche, fardo…).
 4. Datos clave, especificaciones, beneficios, usos.
 5. Botones: Agregar a cotización, WhatsApp, Dónde comprar.
+
+*Nota de BD-038:* `ProductCardView.brand` trae la marca del grupo (Bolik, Fabik, Coloreto, EcoBol, K-Pen): la ficha la muestra como chip cuando no es Bolik. Las presentaciones del catálogo usan códigos genéricos (`caja`, `estuche`…) con el texto completo en `Packaging.name`.
 
 **Criterios de aceptación**
 
@@ -1329,6 +1366,8 @@ Búsqueda instantánea por nombre, código o código de barras.
 2. Overlay con atajo `/` y `Ctrl+K`; Fuse.js se carga al enfocar.
 3. Normalizar tildes; sinónimos (lapicero = bolígrafo).
 4. Página `/buscar?q=` (noindex) como respaldo sin JS.
+
+*Nota de BD-038:* el índice incluye la marca del grupo (`brand`, `BRAND_LABELS`): buscar «Fabik» encuentra sus productos.
 
 **Criterios de aceptación**
 
@@ -1607,6 +1646,8 @@ Datos que Google y las IA entienden.
 - [ ] Capturas de la validación adjuntas al ticket.
 
 *Nota de BD-054:* `features/seo/jsonld.tsx` ya existe con `JsonLd` (escapa `<`) y `faqPageJsonLd` (la home publica su `FAQPage`). Este ticket suma los demás tipos (Organization, WebSite, ProductGroup…) sobre esa base.
+
+*Nota de BD-038:* `brand` del `ProductGroup` sale de `Product.brand` (`BRAND_LABELS`), no fijo en Bolik.
 
 #### BD-092 · sitemap.xml y robots.txt
 
@@ -2164,6 +2205,8 @@ Cuando TI publique la API, activar el modo real.
 
 1. Probar contrato con TI en staging.
 2. `ERP_MODE=smartk66`; `scripts/retry-erp.ts` para pendientes.
+
+*Nota de BD-038:* confirmar con SMART-K66 el nombre de cada marca en SAP (`BRAND_ERP_NAMES`) y los valores de `presentacion` (doc 05 §8, `PACKAGING_CODES` ampliados).
 
 **Criterios de aceptación**
 

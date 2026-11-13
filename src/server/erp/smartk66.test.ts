@@ -298,6 +298,22 @@ describe("SMART-K66: artículos (BD-036)", () => {
     });
   });
 
+  it("pide la marca indicada (las del grupo, BD-038)", async () => {
+    let url: URL | undefined;
+    server.use(
+      http.get(`${BASE}/api/web/articulos`, ({ request }) => {
+        url = new URL(request.url);
+        return HttpResponse.json([]);
+      }),
+    );
+    expect(await gateway().listArticles(undefined, "FABIK")).toEqual({
+      status: "ok",
+      articles: [],
+    });
+    expect(url!.searchParams.get("marca")).toBe("FABIK");
+    expect(url!.searchParams.has("desde")).toBe(false);
+  });
+
   it("un artículo inválido hace fallar la lectura completa", async () => {
     server.use(
       http.get(`${BASE}/api/web/articulos`, () => HttpResponse.json([{ itemCode: "PT1" }])),
