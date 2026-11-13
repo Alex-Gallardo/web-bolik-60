@@ -96,6 +96,9 @@ BD-026,E1,Sistema de diseño y /styleguide,Vista /styleguide,S1,1,Must,A,BD-020 
 BD-027,E1,Sistema de diseño y /styleguide,Logo e ilustraciones,S1,0.5,Must,A,BD-007,02,Logo como componente SVG y las ilustraciones de los diálogos.,"1. `components/brand/logo.tsx` con el logo oficial de Mercadeo: variantes `full`, `inverse` y `wordmark` (BOLIK® en un color; el logo no tiene isotipo, así que no hay `mark`). Archivos optimizados con SVGO en `public/brand`.
 2. Ilustraciones SVG en línea (éxito, error, vacío, sin resultados, sin conexión).","- Cada ilustración y el wordmark pesan < 4 KB; el archivo del logo completo, ≤ 25 KB (7 KB gzip: el trazo de crayón oficial no baja más sin perder detalle).
 - El logo tiene `aria-label=""Bolik""`.",No
+BD-028,E1,Sistema de diseño y /styleguide,Favicon e íconos de Bolik,S3,0.25,Must,A,BD-027,02,"Ticket nuevo (de BD-055): el sitio usa todavía el favicon por defecto de Next.js.","1. Pedir a Mercadeo la versión cuadrada para el ícono (el logo no tiene isotipo).
+2. `src/app/favicon.ico` con cuadros PNG de 16, 32 y 48 px; `icon.svg` y `apple-icon.png` (180 px).","- Ningún ícono de Next.js en el sitio.
+- `favicon.ico` ≤ 4 KB.",Sí
 BD-030,E2,"Datos, medios e integración base",Esquema completo y migraciones,S0,0.5,Must,B,BD-010,05,Todas las tablas del MVP.,"1. Usar `starter/prisma/schema.prisma` completo.
 2. `pnpm db:migrate --name schema_mvp`.
 3. Revisar índices del doc 05 §6.","- `prisma validate` OK.
@@ -186,13 +189,14 @@ BD-054,E4,Inicio,"FAQ, CTA final y apariencia por sección",S2,0.5,Must,A,BD-051
 BD-055,E4,Inicio,Ajuste de rendimiento de la home,S2,0.5,Must,A,BD-050 BD-054 BD-056,12,La home cumple los presupuestos.,"1. Bundle analyzer; mover a carga diferida lo que no se ve arriba.
 2. Lighthouse móvil 3 corridas.","- JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
 - Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.
-- LCP de la home ≤ 2.0 s en Lighthouse móvil (viene de BD-050; hoy 3.2 s temporal).",Sí
+- ~~LCP de la home ≤ 2.0 s en Lighthouse móvil~~: pasó a medición de campo en BD-126 (decisión del 12 nov 2026).
+- LCP de la home ≤ 3.2 s en Lighthouse móvil como guardia de regresión.",Sí
 BD-056,E4,Inicio,Hero principal nuevo,S2,1.5,Must,A,BD-050,"06 §3.1, 09, 12","Ticket nuevo: un hero visualmente atractivo e impactante abre la home; el hero de video por capítulos pasa a una sección más abajo.","1. Definir con el usuario el diseño del hero nuevo.
 2. El hero nuevo lleva el único h1 y el elemento LCP de la home.
 3. El hero de video pasa a la sección 3 o 4: título h2, pósters con loading lazy y sin prioridad alta, video después de load y cerca de la pantalla.
 4. Actualizar doc 06 §3.1 y doc 09 §5.","- Un solo h1 en la home, en el hero nuevo.
 - La sección de video no pide pósters ni video en la carga inicial.
-- LCP de la home ≤ 2.0 s en Lighthouse móvil, junto con BD-055.
+- ~~LCP de la home ≤ 2.0 s en Lighthouse móvil, junto con BD-055~~: pasó a medición de campo en BD-126.
 - Visible sin JavaScript y con movimiento reducido respetado.",Sí
 BD-060,E5,"Catálogo, fichas y búsqueda",Catálogo /productos,S2,1,Must,A,BD-023 BD-037,06 §3.2,Todos los productos con filtros por uso.,"1. Server Component con la grilla completa.
 2. Isla cliente para filtros (uso, línea, color) que actualiza la URL (`?uso=oficina`) sin recargar.

@@ -55,6 +55,29 @@ test.describe("hero principal (BD-056)", () => {
     );
     // El LCP es el texto del h1: ninguna imagen se precarga.
     await expect(page.locator('link[rel="preload"][as="image"]')).toHaveCount(0);
+    // Se precargan las dos fuentes del sitio (BD-055: sin la de texto, CLS > 0) y una es la del h1.
+    const fontPreload = page.locator('link[rel="preload"][as="font"]');
+    await expect(fontPreload).toHaveCount(2);
+    const preloaded = await fontPreload.evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href")!.split("/").pop()!),
+    );
+    // La URL del preload es la que usa la @font-face de la familia del h1.
+    const h1Font = await h1.evaluate((el) => getComputedStyle(el).fontFamily.split(",")[0]!.trim());
+    const h1Sources = await page.evaluate((family) => {
+      const urls: string[] = [];
+      for (const sheet of [...document.styleSheets]) {
+        for (const rule of [...sheet.cssRules]) {
+          if (
+            rule instanceof CSSFontFaceRule &&
+            rule.style.getPropertyValue("font-family").includes(family.replaceAll(/["']/g, ""))
+          ) {
+            urls.push(rule.style.getPropertyValue("src"));
+          }
+        }
+      }
+      return urls.join(" ");
+    }, h1Font);
+    expect(preloaded.some((file) => h1Sources.includes(file))).toBe(true);
     await settle(page);
     await expectNoA11yViolations(page);
     expect(errors, "errores en la consola").toEqual([]);
