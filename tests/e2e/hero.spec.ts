@@ -55,6 +55,27 @@ test.describe("hero principal (BD-056)", () => {
     );
     // El LCP es el texto del h1: ninguna imagen se precarga.
     await expect(page.locator('link[rel="preload"][as="image"]')).toHaveCount(0);
+    // Solo se precarga la fuente de títulos, la del h1 (BD-055).
+    const fontPreload = page.locator('link[rel="preload"][as="font"]');
+    await expect(fontPreload).toHaveCount(1);
+    const preloaded = await fontPreload.getAttribute("href");
+    // La URL del preload es la que usa la @font-face de la familia del h1.
+    const h1Font = await h1.evaluate((el) => getComputedStyle(el).fontFamily.split(",")[0]!.trim());
+    const h1Sources = await page.evaluate((family) => {
+      const urls: string[] = [];
+      for (const sheet of [...document.styleSheets]) {
+        for (const rule of [...sheet.cssRules]) {
+          if (
+            rule instanceof CSSFontFaceRule &&
+            rule.style.getPropertyValue("font-family").includes(family.replaceAll(/["']/g, ""))
+          ) {
+            urls.push(rule.style.getPropertyValue("src"));
+          }
+        }
+      }
+      return urls.join(" ");
+    }, h1Font);
+    expect(h1Sources).toContain(preloaded!.split("/").pop()!);
     await settle(page);
     await expectNoA11yViolations(page);
     expect(errors, "errores en la consola").toEqual([]);

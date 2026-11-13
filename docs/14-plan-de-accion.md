@@ -593,6 +593,22 @@ Logo como componente SVG y las ilustraciones de los diálogos.
 - [ ] Cada ilustración y el wordmark pesan < 4 KB; el archivo del logo completo, ≤ 25 KB (7 KB gzip: el trazo de crayón oficial no baja más sin perder detalle).
 - [ ] El logo tiene `aria-label="Bolik"`.
 
+#### BD-028 · Favicon e íconos de Bolik
+
+**Sprint** S3 · **Días** 0.25 · **Prioridad** Must · **Pista** A · **Depende de** BD-027 · **Docs** 02 · *Ticket nuevo (12 nov 2026, de BD-055)*
+
+El sitio usa todavía el favicon por defecto de Next.js (la «N»).
+
+**Pasos**
+
+1. Pedir a Mercadeo la versión cuadrada para el ícono: el logo no tiene isotipo (BD-027), así que la define Mercadeo (por ejemplo, la «B» del wordmark).
+2. `src/app/favicon.ico` con cuadros PNG de 16, 32 y 48 px; `icon.svg` y `apple-icon.png` (180 px) en `src/app`.
+
+**Criterios de aceptación**
+
+- [ ] Ningún ícono de Next.js en el sitio.
+- [ ] `favicon.ico` ≤ 4 KB (se pide con prioridad alta en cada página; prueba en `src/app/favicon.test.ts`).
+
 ### E2 · Datos, medios e integración base
 
 #### BD-030 · Esquema completo y migraciones
@@ -1136,7 +1152,8 @@ La home cumple los presupuestos.
 
 - [ ] JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
 - [ ] Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.
-- [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil (viene de BD-050): bajar `largest-contentful-paint` de la home de 3200 (temporal) a 2000 en `lighthouse.config.cjs`.
+- [ ] ~~LCP de la home ≤ 2.0 s en Lighthouse móvil (viene de BD-050): bajar `largest-contentful-paint` de la home de 3200 (temporal) a 2000 en `lighthouse.config.cjs`~~: pasó a medición de campo en BD-126 (decisión del usuario, 12 nov 2026); en Lighthouse la home tiene una guardia de 3.2 s (docs/12 §1).
+- [ ] LCP de la home ≤ 3.2 s en Lighthouse móvil como guardia de regresión.
 
 **Nota de BD-050:** tras el hero, la home queda en **163.7 KB** de JS: solo hay 1.3 KB de margen para BD-051 a 054. El LCP (el póster del capítulo 1) medido en local con Lantern sale de 2.9 s (2.3 s con el marcador de texto de `develop`). Ese tiempo no viene del póster, que se pide primero con prioridad alta y pesa ~13 KB en móvil:
 - la descarga compite con ~160 KB de JS y dos fuentes precargadas (~78 KB);
@@ -1144,6 +1161,18 @@ La home cumple los presupuestos.
 Puntos a revisar: `preload` de las fuentes (¿solo la del h1?) y qué JS de la home puede cargarse después. El splash no influye: sin él el LCP medido es el mismo. La CI midió 3.06 s (mejor de 3) con el póster del hero de video como LCP; con el hero nuevo (BD-056), ese póster deja de ser el LCP.
 
 **Nota de BD-056:** el LCP ya es el texto del h1 del hero principal y no hay imagen precargada. Aun así, Lantern da unos 3.04 s, contra un LCP observado de 0.49 s (igual al FCP): el 84 % es «render delay» (2.57 s), porque todo lo que se pide antes del LCP observado (JS de la página y las dos fuentes precargadas, ~240 KB) comparte el ancho de banda simulado. Lo que mueve el número es pedir menos antes del primer pintado: precargar solo la fuente del h1 (o ninguna, el h1 pinta con la de reserva por `display: swap`) y diferir el JS que no hace falta arriba.
+
+**Implementado (BD-055)**
+
+Decisión del usuario: la home cierra con una guardia de 3.2 s en Lighthouse y la meta de 2.0 s se mide en campo (BD-126).
+
+- JS de la home: 164.4 KB (≤ 165). Rendimiento 0.91–0.92, SEO 100, CLS 0.
+- **LCP:** ningún ajuste lo bajó de ~2.9 s en Lighthouse móvil (tabla en docs/12 §1). El navegador pinta el h1 a los ~0.5 s; la simulación de Lantern le carga lo que se pide antes del primer pintado (~146 KB de Next/React, el JS de la página y las fuentes).
+  - Se quedan: el favicon de 15 KB a 1.4 KB (los mismos píxeles de los cuadros de 16 y 32 px, en PNG; se quitó el de 48 px) y precargar solo la fuente de títulos.
+  - Se descartaron: ninguna fuente precargada (CLS 0.023 a cambio de 0.02 s: se prefiere CLS 0), fuentes estáticas por peso, throttling aplicado (2.2–5.3 s) y diferir el JS propio (3.8 KB).
+  - Riesgo: la home queda a 0.6 KB del tope de 165 KB de JS. La analítica (BD-125 a 127) debe cargarse diferida.
+  - `lighthouse.config.cjs`: el LCP de la home queda en 3200 como guardia de regresión, ya no «temporal».
+- **Pendiente aparte:** el favicon es todavía el de Next.js (la «N»). Uno de Bolik necesita el archivo de marca: ticket BD-028.
 
 #### BD-056 · Hero principal nuevo
 
@@ -1165,7 +1194,7 @@ Un hero visualmente atractivo e impactante abre la home; el hero de video por ca
 
 - [ ] Un solo h1 en la home, en el hero nuevo.
 - [ ] La sección de video no pide pósters ni video en la carga inicial.
-- [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil, junto con BD-055.
+- [ ] ~~LCP de la home ≤ 2.0 s en Lighthouse móvil, junto con BD-055~~: pasó a medición de campo en BD-126 (decisión del usuario, 12 nov 2026); en Lighthouse la home tiene una guardia de 3.2 s (docs/12 §1).
 - [ ] Visible sin JavaScript y con movimiento reducido respetado.
 
 **Implementado (BD-056)**
@@ -2102,6 +2131,8 @@ Saber cómo carga el sitio en teléfonos reales.
 **Criterios de aceptación**
 
 - [ ] LCP, INP, CLS y TTFB llegan a GA4 con la ruta.
+
+*Nota de BD-055:* la meta de LCP ≤ 2.0 s de la home (BD-055 y BD-056) se comprueba aquí, con el p75 móvil de usuarios reales: en Lighthouse la home tiene una guardia de 3.2 s (docs/12 §1). El CLS p75 móvil también valida que DM Sans vaya sin precarga (en Android no hay Arial para el ajuste de métricas de la fuente de reserva).
 
 #### BD-127 · Eventos de analítica en toda la interfaz
 

@@ -16,10 +16,15 @@ export const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
 });
 
-/** Texto corrido. */
+/**
+ * Texto corrido. Sin precarga (BD-055): solo se precarga la de títulos, la del h1 de la home (el
+ * LCP). La del texto se pide al resolver los estilos y puede pintarse primero con la fuente de
+ * reserva (`swap`); CLS medido 0 en la home. El CLS de campo lo confirma en BD-126.
+ */
 export const dmSans = DM_Sans({
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   variable: "--font-dm-sans",
 });
 

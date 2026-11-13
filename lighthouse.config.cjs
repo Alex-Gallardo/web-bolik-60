@@ -4,7 +4,7 @@
  * Con LHCI_BASE_URL (la CI, que prueba el artefacto) no se levanta servidor.
  *
  * Las aserciones usan el default de LHCI ("optimistic"): la mejor de las 3 corridas. Los tiempos
- * (LCP, TBT, puntaje de rendimiento) varían entre corridas iguales (LCP de la home: 1.9–2.7 s) y la
+ * (LCP, TBT, puntaje de rendimiento) varían entre corridas iguales (LCP de la home: 2.9–3.2 s) y la
  * mediana fallaría al azar; los tamaños (JS, CSS, peticiones) no varían. El reporte del PR muestra
  * la corrida mediana.
  *
@@ -56,10 +56,11 @@ module.exports = {
     assert: {
       assertMatrix: [
         {
-          // Home: ≥ 90 en rendimiento por el video y JS ≤ 165 KB. LCP: 3.2 s TEMPORAL (BD-050 midió
-          // 3.06 s en la CI con el póster del hero como LCP; en un navegador real, 0.36 s). El
-          // objetivo de 2.0 s es criterio de BD-055 con el hero nuevo (BD-056). Lighthouse móvil
-          // no pide video: sin video vertical, el hero de móvil se queda con el póster.
+          // Home: ≥ 90 en rendimiento y JS ≤ 165 KB. LCP: guardia de regresión en 3.2 s (BD-055).
+          // El LCP es el texto del h1 y el navegador lo pinta a los ~0.5 s, pero la simulación de
+          // Lantern le carga todo lo pedido antes del primer pintado (~146 KB de Next/React, el JS
+          // de la página y las fuentes): da 2.9–3.2 s y ningún ajuste lo bajó de ahí (docs/12 §1).
+          // La meta de 2.0 s es de campo (p75 móvil) y se mide con usuarios reales en BD-126.
           matchingUrlPattern: "^https?://[^/]+/$",
           assertions: {
             ...common,
