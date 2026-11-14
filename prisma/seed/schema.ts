@@ -61,6 +61,12 @@ export const categorySchema = z.object({
   lineGroup: z.enum(LINE_GROUPS),
   shortText: text(200),
   intro: z.string().trim().min(1).optional(),
+  /**
+   * Title y description de su página (docs/10 §1, docs/17 §6); sin ellos, los arma la página.
+   * Title ≤ 52: con « | Bolik» queda en 60. Descripción de 140–160 caracteres.
+   */
+  seoTitle: text(52).optional(),
+  seoDescription: z.string().trim().min(140).max(160).optional(),
   published: z.boolean().default(true),
 });
 

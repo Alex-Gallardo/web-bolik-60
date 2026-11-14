@@ -160,6 +160,8 @@ const categorySelect = {
   lineGroup: true,
   shortText: true,
   intro: true,
+  seoTitle: true,
+  seoDescription: true,
   _count: { select: { products: { where: { published: true } } } },
 } satisfies Prisma.CategorySelect;
 
@@ -170,6 +172,8 @@ function toCategory(c: Prisma.CategoryGetPayload<{ select: typeof categorySelect
     lineGroup: c.lineGroup as LineGroup,
     shortText: c.shortText,
     intro: c.intro,
+    seoTitle: c.seoTitle,
+    seoDescription: c.seoDescription,
     href: categoryHref(c.slug),
     productCount: c._count.products,
   };

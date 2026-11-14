@@ -40,7 +40,7 @@ Slugs de categorías: `boligrafos`, `lapices-y-lapices-de-colores`, `crayones-de
 | Parámetros | `?color=`, `?linea=`, `utm_*` → canónica sin parámetros |
 | Utilidades sin indexar | `noindex, follow` en `/buscar`, `/cotizacion`, `/cotizacion/enviada/*`, `/styleguide`; `/admin` y `/api` además en `Disallow` |
 | Staging | `robots.txt` con `Disallow: /` + cabecera `X-Robots-Tag: noindex` en IIS + contraseña básica |
-| 404 reales | `notFound()` devuelve 404 (no "soft 404"); páginas de departamento sin tiendas → 404 o `noindex` |
+| 404 reales | Con Cache Components, `notFound()` en una ruta dinámica llega con el layout ya enviado (200 + `noindex`): por eso `proxy.ts` valida los slugs del catálogo en memoria (`server/seo/catalog-routes.ts`, BD-061) y responde 404 real. Páginas de departamento sin tiendas → 404 o `noindex` |
 | Paginación | No se necesita en el MVP (catálogo pequeño) |
 
 ## 3. Metadata por página

@@ -134,6 +134,8 @@ describe("CategoryCard y AudienceCard", () => {
       lineGroup: "oficina",
       shortText: "Pizarra y permanentes.",
       intro: null,
+      seoTitle: null,
+      seoDescription: null,
       href: "/productos/marcadores",
       productCount: 1,
     };

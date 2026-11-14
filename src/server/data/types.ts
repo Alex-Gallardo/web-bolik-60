@@ -21,6 +21,9 @@ export type CategoryView = {
   lineGroup: LineGroup;
   shortText: string;
   intro: string | null;
+  /** Title y description propios (docs/10 §1, docs/17 §6, editables en el admin); null = los arma categoryMeta. */
+  seoTitle: string | null;
+  seoDescription: string | null;
   href: string;
   productCount: number;
 };

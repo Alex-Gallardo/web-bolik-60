@@ -46,7 +46,7 @@ module.exports = {
         ? {}
         : // start:local copia public/ antes de arrancar: con imágenes y video tarda más de 10 s.
           { startServerCommand: "pnpm start:local", startServerReadyTimeout: 60_000 }),
-      url: [`${base}/`, `${base}/productos`],
+      url: [`${base}/`, `${base}/productos`, `${base}/productos/boligrafos`],
       numberOfRuns: 3,
       settings: {
         // Los runners de Linux de GitHub no permiten el sandbox de Chrome.

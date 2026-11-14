@@ -124,6 +124,8 @@ function toCategory(data: SeedData, category: SeedData["categories"][number]): C
     lineGroup: category.lineGroup,
     shortText: category.shortText,
     intro: category.intro ?? null,
+    seoTitle: category.seoTitle ?? null,
+    seoDescription: category.seoDescription ?? null,
     href: categoryHref(category.slug),
     productCount: visibleProducts(data).filter((p) => p.categorySlug === category.slug).length,
   };

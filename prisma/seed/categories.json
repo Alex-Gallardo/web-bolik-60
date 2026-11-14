@@ -4,28 +4,33 @@
     "name": "Bolígrafos",
     "lineGroup": "escritura",
     "shortText": "Bolígrafos y lapiceros de punta mediana y fina, hechos en Guatemala.",
-    "intro": "Bolígrafos y lapiceros Bolik de punta mediana y fina, fabricados en Guatemala. Para la escuela, la oficina y para personalizar con tu logo."
+    "intro": "Bolígrafos y lapiceros Bolik de punta mediana y fina, fabricados en Guatemala. Para la escuela, la oficina y para personalizar con tu logo.",
+    "seoTitle": "Bolígrafos y lapiceros",
+    "seoDescription": "Bolígrafos y lapiceros Bolik hechos en Guatemala: Bolik Ultra y más. Mira colores y presentaciones, encuentra dónde comprar o cotiza por mayor."
   },
   {
     "slug": "lapices-y-lapices-de-colores",
     "name": "Lápices y lápices de colores",
     "lineGroup": "escolar",
     "shortText": "Lápices de grafito y de colores para dibujar, colorear y escribir.",
-    "intro": "Lápices de grafito y de colores para dibujar, colorear y escribir desde preprimaria."
+    "intro": "Lápices de grafito y de colores para dibujar, colorear y escribir desde preprimaria.",
+    "seoTitle": "Lápices y lápices de colores"
   },
   {
     "slug": "crayones-de-cera",
     "name": "Crayones de cera",
     "lineGroup": "arte",
     "shortText": "Crayones de cera de colores intensos para manos pequeñas.",
-    "intro": "Crayones de cera de colores intensos, pensados para manos pequeñas."
+    "intro": "Crayones de cera de colores intensos, pensados para manos pequeñas.",
+    "seoTitle": "Crayones de cera para niños"
   },
   {
     "slug": "marcadores",
     "name": "Marcadores",
     "lineGroup": "oficina",
     "shortText": "Marcadores de pizarra, permanentes y fluorescentes.",
-    "intro": "Marcadores de pizarra, permanentes y fluorescentes para el aula y la oficina."
+    "intro": "Marcadores de pizarra, permanentes y fluorescentes para el aula y la oficina.",
+    "seoTitle": "Marcadores de pizarra, permanentes y fluorescentes"
   },
   {
     "slug": "pegamentos-y-silicon",

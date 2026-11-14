@@ -136,7 +136,6 @@ export default async function CatalogPage() {
               <li key={category.slug}>
                 <CategoryCard
                   category={category}
-                  prefetch={false}
                   data-event="category_click"
                   data-category={category.slug}
                 />

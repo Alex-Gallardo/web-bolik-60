@@ -11,10 +11,33 @@ vi.mock("@/server/seo/redirects", () => ({
   redirectHits: { record: (...args: unknown[]) => record(...args) },
 }));
 vi.mock("@/features/seo/metadata", () => ({ SITE: { url: "https://www.bolik66.com" } }));
+const exists = vi.fn();
+vi.mock("@/server/seo/catalog-routes", () => ({
+  catalogRouteStore: { exists: (...args: unknown[]) => exists(...args) },
+}));
 
 beforeEach(() => {
   find.mockReset();
   record.mockReset();
+  exists.mockReset();
+  exists.mockResolvedValue(true);
+});
+
+describe("proxy: rutas del catálogo (BD-061)", () => {
+  it("un slug del catálogo que no existe se reescribe a la 404 (estado 404 real)", async () => {
+    find.mockResolvedValue(null);
+    exists.mockResolvedValue(false);
+    const response = await proxy(new NextRequest("http://127.0.0.1:3000/productos/no-existe"));
+    expect(exists).toHaveBeenCalledWith("/productos/no-existe");
+    expect(response.headers.get("x-middleware-rewrite")).toMatch(/\/_no-existe$/);
+  });
+
+  it("uno que existe sigue su camino", async () => {
+    find.mockResolvedValue(null);
+    const response = await proxy(new NextRequest("http://127.0.0.1:3000/productos/marcadores"));
+    expect(response.headers.get("x-middleware-rewrite")).toBeNull();
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
 });
 
 describe("proxy (BD-046)", () => {

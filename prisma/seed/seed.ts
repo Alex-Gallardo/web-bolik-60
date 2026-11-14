@@ -65,6 +65,8 @@ export async function seedDatabase(
       lineGroup: c.lineGroup,
       shortText: c.shortText,
       intro: c.intro ?? null,
+      seoTitle: c.seoTitle ?? null,
+      seoDescription: c.seoDescription ?? null,
       published: c.published,
       sortOrder,
     };

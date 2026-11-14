@@ -68,7 +68,6 @@ export function CatalogSection({ categories, productCount }: CatalogSectionProps
             <li key={category.slug} data-reveal style={{ "--i": index } as CSSProperties}>
               <CategoryCard
                 category={category}
-                prefetch={false}
                 data-event="category_click"
                 data-category={category.slug}
               />
