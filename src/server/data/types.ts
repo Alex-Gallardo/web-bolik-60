@@ -55,6 +55,8 @@ export type ProductCardView = {
   shortDescription: string;
   colors: ColorView[];
   skus: string[];
+  /** Slugs de sus usos (Escolar, Oficina…), en el orden de UseTag: filtros del catálogo (BD-060). */
+  useSlugs: string[];
   featured: boolean;
   /** Producto de ejemplo (no existe en el catálogo real): nunca llega a producción. */
   sample: boolean;

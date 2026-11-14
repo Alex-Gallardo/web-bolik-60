@@ -4,6 +4,8 @@
  * Regla de docs/10: el texto del JSON-LD es el mismo que se ve en la página, sin campos inventados.
  */
 
+import { SITE } from "./metadata";
+
 type JsonLdObject = { "@context": "https://schema.org"; "@type": string } & Record<string, unknown>;
 
 /**
@@ -37,5 +39,58 @@ export function faqPageJsonLd(faqs: readonly FaqEntry[]): JsonLdObject {
       name: faq.question,
       acceptedAnswer: { "@type": "Answer", text: faq.answer },
     })),
+  };
+}
+
+/** URL absoluta del sitio para una ruta («/productos» → «https://www.bolik66.com/productos»). */
+const absolute = (path: string) => new URL(path, SITE.url).toString();
+
+export type Crumb = { name: string; path: string };
+
+/** BreadcrumbList con las mismas migas que se ven (componente Breadcrumbs). */
+export function breadcrumbListJsonLd(crumbs: readonly Crumb[]): JsonLdObject {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((crumb, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: crumb.name,
+      item: absolute(crumb.path),
+    })),
+  };
+}
+
+/**
+ * CollectionPage con su ItemList: los productos que lista la página, en el mismo orden (docs/10
+ * §4). Solo nombre y URL: sin precios ni reseñas.
+ */
+export function collectionPageJsonLd({
+  name,
+  description,
+  path,
+  items,
+}: {
+  name: string;
+  description: string;
+  path: string;
+  items: readonly { name: string; path: string }[];
+}): JsonLdObject {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name,
+    description,
+    url: absolute(path),
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: items.length,
+      itemListElement: items.map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: item.name,
+        url: absolute(item.path),
+      })),
+    },
   };
 }

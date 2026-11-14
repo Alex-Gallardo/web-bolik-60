@@ -9,7 +9,7 @@
  * la corrida mediana.
  *
  * Cada ticket que publica una página agrega aquí su URL; los presupuestos de "el resto" ya aplican.
- * La ficha de producto (docs/12 §2: 155 KB de JS) necesitará su propia entrada en assertMatrix.
+ * La ficha de producto entra en «el resto» (170 KB de JS desde BD-060).
  * Los KB de JS son transferidos (gzip + cabeceras): Next 16 + React 19 ya ocupan ~146 KB (docs/12 §2).
  */
 const PORT = "3100";
@@ -46,7 +46,7 @@ module.exports = {
         ? {}
         : // start:local copia public/ antes de arrancar: con imágenes y video tarda más de 10 s.
           { startServerCommand: "pnpm start:local", startServerReadyTimeout: 60_000 }),
-      url: [`${base}/`],
+      url: [`${base}/`, `${base}/productos`],
       numberOfRuns: 3,
       settings: {
         // Los runners de Linux de GitHub no permiten el sandbox de Chrome.
@@ -71,14 +71,19 @@ module.exports = {
           },
         },
         {
-          // El resto: ≥ 95 en rendimiento, LCP ≤ 2.0 s, JS ≤ 150 KB (CLAUDE.md).
+          // El resto (BD-060, decisiones del usuario): ≥ 90 en rendimiento, como la home (el puntaje
+          // cae por el mismo LCP simulado); LCP con la misma guardia
+          // de regresión de 3.2 s que la home (la meta de 2.0 s es de campo, BD-126: Lantern da
+          // ~3.0 s por el JS y las fuentes aunque se pinte a los ~0.4 s); JS ≤ 170 KB, porque la
+          // parte común (Next, React y el layout) ya ocupa ~160 KB en cualquier página. BD-047
+          // aligera el layout para volver a bajar el tope.
           matchingUrlPattern: "^https?://[^/]+/.+",
           assertions: {
             ...common,
-            "categories:performance": ["error", { minScore: 0.95 }],
-            "largest-contentful-paint": ["error", { maxNumericValue: 2000 }],
+            "categories:performance": ["error", { minScore: 0.9 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
-            "resource-summary:script:size": ["error", { maxNumericValue: 150 * KB }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
           },
         },
       ],

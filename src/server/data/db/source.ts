@@ -49,6 +49,7 @@ const visibleProduct = { published: true, category: { published: true } } as con
 const cardInclude = {
   category: { select: { slug: true, name: true, lineGroup: true } },
   variants: { where: { published: true }, orderBy: bySortOrder },
+  uses: { select: { useTag: { select: { slug: true } } }, orderBy: { useTag: { id: "asc" } } },
 } satisfies Prisma.ProductInclude;
 
 type CardRow = Prisma.ProductGetPayload<{ include: typeof cardInclude }>;
@@ -80,6 +81,7 @@ function toCard(p: CardRow): ProductCardView {
     shortDescription: p.shortDescription,
     colors: p.variants.map((v) => ({ key: v.colorKey, name: v.colorName, hex: v.colorHex })),
     skus: p.variants.map((v) => v.sku),
+    useSlugs: p.uses.map((u) => u.useTag.slug),
     featured: p.featured,
     sample: p.isSample,
     image: null, // las fotos llegan con BD-034

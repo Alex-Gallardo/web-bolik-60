@@ -24,6 +24,7 @@ const product: ProductCardView = {
     { key: "negro", name: "Negro", hex: "#111318" }, // check-colors-ignore: dato de prueba
   ],
   skus: ["PT00058", "PT00059"],
+  useSlugs: ["escolar", "oficina"],
   featured: true,
   sample: false,
   image: null,

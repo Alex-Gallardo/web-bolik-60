@@ -174,6 +174,10 @@ BD-045,E3,"Estructura global, splash y movimiento",MotionProvider diferido,S1,0.
 BD-046,E3,"Estructura global, splash y movimiento",Páginas 404 y 500,S2,0.5,Must,B,BD-040 BD-037,"06 §3.19, 10 §6",Errores amables que ayudan a seguir navegando.,"1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías. Conserva su `<MainContent>` (BD-040: queda fuera de los layouts de grupo) y revisa que no salga el `<title>` de Next en inglés.
 2. `error.tsx` con WhatsApp y ""Reintentar"".","- Una URL vieja registrada en `Redirect` responde 301.
 - Las demás registran el 404 con contador.",Sí
+BD-047,E3,"Estructura global, splash y movimiento",Aligerar el JS común del layout,S3,1,Should,A,BD-040 BD-041 BD-042,12 §2,"Ticket nuevo (de BD-060): la parte común del sitio ocupa ~160 KB de JS en cualquier página; bajarla para volver a bajar el tope del resto (hoy 170 KB).","1. `pnpm analyze` del layout: islas de cliente de todas las páginas y su peso.
+2. Diferir lo que no hace falta en el primer pintado sin romper el sitio sin JS ni el feedback.
+3. Medir de nuevo el 404 y `/productos` y bajar el tope en `lighthouse.config.cjs`, docs/12 §2 y CLAUDE.md.","- El 404 baja de ~151 KB de JS y el tope del resto baja de 170 KB.
+- Sin cambios visibles ni de accesibilidad; E2E en verde.",No
 BD-050,E4,Inicio,Hero con video por capítulos,S2,1.5,Must,A,BD-037 BD-034 BD-044,"06 §3.1, 09","El hero de la demo, llevado a producción.","1. Copiar `starter/src/components/hero/video-hero.tsx`.
 2. Datos desde `HeroChapter` (título, texto, CTA, póster, video).
 3. Póster del capítulo 1 con `priority` (es el LCP).

@@ -1,11 +1,11 @@
 import type { Route } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { CatalogSearchForm } from "@/components/catalog/catalog-search-form";
 import { CategoryCard } from "@/components/catalog/category-card";
 import { Section } from "@/components/layout/section";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Chip } from "@/components/ui/chip";
-import { Input } from "@/components/ui/input";
 import { featuredCatalog } from "@/content/home";
 import { ui } from "@/content/ui";
 import { LINE_GROUPS } from "@/lib/constants";
@@ -39,29 +39,7 @@ export function CatalogSection({ categories, productCount }: CatalogSectionProps
         <p className="text-[length:var(--fs-lead)] text-muted">
           {featuredCatalog.text(productCount)}
         </p>
-        <form
-          action={featuredCatalog.searchAction}
-          method="get"
-          role="search"
-          data-event="search_open"
-          className="mt-2 flex flex-col gap-3 sm:flex-row"
-        >
-          <label htmlFor={searchId} className="sr-only">
-            {featuredCatalog.searchLabel}
-          </label>
-          <Input
-            id={searchId}
-            name="q"
-            type="search"
-            autoComplete="off"
-            enterKeyHint="search"
-            placeholder={featuredCatalog.searchPlaceholder}
-            className="sm:flex-1"
-          />
-          <button type="submit" className={buttonVariants({ variant: "primary", block: true })}>
-            {featuredCatalog.searchButton}
-          </button>
-        </form>
+        <CatalogSearchForm id={searchId} className="mt-2" />
       </div>
 
       {lines.length > 0 && (
