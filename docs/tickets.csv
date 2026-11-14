@@ -178,6 +178,9 @@ BD-047,E3,"Estructura global, splash y movimiento",Aligerar el JS común del lay
 2. Diferir lo que no hace falta en el primer pintado sin romper el sitio sin JS ni el feedback.
 3. Medir de nuevo el 404 y `/productos` y bajar el tope en `lighthouse.config.cjs`, docs/12 §2 y CLAUDE.md.","- El 404 baja de ~151 KB de JS y el tope del resto baja de 170 KB.
 - Sin cambios visibles ni de accesibilidad; E2E en verde.",No
+BD-048,E3,"Estructura global, splash y movimiento",Header sin desborde entre 1024 y 1280 px,S2,0.25,Must,A,BD-041,06 §2,"Ticket nuevo (14 nov 2026, de BD-061): con barra de desplazamiento, a 1024 px el header salía de la página (11 px con una barra de 17 px).","1. Medir el contenido del header contra el ancho útil con barra de desplazamiento.
+2. Compactar solo entre lg y xl: logo sin margen extra, separaciones de 4 px y «Cotizar» con 16 px de padding.","- A 1024 px con barra de desplazamiento, nada desborda (E2E).
+- Sin cambios desde 1280 px ni en móvil; «Cotizar» sigue ≥ 44 px de alto.",Sí
 BD-050,E4,Inicio,Hero con video por capítulos,S2,1.5,Must,A,BD-037 BD-034 BD-044,"06 §3.1, 09","El hero de la demo, llevado a producción.","1. Copiar `starter/src/components/hero/video-hero.tsx`.
 2. Datos desde `HeroChapter` (título, texto, CTA, póster, video).
 3. Póster del capítulo 1 con `priority` (es el LCP).

@@ -54,7 +54,7 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 |---|---|---|---|
 | **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
 | **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 16.25 (9.25 / 7) |
-| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 22.5 (12.75 / 9.75) |
+| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 22.75 (13 / 9.75) |
 | **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 22.5 (11 / 11.5) |
 | **S4** | lun 21 dic – vie 8 ene 2027 | Estabilización, pruebas, contenido, producción · feriados 24-25 dic y 31 dic-1 ene · **código congelado el 6 ene** | 19.25 (7.5 / 11.75) |
 | **S5** | lun 11 ene – vie 22 ene 2027 | **Lanzamiento** e hipercuidado | 3 (1 / 2) |
@@ -129,7 +129,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E0 | Fundaciones del repositorio | 17 | 9.25 |
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
 | E2 | Datos, medios e integración base | 10 | 11 |
-| E3 | Estructura global, splash y movimiento | 8 | 4.75 |
+| E3 | Estructura global, splash y movimiento | 9 | 5 |
 | E4 | Inicio | 7 | 5.5 |
 | E5 | Catálogo, fichas y búsqueda | 8 | 7.5 |
 | E6 | Cotización y formularios | 8 | 7 |
@@ -142,7 +142,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **124** | **93.5** |
+| | **Total** | **125** | **93.75** |
 
 ## 6. Tickets
 
@@ -993,6 +993,22 @@ La parte común del sitio (Next, React y el layout) ocupa ~160 KB en cualquier p
 - [ ] El 404 baja de ~151 KB de JS y el tope del resto baja de 170 KB.
 - [ ] Rendimiento ≥ 0.95 en las páginas que no son la home (hoy ≥ 0.90; `/productos` da 0.94).
 - [ ] Sin cambios visibles ni de accesibilidad; E2E en verde.
+
+#### BD-048 · Header sin desborde entre 1024 y 1280 px
+
+**Sprint** S2 · **Días** 0.25 · **Prioridad** Must · **Pista** A · **Depende de** BD-041 · **Docs** 06 §2 · *Ticket nuevo (14 nov 2026, de BD-061)*
+
+Con barra de desplazamiento, a 1024 px el header salía de la página: 11 px con una barra de 17 px (Windows), 9 px con una de 15 px.
+
+**Pasos**
+
+1. Medir: con 1007 px útiles (1024 − 17 de la barra), el contenido del header (logo 112 + menú 646 + acciones 220 + separaciones 16 = 994 px) más 48 px de márgenes no cabía.
+2. Compactar solo entre `lg` y `xl` (1024–1279 px): logo sin margen extra, separaciones de 4 px y «Cotizar» con 16 px de padding (alto de 50 px). Desde `xl` y en móvil, igual que antes.
+
+**Criterios de aceptación**
+
+- [x] A 1024 px con barra de desplazamiento, nada desborda: el contenido del header ocupa 954 px y cabe en 1024 − 17 − 48 = 959 (E2E en `header.spec.ts`).
+- [x] Sin cambios desde 1280 px ni en móvil; «Cotizar» sigue ≥ 44 px de alto.
 
 ### E4 · Inicio
 
