@@ -1,5 +1,5 @@
 import type { Route } from "next";
-import Image from "next/image";
+import { getImageProps } from "next/image";
 import Link from "next/link";
 import { Chip } from "@/components/ui/chip";
 import { ui } from "@/content/ui";
@@ -57,15 +57,18 @@ export function ProductCard({
     >
       <div className="relative aspect-square overflow-hidden rounded-t-[calc(var(--radius-lg)-2px)] bg-soft">
         {product.image ? (
-          <Image
-            src={product.image.src}
-            alt={product.image.alt}
-            fill
-            sizes={sizes}
-            className="object-contain p-4"
-            {...(product.image.blurDataUrl
-              ? { placeholder: "blur" as const, blurDataURL: product.image.blurDataUrl }
-              : {})}
+          // Atributos de next/image (getImageProps): mismo loader, srcset y sizes, sin el JS del
+          // componente Image en el navegador (BD-060). Sin placeholder blur: lo quitaba ese JS al
+          // cargar; el fondo bg-soft del cuadro hace de placeholder.
+          // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+          <img
+            {...getImageProps({
+              src: product.image.src,
+              alt: product.image.alt,
+              fill: true,
+              sizes,
+            }).props}
+            className="absolute inset-0 size-full object-contain p-4"
           />
         ) : (
           // flex-wrap: a 360 px (≈ 120 px útiles) 4 círculos pasan a 2 filas en vez de salirse.

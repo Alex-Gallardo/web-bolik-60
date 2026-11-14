@@ -10,9 +10,9 @@
 | TTFB (servidor) | ≤ 400 ms | ≤ 800 ms |
 | FCP | ≤ 1.5 s | ≤ 1.8 s |
 
-Laboratorio (Lighthouse móvil, throttling por defecto) en CI: **Rendimiento ≥ 95** (≥ 90 tolerado en home por el video), **Accesibilidad ≥ 95**, **Buenas prácticas ≥ 95**, **SEO = 100**.
+Laboratorio (Lighthouse móvil, throttling por defecto) en CI: **Rendimiento ≥ 90** en todas las páginas (BD-060, decisión del usuario: el puntaje cae por el LCP simulado de ~3.0 s; era ≥ 95 salvo la home; BD-047 busca recuperarlo), **Accesibilidad ≥ 95**, **Buenas prácticas ≥ 95**, **SEO = 100**.
 
-**LCP de la home en laboratorio (BD-055):** la meta de 2.0 s de esta tabla es de campo (p75 móvil, BD-126). En Lighthouse la home tiene una guardia de regresión de **3.2 s**, no de 2.0 s. El LCP es el texto del h1 y el navegador lo pinta a los ~0.5 s, pero Lantern simula la red lenta cargándole todo lo que se pidió antes del primer pintado (~146 KB de Next/React, el JS de la página y las fuentes), y eso da 2.9–3.2 s. Lo que se probó en BD-055, con el mejor de 3 corridas:
+**LCP en laboratorio (BD-055 en la home; BD-060 en todas las páginas):** la meta de 2.0 s de esta tabla es de campo (p75 móvil, BD-126). En Lighthouse cada página tiene una guardia de regresión de **3.2 s**, no de 2.0 s (`/productos` dio entre 2.0 y 3.1 s en 3 corridas). El LCP es el texto del h1 y el navegador lo pinta a los ~0.5 s, pero Lantern simula la red lenta cargándole todo lo que se pidió antes del primer pintado (~146 KB de Next/React, el JS de la página y las fuentes), y eso da 2.9–3.2 s. Lo que se probó en BD-055, con el mejor de 3 corridas:
 
 | Ajuste | LCP | Resultado |
 |---|---|---|
@@ -30,10 +30,12 @@ El JS propio de la home pesa poco (reproductor de video y contador: 3.8 KB; layo
 | Página | JS inicial (gzip) | CSS (gzip) | Imágenes arriba del pliegue | Fuentes | Peticiones iniciales |
 |---|---|---|---|---|---|
 | Inicio | ≤ 165 KB | ≤ 25 KB | Póster ≤ 120 KB | 2 familias, ≤ 4 archivos woff2 | ≤ 25 |
-| Catálogo / categoría | ≤ 150 KB | ≤ 25 KB | ≤ 6 tarjetas × 25 KB | 2 familias | ≤ 25 |
-| Ficha | ≤ 155 KB | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 25 |
-| Dónde comprar | ≤ 150 KB (+ mapa diferido ≤ 60 KB) | ≤ 25 KB (+ CSS de Leaflet diferido) | — | 2 familias | ≤ 25 |
-| Escuelas | ≤ 150 KB | ≤ 25 KB | ≤ 150 KB | 3 familias (incluye Baloo 2) | ≤ 28 |
+| Catálogo / categoría | ≤ 170 KB | ≤ 25 KB | ≤ 6 tarjetas × 25 KB | 2 familias | ≤ 25 |
+| Ficha | ≤ 170 KB | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 25 |
+| Dónde comprar | ≤ 170 KB (+ mapa diferido ≤ 60 KB) | ≤ 25 KB (+ CSS de Leaflet diferido) | — | 2 familias | ≤ 25 |
+| Escuelas | ≤ 170 KB | ≤ 25 KB | ≤ 150 KB | 3 familias (incluye Baloo 2) | ≤ 28 |
+
+**Resto de páginas a 170 KB (BD-060, decisión del usuario, 14 nov 2026).** Con el layout del sitio completo (header con menú y contador, pie, flotantes, avisos, revelado), la parte común ya ocupa unos 160 KB en cualquier página: el 404, sin código propio, ronda 151 KB y `/productos` queda en 167.4 KB (sus filtros suman ~4 KB). Por eso el tope del resto pasa de 150 a 170 KB (también la ficha, que era de 155). BD-047 aligera el JS común del layout para volver a bajarlo. En `/productos`, `ProductCard` dejó de usar el componente `Image` (cliente) y pasa por `getImageProps`: −6.5 KB en la página y −1.4 KB en la home.
 
 **Por qué estos números (BD-015, 3 nov 2026).** La guía original pedía 120 KB en la home y 100 KB en el resto, pensando en un runtime de Next de ~100 KB. Con Next 16.4.3 + React 19.3, una app **vacía** ya carga 132 KB gzip y nuestra home sin código de cliente, 146 KB transferidos (Lighthouse cuenta también las cabeceras). Se mantuvo el margen que daba la guía sobre el runtime: ~+20 KB en la home (hero, splash, drawer) y ~+10 KB en la ficha; en el resto la guía no dejaba margen y aquí queda una holgura mínima (+4 KB). JS inicial = todo script que se descarga mientras Lighthouse mide la carga, **incluidos** los chunks de `dynamic()` que cargan al montar o en ocioso (splash, drawer); solo queda fuera lo que se carga al interactuar (clic, scroll a la sección). Al actualizar Next o React, medir de nuevo el runtime (app vacía) y ajustar si cambia.
 

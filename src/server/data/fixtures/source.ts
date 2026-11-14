@@ -61,6 +61,7 @@ function toCard(data: SeedData, product: Product): ProductCardView {
     shortDescription: product.shortDescription,
     colors: variants.map((v) => ({ key: v.colorKey, name: v.colorName, hex: v.colorHex })),
     skus: variants.map((v) => v.sku),
+    useSlugs: data.useTags.filter((u) => product.uses.includes(u.slug)).map((u) => u.slug),
     featured: product.featured,
     sample: product.sample,
     image: null, // las fotos llegan con BD-034

@@ -79,8 +79,8 @@ Detalle en `docs/04-estructura-proyecto.md`.
 ### Rendimiento (lo más importante junto con SEO)
 
 - Todas las páginas públicas son **Server Components** y se generan estáticas (SSG) con revalidación por **tags**. `"use client"` solo en hojas interactivas pequeñas.
-- Presupuesto de JS inicial por página (transferido, gzip, como lo mide Lighthouse): **≤ 165 KB** (home), **≤ 155 KB** (ficha) y **≤ 150 KB** (resto). Next 16 + React 19 ya ocupan ~146 KB en una página sin código de cliente: el margen es lo que nos toca (docs/12 §2). Mapa, buscador (Fuse), PDF, Motion y analítica se cargan con `dynamic()` o al interactuar.
-- LCP móvil **≤ 2.0 s**, INP **≤ 150 ms** (máximo 200), CLS **≤ 0.05**. Lighthouse móvil ≥ 95 en Rendimiento (≥ 90 en la home por el video) y 100 en SEO. Detalle en `docs/12`.
+- Presupuesto de JS inicial por página (transferido, gzip, como lo mide Lighthouse): **≤ 165 KB** (home) y **≤ 170 KB** (resto, incluida la ficha). Next 16 + React 19 ya ocupan ~146 KB y el layout del sitio (header, pie, flotantes, avisos) ~14 KB más: lo de cada página va encima (docs/12 §2; BD-047 aligera el layout para bajar el tope). Mapa, buscador (Fuse), PDF, Motion y analítica se cargan con `dynamic()` o al interactuar.
+- LCP móvil **≤ 2.0 s** (p75 de campo, BD-126), INP **≤ 150 ms** (máximo 200), CLS **≤ 0.05**. En Lighthouse el LCP es una guardia de regresión de **3.2 s** en todas las páginas: la simulación da ~3.0 s por el JS y las fuentes aunque el navegador pinte a los ~0.4 s (docs/12 §1). Lighthouse móvil ≥ 90 en Rendimiento en todas las páginas (cae por esa misma simulación; BD-047 busca recuperar el 95) y 100 en SEO. Detalle en `docs/12`.
 - Imágenes siempre con `next/image`, `sizes` correcto, `alt` real, dimensiones declaradas. `priority` **solo** en la imagen LCP.
 - Fuentes con `next/font` (autohospedadas, `display: swap`, subset latin). Máximo 2 familias por página (Baloo 2 solo en la sección escuelas).
 - El video del hero nunca es el LCP: el **póster** es el LCP; el video carga después de `load`, solo con buena conexión y sin `Save-Data`.

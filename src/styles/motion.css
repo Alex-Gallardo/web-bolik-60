@@ -142,6 +142,14 @@
   animation: fade-up var(--dur-base) var(--ease-out) both;
 }
 
+/* ── Reordenar la grilla A-22, BD-060 ──
+   Al filtrar el catálogo, las tarjetas que vuelven a aparecer entran con fade (quitar hidden
+   reinicia la animación). data-filtered lo pone el primer cambio de filtro: la primera carga no
+   se anima. Con movimiento reducido dura 1 ms (regla global). */
+[data-filtered] [data-product]:not([hidden]) {
+  animation: fade-in var(--dur-base) var(--ease-out);
+}
+
 /* ── Reveal al hacer scroll A-21, BD-044 ──
    Solo se oculta cuando RevealObserver está listo (data-reveal-ready en <html>): antes revela lo que
    ya está en pantalla. Sin JS, mientras el JS carga o con movimiento reducido, todo es visible.

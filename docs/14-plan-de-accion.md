@@ -55,7 +55,7 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 | **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
 | **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 16.25 (9.25 / 7) |
 | **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 22.5 (12.75 / 9.75) |
-| **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 21.5 (10 / 11.5) |
+| **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 22.5 (11 / 11.5) |
 | **S4** | lun 21 dic – vie 8 ene 2027 | Estabilización, pruebas, contenido, producción · feriados 24-25 dic y 31 dic-1 ene · **código congelado el 6 ene** | 19.25 (7.5 / 11.75) |
 | **S5** | lun 11 ene – vie 22 ene 2027 | **Lanzamiento** e hipercuidado | 3 (1 / 2) |
 
@@ -129,7 +129,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E0 | Fundaciones del repositorio | 17 | 9.25 |
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
 | E2 | Datos, medios e integración base | 10 | 11 |
-| E3 | Estructura global, splash y movimiento | 7 | 3.75 |
+| E3 | Estructura global, splash y movimiento | 8 | 4.75 |
 | E4 | Inicio | 7 | 5.5 |
 | E5 | Catálogo, fichas y búsqueda | 8 | 7.5 |
 | E6 | Cotización y formularios | 8 | 7 |
@@ -142,7 +142,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **123** | **92.5** |
+| | **Total** | **124** | **93.5** |
 
 ## 6. Tickets
 
@@ -976,6 +976,24 @@ Errores amables que ayudan a seguir navegando.
 - 404 con enlaces a Inicio, Catálogo, Dónde comprar y las líneas de producto; el buscador queda para BD-066. Un solo `<meta name="robots">` (el de Next).
 - 500 con reintentar, WhatsApp (si hay número) y teléfono (`data-contact-*` del layout de `(site)`); sin número, el texto no promete WhatsApp. La 404 dice «Revisa el catálogo…» hasta que BD-066 traiga el buscador (doc 17).
 
+#### BD-047 · Aligerar el JS común del layout
+
+**Sprint** S3 · **Días** 1 · **Prioridad** Should · **Pista** A · **Depende de** BD-040, BD-041, BD-042 · **Docs** 12 §2 · *Ticket nuevo (14 nov 2026, de BD-060)*
+
+La parte común del sitio (Next, React y el layout) ocupa ~160 KB en cualquier página; el presupuesto del resto subió a 170 KB y este ticket busca bajarlo.
+
+**Pasos**
+
+1. `pnpm analyze` del layout: qué islas de cliente cargan en todas las páginas (header, contador de cotización, flotantes, avisos, revelado, entrada de página) y cuánto pesa cada una.
+2. Diferir lo que no hace falta en el primer pintado (`dynamic()` al interactuar o en ocioso), sin romper el funcionamiento sin JS ni los avisos de feedback.
+3. Medir de nuevo el 404 (sin código propio) y `/productos`; bajar `resource-summary:script:size` del resto en `lighthouse.config.cjs` y en docs/12 §2 y CLAUDE.md a lo que se logre.
+
+**Criterios de aceptación**
+
+- [ ] El 404 baja de ~151 KB de JS y el tope del resto baja de 170 KB.
+- [ ] Rendimiento ≥ 0.95 en las páginas que no son la home (hoy ≥ 0.90; `/productos` da 0.94).
+- [ ] Sin cambios visibles ni de accesibilidad; E2E en verde.
+
 ### E4 · Inicio
 
 #### BD-050 · Hero con video por capítulos
@@ -1268,6 +1286,23 @@ Todos los productos con filtros por uso.
 
 - [ ] Filtrar no hace peticiones al servidor.
 - [ ] La URL con filtros se puede compartir.
+
+**Implementado (BD-060)**
+
+Decisiones del usuario (14 nov 2026): JS del resto de páginas a 170 KB con un ticket para aligerar el layout (BD-047); LCP con guardia de 3.2 s en Lighthouse en todas las páginas (la meta de 2.0 s es de campo, BD-126); y rendimiento ≥ 0.90 en todas las páginas, como la home (cae por el mismo LCP simulado). CLAUDE.md y docs/12 lo dicen.
+
+- `app/(site)/productos/page.tsx`: estática, con migas (Inicio › Catálogo Bolik), h1, intro y buscador de doc 17 (GET a `/buscar`), la grilla completa de `ProductCard` (h2) y, al final, las categorías publicadas. Canónica `/productos` aunque la URL lleve filtros. JSON-LD `CollectionPage` con su `ItemList` y `BreadcrumbList` (helpers nuevos en `features/seo/jsonld.tsx`).
+- **Filtros** (`components/catalog/catalog-filters.tsx`): línea, uso y color, una opción por grupo y combinados con «y» (`features/catalog/filters.ts`). Solo ocultan y muestran los `<li>` de la grilla (atributo `hidden`): no vuelven a pintar tarjetas ni piden nada al servidor (E2E). Viven en la URL (`?linea=…&uso=…&color=…`, `replaceState`, leída con `useSyncExternalStore`); un valor desconocido se ignora. Contador «N productos» con `aria-live`; estado vacío con «Quitar filtros» (`feedback.catalog.filtersEmpty`).
+- **Sin JS** la barra no se muestra (`.js-only`, regla nueva en `globals.css`) y se ven todos los productos.
+- **Móvil:** «Filtros» abre un Sheet que se descarga al primer toque (como el menú móvil) y cuenta en vivo («Ver N productos»). En escritorio, barra fija bajo el header.
+- **A-22:** las tarjetas que vuelven a aparecer entran con fade (CSS, `[data-filtered]`); la primera carga no se anima.
+- `ProductCardView.useSlugs` en las dos fuentes. `ProductCard` usa `getImageProps` en lugar del componente `Image`: −6.5 KB en `/productos` y −1.4 KB en la home.
+- **Router:** `replaceState(null, …)` para que Next sincronice su estado, y un `useSearchParams` en su propio `Suspense` avisa cuando un `<Link>` cambia la URL (estando filtrado, «Ver todo el catálogo» limpia la grilla; E2E). La página sigue estática.
+- **Sin CLS con un enlace filtrado** (`?linea=…` desde la home o compartido): un script en línea después de la grilla (`features/catalog/prepaint-script.ts`) oculta lo que no va antes del primer pintado, con los `data-*` de cada `<li>`; E2E de CLS a 360 px.
+- **Accesibilidad:** la barra es fija solo en móvil (una fila) para no tapar el foco, con `scroll-padding` que la suma; «Quitar filtros» (también en la barra de escritorio) deja el foco en el contador; el sheet anuncia el conteo en su propia región viva. La isla empareja por slug (`data-product`).
+- `CatalogSearchForm` compartido con la home. `ProductCard` sin placeholder blur (lo quitaba el JS de `Image`).
+- Medido: `/productos` 167.6 KB de JS, rendimiento 0.94, CLS 0, LCP ~3.05 s (observado ~0.4 s).
+- **Pendiente:** el «texto corto sobre la marca» del bloque SEO (docs/06 §3.2 punto 5) no tiene copy en doc 17: hoy el bloque solo enlaza las categorías. Pedirlo a Mercadeo (BD-150).
 
 #### BD-061 · Página de categoría
 
@@ -1640,6 +1675,8 @@ Datos que Google y las IA entienden.
 1. Copiar `features/seo/jsonld.tsx` y usarlo en cada plantilla.
 2. Validar con la Prueba de resultados enriquecidos y validator.schema.org.
 
+*Nota de BD-060:* `breadcrumbListJsonLd` y `collectionPageJsonLd` (con su `ItemList`) ya existen y los usa `/productos`.
+
 **Criterios de aceptación**
 
 - [ ] 0 errores en las plantillas: home, categoría, ficha, FAQ, dónde comprar.
@@ -1675,6 +1712,8 @@ Ayuda a usuarios y buscadores a entender la jerarquía.
 
 1. Componente `Breadcrumbs` visible + `BreadcrumbList`.
 2. Bloques de enlaces relacionados (categorías hermanas, productos relacionados, departamentos).
+
+*Nota de BD-060:* `components/layout/breadcrumbs.tsx` ya existe (migas visibles + `BreadcrumbList`); este ticket lo lleva a todas las páginas.
 
 **Criterios de aceptación**
 
