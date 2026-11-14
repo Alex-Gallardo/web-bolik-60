@@ -1317,8 +1317,17 @@ Página optimizada para búsquedas como "crayones de cera Guatemala".
 
 **Criterios de aceptación**
 
-- [ ] Título y descripción únicos.
-- [ ] BreadcrumbList válido.
+- [x] Título y descripción únicos.
+- [x] BreadcrumbList válido.
+
+**Implementado (BD-061)**
+
+- `app/(site)/productos/[categoria]/page.tsx`: estática con `generateStaticParams` (categorías publicadas). Migas (Inicio › Catálogo Bolik › categoría) con `BreadcrumbList`, h1 con el nombre, bajada (`shortText`), sus productos con `CollectionPage`/`ItemList`, la intro SEO, «Cotizar esta línea por mayor» (`/mayoreo`) y «Dónde comprar», sus preguntas (solo si hay, con `FAQPage`) y las otras categorías como enlaces internos.
+- **Title y description únicos:** `Category.seoTitle`/`seoDescription` ahora están en el seed, `CategoryView` y las dos fuentes (con los textos de docs/10 §1 y docs/17 §6 donde existen). Sin ellos, `features/catalog/category-meta.ts` arma la descripción con la plantilla de docs/10 §1: «{nombre} Bolik: {texto corto} Encuentra dónde comprar o cotiza por mayor con Bolik, hecho en Guatemala.» (sin el nombre si pasa de 160). Prueba: únicos en todo el seed, title ≤ 60 con « | Bolik» y descripción de 140–160; el seed limita `seoTitle` a 52 y `seoDescription` a 140–160.
+- **404 real (decisión del usuario):** con Cache Components, `notFound()` llega con el layout ya enviado y la respuesta sería 200 con `noindex` («soft 404»). `proxy.ts` consulta `server/seo/catalog-routes.ts` (slugs publicados en memoria, recarga cada 60 s, como las redirecciones; lee la fuente directa porque `'use cache'` no corre en el proxy) y reescribe un slug desconocido a la 404 de Next con estado 404. Como las redirecciones: lee con el cliente de Prisma del proxy (`server/data/catalog-routes.ts`, no `dataSource()`), espera la primera carga una sola vez (máximo 5 s; sin lista deja pasar todo), tiene `invalidate()` en `globalThis` para el admin de categorías, y una URL mal codificada es 404, no 500. E2E: `/productos/no-existe` y la categoría sin publicar dan 404.
+- Las tarjetas de categoría (home y `/productos`) ya precargan su página.
+- **Desviaciones de docs/06 §3.3:** el h1 es el nombre de la categoría (sin la palabra clave extra: el title de docs/10 §1 ya la lleva); los botones van después de las preguntas, como pide el doc. Una categoría publicada sin productos no muestra lista ni `ItemList`.
+- **Pendiente:** los «Datos clave» de la categoría (docs/06 §3.3, 3–5 viñetas) no tienen campo ni texto: van con el contenido de Mercadeo (BD-150) y un campo en `Category`. Hoy ninguna categoría tiene FAQs en el seed.
 
 #### BD-062 · Ficha de producto: información y variantes
 
@@ -1335,6 +1344,8 @@ La página más importante para SEO y cotización.
 5. Botones: Agregar a cotización, WhatsApp, Dónde comprar.
 
 *Nota de BD-038:* `ProductCardView.brand` trae la marca del grupo (Bolik, Fabik, Coloreto, EcoBol, K-Pen): la ficha la muestra como chip cuando no es Bolik. Las presentaciones del catálogo usan códigos genéricos (`caja`, `estuche`…) con el texto completo en `Packaging.name`.
+
+*Nota de BD-061:* sumar los slugs de producto a `server/seo/catalog-routes.ts` (hoy solo valida categorías), para que una ficha inexistente responda 404 real y no 200 con `noindex`.
 
 **Criterios de aceptación**
 

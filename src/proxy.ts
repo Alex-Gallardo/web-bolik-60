@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SITE } from "@/features/seo/metadata";
+import { catalogRouteStore } from "@/server/seo/catalog-routes";
 import { redirectHits, redirectStore } from "@/server/seo/redirects";
 
 /**
@@ -10,6 +11,9 @@ import { redirectHits, redirectStore } from "@/server/seo/redirects";
  * 2. La barra final: `skipTrailingSlashRedirect` desactiva la de Next, que corría antes que el
  *    proxy y hacía dos saltos (`/viejo/` → `/viejo` → destino). Aquí va después de la tabla.
  * Las URLs salen con la URL pública del sitio: detrás de IIS (ARR) el host interno es 127.0.0.1.
+ * 3. Rutas del catálogo (BD-061): /productos/{slug} que no está publicado responde 404 de verdad (la
+ *    página, con Cache Components, ya habría enviado el layout con 200). Se reescribe a una ruta
+ *    que no existe: Next pinta su 404 con estado 404.
  * BD-094 agrega aquí el mapa estático de Joomla; BD-115, la comprobación de la cookie del admin.
  */
 export async function proxy(request: NextRequest) {
@@ -24,6 +28,10 @@ export async function proxy(request: NextRequest) {
     // Una sola «/» al inicio: «//otro.com/» nunca debe volverse un destino de otro sitio.
     const clean = `/${pathname.replace(/^\/+|\/+$/g, "")}`;
     return NextResponse.redirect(new URL(`${clean}${search}`, SITE.url), 308);
+  }
+
+  if (!(await catalogRouteStore.exists(pathname))) {
+    return NextResponse.rewrite(new URL("/_no-existe", request.url));
   }
 
   return NextResponse.next();

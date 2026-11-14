@@ -119,6 +119,8 @@ Botones: Ver productos · Cotizar por mayor
 | Tarjeta, colores | Color: {color} · Colores: {a}, {b} y {c} (en minúscula; +{n} si no caben los puntos) |
 | Tarjeta de categoría | 1 producto · {n} productos |
 | Sin resultados con filtros | No hay productos con esos filtros. · Quitar filtros |
+| Página de categoría, botones | Cotizar esta línea por mayor · Dónde comprar |
+| Página de categoría, secciones | Preguntas frecuentes · Otras categorías |
 
 Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa el admin):
 
