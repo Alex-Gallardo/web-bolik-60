@@ -1468,8 +1468,14 @@ Lista de productos a cotizar que se guarda en el navegador.
 
 **Criterios de aceptación**
 
-- [ ] Recargar la página conserva la lista.
-- [ ] Pruebas unitarias del doc 13 §3.
+- [x] Recargar la página conserva la lista.
+- [x] Pruebas unitarias del doc 13 §3.
+
+**Implementado (BD-070)**
+
+- `features/quote/store.ts` (zustand 5 con `persist`, del starter): líneas por tipo + referencia + presentación (`lineKey`); agregar suma la cantidad si se repite; quitar con «deshacer» (no duplica una línea que se volvió a agregar ni pasa de 50); cantidad entre 1 y 9 999; tope de 50 líneas (`{ ok: false, reason: "limit" }`); vaciar, también con «deshacer» (`undoClear`, para `feedback.quote.cleared`). No muestra mensajes: devuelve el resultado y quien lo usa elige el texto de `feedback.ts`.
+- Se guarda en `localStorage` (`bolik_quote`, versión 1, solo `lines`); lo guardado pasa por `sanitizeLines` (tipo y presentación válidos, ruta interna, clave recalculada y sin repetidas; una línea dañada se descarta sin vaciar la lista; recorta a 50). Con `localStorage` bloqueado o lleno, guarda en memoria; en el servidor no guarda nada (nada compartido entre visitantes). Otras pestañas: el evento `storage` vuelve a leer la lista.
+- **Contador del header sin el store (desviación del paso 2):** con el store en el header, zustand y `persist` sumaban ~3.3 KB al JS de todas las páginas (home 166.2 KB de 165; resto 170.9 de 170). Lo puro va en `features/quote/lines.ts` (forma de la línea, `lineKey`, `sanitizeLines`), sin zustand, y la clave, el evento y el conteo en `storage-keys.ts` (sin las listas de `constants.ts`); `useQuoteCount` solo importa este último: lee lo guardado y se entera de los cambios por `QUOTE_CHANGE_EVENT` (lo dispara el store al guardar, con el número de líneas) y por `storage` (otras pestañas). Zustand solo carga en las páginas que agregan o editan (ficha, drawer). Medido: home 163.0 KB y `/productos` 167.6 KB, igual que antes de BD-070. 0 en el servidor, sin error de hidratación; el header no cambió.
 
 #### BD-071 · Drawer de cotización
 
@@ -1482,6 +1488,8 @@ Ver y editar la cotización sin salir de la página.
 1. Sheet lateral (escritorio) / inferior (móvil) cargado al primer uso. Ojo (BD-045): Motion pesa ≈ 50 KB gzip al primer uso; con el criterio de 30 KB, el drawer usa el `Sheet` con CSS (A-08) y Motion queda para A-36, o se revisa el criterio (docs/09 §7).
 2. Editar cantidades, quitar con deshacer (toast), ir a enviar.
 3. Si el presupuesto de JS lo permite, «Cotizar» de la barra móvil (BD-042) pasa a «Mi cotización (n)» y abre el drawer.
+
+*Nota de BD-070:* el contador del header cuenta líneas: agregar algo que ya está suma la cantidad pero no sube el número ni hace «pop». Si docs/08 pide el pop en cada «Agregar», el drawer o la ficha lo disparan con el resultado de `add` (`merged: true`).
 
 **Criterios de aceptación**
 
