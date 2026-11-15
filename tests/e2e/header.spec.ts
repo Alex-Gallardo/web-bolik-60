@@ -167,7 +167,21 @@ test.describe("header", () => {
     await page.addInitScript(() =>
       localStorage.setItem(
         "bolik_quote",
-        JSON.stringify({ state: { lines: [{}, {}, {}] }, version: 1 }),
+        JSON.stringify({
+          state: {
+            lines: ["PT00058", "PT00059", "PT00060"].map((sku) => ({
+              key: `variante:${sku}:cajilla12`,
+              type: "variante",
+              ref: sku,
+              name: "Bolik Ultra",
+              packaging: "cajilla12",
+              quantity: 2,
+              url: "/productos/boligrafos/bolik-ultra",
+              addedAt: 0,
+            })),
+          },
+          version: 1,
+        }),
       ),
     );
     await page.goto("/");
