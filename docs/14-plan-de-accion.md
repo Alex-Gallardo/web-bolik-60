@@ -1450,8 +1450,18 @@ El QR del empaque abre la ficha correcta.
 
 **Criterios de aceptación**
 
-- [ ] `/p/PT00058` → ficha del Ultra azul.
-- [ ] Código inexistente → 404 amigable.
+- [x] `/p/PT00058` → ficha del Ultra azul.
+- [x] Código inexistente → 404 amigable.
+
+**Implementado (BD-065)**
+
+Decisión del usuario (16 nov 2026): un código que no existe va a la 404 amigable, como pide el ticket, y no a `/buscar` con 302 (docs/06 §3.5 decía eso; `/buscar` llega con BD-066 y la 404 ya tiene salidas).
+
+- **En el proxy, no en un route handler:** así hay 301 exacto y, si el código no existe, la 404 real de Next con estado 404 (un route handler no puede mostrar esa página). `proxy.ts` atiende `/p/{codigo}` después de las redirecciones de la tabla (una fila sobre `/p/…` gana) y antes de quitar la barra final (`/p/PT00058/` da un solo salto).
+- **La misma lista en memoria que las rutas del catálogo** (`server/seo/catalog-routes.ts`, BD-061): `listPublishedCatalogRoutes` también trae los SKU y códigos de barras de las variantes publicadas de las fichas visibles, con su ruta y su color. `resolveCode` normaliza lo que llega como la búsqueda por código (`normalizeCode`: sin espacios ni guiones, en mayúsculas; `PT-00058`, `pt00058`), descarta lo que no tiene forma de código o está mal codificado. Van primero todos los SKU y después los códigos de barras, y gana el primero: un SKU nunca queda tapado por un código de barras repetido de otra ficha. Misma recarga cada 60 s y misma espera única al arrancar. Sin lista (base caída) no se sabe si el código existe: un **302** temporal a `/productos`, nunca la 404.
+- **301** a `/productos/{categoria}/{producto}?color={color}&utm_source=qr&utm_medium=empaque` (docs/06 §3.5), con la URL pública del sitio y las demás `utm_*` que traiga el QR (`utm_campaign`). Lleva `Cache-Control: public, max-age=3600`: un 301 sin cabeceras queda en el navegador para siempre, y un código puede cambiar de ficha. La ficha pinta ese color antes del primer pintado (BD-062).
+- **Pendiente (decisión de negocio):** el QR de un color despublicado de una ficha visible da 404; podría llevar a la ficha sin color.
+- Pruebas: unitarias de la lista (SKU, código de barras, formas escritas a mano, repetidos, sin lista) y del proxy (301 con sus parámetros, 404, `/p` sin código); E2E: `/p/PT00058`, `/p/759364663108` y `/p/pt-00060` dan 301 a su color, la ficha abre en azul y un código inexistente da 404 con la página amigable.
 
 #### BD-066 · Buscador
 

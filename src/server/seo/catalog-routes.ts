@@ -2,6 +2,7 @@ import "server-only";
 import { listPublishedCatalogRoutes } from "@/server/data/catalog-routes";
 import { log } from "@/server/log";
 import { safeSlug } from "@/lib/slug";
+import { isSearchableCode, normalizeCode } from "@/server/data/variant-code";
 
 /**
  * Slugs publicados del catálogo en memoria (BD-061), para que proxy.ts responda un 404 real a
@@ -18,8 +19,21 @@ import { safeSlug } from "@/lib/slug";
  *   producto).
  */
 
-/** Slugs publicados: categorías y fichas como «categoria/producto». */
-export type CatalogRoutes = { categories: string[]; products: string[] };
+/** A dónde lleva un código del QR (BD-065): la ficha y el color de esa variante. */
+export type CodeTarget = { path: string; color: string };
+
+export type CodeResult =
+  { status: "found"; target: CodeTarget } | { status: "missing" } | { status: "unavailable" };
+
+/**
+ * Slugs publicados: categorías y fichas como «categoria/producto», y los códigos (SKU y código de
+ * barras) de las variantes visibles con su ficha y su color.
+ */
+export type CatalogRoutes = {
+  categories: string[];
+  products: string[];
+  codes: [code: string, target: CodeTarget][];
+};
 
 export type CatalogRouteStoreOptions = {
   load: () => Promise<CatalogRoutes>;
@@ -31,6 +45,11 @@ export type CatalogRouteStoreOptions = {
 export type CatalogRouteStore = {
   /** false solo si la ruta es una categoría o una ficha sin publicar; true en otro caso. */
   exists(pathname: string): Promise<boolean>;
+  /**
+   * La ficha de un código de /p/{codigo} (BD-065), tal como llega en la URL. «missing» si no
+   * existe o está mal escrito; «unavailable» si la lista no cargó (no se sabe).
+   */
+  resolveCode(segment: string): Promise<CodeResult>;
   invalidate(): void;
 };
 
@@ -52,7 +71,11 @@ export function createCatalogRouteStore({
   firstLoadTimeoutMs = 5_000,
   now = Date.now,
 }: CatalogRouteStoreOptions): CatalogRouteStore {
-  let routes: { categories: Set<string>; products: Set<string> } | null = null;
+  let routes: {
+    categories: Set<string>;
+    products: Set<string>;
+    codes: Map<string, CodeTarget>;
+  } | null = null;
   let loadedAt = Number.NEGATIVE_INFINITY;
   let generation = 0;
   let loading: Promise<void> | undefined;
@@ -65,7 +88,18 @@ export function createCatalogRouteStore({
     const pending: Promise<void> = load()
       .then((data) => {
         if (current === generation) {
-          routes = { categories: new Set(data.categories), products: new Set(data.products) };
+          // Gana el primero. El cargador pone todos los SKU antes que los códigos de barras: un SKU
+          // (único) nunca queda tapado por un código de barras repetido de otra ficha.
+          const codes = new Map<string, CodeTarget>();
+          for (const [code, target] of data.codes) {
+            const key = normalizeCode(code);
+            if (isSearchableCode(key) && !codes.has(key)) codes.set(key, target);
+          }
+          routes = {
+            categories: new Set(data.categories),
+            products: new Set(data.products),
+            codes,
+          };
         }
       })
       .catch((error: unknown) => {
@@ -82,23 +116,29 @@ export function createCatalogRouteStore({
     return pending;
   }
 
+  /** Recarga si toca; la primera vez espera (una sola vez y como mucho firstLoadTimeoutMs). */
+  async function fresh() {
+    if (now() - loadedAt > ttlMs) {
+      const pending = refresh();
+      if (!ready) {
+        firstLoad ??= Promise.race([
+          pending,
+          new Promise<void>((resolve) => setTimeout(resolve, firstLoadTimeoutMs).unref?.()),
+        ]).then(() => {
+          ready = true;
+        });
+        await firstLoad;
+      }
+    }
+    return routes;
+  }
+
   return {
     async exists(pathname) {
       const category = CATEGORY_PATH.exec(pathname);
       const product = category ? null : PRODUCT_PATH.exec(pathname);
       if (!category && !product) return true;
-      if (now() - loadedAt > ttlMs) {
-        const pending = refresh();
-        if (!ready) {
-          firstLoad ??= Promise.race([
-            pending,
-            new Promise<void>((resolve) => setTimeout(resolve, firstLoadTimeoutMs).unref?.()),
-          ]).then(() => {
-            ready = true;
-          });
-          await firstLoad;
-        }
-      }
+      const routes = await fresh();
       if (!routes) return true;
       if (category) {
         const slug = slugOf(category[1]!);
@@ -111,6 +151,19 @@ export function createCatalogRouteStore({
         productSlug !== null &&
         routes.products.has(`${categorySlug}/${productSlug}`)
       );
+    },
+    async resolveCode(segment) {
+      let code: string;
+      try {
+        code = normalizeCode(decodeURIComponent(segment));
+      } catch {
+        return { status: "missing" }; // «%» suelto o una secuencia rota
+      }
+      if (!isSearchableCode(code)) return { status: "missing" };
+      const routes = await fresh();
+      if (!routes) return { status: "unavailable" };
+      const target = routes.codes.get(code);
+      return target ? { status: "found", target } : { status: "missing" };
     },
     invalidate() {
       generation += 1;
