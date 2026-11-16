@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { floatingText } from "@/content/footer";
 import { ui } from "@/content/ui";
+import { whatsappEventData } from "@/lib/whatsapp-event";
 
 type FloatingActionsProps = {
   /** Enlace de WhatsApp con el mensaje general; null mientras no haya número en los ajustes. */
@@ -63,6 +64,7 @@ export function FloatingActions({ whatsappUrl }: FloatingActionsProps) {
           rel="noopener noreferrer"
           aria-label={`${t.whatsapp} ${ui.header.newTab}`}
           className="floating-item floating-whatsapp"
+          {...whatsappEventData("general")}
         >
           <WhatsAppIcon className="size-7" />
         </a>
@@ -70,7 +72,12 @@ export function FloatingActions({ whatsappUrl }: FloatingActionsProps) {
       <nav aria-label={t.label} className="floating-item mobile-bar">
         {whatsappUrl ? (
           <Button asChild variant="whatsapp" className="flex-1">
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              {...whatsappEventData("general")}
+            >
               <WhatsAppIcon className="size-5" />
               {t.whatsappShort}
               <span className="sr-only"> {ui.header.newTab}</span>

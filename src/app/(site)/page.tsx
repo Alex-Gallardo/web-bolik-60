@@ -11,9 +11,8 @@ import { SolutionsSection } from "@/components/home/solutions-section";
 import { StatsBand } from "@/components/home/stats-band";
 import { WhereToBuySection } from "@/components/home/where-to-buy-section";
 import { WholesaleSection } from "@/components/home/wholesale-section";
-import { floatingText } from "@/content/footer";
 import { SITE, buildMetadata } from "@/features/seo/metadata";
-import { whatsappUrl } from "@/lib/whatsapp";
+import { whatsappMessage, whatsappUrl } from "@/lib/whatsapp";
 import { getFeaturedProduct, listCategories } from "@/server/data/catalog";
 import {
   getSiteSettings,
@@ -69,7 +68,7 @@ export default async function HomePage() {
   const productCount = stats.find((stat) => stat.key === "productos")?.value ?? null;
   // Como en el layout: null (sin número válido) = sin botón de WhatsApp.
   const whatsapp = settings.whatsappNumber
-    ? whatsappUrl(settings.whatsappNumber, floatingText.whatsappMessage)
+    ? whatsappUrl(settings.whatsappNumber, whatsappMessage({ context: "general" }))
     : null;
   return (
     <>
