@@ -161,7 +161,7 @@ Los filtros se reflejan en la URL (`?linea=escolar&uso=oficina`) con `history.re
 - **Eventos:** `product_view`, `color_select`, `pack_select`, `quote_add`, `retailer_click`, `whatsapp_open`, `pdf_download`, `dimension_open`.
 
 ### 3.5 `/p/[codigo]` Acceso por QR
-Route handler: busca la variante por `sku` o `barcode` y responde **301** a `/productos/{categoria}/{producto}?color={colorKey}&utm_source=qr&utm_medium=empaque`. Si no existe, 302 a `/buscar?q={codigo}`.
+En `proxy.ts` (BD-065): busca la variante por `sku` o `barcode` (normalizados: sin espacios ni guiones, en mayúsculas) y responde **301** a `/productos/{categoria}/{producto}?color={colorKey}&utm_source=qr&utm_medium=empaque`. Si no existe, la **404 amigable** con estado 404 (decisión del usuario; la 404 suma el buscador con BD-066).
 
 ### 3.6 `/buscar`
 **noindex, follow.** Campo grande enfocado, resultados en vivo (Fuse.js con índice de `/api/search-index`), búsqueda por nombre, sinónimo ("lapicero" = "bolígrafo"), código SKU o código de barras. Si hay coincidencia exacta de código, muestra la tarjeta destacada "¿Buscas el Bolik Ultra Azul (PT00058)?". Sugerencias cuando no hay resultados. Atajo de teclado `/` abre el buscador en desktop.
