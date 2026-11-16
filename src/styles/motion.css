@@ -10,6 +10,7 @@
   --dur-slower: 700ms; /* crossfade del hero, trazos */
   --dur-splash: 2000ms; /* splash completo */
   --dur-shake: 360ms; /* error de campo */
+  --dur-cota: 320ms; /* cota del diagrama de medidas (A-33, docs/09) */
   --dur-shimmer: 1200ms; /* brillo del skeleton (bucle) */
   --dur-spin: 800ms; /* una vuelta del spinner (bucle) */
 
@@ -878,6 +879,61 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
 /* Con JS, la barra de abajo de la ficha (Agregar + WhatsApp) reemplaza a la del sitio. */
 .js body:has(.product-bar) .floating-actions .mobile-bar {
   display: none;
+}
+
+/* ── Diagrama de medidas (BD-063, A-33) ──
+   Sin parte elegida se ven todas las cotas. Al elegir una (radios del diagrama, sin JS) las demás
+   se atenúan y la suya se resalta: su línea se dibuja (stroke-dashoffset) y la etiqueta aparece
+   (opacity). Las partes son las de PEN_PARTS (dimension-diagram.tsx). */
+/* Color de la línea aquí y no con una utilidad (stroke-ink): la utilidad le ganaría al azul. */
+.dimension-diagram .cota-line {
+  stroke: var(--ink);
+  fill: none;
+}
+.dimension-diagram svg [data-part] {
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.dimension-diagram:has([data-dimension-part]:checked) svg [data-part] {
+  opacity: 0.25;
+}
+.dimension-diagram:has([data-dimension-part="body"]:checked) svg [data-part="body"],
+.dimension-diagram:has([data-dimension-part="cap"]:checked) svg [data-part="cap"],
+.dimension-diagram:has([data-dimension-part="tip_length"]:checked) svg [data-part="tip_length"],
+.dimension-diagram:has([data-dimension-part="tip_diameter"]:checked) svg [data-part="tip_diameter"],
+.dimension-diagram:has([data-dimension-part="mark"]:checked) svg [data-part="mark"] {
+  opacity: 1;
+}
+.dimension-diagram:has([data-dimension-part="body"]:checked) [data-part="body"] .cota-line,
+.dimension-diagram:has([data-dimension-part="cap"]:checked) [data-part="cap"] .cota-line,
+.dimension-diagram:has([data-dimension-part="tip_length"]:checked)
+  [data-part="tip_length"]
+  .cota-line,
+.dimension-diagram:has([data-dimension-part="tip_diameter"]:checked)
+  [data-part="tip_diameter"]
+  .cota-line,
+.dimension-diagram:has([data-dimension-part="mark"]:checked) [data-part="mark"] .cota-line {
+  stroke: var(--blue);
+  stroke-dasharray: 1;
+  animation: cota-draw var(--dur-cota) var(--ease-out);
+}
+.dimension-diagram:has([data-dimension-part="body"]:checked) [data-part="body"] .cota-label,
+.dimension-diagram:has([data-dimension-part="cap"]:checked) [data-part="cap"] .cota-label,
+.dimension-diagram:has([data-dimension-part="tip_length"]:checked)
+  [data-part="tip_length"]
+  .cota-label,
+.dimension-diagram:has([data-dimension-part="tip_diameter"]:checked)
+  [data-part="tip_diameter"]
+  .cota-label,
+.dimension-diagram:has([data-dimension-part="mark"]:checked) [data-part="mark"] .cota-label {
+  animation: fade-in var(--dur-cota) var(--ease-out);
+}
+@keyframes cota-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* ── Movimiento reducido: sin desplazamientos, solo opacidad breve ── */
