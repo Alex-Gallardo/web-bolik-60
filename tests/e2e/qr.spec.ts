@@ -1,6 +1,8 @@
 import { collectConsoleErrors, expect, test } from "./helpers";
 
 // Acceso por QR /p/[codigo] (BD-065, docs/06 §3.5): el código del empaque abre la ficha correcta.
+// Location se resuelve contra la URL pedida: cuando la URL pública es la del servidor de prueba
+// (CI), Next la deja relativa.
 
 const ULTRA = "/productos/boligrafos/bolik-ultra";
 
@@ -16,7 +18,7 @@ test.describe("acceso por QR (BD-065)", () => {
     for (const [path, color] of cases) {
       const response = await request.get(path, { maxRedirects: 0 });
       expect(response.status(), path).toBe(301);
-      const location = new URL(response.headers().location!);
+      const location = new URL(response.headers().location!, response.url());
       expect(location.pathname, path).toBe(ULTRA);
       expect(location.searchParams.get("color"), path).toBe(color);
       expect(location.searchParams.get("utm_source"), path).toBe("qr");
@@ -30,7 +32,7 @@ test.describe("acceso por QR (BD-065)", () => {
     const errors = collectConsoleErrors(page);
     // Lleva a la URL pública del sitio: se sigue en este mismo servidor.
     const response = await page.request.get("/p/PT00058", { maxRedirects: 0 });
-    const location = new URL(response.headers().location!);
+    const location = new URL(response.headers().location!, response.url());
     await page.goto(`${location.pathname}${location.search}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bolik Ultra");
     await expect(page.getByText("Color: Azul · Código PT00058")).toBeVisible();
