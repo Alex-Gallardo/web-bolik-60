@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/server/data/catalog-routes", () => ({ listPublishedCategorySlugs: vi.fn() }));
+vi.mock("@/server/data/catalog-routes", () => ({ listPublishedCatalogRoutes: vi.fn() }));
 vi.mock("@/server/log", () => ({ log: { error: vi.fn() } }));
 
 const { createCatalogRouteStore } = await import("./catalog-routes");
@@ -11,19 +11,36 @@ const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 describe("rutas del catálogo para el proxy (BD-061)", () => {
   it("solo los slugs publicados existen; las demás rutas pasan", async () => {
     const store = createCatalogRouteStore({
-      load: async () => ({ categories: ["marcadores", "boligrafos"] }),
+      load: async () => ({ categories: ["marcadores", "boligrafos"], products: [] }),
     });
     expect(await store.exists("/productos/marcadores")).toBe(true);
     expect(await store.exists("/productos/no-existe")).toBe(false);
     expect(await store.exists("/productos/Marcadores")).toBe(false); // URLs en minúsculas
-    // Otras rutas (y las fichas, hasta BD-062) no se tocan.
+    // Otras rutas no se tocan.
     expect(await store.exists("/productos")).toBe(true);
-    expect(await store.exists("/productos/marcadores/fabik-pizarra")).toBe(true);
     expect(await store.exists("/escuelas")).toBe(true);
   });
 
+  it("una ficha existe solo publicada y en su categoría (BD-062)", async () => {
+    const store = createCatalogRouteStore({
+      load: async () => ({
+        categories: ["boligrafos", "marcadores"],
+        products: ["boligrafos/bolik-ultra"],
+      }),
+    });
+    expect(await store.exists("/productos/boligrafos/bolik-ultra")).toBe(true);
+    expect(await store.exists("/productos/boligrafos/no-existe")).toBe(false);
+    expect(await store.exists("/productos/marcadores/bolik-ultra")).toBe(false);
+    expect(await store.exists("/productos/boligrafos/Bolik-Ultra")).toBe(false);
+    expect(await store.exists("/productos/boligrafos/%")).toBe(false);
+    // Más hondo (el PDF de BD-064) lo decide su ruta.
+    expect(await store.exists("/productos/boligrafos/bolik-ultra/ficha.pdf")).toBe(true);
+  });
+
   it("una URL mal codificada es 404, no un error", async () => {
-    const store = createCatalogRouteStore({ load: async () => ({ categories: ["marcadores"] }) });
+    const store = createCatalogRouteStore({
+      load: async () => ({ categories: ["marcadores"], products: [] }),
+    });
     expect(await store.exists("/productos/%")).toBe(false);
     expect(await store.exists("/productos/%E0%A4%A")).toBe(false);
   });
@@ -31,7 +48,7 @@ describe("rutas del catálogo para el proxy (BD-061)", () => {
   it("la primera carga se espera una sola vez, como mucho el tiempo límite", async () => {
     vi.useFakeTimers();
     try {
-      const load = vi.fn(() => new Promise<{ categories: string[] }>(() => {})); // no responde
+      const load = vi.fn(() => new Promise<{ categories: string[]; products: string[] }>(() => {})); // no responde
       const store = createCatalogRouteStore({ load, firstLoadTimeoutMs: 1000 });
       const first = store.exists("/productos/x");
       const second = store.exists("/productos/y");
@@ -53,7 +70,7 @@ describe("rutas del catálogo para el proxy (BD-061)", () => {
     const store = createCatalogRouteStore({
       load: async () => {
         if (fail) throw new Error("sin base");
-        return { categories: slugs };
+        return { categories: slugs, products: [] };
       },
       now: () => clock,
       ttlMs: 10,

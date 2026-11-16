@@ -47,12 +47,14 @@ test.describe("500", () => {
     await page.goto("/styleguide");
     await page.getByRole("button", { name: "Provocar un error" }).click();
     await expect(page.getByRole("button", { name: "Intentar de nuevo" })).toBeVisible();
-    // Teléfono de SiteSetting; WhatsApp solo aparece cuando hay número (hoy no).
+    // Teléfono de SiteSetting; WhatsApp aparece porque dev y e2e traen el número de prueba (BD-062).
     await expect(page.getByRole("link", { name: /^Llámanos al / })).toHaveAttribute(
       "href",
       /^tel:\+502/,
     );
-    await expect(page.getByRole("link", { name: "Escríbenos por WhatsApp" })).toHaveCount(0);
+    await expect(
+      page.getByRole("main").getByRole("link", { name: "Escríbenos por WhatsApp" }),
+    ).toHaveAttribute("href", /^https:\/\/wa\.me\/50255551234/);
   });
 });
 

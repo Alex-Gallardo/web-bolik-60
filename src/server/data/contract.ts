@@ -51,6 +51,28 @@ export function describeDataSourceContract(name: string, getSource: () => DataSo
       expect(ultra!.benefits).toHaveLength(4);
       expect(ultra!.keyFacts.length).toBeGreaterThan(0);
       expect(ultra!.safetyWarning).toContain("menores de 3 años");
+      // Title de docs/10 §1 y fotos provisionales por color (BD-062).
+      expect(ultra!.seoTitle).toBe("Bolik Ultra, bolígrafo hexagonal punta 1.0 mm");
+      expect(ultra!.seoDescription).toMatch(/^Bolik Ultra: bolígrafo hexagonal/);
+      expect(ultra!.images.map((i) => [i.colorKey, i.kind])).toEqual([
+        ["azul", "main"],
+        ["azul", "detail"],
+        ["azul", "pack"],
+        ["negro", "main"],
+        ["negro", "detail"],
+        ["negro", "pack"],
+        ["rojo", "main"],
+        ["rojo", "detail"],
+        ["rojo", "pack"],
+      ]);
+      expect(ultra!.images[0]).toMatchObject({
+        src: "/media/products/bolik-ultra-azul-principal-c9384adc",
+        width: 750,
+        height: 750,
+        alt: "Bolígrafo Bolik Ultra azul con el tapón separado.",
+      });
+      // La tarjeta lleva la principal del color por defecto.
+      expect(ultra!.image?.src).toBe(ultra!.images[0]!.src);
     });
 
     it("no encuentra un producto con la categoría equivocada ni uno que no existe", async () => {
@@ -152,10 +174,11 @@ export function describeDataSourceContract(name: string, getSource: () => DataSo
       expect(await source().getSectionAppearance("prueba.sin-registro")).toBeNull();
     });
 
-    it("los ajustes traen el teléfono y nunca un WhatsApp inventado", async () => {
+    it("los ajustes traen el teléfono y el WhatsApp de prueba de dev y e2e", async () => {
       const settings = await source().getSiteSettings();
       expect(settings.phone).toBe("+502 6628 2600");
-      expect(settings.whatsappNumber).toBeNull();
+      // El de docs/17 §5 (BD-062); prod no lo lleva (profiles.test.ts).
+      expect(settings.whatsappNumber).toBe("55551234");
       expect(settings.splashEnabled).toBe(true);
     });
 

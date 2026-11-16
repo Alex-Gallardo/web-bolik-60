@@ -4,6 +4,7 @@
  * Regla de docs/10: el texto del JSON-LD es el mismo que se ve en la página, sin campos inventados.
  */
 
+import { isValidGtin } from "@/lib/gtin";
 import { SITE } from "./metadata";
 
 type JsonLdObject = { "@context": "https://schema.org"; "@type": string } & Record<string, unknown>;
@@ -92,5 +93,80 @@ export function collectionPageJsonLd({
         url: absolute(item.path),
       })),
     },
+  };
+}
+
+export type ProductGroupInput = {
+  name: string;
+  /** Slug del producto: productGroupID. */
+  slug: string;
+  /** El texto que se ve en la ficha (descripción o, si no hay, la corta). */
+  description: string;
+  path: string;
+  brand: string;
+  /** Razón social del fabricante (SiteSetting legal_name), con el @id de Organization. */
+  manufacturer: string;
+  /** Rutas base de /media (sin ancho): se publican en 1280 px. */
+  images: readonly string[];
+  /** Especificaciones visibles: additionalProperty. */
+  specs: readonly { label: string; value: string }[];
+  variants: readonly {
+    sku: string;
+    barcode: string | null;
+    colorKey: string;
+    colorName: string;
+    /** Ruta base de su foto principal. */
+    image: string | null;
+  }[];
+};
+
+/** Foto publicada (process-image.ts genera 1280 px, sin agrandar las pequeñas). */
+const mediaUrl = (base: string) => absolute(`${base}-1280.webp`);
+
+/**
+ * ProductGroup con sus variantes Product (docs/10 §4, BD-062): sku, color, imagen, URL con
+ * ?color= y gtin12 solo si el código de barras tiene 12 dígitos y su verificador es correcto.
+ * Marca, fabricante, país de origen (todo lo hace Industrias Bolik en Guatemala) y las
+ * especificaciones como additionalProperty. Sin offers, precio ni reseñas: no se inventan.
+ */
+export function productGroupJsonLd(product: ProductGroupInput): JsonLdObject {
+  const url = absolute(product.path);
+  const multiColor = product.variants.length > 1;
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProductGroup",
+    name: product.name,
+    productGroupID: product.slug,
+    description: product.description,
+    url,
+    brand: { "@type": "Brand", name: product.brand },
+    manufacturer: {
+      "@type": "Organization",
+      "@id": `${absolute("/")}#organization`,
+      name: product.manufacturer,
+    },
+    countryOfOrigin: "GT",
+    ...(product.images.length > 0 ? { image: product.images.map(mediaUrl) } : {}),
+    ...(multiColor ? { variesBy: "https://schema.org/color" } : {}),
+    ...(product.specs.length > 0
+      ? {
+          additionalProperty: product.specs.map((spec) => ({
+            "@type": "PropertyValue",
+            name: spec.label,
+            value: spec.value,
+          })),
+        }
+      : {}),
+    hasVariant: product.variants.map((variant) => ({
+      "@type": "Product",
+      name: multiColor ? `${product.name} ${variant.colorName}` : product.name,
+      sku: variant.sku,
+      ...(variant.barcode && variant.barcode.length === 12 && isValidGtin(variant.barcode)
+        ? { gtin12: variant.barcode }
+        : {}),
+      color: variant.colorName,
+      url: multiColor ? `${url}?color=${variant.colorKey}` : url,
+      ...(variant.image ? { image: mediaUrl(variant.image) } : {}),
+    })),
   };
 }

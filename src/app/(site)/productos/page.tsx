@@ -100,7 +100,7 @@ export default async function CatalogPage() {
                 data-usos={product.useSlugs.join(" ")}
                 data-colores={colorKeys(product).join(" ")}
               >
-                {/* Sin precarga: las fichas llegan con BD-062. */}
+                {/* Sin precarga: el JS de la ficha contaría en el del catálogo (docs/12 §2). */}
                 <ProductCard product={product} headingLevel={2} prefetch={false} />
               </li>
             ))}

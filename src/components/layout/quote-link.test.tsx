@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { lineKey } from "@/features/quote/lines";
-import { QUOTE_STORAGE_KEY } from "@/features/quote/storage-keys";
+import { QUOTE_POP_EVENT, QUOTE_STORAGE_KEY } from "@/features/quote/storage-keys";
 import { QuoteLink } from "./quote-link";
 
 /** Lo que guarda el store de BD-070 (zustand persist) con n líneas. */
@@ -59,5 +59,17 @@ describe("QuoteLink (BD-041)", () => {
     expect(document.querySelector("[data-quote-count]")?.classList.contains("badge-pop")).toBe(
       false,
     );
+  });
+
+  it("«pop» también si se sumó a una línea que ya estaba (BD-062)", () => {
+    load(1);
+    render(<QuoteLink />);
+    const badge = () => document.querySelector("[data-quote-count]")!;
+    expect(badge().classList.contains("badge-pop")).toBe(false);
+    act(() => {
+      window.dispatchEvent(new Event(QUOTE_POP_EVENT));
+    });
+    expect(badge().textContent).toBe("1");
+    expect(badge().classList.contains("badge-pop")).toBe(true);
   });
 });

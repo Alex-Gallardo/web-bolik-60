@@ -1353,7 +1353,7 @@ La página más importante para SEO y cotización.
 
 **Pasos**
 
-1. Galería (A-40) con zoom en escritorio y deslizamiento en móvil.
+1. Galería (A-31 al cambiar de color) con zoom en escritorio y deslizamiento en móvil.
 2. Selector de color → cambia imagen, SKU, código de barras y URL (`?color=`).
 3. Selector de empaque (las presentaciones de cada producto: blíster, cajilla, estuche, fardo…).
 4. Datos clave, especificaciones, beneficios, usos.
@@ -1367,9 +1367,29 @@ La página más importante para SEO y cotización.
 
 **Criterios de aceptación**
 
-- [ ] Todo el contenido está en el HTML del servidor.
-- [ ] Cambiar color no recarga la página.
-- [ ] JSON-LD `ProductGroup` con variantes válido.
+- [x] Todo el contenido está en el HTML del servidor.
+- [x] Cambiar color no recarga la página.
+- [x] JSON-LD `ProductGroup` con variantes válido.
+
+**Implementado (BD-062)**
+
+Decisiones del usuario (16 nov 2026): usar desde ya las fotos que hay (carpeta «recursos web bolik») mientras Mercadeo manda las demás; número de WhatsApp de prueba; «Ver cotización» y «Dónde comprar» con sus rutas finales. El paso 1 decía A-40 (tarjetas infantiles): la animación de la ficha es A-31.
+
+- `app/(site)/productos/[categoria]/[producto]/page.tsx`: estática con `generateStaticParams` (fichas publicadas). Migas (Inicio › Catálogo Bolik › categoría › producto) con `BreadcrumbList`; chip de línea y de marca si no es Bolik (BD-038); el único h1; tagline y descripción; color con su código y código de barras; compra; «Datos clave del {producto}» (`<section>` con h2 y `<ul>`, docs/11 §4); beneficios y usos; pestañas (Especificaciones · Medidas y empaque · Para distribuidores con «Cotizar por mayor» · Seguridad), solo las que tienen datos; presentaciones en tarjetas y la tabla de códigos por color; preguntas (con `FAQPage`) y el cierre «¿Compras por mayor?» de la home (docs/17 §2). Lee sus params fuera de un `Suspense`, a propósito, con `export const instant = false`: con un `Suspense` (lo que sugiere Next 16 para Partial Prefetching) el HTML prerenderizado trae un esqueleto y el contenido oculto hasta que un script lo cambia, y sin JS no se ve. La categoría (BD-061) lleva lo mismo: Next la marcaba en desarrollo al llegar desde las migas de la ficha. Una ficha sin colores publicados es 404 (página y proxy).
+- **Title y description:** `ProductView` suma `seoTitle`, `seoDescription` y `updatedAt` (las dos fuentes). `features/catalog/product-meta.ts` los arma si faltan: title con la plantilla de docs/10 §2 («{nombre}, {tagline o categoría}», hasta 52) y description con la de docs/10 §1 (`{nombre}: {tagline}. {dato clave}. {cierre}`, el primer dato clave que cabe en 160; si no, sin él, con la descripción corta o recortada en una palabra). El Bolik Ultra lleva el title de docs/10 §1 y la description de docs/17 §6 (137 caracteres: el esquema de producto admite desde 120). Prueba: únicos en todo el seed. Canónica sin `?color=`.
+- **Color sin JS y sin recargar:** radios nativos sin controlar (isla `components/product/product-purchase.tsx`); un `<style>` de la página (`features/catalog/variant-color.ts`) muestra con `:has()` el conjunto de fotos y la línea de código del color marcado (`[data-variant]`, motion.css). Sin JS también cambia. La isla escribe `?color=` (`replaceState(null, …)`) y lo anuncia en una región viva (`feedback.catalog.colorChanged`). Un script después de los radios marca el de `?color=` antes del primer pintado (QR de BD-065, enlaces compartidos): sin CLS (E2E a 360 px).
+- **Galería** (`product-gallery.tsx` + isla sin dibujo): un conjunto por color (sus fotos y las generales), tira con scroll-snap que se desliza en móvil, miniaturas que son enlaces a cada foto (sin JS) y que la isla convierte en desplazamiento suave con `aria-current`. Zoom con mouse (`transform: scale(2)` hacia el puntero) solo en fotos de 1600 px o más. A-31: el conjunto nuevo entra con opacidad (`data-color-changed`, nunca en el primer pintado) y el anillo del color crece. La primera foto del color por defecto es la LCP (`fetchpriority="high"`); las primeras de los demás colores se piden después de hidratar (y con `?color=` el script previo al pintado le da prioridad a la del color elegido), para que el cambio no quede en blanco. Sin fotos, el cuadro muestra el color.
+- **Fotos provisionales:** las 9 del Bolik Ultra (principal, punta y cajilla por color; 750 px y en CMYK) y 8 del Ultra Fino (3125 px; falta la cajilla negra). `ProductImage` en el seed: `products.json` → `images` (clave de `media.json`, toma de `PRODUCT_IMAGE_KINDS` y color), validado contra el manifiesto y los colores. Van como `sample`: el perfil `prod` las quita, también al producto real. `pnpm media:samples` acepta varias carpetas (la de la demo y la de fotos), toma el nombre de la clave y salta (avisando) lo que no encuentra. La tarjeta del catálogo y el producto estrella de la home ya muestran la foto (fondo blanco en la tarjeta). Hot Colors (14 fotos) espera que el producto exista en el catálogo (BD-039). Lo que falta lo pide el documento «Fotos de producto para bolik66.com» (Mercadeo, BD-150).
+- **Presentación y cantidad:** `PackSelector` con `Packaging.name` y sus unidades; empieza en la primera presentación por mayor. «¿Cuántas cajillas de 12 necesitas?» (docs/17 §3; «Cuántos» con blísteres, fardos, estuches…), `QuantityStepper`, sugeridas 5, 10, 20 y 50 en las de mayoreo (docs/07 §3) y «Total: N unidades». Sin presentaciones, en unidades.
+- **Agregar a mi cotización:** zustand, el store y `feedback.ts` se descargan al primer clic (`components/product/add-to-quote.ts`). Toast `quote.added` con «Ver cotización» (lleva a `/cotizacion`, BD-072; BD-071 lo cambia por el drawer); con 50 líneas, `quote.limit`. El contador hace «pop» también cuando la línea ya estaba (`merged: true`): evento `QUOTE_POP_EVENT` en `storage-keys.ts`, que escucha `useQuoteCount` (el header no cambió).
+- **WhatsApp:** sin JS, el botón abre `wa.me` con el color por defecto. Con JS abre el `WhatsAppSheet` (`components/whatsapp/whatsapp-sheet.tsx`, se descarga al primer toque) con el mensaje `product` (nombre con color, SKU, presentación, cantidad y URL con `?color=`): «Copiar» (`whatsapp.copied`, o `copyFailed` con el texto ya seleccionado) y «Abrir WhatsApp» con `whatsapp_open` y `data-sku`. Textos del sheet en `content/whatsapp.ts`.
+- **Número de prueba:** `settings.json` → `sample_whatsapp_number` (55551234, el ejemplo de docs/17 §5). `settingsForProfile` lo usa como `whatsapp_number` en dev, e2e, la fuente fixtures y staging con `-SampleData`; `prod` nunca lo lleva y no pisa uno real. Con él se ven los botones de WhatsApp de todo el sitio (flotante, barra, menú, cierre, 500).
+- **Barra móvil:** con JS, «Agregar a cotización» + WhatsApp reemplazan a la del sitio (`.product-bar`, motion.css); sin JS queda la del sitio.
+- **404 real:** `server/seo/catalog-routes.ts` también valida `/productos/{categoría}/{ficha}` (publicada y en su categoría); lo más hondo (el PDF de BD-064) pasa. E2E: `/productos/boligrafos/no-existe` y `/productos/marcadores/bolik-ultra` dan 404.
+- **JSON-LD:** `productGroupJsonLd` (`features/seo/jsonld.tsx`): `ProductGroup` con `productGroupID`, marca, fabricante (razón social de SiteSetting con el `@id` de Organization de BD-091), `countryOfOrigin`, imágenes, `variesBy` si hay más de un color, `additionalProperty` desde las especificaciones y `hasVariant` con `sku`, `color`, imagen, URL con `?color=` y `gtin12` solo con 12 dígitos y verificador correcto. Sin `offers` ni reseñas.
+- **Precarga y presupuesto:** con la precarga, el JS de la ficha contaba en el de `/productos` y la categoría (174.5 KB, tope 170), así que las tarjetas siguen sin precargar; las migas de la ficha tampoco (el JS del catálogo contaba en la ficha). «Ver ficha» del producto estrella sí precarga (está bajo el pliegue de la home). La ficha entra en Lighthouse CI con el tope de 170 KB (medido: 169.9 KB, rendimiento 0.92, CLS 0). Su LCP es la foto y da 3.39 s simulado: guardia de **3.5 s** para las fichas (decisión del usuario del 16 nov 2026; docs/12 y CLAUDE.md). Las primeras fotos de los otros colores las pide la isla después de hidratar, para no competir con la LCP. En /styleguide, ColorSwatches, PackSelector y WhatsAppSheet enlazan a la ficha.
+- **Pendiente:** los beneficios usan todos el mismo check; los íconos por `iconKey` («Beneficios con íconos», docs/06 §3.4) esperan el set de íconos (pendiente en /styleguide). En desarrollo, React avisa en consola del script previo al pintado al llegar a la ficha por un enlace (el mismo aviso que el del catálogo; en producción no sale): la isla marca el color de `?color=` al montar.
+- **Fuera de este ticket:** diagrama de medidas, relacionados y «Dónde comprar este producto» con las cadenas (BD-063); PDF (BD-064); «Actualizado el {fecha}» y anclas de las preguntas (BD-103); imágenes en el sitemap (BD-093, los datos ya están en `ProductView.images`); registrar los `data-event` (BD-127).
 
 #### BD-063 · Ficha: medidas, relacionados y dónde comprar
 
@@ -1404,6 +1424,8 @@ Descarga de la ficha técnica generada desde la BD.
 - [ ] Evento `pdf_download`.
 
 #### BD-065 · Acceso por QR /p/[codigo]
+
+> **Nota de BD-062:** la ficha ya pinta el color de `?color=` antes del primer pintado (sin CLS); el 301 solo tiene que llevar a esa URL.
 
 **Sprint** S2 · **Días** 0.25 · **Prioridad** Must · **Pista** B · **Depende de** BD-062 · **Docs** 06 §3.5
 

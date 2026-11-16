@@ -1,4 +1,5 @@
 import type { Route } from "next";
+import { cx } from "class-variance-authority";
 import { getImageProps } from "next/image";
 import Link from "next/link";
 import { Chip } from "@/components/ui/chip";
@@ -55,7 +56,13 @@ export function ProductCard({
       prefetch={prefetch}
       className="lift group flex h-full flex-col rounded-lg border-2 border-line bg-paper text-ink no-underline"
     >
-      <div className="relative aspect-square overflow-hidden rounded-t-[calc(var(--radius-lg)-2px)] bg-soft">
+      {/* Con foto, fondo blanco como el de las fotos de producto; sin ella, el gris de los colores. */}
+      <div
+        className={cx(
+          "relative aspect-square overflow-hidden rounded-t-[calc(var(--radius-lg)-2px)]",
+          product.image ? "bg-paper" : "bg-soft",
+        )}
+      >
         {product.image ? (
           // Atributos de next/image (getImageProps): mismo loader, srcset y sizes, sin el JS del
           // componente Image en el navegador (BD-060). Sin placeholder blur: lo quitaba ese JS al

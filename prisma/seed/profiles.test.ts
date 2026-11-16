@@ -1,15 +1,26 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { parseSeedData } from "./data";
-import { dataForProfile, isSeedProfile, seedMode, seedTargetProblem } from "./profiles";
+import {
+  dataForProfile,
+  isSeedProfile,
+  seedMode,
+  seedTargetProblem,
+  settingsForProfile,
+} from "./profiles";
 import type { SeedData } from "./schema";
 
 const data = parseSeedData();
 
 describe("perfiles del seed (BD-031)", () => {
   it("dev y e2e cargan todo, incluidos los ejemplos, y sincronizan con el JSON", () => {
-    expect(dataForProfile(data, "dev")).toBe(data);
-    expect(dataForProfile(data, "e2e")).toBe(data);
+    for (const profile of ["dev", "e2e"] as const) {
+      const loaded = dataForProfile(data, profile);
+      expect({ ...loaded, settings: data.settings }).toEqual(data);
+      // El número de prueba de WhatsApp (BD-062) hace de número real.
+      expect(loaded.settings.whatsapp_number).toBe("55551234");
+      expect(loaded.settings).not.toHaveProperty("sample_whatsapp_number");
+    }
     expect(seedMode("dev")).toBe("sync");
     expect(seedMode("e2e")).toBe("sync");
   });
@@ -28,7 +39,17 @@ describe("perfiles del seed (BD-031)", () => {
     expect(prod.categories.map((c) => c.slug)).toEqual(data.categories.map((c) => c.slug));
     expect(prod.stores).toEqual(data.stores);
     expect(prod.content.milestones).toEqual(data.content.milestones);
-    expect(prod.settings).toEqual(data.settings);
+    // Ni el número de prueba de WhatsApp ni las fotos provisionales (BD-062).
+    expect(prod.settings).toEqual({ ...data.settings, sample_whatsapp_number: undefined });
+    expect(prod.settings).not.toHaveProperty("sample_whatsapp_number");
+    expect(prod.settings.whatsapp_number).toBeUndefined();
+    expect(prod.products.flatMap((p) => p.images)).toEqual([]);
+  });
+
+  it("settingsForProfile no pisa un número de WhatsApp real", () => {
+    const settings = { ...data.settings, whatsapp_number: "66282600" };
+    expect(settingsForProfile(settings, "dev").whatsapp_number).toBe("66282600");
+    expect(settingsForProfile(settings, "prod").whatsapp_number).toBe("66282600");
   });
 
   it("prod deja sin publicar las categorías sin productos reales publicados (BD-038)", () => {

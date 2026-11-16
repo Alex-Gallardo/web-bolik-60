@@ -73,6 +73,11 @@ export const FAQ_SCOPES = [
 export const MEDIA_KINDS = ["image", "video", "poster", "pdf"] as const;
 export const MEDIA_IMAGE_KINDS: readonly (typeof MEDIA_KINDS)[number][] = ["image", "poster"];
 export const CLICK_KINDS = ["whatsapp", "retailer", "maps", "phone", "pdf"] as const;
+/**
+ * ProductImage.kind (docs/05, BD-062): principal, detalle (punta), trazo, empaque y en uso. La
+ * galería sigue el orden de products.json (sortOrder), dentro de cada color.
+ */
+export const PRODUCT_IMAGE_KINDS = ["main", "detail", "stroke", "pack", "lifestyle"] as const;
 
 export type Role = (typeof ROLES)[number];
 export type CustomerType = (typeof CUSTOMER_TYPES)[number];
@@ -82,6 +87,7 @@ export type QuoteItemType = (typeof QUOTE_ITEM_TYPES)[number];
 export type PackagingCode = (typeof PACKAGING_CODES)[number];
 export type Brand = (typeof BRANDS)[number];
 export type BackgroundPreset = (typeof BACKGROUND_PRESETS)[number];
+export type ProductImageKind = (typeof PRODUCT_IMAGE_KINDS)[number];
 
 export const PACKAGING_LABELS: Record<PackagingCode, { singular: string; plural: string }> = {
   blister1: { singular: "blíster de 1", plural: "blísteres de 1" },

@@ -12,7 +12,9 @@
 
 Laboratorio (Lighthouse móvil, throttling por defecto) en CI: **Rendimiento ≥ 90** en todas las páginas (BD-060, decisión del usuario: el puntaje cae por el LCP simulado de ~3.0 s; era ≥ 95 salvo la home; BD-047 busca recuperarlo), **Accesibilidad ≥ 95**, **Buenas prácticas ≥ 95**, **SEO = 100**.
 
-**LCP en laboratorio (BD-055 en la home; BD-060 en todas las páginas):** la meta de 2.0 s de esta tabla es de campo (p75 móvil, BD-126). En Lighthouse cada página tiene una guardia de regresión de **3.2 s**, no de 2.0 s (`/productos` dio entre 2.0 y 3.1 s en 3 corridas). El LCP es el texto del h1 y el navegador lo pinta a los ~0.5 s, pero Lantern simula la red lenta cargándole todo lo que se pidió antes del primer pintado (~146 KB de Next/React, el JS de la página y las fuentes), y eso da 2.9–3.2 s. Lo que se probó en BD-055, con el mejor de 3 corridas:
+**LCP en laboratorio (BD-055 en la home; BD-060 en todas las páginas):** la meta de 2.0 s de esta tabla es de campo (p75 móvil, BD-126). En Lighthouse cada página tiene una guardia de regresión de **3.2 s** (las fichas de producto, **3.5 s**: ver abajo), no de 2.0 s (`/productos` dio entre 2.0 y 3.1 s en 3 corridas). El LCP es el texto del h1 y el navegador lo pinta a los ~0.5 s, pero Lantern simula la red lenta cargándole todo lo que se pidió antes del primer pintado (~146 KB de Next/React, el JS de la página y las fuentes), y eso da 2.9–3.2 s. Lo que se probó en BD-055, con el mejor de 3 corridas:
+
+**Fichas de producto (BD-062, decisión del usuario del 16 nov 2026):** guardia de LCP de **3.5 s**. Su LCP es la foto principal, no texto, y Lantern le suma el documento, más pesado que el de una categoría (27 KB comprimido contra 17: el contenido de la ficha y su payload RSC). Medido: 3.39 s en Lighthouse, con la foto en el navegador a los ~0.6 s (`fetchpriority="high"`, sin competir con las fotos de los otros colores). El JS (≤ 170 KB) y el rendimiento (≥ 0.90) son los mismos que en el resto; la ficha entra en Lighthouse CI.
 
 | Ajuste | LCP | Resultado |
 |---|---|---|

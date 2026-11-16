@@ -1,11 +1,12 @@
 import "server-only";
-import { listPublishedCategorySlugs } from "@/server/data/catalog-routes";
+import { listPublishedCatalogRoutes } from "@/server/data/catalog-routes";
 import { log } from "@/server/log";
 import { safeSlug } from "@/lib/slug";
 
 /**
  * Slugs publicados del catálogo en memoria (BD-061), para que proxy.ts responda un 404 real a
- * /productos/{algo que no existe}. Con Cache Components el layout ya se envió cuando la página
+ * /productos/{algo que no existe} y a /productos/{categoría}/{ficha que no existe} (BD-062). Una
+ * ficha existe solo en su categoría. Con Cache Components el layout ya se envió cuando la página
  * llama a notFound(): sin esto la respuesta sería 200 con noindex («soft 404»). Como las
  * redirecciones (redirects.ts):
  * - se recarga cada `ttlMs` en segundo plano (la petición usa la lista que hay);
@@ -13,24 +14,28 @@ import { safeSlug } from "@/lib/slug";
  *   como mucho `firstLoadTimeoutMs`; si la base no responde, se deja pasar todo (la página decide
  *   con su notFound()) y se reintenta en el siguiente ciclo;
  * - si una recarga falla, se sigue con la lista anterior;
- * - `invalidate()` lanza una carga nueva (el admin al publicar o despublicar una categoría).
- * BD-062 suma las fichas.
+ * - `invalidate()` lanza una carga nueva (el admin al publicar o despublicar una categoría o un
+ *   producto).
  */
 
+/** Slugs publicados: categorías y fichas como «categoria/producto». */
+export type CatalogRoutes = { categories: string[]; products: string[] };
+
 export type CatalogRouteStoreOptions = {
-  load: () => Promise<{ categories: string[] }>;
+  load: () => Promise<CatalogRoutes>;
   ttlMs?: number;
   firstLoadTimeoutMs?: number;
   now?: () => number;
 };
 
 export type CatalogRouteStore = {
-  /** false solo si la ruta es una categoría y su slug no está publicado; true en otro caso. */
+  /** false solo si la ruta es una categoría o una ficha sin publicar; true en otro caso. */
   exists(pathname: string): Promise<boolean>;
   invalidate(): void;
 };
 
 const CATEGORY_PATH = /^\/productos\/([^/]+)$/;
+const PRODUCT_PATH = /^\/productos\/([^/]+)\/([^/]+)$/;
 
 /** El segmento de la URL como slug; null si está mal codificado o no es un slug válido. */
 function slugOf(segment: string): string | null {
@@ -47,7 +52,7 @@ export function createCatalogRouteStore({
   firstLoadTimeoutMs = 5_000,
   now = Date.now,
 }: CatalogRouteStoreOptions): CatalogRouteStore {
-  let categories: Set<string> | null = null;
+  let routes: { categories: Set<string>; products: Set<string> } | null = null;
   let loadedAt = Number.NEGATIVE_INFINITY;
   let generation = 0;
   let loading: Promise<void> | undefined;
@@ -59,7 +64,9 @@ export function createCatalogRouteStore({
     const current = generation;
     const pending: Promise<void> = load()
       .then((data) => {
-        if (current === generation) categories = new Set(data.categories);
+        if (current === generation) {
+          routes = { categories: new Set(data.categories), products: new Set(data.products) };
+        }
       })
       .catch((error: unknown) => {
         log.error(
@@ -77,8 +84,9 @@ export function createCatalogRouteStore({
 
   return {
     async exists(pathname) {
-      const match = CATEGORY_PATH.exec(pathname);
-      if (!match) return true;
+      const category = CATEGORY_PATH.exec(pathname);
+      const product = category ? null : PRODUCT_PATH.exec(pathname);
+      if (!category && !product) return true;
       if (now() - loadedAt > ttlMs) {
         const pending = refresh();
         if (!ready) {
@@ -91,9 +99,18 @@ export function createCatalogRouteStore({
           await firstLoad;
         }
       }
-      if (!categories) return true;
-      const slug = slugOf(match[1]!);
-      return slug !== null && categories.has(slug);
+      if (!routes) return true;
+      if (category) {
+        const slug = slugOf(category[1]!);
+        return slug !== null && routes.categories.has(slug);
+      }
+      const categorySlug = slugOf(product![1]!);
+      const productSlug = slugOf(product![2]!);
+      return (
+        categorySlug !== null &&
+        productSlug !== null &&
+        routes.products.has(`${categorySlug}/${productSlug}`)
+      );
     },
     invalidate() {
       generation += 1;
@@ -110,5 +127,5 @@ export function createCatalogRouteStore({
 const shared = globalThis as unknown as { bolikCatalogRouteStore?: CatalogRouteStore };
 
 export const catalogRouteStore = (shared.bolikCatalogRouteStore ??= createCatalogRouteStore({
-  load: async () => ({ categories: await listPublishedCategorySlugs() }),
+  load: listPublishedCatalogRoutes,
 }));

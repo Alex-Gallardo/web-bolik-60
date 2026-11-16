@@ -222,6 +222,8 @@ Los nombres de archivo llevan un hash corto del contenido y de los parámetros (
 
 Implementado en BD-034: `server/media/process-image.ts` (sharp) genera los 6 anchos de `lib/image-loader.ts` sin agrandar, endereza por EXIF, convierte a sRGB y no copia metadatos (ni la ubicación GPS); no acepta HEIC, SVG, GIF ni animaciones; `server/data/media.ts` registra `MediaAsset`; `pnpm import:media` carga fotos en lote. En el servidor, IIS sirve `/media` desde `D:\bolik\media`; donde no hay IIS (desarrollo, `start:local`, CI), lo sirve `app/media/[...path]/route.ts` desde `MEDIA_DIR`, con las mismas cabeceras.
 
+**Fotos de producto (BD-062):** cuadradas, de al menos 2000 × 2000 px, en sRGB y sobre fondo blanco puro, una serie por color con el mismo encuadre (la galería las cambia con un fundido). La lista completa para Mercadeo está en el documento «Fotos de producto para bolik66.com». Las que hay hoy (Bolik Ultra a 750 px y en CMYK, Ultra Fino) son provisionales: van como `sample` en `media.json` y no llegan a producción. Una foto de 1600 px o más se puede ampliar en la ficha.
+
 ## 8. Seguridad
 
 | Capa | Medida |

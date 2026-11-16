@@ -50,7 +50,7 @@ pnpm db:generate      # regenera el cliente (también corre en pnpm install)
 pnpm db:reset:test    # borra y recrea BolikDigital_Test (manual; nunca lo corre un agente)
 pnpm db:seed          # datos iniciales: --profile dev (por defecto) | e2e | prod (solo crea lo que falta, sin ejemplos)
 pnpm import:media     # procesa en lote las fotos de una carpeta (WebP 320…1920) y las registra en MediaAsset
-pnpm media:samples    # pósters y videos de ejemplo del hero en MEDIA_DIR desde la carpeta de la demo (no van al repo)
+pnpm media:samples    # pósters y videos del hero y fotos de producto provisionales en MEDIA_DIR (carpetas de la demo y de fotos; no van al repo)
 pnpm sync:catalog     # sincroniza artículos desde SMART-K66
 ```
 
@@ -80,7 +80,7 @@ Detalle en `docs/04-estructura-proyecto.md`.
 
 - Todas las páginas públicas son **Server Components** y se generan estáticas (SSG) con revalidación por **tags**. `"use client"` solo en hojas interactivas pequeñas.
 - Presupuesto de JS inicial por página (transferido, gzip, como lo mide Lighthouse): **≤ 165 KB** (home) y **≤ 170 KB** (resto, incluida la ficha). Next 16 + React 19 ya ocupan ~146 KB y el layout del sitio (header, pie, flotantes, avisos) ~14 KB más: lo de cada página va encima (docs/12 §2; BD-047 aligera el layout para bajar el tope). Mapa, buscador (Fuse), PDF, Motion y analítica se cargan con `dynamic()` o al interactuar.
-- LCP móvil **≤ 2.0 s** (p75 de campo, BD-126), INP **≤ 150 ms** (máximo 200), CLS **≤ 0.05**. En Lighthouse el LCP es una guardia de regresión de **3.2 s** en todas las páginas: la simulación da ~3.0 s por el JS y las fuentes aunque el navegador pinte a los ~0.4 s (docs/12 §1). Lighthouse móvil ≥ 90 en Rendimiento en todas las páginas (cae por esa misma simulación; BD-047 busca recuperar el 95) y 100 en SEO. Detalle en `docs/12`.
+- LCP móvil **≤ 2.0 s** (p75 de campo, BD-126), INP **≤ 150 ms** (máximo 200), CLS **≤ 0.05**. En Lighthouse el LCP es una guardia de regresión de **3.2 s** en todas las páginas y de **3.5 s** en las fichas de producto (su LCP es la foto; BD-062): la simulación da ~3.0 s por el JS y las fuentes aunque el navegador pinte a los ~0.4 s (docs/12 §1). Lighthouse móvil ≥ 90 en Rendimiento en todas las páginas (cae por esa misma simulación; BD-047 busca recuperar el 95) y 100 en SEO. Detalle en `docs/12`.
 - Imágenes siempre con `next/image`, `sizes` correcto, `alt` real, dimensiones declaradas. `priority` **solo** en la imagen LCP.
 - Fuentes con `next/font` (autohospedadas, `display: swap`, subset latin). Máximo 2 familias por página (Baloo 2 solo en la sección escuelas).
 - El video del hero nunca es el LCP: el **póster** es el LCP; el video carga después de `load`, solo con buena conexión y sin `Save-Data`.

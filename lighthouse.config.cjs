@@ -46,7 +46,13 @@ module.exports = {
         ? {}
         : // start:local copia public/ antes de arrancar: con imágenes y video tarda más de 10 s.
           { startServerCommand: "pnpm start:local", startServerReadyTimeout: 60_000 }),
-      url: [`${base}/`, `${base}/productos`, `${base}/productos/boligrafos`],
+      url: [
+        `${base}/`,
+        `${base}/productos`,
+        `${base}/productos/boligrafos`,
+        // La ficha (BD-062): la página más importante para SEO y cotización.
+        `${base}/productos/boligrafos/bolik-ultra`,
+      ],
       numberOfRuns: 3,
       settings: {
         // Los runners de Linux de GitHub no permiten el sandbox de Chrome.
@@ -76,12 +82,26 @@ module.exports = {
           // de regresión de 3.2 s que la home (la meta de 2.0 s es de campo, BD-126: Lantern da
           // ~3.0 s por el JS y las fuentes aunque se pinte a los ~0.4 s); JS ≤ 170 KB, porque la
           // parte común (Next, React y el layout) ya ocupa ~160 KB en cualquier página. BD-047
-          // aligera el layout para volver a bajar el tope.
-          matchingUrlPattern: "^https?://[^/]+/.+",
+          // aligera el layout para volver a bajar el tope. Sin las fichas (abajo).
+          matchingUrlPattern: "^https?://[^/]+/(?!productos/[^/]+/[^/]+$).+",
           assertions: {
             ...common,
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
+            "total-blocking-time": ["error", { maxNumericValue: 150 }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
+          },
+        },
+        {
+          // Fichas de producto (BD-062, decisión del usuario): lo mismo que el resto, pero el LCP
+          // es la foto principal (no texto) y Lantern le suma el documento, que pesa más (el
+          // contenido de la ficha y su payload RSC): da ~3.4 s aunque la foto llegue a los ~0.6 s.
+          // Guardia de 3.5 s; la meta de 2.0 s sigue siendo de campo (BD-126).
+          matchingUrlPattern: "^https?://[^/]+/productos/[^/]+/[^/]+$",
+          assertions: {
+            ...common,
+            "categories:performance": ["error", { minScore: 0.9 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 3500 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
             "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
           },
