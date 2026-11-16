@@ -1363,6 +1363,8 @@ La página más importante para SEO y cotización.
 
 *Nota de BD-061:* sumar los slugs de producto a `server/seo/catalog-routes.ts` (hoy solo valida categorías), para que una ficha inexistente responda 404 real y no 200 con `noindex`.
 
+*Nota de BD-067:* el botón de WhatsApp usa `whatsappMessage({ context: "product", item, url })` (nombre con color, SKU, presentación y cantidad elegidas, URL con `?color=`) y `whatsappEventData("product", sku)`. Aquí va también el `WhatsAppSheet` de docs/08 (vista previa del mensaje, «Copiar» con `feedback.whatsapp.copied`/`copyFailed`, «Abrir WhatsApp»).
+
 **Criterios de aceptación**
 
 - [ ] Todo el contenido está en el HTML del servidor.
@@ -1450,8 +1452,15 @@ Mensajes prellenados según dónde esté el visitante.
 
 **Criterios de aceptación**
 
-- [ ] El mensaje incluye producto, SKU, empaque y URL.
-- [ ] Evento `whatsapp_open`.
+- [x] El mensaje incluye producto, SKU, empaque y URL.
+- [x] Evento `whatsapp_open`.
+
+**Implementado (BD-067)**
+
+- Textos en `content/whatsapp.ts` (docs/17 §10); `lib/whatsapp.ts` los arma con `whatsappMessage({ context })`: `general`; `product` (nombre con color, SKU, presentación, cantidad y URL absoluta de la ficha); `quote` (una línea por producto, hasta 10 y «y N productos más»); `sent` (folio). Sin presentación, la cantidad dice «20 unidades»; sin cantidad, no aparece. Una cotización sin productos da el mensaje general. Nunca datos personales.
+- `whatsappEventData(contexto, sku?)` (en `lib/whatsapp-event.ts`, sin textos: lo usan islas de cliente) da `data-event="whatsapp_open"`, `data-context` y, en la ficha, `data-sku` (docs/12 §4; los registra BD-127). Lo llevan el flotante, la barra móvil, el menú móvil, el cierre de la home y la pantalla de error, con la plantilla general.
+- `floatingText.whatsappMessage` salió de `content/footer.ts`: el mensaje general vive en `content/whatsapp.ts`.
+- El `WhatsAppSheet` de docs/08 (vista previa, copiar, abrir) va con la ficha (BD-062), donde se usa por primera vez.
 
 ### E6 · Cotización y formularios
 

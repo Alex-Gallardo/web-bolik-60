@@ -98,7 +98,7 @@ bolik-digital/
 │  │  └─ admin/                 # data-table, form-field, image-uploader, status-badge
 │  ├─ features/                 # lógica por dominio (sin JSX de presentación pesada)
 │  │  ├─ catalog/  (queries.ts, schemas.ts, search.ts, format.ts)
-│  │  ├─ quote/    (store.ts, schemas.ts, actions.ts, whatsapp.ts)
+│  │  ├─ quote/    (store.ts, lines.ts, storage-keys.ts, schemas.ts, actions.ts)
 │  │  ├─ stores/   (queries.ts)
 │  │  ├─ schools/  (actions.ts, schemas.ts)
 │  │  ├─ distributors/ · contact/

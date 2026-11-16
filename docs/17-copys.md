@@ -373,3 +373,14 @@ Texto:
 
 ### Estado / historias (texto corto)
 > Nuevo bolik66.com ✏️ Encuentra Bolik cerca de ti.
+
+## 10. Mensajes de WhatsApp (BD-067)
+
+Prellenados según dónde está el visitante (`content/whatsapp.ts`). Llevan lo que Ventas necesita para no volver a preguntar, sin datos personales.
+
+| Contexto | Mensaje |
+|---|---|
+| General (flotante, menú, cierre de la home) | Hola, Bolik. Quiero información sobre sus productos y precios por mayor. |
+| Ficha de producto | Hola, Bolik. Me interesa {producto} {color} ({SKU}), {presentación} × {cantidad}. ¿Me pueden dar precio y disponibilidad? {URL de la ficha} |
+| Cotización sin enviar | Hola, Bolik. Quiero cotizar: • {producto} ({SKU}), {presentación} × {cantidad} … (hasta 10; «y N productos más») ¿Me pueden dar precio y disponibilidad? |
+| Cotización enviada | Hola, Bolik. Envié la cotización {folio}. ¿Me pueden ayudar con el seguimiento? |

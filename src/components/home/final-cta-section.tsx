@@ -4,6 +4,7 @@ import { Section } from "@/components/layout/section";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { finalCta } from "@/content/home";
 import { ui } from "@/content/ui";
+import { whatsappEventData } from "@/lib/whatsapp-event";
 
 /**
  * Cierre de la home (docs/06 §3.1 sección 13, BD-054): «¿Compras por mayor?» con Armar mi
@@ -34,8 +35,7 @@ export function FinalCtaSection({ whatsappUrl }: { whatsappUrl: string | null })
               target="_blank"
               rel="noopener noreferrer"
               className={buttonVariants({ variant: "whatsapp", block: true })}
-              data-event="whatsapp_open"
-              data-context="general"
+              {...whatsappEventData("general")}
             >
               {finalCta.whatsapp}
               <span className="sr-only">{` ${ui.cards.newTab}`}</span>

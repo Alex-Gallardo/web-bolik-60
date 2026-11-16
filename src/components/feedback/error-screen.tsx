@@ -3,6 +3,7 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { PAGE_ID } from "@/components/layout/page-id";
 import { feedback } from "@/content/feedback";
+import { whatsappEventData } from "@/lib/whatsapp-event";
 
 type ErrorScreenProps = {
   /** El valor que llegó al error boundary (`unknown` en Next 16.4). */
@@ -64,6 +65,7 @@ export function ErrorScreen({ error, retry }: ErrorScreenProps) {
             href={whatsapp}
             target="_blank"
             rel="noopener noreferrer"
+            {...whatsappEventData("general")}
             className="press inline-flex min-h-11 items-center rounded-md border-2 border-blue px-6 font-bold text-blue no-underline"
           >
             {text.whatsapp}

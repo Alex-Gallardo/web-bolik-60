@@ -8,10 +8,9 @@ import { PageEnter } from "@/components/motion/page-enter";
 import { RevealObserver } from "@/components/motion/reveal-observer";
 import type { NavGroup } from "@/components/layout/products-menu";
 import { feedback } from "@/content/feedback";
-import { floatingText } from "@/content/footer";
 import { LINE_GROUPS } from "@/lib/constants";
 import { formatPhone, toInternationalPhone } from "@/lib/format";
-import { whatsappUrl } from "@/lib/whatsapp";
+import { whatsappMessage, whatsappUrl } from "@/lib/whatsapp";
 import { listCategories } from "@/server/data/catalog";
 import { getSiteSettings } from "@/server/data/content";
 
@@ -32,9 +31,9 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       .map(({ name, href }) => ({ name, href })),
   })).filter((group) => group.categories.length > 0);
   // Helper de lib/whatsapp: agrega el 502 y descarta números inválidos (null = sin botón). Mensaje
-  // general prellenado en el menú y los flotantes; BD-067 trae las plantillas por contexto.
+  // general (whatsappMessage({ context: "general" }), BD-067) en el menú y los flotantes.
   const whatsapp = settings.whatsappNumber
-    ? whatsappUrl(settings.whatsappNumber, floatingText.whatsappMessage)
+    ? whatsappUrl(settings.whatsappNumber, whatsappMessage({ context: "general" }))
     : null;
 
   const international = toInternationalPhone(settings.phone);

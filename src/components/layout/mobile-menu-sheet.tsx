@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ui } from "@/content/ui";
+import { whatsappEventData } from "@/lib/whatsapp-event";
 import type { NavGroup } from "./products-menu";
 
 export type MobileMenuSheetProps = {
@@ -51,7 +52,13 @@ export default function MobileMenuSheet({
             </Button>
             {whatsappUrl ? (
               <Button asChild variant="whatsapp" size="lg" className="w-full">
-                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" onClick={close}>
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={close}
+                  {...whatsappEventData("general")}
+                >
                   {ui.header.whatsapp}
                   <span className="sr-only"> {ui.header.newTab}</span>
                 </a>

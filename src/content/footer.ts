@@ -54,7 +54,5 @@ export const floatingText = {
   label: "Acciones rápidas",
   whatsapp: "Escríbenos por WhatsApp",
   whatsappShort: "WhatsApp",
-  /** Mensaje prellenado general (demo); las plantillas por producto y folio llegan con BD-067. */
-  whatsappMessage: "Hola, Bolik. Quiero información sobre sus productos y precios por mayor.",
   backToTop: BACK_TO_TOP,
 } as const;

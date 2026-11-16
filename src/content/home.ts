@@ -204,6 +204,6 @@ export const finalCta = {
   title: "¿Compras por mayor?",
   text: "Arma tu lista en minutos y recibe precio de fábrica en un día hábil.",
   quote: { label: "Armar mi cotización", href: "/cotizacion" },
-  /** Mensaje: el general del sitio (footer.ts) hasta las plantillas por contexto (BD-067). */
+  /** Mensaje: el general del sitio (content/whatsapp.ts, whatsappText.general). */
   whatsapp: "Escribir por WhatsApp",
 } as const;
