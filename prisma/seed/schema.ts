@@ -5,6 +5,7 @@ import {
   FAQ_SCOPES,
   LINE_GROUPS,
   PACKAGING_CODES,
+  PRODUCT_IMAGE_KINDS,
   STORE_TYPES,
 } from "../../src/lib/constants";
 import { isValidGtin } from "../../src/lib/gtin";
@@ -42,8 +43,11 @@ const mediaKey = z
 /**
  * Imágenes de ejemplo ya procesadas (media.json, BD-050): sus medidas, para que la fuente
  * `fixtures` arme la vista sin base y el seed registre la fila de MediaAsset. Los archivos no van
- * al repo (son de la demo): los genera `pnpm media:samples` en MEDIA_DIR, y en la CI se usan
- * reemplazos con la misma clave (scripts/ci/sample-media.mjs).
+ * al repo: los genera `pnpm media:samples` en MEDIA_DIR, y en la CI se usan reemplazos con la
+ * misma clave (scripts/ci/sample-media.mjs). `originalName` es la ruta del archivo dentro de la
+ * carpeta de origen (la de la demo o la de fotos de Mercadeo). Las fotos de producto provisionales
+ * (BD-062: 750 px y en CMYK) también van como `sample`: no llegan a producción hasta tener los
+ * originales que pide «Fotos de producto para bolik66.com».
  */
 export const mediaSchema = z.object({
   key: mediaKey,
@@ -124,6 +128,26 @@ export const productSchema = z.object({
   benefits: z
     .array(z.object({ iconKey: key, title: text(80), text: text(200).optional() }))
     .default([]),
+  /**
+   * Fotos de la galería (BD-062), en orden: imágenes de media.json con su toma y, si son de un
+   * color, la clave de la variante. El texto alternativo es el del manifiesto.
+   */
+  images: z
+    .array(
+      z.object({
+        mediaKey,
+        kind: z.enum(PRODUCT_IMAGE_KINDS),
+        colorKey: key.optional(),
+      }),
+    )
+    .default([]),
+  /**
+   * Title y description de la ficha (docs/10 §1, docs/17 §6); sin ellos, los arma la página
+   * (features/catalog/product-meta.ts). Title ≤ 52: con « | Bolik» queda en 60. La descripción
+   * admite desde 120: la del Bolik Ultra (docs/17 §6) tiene 137.
+   */
+  seoTitle: text(52).optional(),
+  seoDescription: z.string().trim().min(120).max(160).optional(),
 });
 
 export const departmentSchema = z.object({
@@ -268,6 +292,11 @@ export const settingsSchema = z
       .string()
       .regex(/^\d{8,15}$/)
       .optional(), // sin inventar: vacío hasta tenerlo
+    /** Número de prueba (BD-062): solo dev, e2e y fixtures; nunca prod (settingsForProfile). */
+    sample_whatsapp_number: z
+      .string()
+      .regex(/^\d{8,15}$/)
+      .optional(),
     splash_enabled: z.enum(["true", "false"]),
     kits_enabled: z.enum(["true", "false"]),
     show_kit_prices: z.enum(["true", "false"]).optional(),
@@ -412,6 +441,17 @@ export const seedDataSchema = z
     // La fuente fixtures solo resuelve pósters del manifiesto; un póster de la demo debe ir marcado
     // como sampleMedia para que el perfil prod lo quite (y el manifiesto, como sample).
     const media = new Map(data.media.map((m) => [m.key, m]));
+    data.products.forEach((p, i) => {
+      const colors = new Set(p.variants.map((v) => v.colorKey));
+      const keys = p.images.map((image) => image.mediaKey);
+      if (new Set(keys).size !== keys.length) fail(["products", i], "foto repetida");
+      for (const image of p.images) {
+        if (!media.has(image.mediaKey))
+          fail(["products", i], `foto ${image.mediaKey} no está en media.json`);
+        if (image.colorKey && !colors.has(image.colorKey))
+          fail(["products", i], `foto de un color que no tiene: ${image.colorKey}`);
+      }
+    });
     data.content.heroChapters.forEach((h, i) => {
       const poster = h.posterKey ? media.get(h.posterKey) : undefined;
       if (h.posterKey && !poster)

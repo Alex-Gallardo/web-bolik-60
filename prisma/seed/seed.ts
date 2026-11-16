@@ -204,6 +204,47 @@ export async function seedDatabase(
     });
   }
 
+  // Fotos de cada producto (BD-062), ya con sus MediaAsset. Como las relaciones: en prod solo
+  // los productos recién creados (no se pisa lo editado en el admin).
+  const mediaIds = new Map(
+    (await db.mediaAsset.findMany({ select: { id: true, key: true } })).map((m) => [m.key, m.id]),
+  );
+  for (const p of data.products) {
+    const productId = productIds.get(p.slug);
+    if (productId === undefined) continue;
+    if (mode === "create-only" && !createdProducts.has(p.slug)) continue;
+    const colorIds = new Map(
+      (
+        await db.productVariant.findMany({
+          where: { productId },
+          select: { id: true, colorKey: true },
+        })
+      ).map((v) => [v.colorKey, v.id]),
+    );
+    const images = p.images.flatMap((image) => {
+      const mediaId = mediaIds.get(image.mediaKey);
+      return mediaId === undefined ? [] : [{ ...image, mediaId }];
+    });
+    await db.$transaction(async (tx) => {
+      await tx.productImage.deleteMany({
+        where: { productId, mediaId: { notIn: images.map((i) => i.mediaId) } },
+      });
+      for (const [sortOrder, image] of images.entries()) {
+        const row = {
+          variantId: image.colorKey ? (colorIds.get(image.colorKey) ?? null) : null,
+          kind: image.kind,
+          alt: data.media.find((m) => m.key === image.mediaKey)!.alt,
+          sortOrder,
+        };
+        await tx.productImage.upsert({
+          where: { productId_mediaId: { productId, mediaId: image.mediaId } },
+          create: { productId, mediaId: image.mediaId, ...row },
+          update: row,
+        });
+      }
+    }, TX_OPTIONS);
+  }
+
   await seedContent(db, data.content, mode);
 
   const skuIds = new Map(
@@ -309,6 +350,8 @@ async function upsertProduct(
     featured: p.featured,
     published: p.published,
     isSample: p.sample,
+    seoTitle: p.seoTitle ?? null,
+    seoDescription: p.seoDescription ?? null,
     sortOrder,
   };
   const { id: productId } = await tx.product.upsert({

@@ -156,6 +156,9 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Advertencia: Uso bajo supervisión de un adulto con niños menores de 3 años. Contiene partes pequeñas que pueden ser ingeridas o inhaladas. Evitar temperaturas superiores a 45 °C y la exposición directa al sol. Almacenar en un lugar seco y ventilado.
 - Actualizado: Actualizado el {fecha}
 - Relacionados: También te puede servir
+- Interfaz de la ficha (BD-062): Datos clave del {producto} · Beneficios · Usos · Pestañas: Especificaciones · Medidas y empaque · Para distribuidores · Seguridad · Presentaciones · Códigos por color (Color · Código · Código de barras; «Por confirmar» si falta) · Total: {n} unidades · Cantidades sugeridas: Elegir {n} · Barra móvil: Agregar a cotización · WhatsApp · Cierre: el «CTA final» de la home (§2)
+- Etiquetas de la ficha (BD-062): Migas de pan · Marca {marca} · Fotos del producto · Foto {n} de {total} · {Producto} {color}, sin foto todavía · Código de barras {código} (o «Código de barras por confirmar») · Medidas del {producto} en milímetros (Parte · Medida) · Medidas, peso y unidades de cada presentación (Presentación · Unidades · Contiene: {n} empaques · Medidas (largo × ancho × alto) · Peso) · Código SAP y código de barras de cada color del {producto} · Acciones del producto (barra móvil)
+- WhatsAppSheet: Escríbenos por WhatsApp · Vista previa del mensaje · Copiar · Abrir WhatsApp
 
 ## 4. Páginas por público
 

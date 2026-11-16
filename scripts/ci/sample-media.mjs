@@ -1,6 +1,6 @@
-// Reemplazos de los medios de ejemplo (BD-050) para la CI y para `pnpm start:local` sin
-// `pnpm media:samples`: las ilustraciones y videos de la demo no van al repo (es público), pero el
-// hero las pide. Para cada imagen de prisma/seed/media.json escribe los 6 WebP con su clave (un
+// Reemplazos de los medios de ejemplo (BD-050, BD-062) para la CI y para `pnpm start:local` sin
+// `pnpm media:samples`: las ilustraciones y videos de la demo y las fotos de producto provisionales
+// no van al repo (es público), pero el hero y la ficha las piden. Para cada imagen de prisma/seed/media.json escribe los 6 WebP con su clave (un
 // degradado de marca con grano, de peso parecido al de una ilustración real, para que Lighthouse
 // mida un LCP con imagen) y, para cada video del hero, un archivo que no es un video: el hero lo
 // detecta y se queda con el póster, sin errores de red en la consola.
@@ -28,7 +28,16 @@ async function readJson(relative) {
 }
 
 /** Degradado navy → azul con grano: comprime como una ilustración, no como un color plano. */
-async function placeholder(width, height) {
+/** Un reemplazo por medida: muchas fotos comparten tamaño (las de un producto, por color). */
+const generated = new Map();
+
+function placeholder(width, height) {
+  const size = `${width}x${height}`;
+  if (!generated.has(size)) generated.set(size, drawPlaceholder(width, height));
+  return generated.get(size);
+}
+
+async function drawPlaceholder(width, height) {
   const pixels = Buffer.alloc(width * height * 3);
   let seed = 7;
   for (let y = 0; y < height; y++) {

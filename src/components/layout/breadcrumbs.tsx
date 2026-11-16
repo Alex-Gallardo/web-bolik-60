@@ -7,13 +7,15 @@ type BreadcrumbsProps = {
   crumbs: readonly Crumb[];
   /** Nombre del <nav> para lectores de pantalla. */
   label: string;
+  /** Prefetch de los enlaces (por defecto el de Next); false donde el presupuesto de JS es justo. */
+  prefetch?: boolean;
 };
 
 /**
  * Migas de pan (docs/06 §3.2; BD-060 las trae y BD-093 las lleva a todas las páginas) con su
  * BreadcrumbList del mismo texto (docs/10 §4). Server Component sin JS.
  */
-export function Breadcrumbs({ crumbs, label }: BreadcrumbsProps) {
+export function Breadcrumbs({ crumbs, label, prefetch }: BreadcrumbsProps) {
   return (
     <nav aria-label={label}>
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
@@ -29,6 +31,7 @@ export function Breadcrumbs({ crumbs, label }: BreadcrumbsProps) {
                 <>
                   <Link
                     href={crumb.path as Route}
+                    prefetch={prefetch}
                     className="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
                   >
                     {crumb.name}

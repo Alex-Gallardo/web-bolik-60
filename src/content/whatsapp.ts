@@ -17,4 +17,12 @@ export const whatsappText = {
   more: (n: number) => `y ${n} ${n === 1 ? "producto más" : "productos más"}`,
   /** Después de enviar la cotización (BD-073). */
   sent: (folio: string) => `Envié la cotización ${folio}. ¿Me pueden ayudar con el seguimiento?`,
+  /** WhatsAppSheet (docs/08 §2 y §4, BD-062): vista previa, copiar y abrir. */
+  sheet: {
+    title: "Escríbenos por WhatsApp",
+    description: "Vista previa del mensaje",
+    copy: "Copiar",
+    open: "Abrir WhatsApp",
+    newTab: "(se abre en otra pestaña)",
+  },
 } as const;

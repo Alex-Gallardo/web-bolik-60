@@ -161,7 +161,56 @@
         "iconKey": "water-resistant",
         "title": "Resistente al agua y a la luz"
       }
-    ]
+    ],
+    "images": [
+      {
+        "mediaKey": "products/bolik-ultra-azul-principal-c9384adc",
+        "kind": "main",
+        "colorKey": "azul"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-azul-punta-fb7192e5",
+        "kind": "detail",
+        "colorKey": "azul"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-azul-cajilla-12-4d0030ac",
+        "kind": "pack",
+        "colorKey": "azul"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-negro-principal-a1fd4f50",
+        "kind": "main",
+        "colorKey": "negro"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-negro-punta-5f2ebede",
+        "kind": "detail",
+        "colorKey": "negro"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-negro-cajilla-12-b9882dc4",
+        "kind": "pack",
+        "colorKey": "negro"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-rojo-principal-bf75c098",
+        "kind": "main",
+        "colorKey": "rojo"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-rojo-punta-d721b00c",
+        "kind": "detail",
+        "colorKey": "rojo"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-rojo-cajilla-12-635793df",
+        "kind": "pack",
+        "colorKey": "rojo"
+      }
+    ],
+    "seoTitle": "Bolik Ultra, bolígrafo hexagonal punta 1.0 mm",
+    "seoDescription": "Bolik Ultra: bolígrafo hexagonal de punta mediana 1.0 mm, tinta resistente al agua. Azul, negro y rojo. Encuentra dónde comprar o cotiza."
   },
   {
     "slug": "bolik-ultra-fino",
@@ -193,6 +242,48 @@
         "colorKey": "rojo",
         "colorName": "Rojo",
         "colorHex": "#D42A22"
+      }
+    ],
+    "images": [
+      {
+        "mediaKey": "products/bolik-ultra-fino-azul-principal-aea697fc",
+        "kind": "main",
+        "colorKey": "azul"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-fino-azul-punta-416ce1fe",
+        "kind": "detail",
+        "colorKey": "azul"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-fino-azul-cajilla-12-19f76b6d",
+        "kind": "pack",
+        "colorKey": "azul"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-fino-negro-principal-ca8c89c1",
+        "kind": "main",
+        "colorKey": "negro"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-fino-negro-punta-733bdde6",
+        "kind": "detail",
+        "colorKey": "negro"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-fino-rojo-principal-7cc70118",
+        "kind": "main",
+        "colorKey": "rojo"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-fino-rojo-punta-a24c79b7",
+        "kind": "detail",
+        "colorKey": "rojo"
+      },
+      {
+        "mediaKey": "products/bolik-ultra-fino-rojo-cajilla-12-8974ab61",
+        "kind": "pack",
+        "colorKey": "rojo"
       }
     ]
   },

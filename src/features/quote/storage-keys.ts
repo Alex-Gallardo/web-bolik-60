@@ -14,6 +14,12 @@ export const QUOTE_STORAGE_KEY = "bolik_quote";
 export const QUOTE_CHANGE_EVENT = "bolik:quote-change";
 
 /**
+ * Evento de la ventana para el «pop» del contador (A-05) cuando el número no sube: agregar algo que
+ * ya estaba suma la cantidad a su línea (`merged: true`, BD-062). Lo dispara quien agrega.
+ */
+export const QUOTE_POP_EVENT = "bolik:quote-pop";
+
+/**
  * Cuántas líneas hay en un valor guardado (JSON de zustand persist); 0 si no se lee. Cuenta las que
  * tienen clave y referencia: el saneo completo (sanitizeLines) lo hace el store al cargar y guarda
  * la lista limpia, así que el número coincide en cuanto el store la lee.

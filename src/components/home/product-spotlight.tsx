@@ -12,7 +12,7 @@ import { UltraIllustration } from "./ultra-illustration";
  * sus colores y código SAP, presentaciones, beneficios y CTA «Ver ficha» y «Dónde comprar»
  * (docs/17). Server Component sin JS: la foto, cuando exista, sale con getImageProps (como el
  * hero); mientras tanto, una ilustración. Los chips de color son fijos: el cambio de foto por
- * color (A-31) va en la ficha (BD-062), cuando haya fotos.
+ * color (A-31) está en la ficha (BD-062).
  */
 export function ProductSpotlight({ product }: { product: ProductView }) {
   const titleId = "destacado-titulo";
@@ -101,10 +101,9 @@ export function ProductSpotlight({ product }: { product: ProductView }) {
           )}
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            {/* Sin precarga: la ficha (BD-062) y Dónde comprar llegan con sus tickets. */}
+            {/* La ficha se precarga; Dónde comprar llega con BD-080 (sin precarga). */}
             <Link
               href={product.href as Route}
-              prefetch={false}
               className={buttonVariants({ variant: "primary", block: true })}
               data-event="spotlight_click"
               data-product={product.slug}

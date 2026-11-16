@@ -4,6 +4,7 @@ import type {
   FAQ_SCOPES,
   LINE_GROUPS,
   PackagingCode,
+  ProductImageKind,
   STORE_TYPES,
 } from "@/lib/constants";
 
@@ -63,7 +64,10 @@ export type ProductCardView = {
   featured: boolean;
   /** Producto de ejemplo (no existe en el catálogo real): nunca llega a producción. */
   sample: boolean;
-  /** Imagen principal; null hasta que haya fotos (BD-034): la tarjeta muestra sus colores. */
+  /**
+   * Foto principal del color por defecto (o la primera que haya); null sin fotos: la tarjeta
+   * muestra sus colores.
+   */
   image: ImageView | null;
 };
 
@@ -90,7 +94,20 @@ export type PackagingView = {
 
 export type BenefitView = { iconKey: string; title: string; text: string | null };
 
+/** Foto de la galería (BD-062): su toma y, si es de un color, la clave de esa variante. */
+export type ProductImageView = ImageView & {
+  kind: ProductImageKind;
+  colorKey: string | null;
+};
+
 export type ProductView = ProductCardView & {
+  /** Title y description propios (docs/10 §1, editables en el admin); null = los arma productMeta. */
+  seoTitle: string | null;
+  seoDescription: string | null;
+  /** Última edición del producto o de sus variantes; null con la fuente de ejemplo. */
+  updatedAt: UpdatedAt;
+  /** Galería en orden; solo de colores visibles. Vacía hasta tener fotos. */
+  images: ProductImageView[];
   tagline: string | null;
   description: string | null;
   keyFacts: string[];

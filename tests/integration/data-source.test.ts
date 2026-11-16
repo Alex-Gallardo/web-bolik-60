@@ -40,7 +40,10 @@ describe("fuente db: lo mismo que la fuente de ejemplo", () => {
   it("las tarjetas, fichas, tiendas y contenido coinciden con fixtures", async () => {
     expect(await dbSource.listCategories()).toEqual(await fixturesSource.listCategories());
     expect(await dbSource.listProducts()).toEqual(await fixturesSource.listProducts());
-    expect(await dbSource.getProduct("boligrafos", "bolik-ultra")).toEqual(
+    // La base sabe cuándo cambió la ficha (BD-062); los JSON no, y la fuente de ejemplo da null.
+    const dbUltra = await dbSource.getProduct("boligrafos", "bolik-ultra");
+    expect(dbUltra?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect({ ...dbUltra, updatedAt: null }).toEqual(
       await fixturesSource.getProduct("boligrafos", "bolik-ultra"),
     );
     expect(await dbSource.listUseTags()).toEqual(await fixturesSource.listUseTags());

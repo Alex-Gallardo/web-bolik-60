@@ -1,7 +1,12 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-import { QUOTE_CHANGE_EVENT, QUOTE_STORAGE_KEY, countStoredLines } from "./storage-keys";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  QUOTE_CHANGE_EVENT,
+  QUOTE_POP_EVENT,
+  QUOTE_STORAGE_KEY,
+  countStoredLines,
+} from "./storage-keys";
 
 /**
  * Último número que avisó el store (QUOTE_CHANGE_EVENT): con localStorage bloqueado la lista vive
@@ -55,6 +60,12 @@ export function useQuoteCount(): { count: number; popKey: number } {
   );
   const [seen, setSeen] = useState<number | null>(null);
   const [popKey, setPopKey] = useState(0);
+  // Se sumó a una línea que ya estaba: el número no sube, pero también hay «pop» (BD-062).
+  useEffect(() => {
+    const onPop = () => setPopKey((key) => key + 1);
+    window.addEventListener(QUOTE_POP_EVENT, onPop);
+    return () => window.removeEventListener(QUOTE_POP_EVENT, onPop);
+  }, []);
   // Estado derivado del render anterior (patrón de React): se anima solo si sube después de hidratar.
   if (hydrated && seen !== count) {
     if (seen !== null && count > seen) setPopKey((key) => key + 1);

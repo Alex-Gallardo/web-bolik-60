@@ -38,7 +38,9 @@ describe("scripts/ci/sample-media.mjs (BD-050)", () => {
       "oficina-demo.mp4",
       "planta-demo.mp4",
     ]);
-  });
+    // Con las fotos de producto (BD-062) son 21 imágenes: sharp tarda más que los 5 s por defecto
+    // cuando corre junto al resto de la suite.
+  }, 60_000);
 
   it("nunca pisa lo que ya está (las ilustraciones reales de media:samples)", async () => {
     const real = path.join(dir, "video", "planta-demo.mp4");

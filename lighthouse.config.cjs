@@ -46,7 +46,13 @@ module.exports = {
         ? {}
         : // start:local copia public/ antes de arrancar: con imágenes y video tarda más de 10 s.
           { startServerCommand: "pnpm start:local", startServerReadyTimeout: 60_000 }),
-      url: [`${base}/`, `${base}/productos`, `${base}/productos/boligrafos`],
+      url: [
+        `${base}/`,
+        `${base}/productos`,
+        `${base}/productos/boligrafos`,
+        // La ficha (BD-062): la página más importante para SEO y cotización.
+        `${base}/productos/boligrafos/bolik-ultra`,
+      ],
       numberOfRuns: 3,
       settings: {
         // Los runners de Linux de GitHub no permiten el sandbox de Chrome.

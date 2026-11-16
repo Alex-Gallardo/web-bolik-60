@@ -26,6 +26,14 @@ export async function generateStaticParams() {
   return categories.map((category) => ({ categoria: category.slug }));
 }
 
+/**
+ * Lee sus params fuera de un Suspense, a propósito (como la ficha, BD-062): con uno, el HTML
+ * prerenderizado traería un esqueleto y el contenido oculto hasta que un script lo cambie (sin JS no
+ * se vería). Le dice a Next 16 (Partial Prefetching) que llegar aquí puede esperar a que baje: todas
+ * las categorías están prerenderizadas.
+ */
+export const instant = false;
+
 export async function generateMetadata({
   params,
 }: PageProps<"/productos/[categoria]">): Promise<Metadata> {
@@ -77,7 +85,7 @@ export default async function CategoryPage({ params }: PageProps<"/productos/[ca
             >
               {products.map((product) => (
                 <li key={product.slug}>
-                  {/* Sin precarga: las fichas llegan con BD-062. */}
+                  {/* Sin precarga: el JS de la ficha contaría en el de la categoría (docs/12 §2). */}
                   <ProductCard product={product} headingLevel={2} prefetch={false} />
                 </li>
               ))}

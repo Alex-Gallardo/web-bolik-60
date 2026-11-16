@@ -4,10 +4,13 @@ import {
   BRANDS,
   FAQ_SCOPES,
   MEDIA_IMAGE_KINDS,
+  PRODUCT_IMAGE_KINDS,
   type Brand,
   type PackagingCode,
+  type ProductImageKind,
 } from "@/lib/constants";
 import { db } from "@/server/db";
+import { cardImage, visibleImages } from "../product-images";
 import { toSiteSettings } from "../settings-view";
 import type {
   CategoryView,
@@ -18,6 +21,7 @@ import type {
   KitView,
   LineGroup,
   ProductCardView,
+  ProductImageView,
   ProductView,
   SchoolActivityView,
   SectionAppearanceView,
@@ -50,9 +54,48 @@ const cardInclude = {
   category: { select: { slug: true, name: true, lineGroup: true } },
   variants: { where: { published: true }, orderBy: bySortOrder },
   uses: { select: { useTag: { select: { slug: true } } }, orderBy: { useTag: { id: "asc" } } },
+  // Fotos (BD-062): solo de imágenes ya procesadas; el color sale de su variante.
+  images: {
+    where: { media: { kind: { in: [...MEDIA_IMAGE_KINDS] } } },
+    orderBy: bySortOrder,
+    select: {
+      kind: true,
+      alt: true,
+      variant: { select: { colorKey: true } },
+      media: { select: { key: true, width: true, height: true, blurDataUrl: true } },
+    },
+  },
 } satisfies Prisma.ProductInclude;
 
 type CardRow = Prisma.ProductGetPayload<{ include: typeof cardInclude }>;
+
+/** Una toma desconocida (editada a mano) cuenta como detalle. */
+const toImageKind = (value: string): ProductImageKind =>
+  (PRODUCT_IMAGE_KINDS as readonly string[]).includes(value)
+    ? (value as ProductImageKind)
+    : "detail";
+
+function toImages(p: CardRow): ProductImageView[] {
+  const images = p.images.flatMap((image): ProductImageView[] =>
+    image.media.width && image.media.height
+      ? [
+          {
+            src: `/media/${image.media.key}`,
+            alt: image.alt,
+            width: image.media.width,
+            height: image.media.height,
+            blurDataUrl: image.media.blurDataUrl,
+            kind: toImageKind(image.kind),
+            colorKey: image.variant?.colorKey ?? null,
+          },
+        ]
+      : [],
+  );
+  return visibleImages(
+    images,
+    p.variants.map((v) => v.colorKey),
+  );
+}
 
 function toVariant(v: CardRow["variants"][number]): VariantView {
   return {
@@ -84,7 +127,7 @@ function toCard(p: CardRow): ProductCardView {
     useSlugs: p.uses.map((u) => u.useTag.slug),
     featured: p.featured,
     sample: p.isSample,
-    image: null, // las fotos llegan con BD-034
+    image: cardImage(toImages(p), p.variants.find((v) => v.isDefault)?.colorKey),
   };
 }
 
@@ -124,6 +167,11 @@ function toProduct(p: ProductRow): ProductView {
   }
   return {
     ...toCard(p),
+    seoTitle: p.seoTitle,
+    seoDescription: p.seoDescription,
+    // La ficha también cambia con sus variantes (sincronización con SAP), como en el sitemap.
+    updatedAt: maxDate([p.updatedAt, ...p.variants.map((v) => v.updatedAt)]),
+    images: toImages(p),
     tagline: p.tagline,
     description: p.description,
     keyFacts: parseKeyFacts(p.keyFacts),

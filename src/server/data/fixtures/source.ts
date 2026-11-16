@@ -7,11 +7,14 @@ import type {
   DepartmentView,
   ImageView,
   ProductCardView,
+  ProductImageView,
   ProductView,
   SpecGroupView,
   StoreView,
   VariantView,
 } from "../types";
+import { settingsForProfile } from "../../../../prisma/seed/profiles";
+import { cardImage, visibleImages } from "../product-images";
 import { toSiteSettings } from "../settings-view";
 import { seedData } from "./load";
 
@@ -49,6 +52,18 @@ function toVariant(variant: Product["variants"][number]): VariantView {
   };
 }
 
+/** Fotos de la galería con las medidas y el alt del manifiesto (media.json). */
+function toImages(product: Product): ProductImageView[] {
+  const images = product.images.flatMap((image): ProductImageView[] => {
+    const media = mediaImage(image.mediaKey);
+    return media ? [{ ...media, kind: image.kind, colorKey: image.colorKey ?? null }] : [];
+  });
+  return visibleImages(
+    images,
+    product.variants.filter((v) => v.published).map((v) => v.colorKey),
+  );
+}
+
 function toCard(data: SeedData, product: Product): ProductCardView {
   const category = data.categories.find((c) => c.slug === product.categorySlug)!;
   const variants = product.variants.filter((v) => v.published);
@@ -64,7 +79,7 @@ function toCard(data: SeedData, product: Product): ProductCardView {
     useSlugs: data.useTags.filter((u) => product.uses.includes(u.slug)).map((u) => u.slug),
     featured: product.featured,
     sample: product.sample,
-    image: null, // las fotos llegan con BD-034
+    image: cardImage(toImages(product), variants.find((v) => v.isDefault)?.colorKey),
   };
 }
 
@@ -78,6 +93,10 @@ function toProduct(data: SeedData, product: Product): ProductView {
   }
   return {
     ...toCard(data, product),
+    seoTitle: product.seoTitle ?? null,
+    seoDescription: product.seoDescription ?? null,
+    updatedAt: null, // los JSON no dicen cuándo cambió (no se inventa "ahora")
+    images: toImages(product),
     tagline: product.tagline ?? null,
     description: product.description ?? null,
     keyFacts: product.keyFacts,
@@ -328,7 +347,8 @@ export const fixturesSource: DataSource = {
   },
 
   async getSiteSettings() {
-    return toSiteSettings(seedData().settings);
+    // Como el perfil dev del seed: con el número de prueba de WhatsApp (BD-062).
+    return toSiteSettings(settingsForProfile(seedData().settings, "dev"));
   },
 
   // Sin fechas: los JSON no dicen cuándo cambió cada cosa y el sitemap no inventa "ahora".

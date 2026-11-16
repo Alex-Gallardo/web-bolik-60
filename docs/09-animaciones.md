@@ -129,7 +129,7 @@ Cómo quedó (BD-050): `src/components/hero/video-hero.tsx` (servidor: chip, h1 
 - **Los cuatro paneles van en el HTML:** sin JS se ven todos y con JS solo el activo (`.js .hero-chapter`). A-12 se dispara al volver a mostrarse. Con el foco dentro del hero, el video no avanza solo.
 - **Sin `aria-live` en el texto del capítulo:** con el avance automático anunciaría cada 10 s. Las pestañas siguen el patrón ARIA (`tablist`, `tabpanel`, flechas, Inicio y Fin).
 - **La barra (A-13)** se mueve escribiendo el `transform` directo: `timeupdate` no vuelve a renderizar el hero.
-- **Medios de ejemplo:** las ilustraciones y videos de la demo no van al repo. `pnpm media:samples <carpeta>` los pone en `MEDIA_DIR`. Sin ellos, `scripts/ci/sample-media.mjs` (que corren `start:local` y la CI) deja reemplazos con la misma clave: un póster de peso parecido y un «video» que no se reproduce, así que queda el póster.
+- **Medios de ejemplo:** las ilustraciones y videos de la demo y las fotos de producto provisionales (BD-062) no van al repo. `pnpm media:samples <carpeta> [<carpeta>…]` los pone en `MEDIA_DIR`. Sin ellos, `scripts/ci/sample-media.mjs` (que corren `start:local` y la CI) deja reemplazos con la misma clave: un póster de peso parecido y un «video» que no se reproduce, así que queda el póster.
 
 ## 6. Reveals al hacer scroll (A-21)
 

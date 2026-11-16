@@ -277,8 +277,11 @@ test.describe("home: kits, FAQ y cierre (BD-054)", () => {
       "href",
       "/cotizacion",
     );
-    // settings.json no trae número de WhatsApp: sin número no hay botón (nunca uno roto).
-    await expect(cta.getByRole("link", { name: /WhatsApp/ })).toHaveCount(0);
+    // Con el número de prueba de dev y e2e (BD-062), el botón lleva el mensaje general.
+    await expect(cta.getByRole("link", { name: /WhatsApp/ })).toHaveAttribute(
+      "href",
+      /^https:\/\/wa\.me\/50255551234\?text=/,
+    );
     // kits_enabled = false en settings.json: la sección de kits no sale.
     await expect(page.getByRole("region", { name: "Kits escolares 2027" })).toHaveCount(0);
     await expectNoA11yViolations(page);
