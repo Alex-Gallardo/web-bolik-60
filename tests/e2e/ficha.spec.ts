@@ -62,7 +62,7 @@ test.describe("ficha de producto (BD-062)", () => {
     // Datos clave, especificaciones, medidas, distribuidores y seguridad: sin JS, todo a la vista.
     await expect(page.getByRole("heading", { name: "Datos clave del Bolik Ultra" })).toBeVisible();
     await expect(page.getByText("Mediana 1.0 mm", { exact: true })).toBeVisible();
-    await expect(page.getByText("145.83 mm")).toBeVisible();
+    await expect(page.getByRole("cell", { name: "145.83 mm" })).toBeVisible();
     await expect(page.getByRole("rowheader", { name: "Fardo (100 cajillas)" })).toBeVisible();
     await expect(page.getByText(/menores de 3 años/)).toBeVisible();
     // Sin JS no hay botón de agregar (necesita el navegador), pero sí Dónde comprar y WhatsApp.
@@ -186,5 +186,70 @@ test.describe("ficha de producto (BD-062)", () => {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(404);
     }
+  });
+});
+
+test.describe("ficha: medidas, relacionados y dónde comprar (BD-063)", () => {
+  test("diagrama de medidas con su tabla, elegir una parte la resalta y pasa axe", async ({
+    page,
+  }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto(ULTRA);
+    // En móvil las pestañas son acordeón: se abre «Medidas y empaque».
+    const tab = page.getByRole("tab", { name: "Medidas y empaque" });
+    if (await tab.isVisible()) await tab.click();
+    else await page.getByRole("button", { name: "Medidas y empaque" }).click();
+    const diagram = page.getByRole("img", { name: "Diagrama de medidas del Bolik Ultra" });
+    await expect(diagram).toBeVisible();
+    await expect(
+      page.getByRole("table", { name: "Medidas del Bolik Ultra en milímetros" }),
+    ).toBeVisible();
+    const body = page.getByRole("radio", { name: /Largo del cuerpo 145.83 mm/ });
+    await expect(body).toHaveAttribute("data-event", "dimension_open");
+    await body.check({ force: true });
+    const opacity = (part: string) =>
+      page
+        .locator(`.dimension-diagram svg [data-part="${part}"]`)
+        .evaluate((el) => Number(getComputedStyle(el).opacity));
+    await expect.poll(() => opacity("body")).toBe(1);
+    await expect.poll(() => opacity("cap")).toBeLessThan(0.5);
+    // «Todas» vuelve a mostrar todas las cotas.
+    await page.getByRole("radio", { name: "Todas" }).check({ force: true });
+    await expect.poll(() => opacity("cap")).toBe(1);
+    await expectNoA11yViolations(page);
+    expect(errors, "errores en la consola").toEqual([]);
+  });
+
+  test("sin JS se ven todas las cotas", async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== "escritorio", "una vez basta");
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto(ULTRA);
+    const labels = page.locator(".dimension-diagram svg .cota-label");
+    await expect(labels).toHaveCount(5);
+    await expect(labels.first()).toBeVisible();
+    await context.close();
+  });
+
+  test("relacionados enlazan a su ficha y dónde comprar lleva cadenas y tiendas en línea", async ({
+    page,
+  }) => {
+    await page.goto(ULTRA);
+    const related = page.getByRole("region", { name: "También te puede servir" });
+    await expect(related.getByRole("link", { name: /Bolik Ultra Fino/ })).toHaveAttribute(
+      "href",
+      "/productos/boligrafos/bolik-ultra-fino",
+    );
+    const where = page.getByRole("region", { name: "Dónde comprar este producto" });
+    await expect(where.getByText("Unimarck", { exact: true })).toBeVisible();
+    const walmart = where.getByRole("link", { name: /Comprar en Walmart/ });
+    await expect(walmart).toHaveAttribute("href", "https://www.walmart.com.gt");
+    await expect(walmart).toHaveAttribute("data-event", "retailer_click");
+    await expect(walmart).toHaveAttribute("data-sku", "PT00058");
+    await expect(walmart).toHaveAttribute("rel", "noopener noreferrer");
+    await expect(where.getByRole("link", { name: "Ver todas las tiendas" })).toHaveAttribute(
+      "href",
+      "/donde-comprar",
+    );
   });
 });

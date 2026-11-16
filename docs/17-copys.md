@@ -158,6 +158,7 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Relacionados: También te puede servir
 - Interfaz de la ficha (BD-062): Datos clave del {producto} · Beneficios · Usos · Pestañas: Especificaciones · Medidas y empaque · Para distribuidores · Seguridad · Presentaciones · Códigos por color (Color · Código · Código de barras; «Por confirmar» si falta) · Total: {n} unidades · Cantidades sugeridas: Elegir {n} · Barra móvil: Agregar a cotización · WhatsApp · Cierre: el «CTA final» de la home (§2)
 - Etiquetas de la ficha (BD-062): Migas de pan · Marca {marca} · Fotos del producto · Foto {n} de {total} · {Producto} {color}, sin foto todavía · Código de barras {código} (o «Código de barras por confirmar») · Medidas del {producto} en milímetros (Parte · Medida) · Medidas, peso y unidades de cada presentación (Presentación · Unidades · Contiene: {n} empaques · Medidas (largo × ancho × alto) · Peso) · Código SAP y código de barras de cada color del {producto} · Acciones del producto (barra móvil)
+- Medidas, relacionados y dónde comprar (BD-063): Diagrama de medidas del {producto} · Elige una parte para ver su medida · Todas · Dónde comprar este producto (con el texto de «Dónde comprar» de §2) · Cadenas · Compra en línea · Comprar en {tienda} · Ver todas las tiendas · También te puede servir
 - WhatsAppSheet: Escríbenos por WhatsApp · Vista previa del mensaje · Copiar · Abrir WhatsApp
 
 ## 4. Páginas por público

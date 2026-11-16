@@ -50,6 +50,12 @@ export const productPage = {
     safety: "Seguridad",
   },
   dimensions: {
+    /** Nombre del SVG (la tabla de abajo es su alternativa, BD-063). */
+    diagramLabel: (name: string) => `Diagrama de medidas del ${name}`,
+    /** docs/06 §3.4: al elegir una parte se resalta y muestra su valor. */
+    choosePart: "Elige una parte para ver su medida",
+    /** La opción que vuelve a mostrar todas las cotas. */
+    allParts: "Todas",
     caption: (name: string) => `Medidas del ${name} en milímetros`,
     part: "Parte",
     value: "Medida",
@@ -81,6 +87,13 @@ export const productPage = {
     pendingBarcode: "Por confirmar",
   },
   faqTitle: "Preguntas frecuentes",
+  /** docs/17 §3: «Relacionados: También te puede servir» (BD-063). */
+  relatedTitle: "También te puede servir",
+  /** Bloque de docs/06 §3.4 y del ticket BD-063; el texto es el de «Dónde comprar» (docs/17 §2). */
+  whereToBuyBlock: {
+    title: "Dónde comprar este producto",
+    chainsTitle: "Cadenas",
+  },
   /** docs/17 §3: «Dónde comprar» (la página llega con BD-080). */
   whereToBuy: { label: "Dónde comprar", href: "/donde-comprar" },
 } as const;

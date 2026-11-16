@@ -1405,7 +1405,20 @@ Información de apoyo para decidir.
 
 **Criterios de aceptación**
 
-- [ ] El diagrama es accesible (tabla alternativa).
+- [x] El diagrama es accesible (tabla alternativa).
+
+**Implementado (BD-063)**
+
+Decisión del usuario (16 nov 2026): el bloque «Dónde comprar este producto» muestra las cadenas por nombre, sin decir que cada una tiene este producto (no hay datos de surtido por tienda).
+
+- **Sin JS nuevo:** la ficha está en 169.9 KB de 170 (docs/12 §2), así que todo es de servidor y la interacción va con radios y CSS, como el color.
+- **Diagrama de medidas** (`components/product/dimension-diagram.tsx`, en la pestaña «Medidas y empaque»): el bolígrafo con el tapón separado, dibujado a escala desde `ProductDimension` (3.4 px por mm), con una cota por parte: cuerpo, tapa, largo y diámetro de la punta, y largo de la marca (`PEN_PARTS`). Solo sale si el producto tiene el largo del cuerpo; los demás muestran solo la tabla. La punta se dibuja con un mínimo (no a escala) para que se vea a 360 px; las etiquetas dicen la medida real y en móvil son más grandes. Una parte que falta (o vale 0) no se dibuja ni se ofrece. Las partes son radios nativos («Largo del cuerpo 145.83 mm»), más «Todas» (al inicio), que vuelve a mostrar todas las cotas: al elegir una, CSS (`:has`, motion.css) atenúa las demás, dibuja su línea en azul con `stroke-dashoffset` y su etiqueta entra con opacidad (A-33, token nuevo `--dur-cota`: 320 ms de docs/09). Sin JS funciona igual. Cada radio lleva `data-event="dimension_open"` y `data-part` (docs/12 §4). El SVG es `role="img"` con nombre y la tabla de medidas queda debajo como alternativa (criterio).
+- **«Dónde comprar este producto»** (`product-where-to-buy.tsx`): el texto de «Dónde comprar» de docs/17 §2, las cadenas con productos Bolik (`stores.json`, tipo `cadena`), «Compra en línea» (Walmart y La Torre, otra pestaña, solo `https`, con `retailer_click`, `data-retailer` y `data-sku` del color por defecto) y «Ver todas las tiendas» (/donde-comprar, BD-080). Una tienda en línea por URL: con la base, cada sucursal es un punto de venta.
+- **«También te puede servir»** (docs/17 §3, `product-related.tsx`): hasta 4 relacionados de `ProductRelation` (ya filtrados por la fuente) con `ProductCard`, sin precarga (el JS de otra ficha contaría en esta).
+- /styleguide muestra el `DimensionDiagram` con las medidas del Bolik Ultra leídas del seed (no de la base, docs/08 §6).
+- Medido: la ficha sigue en 169.9 KB de JS, rendimiento 0.93, LCP 3.23 s (guardia de 3.5 s).
+- Pruebas: unitarias de la geometría y del componente; E2E del diagrama con axe, la parte elegida resaltada, todas las cotas sin JS, los relacionados y los enlaces de las tiendas.
+- **Pendiente:** el surtido por tienda («este producto está en…») necesita datos de Ventas; los clics salientes se registran con BD-083.
 
 #### BD-064 · PDF de ficha técnica
 

@@ -37,7 +37,7 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 | A-30 | Elevar tarjeta | Hover en tarjetas (solo `hover: hover`) | `translateY(-4px)` + sombra vía `opacity` de pseudo-elemento | 160 ms out | Sin elevar |
 | A-31 | Cambio de color | Ficha y spotlight | Crossfade de imagen (`opacity`) + anillo del swatch con `scale` | 240 ms in-out | Solo opacidad |
 | A-32 | Sheet de filtros | Catálogo móvil | = A-08 | 420 ms | Opacidad |
-| A-33 | Cota interactiva | Diagrama de medidas | Línea de cota con `stroke-dashoffset` y etiqueta `fade-in` | 320 ms out | Estático |
+| A-33 | Cota interactiva | Diagrama de medidas | Línea de cota con `stroke-dashoffset` y etiqueta `fade-in` (CSS con radios, sin JS; token `--dur-cota`, BD-063) | 320 ms out | Estático |
 | A-34 | Pines del mapa | Dónde comprar | Pines caen con `translateY(-8px) → 0` escalonado; pin activo con `scale(1.15)` | 240 ms spring | Estático |
 | A-35 | Acordeón | FAQs | `<details>` + `::details-content` (`block-size`)* y rotación del ícono + | 240 ms in-out | Instantáneo |
 | A-36 | Quitar línea | Cotización | Motion `AnimatePresence`: `opacity` y `x` hacia la derecha; al terminar, las de abajo suben (sin animar la altura; `layout` necesitaría `domMax`) | 240 ms (`--dur-base`) | Solo opacidad |

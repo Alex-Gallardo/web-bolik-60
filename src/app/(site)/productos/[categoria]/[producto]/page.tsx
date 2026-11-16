@@ -4,12 +4,15 @@ import { notFound } from "next/navigation";
 import { FinalCtaSection } from "@/components/home/final-cta-section";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Section } from "@/components/layout/section";
+import { DimensionDiagram, hasPenDiagram } from "@/components/product/dimension-diagram";
 import { ProductGallery, type GallerySet } from "@/components/product/product-gallery";
 import {
   ProductPurchase,
   type PurchasePack,
   type PurchaseVariant,
 } from "@/components/product/product-purchase";
+import { ProductRelated } from "@/components/product/product-related";
+import { ProductWhereToBuy } from "@/components/product/product-where-to-buy";
 import { Accordion } from "@/components/ui/accordion";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Chip } from "@/components/ui/chip";
@@ -25,6 +28,7 @@ import { BRAND_LABELS, PACKAGING_LABELS } from "@/lib/constants";
 import { whatsappMessage, whatsappUrl } from "@/lib/whatsapp";
 import { getProduct, listProducts } from "@/server/data/catalog";
 import { getSiteSettings, listFaqs } from "@/server/data/content";
+import { listStores } from "@/server/data/stores";
 import type { ProductView } from "@/server/data/types";
 
 /**
@@ -117,8 +121,8 @@ function purchasePacks(product: ProductView): PurchasePack[] {
  * usos, pestañas (especificaciones, medidas y empaque, para distribuidores, seguridad), las
  * presentaciones con los códigos por color, las preguntas y el cierre de la home. Todo en el HTML
  * del servidor; cambiar de color no recarga (CSS + isla). JSON-LD: ProductGroup con variantes,
- * BreadcrumbList (migas) y FAQPage. Medidas con diagrama, relacionados y «Dónde comprar este
- * producto»: BD-063.
+ * BreadcrumbList (migas) y FAQPage. BD-063 suma el diagrama de medidas (en su pestaña, con la tabla
+ * como alternativa), «Dónde comprar este producto» y «También te puede servir».
  */
 export default async function ProductPage({
   params,
@@ -128,9 +132,10 @@ export default async function ProductPage({
   // Sin colores publicados (los despublicó el admin o SAP) no hay ficha que mostrar.
   if (!product || product.variants.length === 0) notFound();
 
-  const [faqs, settings] = await Promise.all([
+  const [faqs, settings, stores] = await Promise.all([
     listFaqs({ scope: "product", productSlug: product.slug }),
     getSiteSettings(),
+    listStores(),
   ]);
   const defaultVariant = product.variants.find((v) => v.isDefault) ?? product.variants[0]!;
   const multiColor = product.variants.length > 1;
@@ -201,31 +206,41 @@ export default async function ProductPage({
             value: "medidas",
             label: t.tabs.dimensions,
             content: (
-              <table className="w-full max-w-xl text-left">
-                <caption className="pb-2 text-left text-sm text-muted">
-                  {t.dimensions.caption(product.name)}
-                </caption>
-                <thead>
-                  <tr className="border-b-2 border-line">
-                    <th scope="col" className="py-2">
-                      {t.dimensions.part}
-                    </th>
-                    <th scope="col" className="py-2">
-                      {t.dimensions.value}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y-2 divide-line">
-                  {product.dimensions.map((d) => (
-                    <tr key={d.partKey}>
-                      <th scope="row" className="py-2 font-normal">
-                        {d.label}
+              <div className="flex flex-col gap-8">
+                {hasPenDiagram(product.dimensions) ? (
+                  <DimensionDiagram
+                    id="ficha-cota"
+                    productName={product.name}
+                    dimensions={product.dimensions}
+                  />
+                ) : null}
+                {/* La tabla es la alternativa accesible del diagrama (criterio de BD-063). */}
+                <table className="w-full max-w-xl text-left">
+                  <caption className="pb-2 text-left text-sm text-muted">
+                    {t.dimensions.caption(product.name)}
+                  </caption>
+                  <thead>
+                    <tr className="border-b-2 border-line">
+                      <th scope="col" className="py-2">
+                        {t.dimensions.part}
                       </th>
-                      <td className="py-2">{t.dimensions.mm(d.valueMm, d.tolerance)}</td>
+                      <th scope="col" className="py-2">
+                        {t.dimensions.value}
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y-2 divide-line">
+                    {product.dimensions.map((d) => (
+                      <tr key={d.partKey}>
+                        <th scope="row" className="py-2 font-normal">
+                          {d.label}
+                        </th>
+                        <td className="py-2">{t.dimensions.mm(d.valueMm, d.tolerance)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ),
           },
         ]
@@ -493,6 +508,8 @@ export default async function ProductPage({
         </div>
       </Section>
 
+      <ProductWhereToBuy stores={stores} sku={defaultVariant.sku} />
+
       {faqs.length > 0 ? (
         <Section aria-labelledby="ficha-faq">
           <div className="mx-auto max-w-[860px]">
@@ -512,6 +529,8 @@ export default async function ProductPage({
           <JsonLd data={faqPageJsonLd(faqs)} />
         </Section>
       ) : null}
+
+      <ProductRelated products={product.related} />
 
       <FinalCtaSection whatsappUrl={generalWhatsapp} />
 
