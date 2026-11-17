@@ -375,13 +375,8 @@ export default async function ProductPage({
               whatsappHref={productWhatsapp}
               whereToBuy={t.whereToBuy}
               quoteHref={ui.header.quote.href}
+              prepaintScript={multiColor ? colorPrepaintScript(FICHA_ID, colorKeys) : null}
             />
-            {multiColor ? (
-              // Después de los radios: con ?color= marca el suyo antes del primer pintado.
-              <script
-                dangerouslySetInnerHTML={{ __html: colorPrepaintScript(FICHA_ID, colorKeys) }}
-              />
-            ) : null}
           </div>
         </div>
       </Section>

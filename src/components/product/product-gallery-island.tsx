@@ -6,7 +6,7 @@ import { useEffect } from "react";
  * Mejoras de la galería de la ficha (BD-062), sobre el HTML del servidor (product-gallery.tsx):
  * - las miniaturas desplazan la tira en su lugar (sin saltar la página) y marcan la actual;
  * - al deslizar con el dedo, la miniatura actual se actualiza;
- * - con mouse, las fotos de 1600 px o más se amplían bajo el puntero (solo transform);
+ * - con mouse, el zoom (gallery-zoom.ts, descargado al primer movimiento sobre la galería);
  * - pide las primeras fotos de los otros colores (data-preload).
  * No dibuja nada: sin JS, las miniaturas siguen funcionando como enlaces.
  */
@@ -61,28 +61,23 @@ export function ProductGalleryIsland({ galleryId }: { galleryId: string }) {
       );
     }
 
+    // Zoom con mouse (gallery-zoom.ts): se descarga al primer movimiento sobre la galería.
+    let zoomRequested = false;
     if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-      for (const slide of gallery.querySelectorAll<HTMLElement>(".gallery-slide[data-zoom]")) {
-        slide.addEventListener(
-          "pointermove",
-          (event) => {
-            const box = slide.getBoundingClientRect();
-            slide.style.setProperty(
-              "--zoom-x",
-              `${((event.clientX - box.left) / box.width) * 100}%`,
-            );
-            slide.style.setProperty(
-              "--zoom-y",
-              `${((event.clientY - box.top) / box.height) * 100}%`,
-            );
-            slide.setAttribute("data-zoomed", "");
-          },
-          { signal },
-        );
-        slide.addEventListener("pointerleave", () => slide.removeAttribute("data-zoomed"), {
-          signal,
-        });
-      }
+      gallery.addEventListener(
+        "pointermove",
+        (event) => {
+          // Solo con mouse: un dedo en una pantalla táctil no descarga el zoom.
+          if (event.pointerType !== "mouse" || zoomRequested) return;
+          zoomRequested = true;
+          void import("./gallery-zoom")
+            .then(({ attachZoom }) => {
+              if (!signal.aborted) attachZoom(gallery, signal);
+            })
+            .catch(() => {}); // sin el módulo (otro despliegue o sin red), sin zoom
+        },
+        { signal },
+      );
     }
     return () => controller.abort();
   }, [galleryId]);

@@ -85,6 +85,11 @@ export default async function CatalogPage() {
             colores: colorKeys(p),
           }))}
           empty={feedback.catalog.filtersEmpty}
+          prepaintScript={catalogPrepaintScript({
+            linea: options.linea.map((o) => o.slug),
+            uso: options.uso.map((o) => o.slug),
+            color: options.color.map((o) => o.slug),
+          })}
         >
           <ul
             id={CATALOG_GRID_ID}
@@ -105,16 +110,6 @@ export default async function CatalogPage() {
               </li>
             ))}
           </ul>
-          {/* Antes del primer pintado: con ?linea=… oculta lo que no va (sin CLS al hidratar). */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html: catalogPrepaintScript({
-                linea: options.linea.map((o) => o.slug),
-                uso: options.uso.map((o) => o.slug),
-                color: options.color.map((o) => o.slug),
-              }),
-            }}
-          />
         </CatalogFilters>
         <JsonLd
           data={collectionPageJsonLd({

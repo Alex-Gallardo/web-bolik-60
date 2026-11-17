@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { retryableImport } from "@/components/feedback/feedback-store";
+import { PrepaintScript } from "@/components/ui/prepaint-script";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { catalogPage } from "@/content/catalog";
 import {
@@ -72,6 +73,8 @@ type CatalogFiltersProps = {
   empty: { title: string; action: string };
   /** La grilla, del servidor: un <li data-product={slug}> por producto. */
   children: ReactNode;
+  /** Script previo al pintado (features/catalog/prepaint-script.ts): va justo después de la grilla. */
+  prepaintScript: string;
 };
 
 /**
@@ -80,7 +83,13 @@ type CatalogFiltersProps = {
  * servidor. Los filtros viven en la URL (?linea=…&uso=…&color=…, replaceState) para compartirla; la
  * canónica sigue siendo /productos. Sin JS no hay filtros (.js-only) y se ve todo.
  */
-export function CatalogFilters({ options, items, empty, children }: CatalogFiltersProps) {
+export function CatalogFilters({
+  options,
+  items,
+  empty,
+  children,
+  prepaintScript,
+}: CatalogFiltersProps) {
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const counter = useRef<HTMLParagraphElement>(null);
@@ -200,6 +209,8 @@ export function CatalogFilters({ options, items, empty, children }: CatalogFilte
       </p>
 
       {children}
+      {/* Antes del primer pintado: con ?linea=… oculta lo que no va (sin CLS al hidratar). */}
+      <PrepaintScript code={prepaintScript} />
 
       {visible === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-xl bg-soft px-6 py-12 text-center">

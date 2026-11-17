@@ -253,3 +253,56 @@ test.describe("ficha: medidas, relacionados y dónde comprar (BD-063)", () => {
     );
   });
 });
+
+test.describe("ficha: zoom adaptado y scripts previos al pintado", () => {
+  test("al llegar por un enlace del sitio no hay errores en consola (catálogo → ficha → catálogo)", async ({
+    page,
+  }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto("/productos/boligrafos");
+    await page.locator('a[href="/productos/boligrafos/bolik-ultra"]').first().click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bolik Ultra");
+    // Llegando por un enlace, la isla no dibuja el script previo (React no lo ejecutaría).
+    await expect(page.locator("#ficha script:not([type])")).toHaveCount(0);
+    await page
+      .getByRole("navigation", { name: "Migas de pan" })
+      .getByRole("link", { name: "Catálogo Bolik" })
+      .click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Catálogo Bolik");
+    await expect(page.locator("#catalogo-grilla ~ script")).toHaveCount(0);
+    expect(errors, "errores en la consola").toEqual([]);
+  });
+
+  for (const [slug, expected] of [
+    ["bolik-ultra", "~1.3x con la foto de 750 px"],
+    ["bolik-ultra-fino", "2x con la foto de 3125 px"],
+  ] as const) {
+    test(`con mouse, la foto principal se amplía (${slug}: ${expected})`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(testInfo.project.name !== "escritorio", "el zoom es con mouse");
+      await page.goto(`/productos/boligrafos/${slug}`);
+      await page.waitForLoadState("networkidle");
+      const slide = page.locator(".gallery-set[data-default] .gallery-slide").first();
+      const box = (await slide.boundingBox())!;
+      // El zoom se descarga al primer movimiento: se mueve el mouse hasta que se active.
+      let step = 0;
+      await expect(async () => {
+        step += 1;
+        await page.mouse.move(box.x + box.width / 2 + step, box.y + box.height / 2);
+        await expect(slide).toHaveAttribute("data-zoomed", "", { timeout: 300 });
+      }).toPass({ timeout: 10_000 });
+      const scale = Number(
+        await slide.evaluate((el) => getComputedStyle(el).getPropertyValue("--zoom-scale")),
+      );
+      if (slug === "bolik-ultra") {
+        expect(scale).toBeGreaterThan(1.15);
+        expect(scale).toBeLessThan(2);
+      } else {
+        expect(scale).toBe(2);
+      }
+      await page.mouse.move(0, 0);
+      await expect(slide).not.toHaveAttribute("data-zoomed", "");
+    });
+  }
+});

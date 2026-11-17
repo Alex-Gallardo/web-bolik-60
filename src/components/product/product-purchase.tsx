@@ -72,6 +72,8 @@ type ProductPurchaseProps = {
   whatsappHref: string | null;
   whereToBuy: { label: string; href: string };
   quoteHref: string;
+  /** Script previo al pintado con ?color= (features/catalog/variant-color.ts); null con un color. */
+  prepaintScript: string | null;
 };
 
 function WhatsAppIcon() {
@@ -114,6 +116,7 @@ export function ProductPurchase({
   whatsappHref,
   whereToBuy,
   quoteHref,
+  prepaintScript,
 }: ProductPurchaseProps) {
   const router = useRouter();
   // En el servidor y al hidratar, false: el portal de la barra se monta justo después.
@@ -282,6 +285,12 @@ export function ProductPurchase({
             {announcement}
           </p>
         </fieldset>
+      ) : null}
+      {/* Después de los radios: con ?color= marca el suyo antes del primer pintado. Solo en el HTML
+          del servidor y al hidratar, como PrepaintScript (aquí con la bandera de la isla: la
+          ficha está en su tope de JS); en una navegación lo hace el efecto de arriba. */}
+      {prepaintScript && !hydrated ? (
+        <script dangerouslySetInnerHTML={{ __html: prepaintScript }} />
       ) : null}
 
       {packagings.length > 0 ? (

@@ -3,9 +3,6 @@ import { productPage } from "@/content/product";
 import type { ProductImageView } from "@/server/data/types";
 import { ProductGalleryIsland } from "./product-gallery-island";
 
-/** Una foto así de ancha se puede ampliar al pasar el mouse (A-31 no aplica: es un zoom). */
-export const ZOOM_MIN_WIDTH = 1600;
-
 /** La columna de la galería mide como mucho ~600 px (contenedor de 1280 en dos columnas). */
 const SLIDE_SIZES = "(min-width: 80rem) 600px, (min-width: 64rem) 50vw, 100vw";
 
@@ -33,7 +30,7 @@ type ProductGalleryProps = {
  *
  * Cada conjunto es una tira con scroll-snap: se desliza con el dedo en móvil y las miniaturas son
  * enlaces a cada foto (#id), que funcionan sin JS. La isla suaviza ese salto, marca la miniatura
- * actual y amplía al pasar el mouse las fotos de 1600 px o más. Sin fotos, el cuadro muestra el
+ * actual y, con mouse, amplía la foto lo que da su resolución (hasta 2x, lib/zoom.ts). Sin fotos, el cuadro muestra el
  * color (como la tarjeta del catálogo).
  */
 export function ProductGallery({ id, productName, sets, defaultColor }: ProductGalleryProps) {
@@ -79,7 +76,8 @@ export function ProductGallery({ id, productName, sets, defaultColor }: ProductG
                         key={image.src}
                         id={`${id}-${key}-${index + 1}`}
                         className="gallery-slide"
-                        {...(image.width >= ZOOM_MIN_WIDTH ? { "data-zoom": "" } : {})}
+                        // Ancho real de la foto: la isla calcula cuánto ampliar (lib/zoom.ts).
+                        data-zoom={image.width}
                       >
                         {/* Atributos de next/image (getImageProps): mismo loader y srcset, sin JS. */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
