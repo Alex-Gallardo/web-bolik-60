@@ -865,12 +865,13 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   object-fit: contain;
   transition: transform var(--dur-fast) var(--ease-out);
 }
-/* Zoom con mouse (fotos de 1600 px o más): solo transform, hacia donde está el puntero. */
-.gallery-slide[data-zoom] {
+/* Zoom con mouse: solo transform, hacia donde está el puntero; el aumento (--zoom-scale) lo
+   calcula la isla según la resolución de la foto (lib/zoom.ts). */
+.gallery-slide[data-zoomable] {
   cursor: zoom-in;
 }
 .gallery-slide[data-zoomed] .gallery-image {
-  transform: scale(2);
+  transform: scale(var(--zoom-scale, 2));
   transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
 }
 .gallery-thumb[aria-current] {
@@ -1001,6 +1002,10 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
     animation-name: fade-in;
     animation-delay: 0ms;
   }
+  /* Zoom de la galería: amplía, pero desde el centro (no se desplaza con el puntero). */
+  .gallery-slide[data-zoomed] .gallery-image {
+    transform-origin: 50% 50%;
+  }
   /* Sheet y Popover: aparecen y se van solo con opacidad. */
   /* El * de arriba no alcanza ::details-content: el acordeón abre al instante. */
   .accordion-item::details-content {
@@ -1081,6 +1086,9 @@ html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) 
 }
 [data-reduced-motion] .accordion-item::details-content {
   transition: none;
+}
+[data-reduced-motion] .gallery-slide[data-zoomed] .gallery-image {
+  transform-origin: 50% 50%;
 }
 [data-reduced-motion] .sheet-content[data-side][data-state="open"],
 [data-reduced-motion] .popover-content[data-state="open"] {

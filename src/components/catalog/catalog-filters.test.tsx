@@ -19,7 +19,7 @@ const empty = { title: "No hay productos con esos filtros", action: "Quitar filt
 
 function renderFilters() {
   return render(
-    <CatalogFilters options={options} items={items} empty={empty}>
+    <CatalogFilters options={options} items={items} empty={empty} prepaintScript="">
       <ul>
         <li data-product="boligrafo">Bolígrafo</li>
         <li>Banner que no es producto</li>
