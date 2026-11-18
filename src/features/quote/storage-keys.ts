@@ -40,3 +40,15 @@ export function countStoredLines(raw: string | null): number {
     return 0;
   }
 }
+
+/**
+ * Evento de la ventana que abre el drawer de la cotización (BD-071). Lo disparan «Mi cotización»
+ * del header y el «Ver cotización» del toast de la ficha; lo escucha QuoteLinkWithDrawer
+ * (header), que descarga el drawer al primer uso. Así nadie importa el drawer (ni Radix ni zustand) en el JS de todas las páginas.
+ */
+export const QUOTE_OPEN_EVENT = "bolik:quote-open";
+
+/** Abre el drawer de la cotización. */
+export function openQuoteDrawer() {
+  window.dispatchEvent(new Event(QUOTE_OPEN_EVENT));
+}

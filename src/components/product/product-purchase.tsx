@@ -3,7 +3,6 @@
 import { cx } from "class-variance-authority";
 import type { Route } from "next";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   useEffect,
   useRef,
@@ -17,6 +16,7 @@ import { retryableImport } from "@/components/feedback/feedback-store";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { QuantityStepper } from "@/components/ui/quantity-stepper";
 import { purchaseText as t } from "@/content/product-purchase";
+import { openQuoteDrawer } from "@/features/quote/storage-keys";
 import type { PackagingCode } from "@/lib/constants";
 import type { ProductWhatsAppSheetProps } from "./product-whatsapp-sheet";
 
@@ -71,7 +71,6 @@ type ProductPurchaseProps = {
   whatsappPhone: string | null;
   whatsappHref: string | null;
   whereToBuy: { label: string; href: string };
-  quoteHref: string;
   /** Script previo al pintado con ?color= (features/catalog/variant-color.ts); null con un color. */
   prepaintScript: string | null;
 };
@@ -115,10 +114,8 @@ export function ProductPurchase({
   whatsappPhone,
   whatsappHref,
   whereToBuy,
-  quoteHref,
   prepaintScript,
 }: ProductPurchaseProps) {
-  const router = useRouter();
   // En el servidor y al hidratar, false: el portal de la barra se monta justo después.
   const hydrated = useSyncExternalStore(
     noop,
@@ -195,7 +192,7 @@ export function ProductPurchase({
         url: path,
         displayName: multiColor ? `${productName} ${variant.colorName}` : productName,
         unit,
-        onView: () => router.push(quoteHref as Route),
+        onView: openQuoteDrawer,
       });
     } finally {
       setBusy(false);

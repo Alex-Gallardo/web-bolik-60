@@ -374,7 +374,6 @@ export default async function ProductPage({
               whatsappPhone={productWhatsapp ? settings.whatsappNumber : null}
               whatsappHref={productWhatsapp}
               whereToBuy={t.whereToBuy}
-              quoteHref={ui.header.quote.href}
               prepaintScript={multiColor ? colorPrepaintScript(FICHA_ID, colorKeys) : null}
             />
           </div>
