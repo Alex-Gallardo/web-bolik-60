@@ -1,6 +1,5 @@
 "use client";
 
-import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
@@ -45,6 +44,9 @@ const IDS: Record<QuoteContactField, string> = {
 };
 
 type Errors = Partial<Record<QuoteContactField, string>>;
+
+/** Milisegundos desde `start` (reloj monotónico del navegador; con 0, desde que abrió la página). */
+const msSince = (start: number) => performance.now() - start;
 
 /**
  * El esquema (`zod/mini`, ~25 KB gzip con Turbopack) llega al primer uso del formulario, no al
@@ -104,11 +106,14 @@ export function QuoteForm({ departments, lines, whatsappUrl }: QuoteFormProps) {
    */
   const submitted = useRef(false);
   const checking = useRef(false);
+  /** Cuándo se abrió el formulario (reloj del navegador): tiempo mínimo de llenado (BD-073). */
+  const openedAt = useRef(0);
 
   // Borrador y ?tipo= al montar (los campos no son controlados: se llenan aquí).
   useEffect(() => {
     const el = form.current;
     if (!el) return;
+    openedAt.current = msSince(0);
     const draft = readDraft();
     // ?tipo= es lo que la persona acaba de elegir (un CTA del hero): gana sobre el borrador.
     const wanted = new URLSearchParams(window.location.search).get("tipo");
@@ -183,6 +188,10 @@ export function QuoteForm({ departments, lines, whatsappUrl }: QuoteFormProps) {
     target?.focus();
   };
 
+  const openWhatsApp = () => {
+    if (whatsappUrl) window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+  };
+
   const send = async (values: QuoteDraft): Promise<void> => {
     setSending(true);
     let result: Awaited<ReturnType<typeof submitQuote>> | null = null;
@@ -190,6 +199,10 @@ export function QuoteForm({ departments, lines, whatsappUrl }: QuoteFormProps) {
       result = await submitQuote(
         values,
         lines.map(({ type, ref, packaging, quantity }) => ({ type, ref, packaging, quantity })),
+        {
+          website: new FormData(form.current ?? undefined).get("website"),
+          elapsedMs: msSince(openedAt.current),
+        },
       );
     } catch {
       result = null; // sin red o el servidor no respondió: mismo aviso que un fallo
@@ -199,10 +212,40 @@ export function QuoteForm({ departments, lines, whatsappUrl }: QuoteFormProps) {
     if (result?.ok) {
       clearDraft();
       useQuote.getState().clear();
-      openDialog(feedback.quote.sent(result.data.folio), {
-        kind: "success",
-        onPrimary: () => router.push(`/cotizacion/enviada/${result.data.folio}` as Route),
+      // «Ver resumen» (/cotizacion/enviada/[folio]) llega con BD-075: hasta entonces, el botón
+      // principal es «Seguir viendo productos».
+      const { title, body, secondary } = feedback.quote.sent(result.data.folio);
+      openDialog(
+        { title, body, primary: secondary },
+        { kind: "success", onPrimary: () => router.push("/productos") },
+      );
+      return;
+    }
+    if (result?.error === "tooFast") {
+      void showToast(feedback.forms.tooFast);
+      return;
+    }
+    if (result?.error === "rateLimited") {
+      const { title, body, bodyNoWhatsapp, primary, secondary } = feedback.forms.rateLimited;
+      openDialog(
+        whatsappUrl
+          ? { title, body, primary, secondary }
+          : { title, body: bodyNoWhatsapp, primary: secondary },
+        {
+          kind: "error",
+          onPrimary: whatsappUrl ? openWhatsApp : undefined,
+        },
+      );
+      return;
+    }
+    if (result?.error === "staleItems") {
+      // Productos que ya no se pueden cotizar: se nombran para quitarlos (reintentar no lo arregla).
+      const names = (result.stale ?? []).map((ref) => {
+        const line = lines.find((l) => l.ref === ref);
+        return line ? `${line.name}${line.detail ? ` (${line.detail})` : ""}` : ref;
       });
+      closeDialog();
+      openDialog(feedback.quote.staleItems(names.join(", ")), { kind: "error" });
       return;
     }
     if (result?.error === "invalid" && result.fields) {
@@ -219,8 +262,9 @@ export function QuoteForm({ departments, lines, whatsappUrl }: QuoteFormProps) {
     openDialog(whatsappUrl ? { ...failed, secondary } : failed, {
       kind: "error",
       onPrimary: () => send(values),
-      onSecondary: whatsappUrl
-        ? () => void window.open(whatsappUrl, "_blank", "noopener,noreferrer")
+      onSecondary: whatsappUrl ? openWhatsApp : undefined,
+      note: result?.reference
+        ? feedback.system.genericError.reference(result.reference)
         : undefined,
     });
   };
@@ -261,8 +305,16 @@ export function QuoteForm({ departments, lines, whatsappUrl }: QuoteFormProps) {
       onBlur={onBlur}
       onChange={onChange}
       aria-busy={sending || undefined}
-      className="flex flex-col gap-6"
+      className="relative flex flex-col gap-6"
     >
+      {/* Campo trampa (BD-073): fuera de la vista y del orden del teclado, invisible para el lector
+          de pantalla; un bot que llena todo lo llena. Sin nombre que active el autocompletado. */}
+      <div aria-hidden="true" className="absolute -left-[9999px] size-px overflow-hidden">
+        <label>
+          Sitio web
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
+        </label>
+      </div>
       {/* Mientras se envía, los campos quedan bloqueados (docs/08 §4): lo que se cambiara en ese
           momento no viajaría. El botón queda fuera, con su spinner y el foco. */}
       <fieldset disabled={sending} className="flex min-w-0 flex-col gap-6">

@@ -1,9 +1,9 @@
 import type { Page } from "@playwright/test";
 import { collectConsoleErrors, expect, expectNoA11yViolations, test } from "./helpers";
 
-// Página /cotizacion y su formulario (BD-072). Criterios: ≤ 6 campos obligatorios y teclado
-// numérico en el teléfono. El envío real (folio, correo, SAP) llega con BD-073: hoy la Server Action
-// valida en el servidor y responde que no se pudo enviar (diálogo quote.failed con WhatsApp).
+// Página /cotizacion y su formulario (BD-072): ≤ 6 campos obligatorios y teclado numérico en el
+// teléfono. Envío (BD-073): con DATA_SOURCE=fixtures la cotización se guarda en memoria con su
+// folio; tiempo mínimo de 3 s y límite por IP.
 
 const ULTRA = "/productos/boligrafos/bolik-ultra";
 
@@ -36,6 +36,24 @@ async function seedQuote(page: Page) {
 /** Líneas de la cotización (no los <li> del header y el pie). */
 const items = (page: Page) =>
   page.getByRole("list", { name: "Productos de tu cotización" }).getByRole("listitem");
+
+/**
+ * Cada prueba que envía, desde su propia IP (X-Forwarded-For; sin IIS delante, el servidor la toma
+ * tal cual): el límite de 5 envíos en 10 minutos por IP no se cruza entre pruebas.
+ */
+async function ownIp(page: Page) {
+  const n = () => Math.floor(Math.random() * 250) + 1;
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": `10.${n()}.${n()}.${n()}` });
+}
+
+/** Datos válidos (las líneas sembradas existen en el catálogo de ejemplo). */
+async function fillValid(page: Page) {
+  await page.getByRole("radio", { name: "Librería o tienda" }).check();
+  await page.getByLabel(/^Nombre de la institución/).fill("Librería El Estudiante");
+  await page.getByLabel(/^Tu nombre/).fill("Ana López");
+  await page.getByLabel("Teléfono", { exact: false }).first().fill("5555 1234");
+  await page.getByLabel(/^Departamento/).selectOption("quetzaltenango");
+}
 
 const form = (page: Page) => page.locator("form").filter({ hasText: "Enviar cotización" });
 
@@ -114,26 +132,36 @@ test.describe("página /cotizacion (BD-072)", () => {
     await expect(page.getByText("Déjanos al menos un teléfono o un correo")).toHaveCount(2);
   });
 
-  test("lleno y válido: el servidor lo valida; sin envío real todavía, ofrece WhatsApp y nada se pierde", async ({
+  test("enviar: diálogo con el folio, la cotización y el borrador quedan vacíos @critico", async ({
     page,
   }) => {
+    const errors = collectConsoleErrors(page);
+    await ownIp(page);
     await seedQuote(page);
     await page.goto("/cotizacion");
-    await page.getByRole("radio", { name: "Librería o tienda" }).check();
-    await page.getByLabel(/^Nombre de la institución/).fill("Librería El Estudiante");
-    await page.getByLabel(/^Tu nombre/).fill("Ana López");
-    await page.getByLabel("Teléfono", { exact: false }).first().fill("5555 1234");
-    await page.getByLabel(/^Departamento/).selectOption("quetzaltenango");
+    await fillValid(page);
+    // Tiempo mínimo de llenado (BD-073): antes de 3 s, el servidor no la acepta.
+    await page.waitForTimeout(3_100);
     await page.getByRole("button", { name: "Enviar cotización" }).click();
     const dialog = page.getByRole("alertdialog").or(page.getByRole("dialog"));
-    await expect(dialog).toContainText("No pudimos enviar tu cotización");
-    await expect(dialog.getByRole("button", { name: "Enviar por WhatsApp" })).toBeVisible();
-    await page.keyboard.press("Escape");
-    // El borrador sigue: recargar no pierde lo escrito ni la lista.
-    await page.reload();
-    await expect(page.getByLabel(/^Tu nombre/)).toHaveValue("Ana López");
-    await expect(page.getByLabel(/^Departamento/)).toHaveValue("quetzaltenango");
+    await expect(dialog).toContainText("¡Listo! Recibimos tu cotización");
+    await expect(dialog).toContainText(/COT-\d{4}-\d{6}/);
+    await expect(page.locator("[data-quote-link]")).toHaveAttribute("aria-label", "Mi cotización");
+    await dialog.getByRole("button", { name: "Seguir viendo productos" }).click();
+    await expect(page).toHaveURL(/\/productos$/);
+    expect(await page.evaluate(() => sessionStorage.getItem("bolik_quote_form"))).toBeNull();
+    expect(errors, "errores en la consola").toEqual([]);
+  });
+
+  test("enviar antes de 3 s: aviso «Dale un momento más» y nada se pierde", async ({ page }) => {
+    await ownIp(page);
+    await seedQuote(page);
+    await page.goto("/cotizacion");
+    await fillValid(page);
+    await page.getByRole("button", { name: "Enviar cotización" }).click();
+    await expect(page.getByText("Dale un momento más antes de enviar").first()).toBeVisible();
     await expect(items(page)).toHaveCount(2);
+    await expect(page.getByLabel(/^Tu nombre/)).toHaveValue("Ana López");
   });
 
   test("quitar una línea con «Deshacer» del toast", async ({ page }) => {

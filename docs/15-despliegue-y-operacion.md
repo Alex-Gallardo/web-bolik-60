@@ -86,6 +86,10 @@ Set-WebConfigurationProperty -pspath $p -filter 'system.webServer/proxy' -name '
 Set-WebConfigurationProperty -pspath $p -filter 'system.webServer/proxy' -name 'reverseRewriteHostInResponseHeaders' -value 'False'
 # 0 = sin búfer: necesario para que el streaming de React (Suspense) llegue al navegador sin esperar
 Set-WebConfigurationProperty -pspath $p -filter 'system.webServer/proxy' -name 'responseBufferLimit' -value 0
+# IP real en X-Forwarded-For y sin el puerto del cliente (BD-073): el límite de envíos por IP toma
+# la ÚLTIMA IP de esa cabecera (la que agrega ARR); con puerto, cada conexión parecería otra IP.
+Set-WebConfigurationProperty -pspath $p -filter 'system.webServer/proxy' -name 'xForwardedForHeaderName' -value 'X-Forwarded-For'
+Set-WebConfigurationProperty -pspath $p -filter 'system.webServer/proxy' -name 'includePortInXForwardedFor' -value 'False'
 # Permitir que URL Rewrite fije estas cabeceras
 Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowedServerVariables' -name '.' -value @{name='HTTP_X_FORWARDED_PROTO'}
 Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowedServerVariables' -name '.' -value @{name='HTTP_X_FORWARDED_HOST'}

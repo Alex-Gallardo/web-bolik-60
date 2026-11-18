@@ -4,6 +4,8 @@
  * Tono: tú, cálido, directo. Qué pasó + qué sigue. Errores con salida (WhatsApp/teléfono).
  */
 
+import { systemFeedback } from "./feedback-system";
+
 export type ToastTone = "success" | "info" | "warning" | "error";
 
 export const feedback = {
@@ -38,6 +40,13 @@ export const feedback = {
       title: "Tu cotización está vacía",
       body: "Agrega productos desde el catálogo o elige un kit escolar.",
     },
+    /** Al enviar, algún producto ya no se puede cotizar (se despublicó o cambió su presentación). */
+    /** `names`: los productos ya unidos («Bolik Ultra (Azul · PT00058), …»). */
+    staleItems: (names: string) => ({
+      title: "Algunos productos ya no están disponibles",
+      body: `Quita de tu cotización: ${names}. Después vuelve a enviarla; si los necesitas, escríbenos por WhatsApp.`,
+      primary: "Entendido",
+    }),
     limit: {
       tone: "warning" as ToastTone,
       title: "Para pedidos de más de 50 productos, escríbenos por WhatsApp",
@@ -60,6 +69,8 @@ export const feedback = {
     rateLimited: {
       title: "Recibimos varias solicitudes seguidas",
       body: "Espera unos minutos e inténtalo de nuevo. Si es urgente, escríbenos por WhatsApp.",
+      /** Sin número de WhatsApp en los ajustes: sin prometerlo. */
+      bodyNoWhatsapp: "Espera unos minutos e inténtalo de nuevo. Si es urgente, llámanos.",
       primary: "Escribir por WhatsApp",
       secondary: "Entendido",
     },
@@ -115,26 +126,7 @@ export const feedback = {
       body: "Escríbenos y te decimos dónde conseguir Bolik, o conviértete en distribuidor.",
     }),
   },
-  system: {
-    offline: {
-      tone: "warning" as ToastTone,
-      title: "Sin conexión",
-      description: "Lo que agregues se guardará en tu cotización.",
-    },
-    online: { tone: "success" as ToastTone, title: "Conexión recuperada" },
-    genericError: {
-      title: "Algo salió mal de nuestro lado",
-      body: "Ya quedó registrado. Inténtalo de nuevo en un momento o escríbenos por WhatsApp.",
-      /** Mientras no haya número de WhatsApp (ajuste whatsapp_number), sin prometerlo. */
-      bodyNoWhatsapp: "Ya quedó registrado. Inténtalo de nuevo en un momento o llámanos.",
-      primary: "Intentar de nuevo",
-      /** Enlaces de contacto de la pantalla de error (BD-046); WhatsApp solo si hay número. */
-      whatsapp: "Escríbenos por WhatsApp",
-      call: (phone: string) => `Llámanos al ${phone}`,
-      /** Se muestra para que el visitante lo comparta con Ventas y se busque en el log. */
-      reference: (code: string) => `Código de referencia: ${code}`,
-    },
-  },
+  system: systemFeedback,
   admin: {
     saved: {
       tone: "success" as ToastTone,

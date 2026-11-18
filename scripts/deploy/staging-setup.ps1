@@ -183,6 +183,10 @@ Set-WebConfigurationProperty -pspath $apphost -filter "system.webServer/proxy" -
 Set-WebConfigurationProperty -pspath $apphost -filter "system.webServer/proxy" -name "reverseRewriteHostInResponseHeaders" -value "False"
 # 0 = sin búfer: el streaming de React (Suspense) llega al navegador sin esperar.
 Set-WebConfigurationProperty -pspath $apphost -filter "system.webServer/proxy" -name "responseBufferLimit" -value 0
+# IP real del visitante en X-Forwarded-For, sin el puerto: el límite de envíos de los formularios
+# (BD-073, src/server/request-ip.ts) toma la última IP de esa cabecera.
+Set-WebConfigurationProperty -pspath $apphost -filter "system.webServer/proxy" -name "xForwardedForHeaderName" -value "X-Forwarded-For"
+Set-WebConfigurationProperty -pspath $apphost -filter "system.webServer/proxy" -name "includePortInXForwardedFor" -value "False"
 $allowed = @(Get-WebConfigurationProperty -pspath $apphost -filter "system.webServer/rewrite/allowedServerVariables" -name "Collection" | Where-Object { $_ } | ForEach-Object { $_.name })
 foreach ($variable in @("HTTP_X_FORWARDED_PROTO", "HTTP_X_FORWARDED_HOST")) {
   if ($allowed -notcontains $variable) {

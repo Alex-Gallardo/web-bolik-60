@@ -392,6 +392,10 @@ model QuoteRequest {
 
   @@index([status, createdAt])
   @@index([erpStatus])
+  // BD-073: SQL Server no indexa solas las claves foráneas; y el límite de envíos por IP cuenta las
+  // cotizaciones recientes de un mismo hash.
+  @@index([assignedToId])
+  @@index([ipHash, createdAt])
 }
 
 model QuoteItem {
@@ -410,6 +414,8 @@ model QuoteItem {
   quantity      Int
   unitLabel     String          @db.NVarChar(30) // cajillas | fardos | kits | unidades
   sortOrder     Int             @default(0)
+
+  @@index([quoteId]) // BD-073
 }
 
 model QuoteNote {
@@ -420,6 +426,8 @@ model QuoteNote {
   author    AdminUser    @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   text      String       @db.NVarChar(2000)
   createdAt DateTime     @default(now())
+
+  @@index([quoteId]) // BD-073
 }
 
 model SchoolVisitRequest {

@@ -1,7 +1,7 @@
 "use client";
 
 import { ErrorScreen } from "@/components/feedback/error-screen";
-import { feedback } from "@/content/feedback";
+import { systemFeedback } from "@/content/feedback-system";
 import { bricolage, dmSans } from "./fonts";
 import "./globals.css";
 
@@ -13,7 +13,7 @@ export default function GlobalError({ error, retry }: { error: unknown; retry: (
   return (
     <html lang="es-GT" className={`${bricolage.variable} ${dmSans.variable} h-full`}>
       <body className="flex min-h-full flex-col">
-        <title>{`${feedback.system.genericError.title} · Bolik`}</title>
+        <title>{`${systemFeedback.genericError.title} · Bolik`}</title>
         <main className="flex flex-1 flex-col">
           <ErrorScreen error={error} retry={retry} />
         </main>

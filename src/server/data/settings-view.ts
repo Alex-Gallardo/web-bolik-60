@@ -32,5 +32,7 @@ export function toSiteSettings(raw: Record<string, string | undefined>): SiteSet
     splashEnabled: s.splash_enabled === "true",
     kitsEnabled: s.kits_enabled === "true",
     minCustomOrder: s.min_custom_order ? Number(s.min_custom_order) : null,
+    // Interruptor del admin (BD-035): solo "false" lo apaga; sin el ajuste, encendido.
+    erpEnabled: s.erp_enabled !== "false",
   };
 }
