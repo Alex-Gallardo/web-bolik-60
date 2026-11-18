@@ -10,10 +10,14 @@ import { ui } from "@/content/ui";
 import { useQuoteCount } from "@/features/quote/quote-count";
 import { QUOTE_OPEN_EVENT, openQuoteDrawer } from "@/features/quote/storage-keys";
 
-/** Clic normal abre el drawer; con Ctrl, Cmd, Shift o la rueda, el enlace hace lo suyo. */
+/**
+ * Clic normal abre el drawer; con Ctrl, Cmd, Shift o la rueda, el enlace hace lo suyo. En
+ * /cotizacion la lista ya está en la página (BD-072): el enlace no abre el drawer encima.
+ */
 function openDrawer(event: MouseEvent<HTMLAnchorElement>) {
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
     return;
+  if (window.location.pathname === ui.header.quote.href) return;
   event.preventDefault();
   openQuoteDrawer();
 }

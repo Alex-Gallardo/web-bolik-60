@@ -52,6 +52,8 @@ module.exports = {
         `${base}/productos/boligrafos`,
         // La ficha (BD-062): la página más importante para SEO y cotización.
         `${base}/productos/boligrafos/bolik-ultra`,
+        // Mi cotización (BD-072): el formulario más pesado del sitio (noindex).
+        `${base}/cotizacion`,
       ],
       numberOfRuns: 3,
       settings: {
@@ -86,13 +88,29 @@ module.exports = {
           // ~3.0 s por el JS y las fuentes aunque se pinte a los ~0.4 s); JS ≤ 170 KB, porque la
           // parte común (Next, React y el layout) ya ocupa ~160 KB en cualquier página. BD-047
           // aligera el layout para volver a bajar el tope. Sin las fichas (abajo).
-          matchingUrlPattern: "^https?://[^/]+/(?!productos/[^/]+/[^/]+$).+",
+          matchingUrlPattern: "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion$).+",
           assertions: {
             ...common,
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
             "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
+          },
+        },
+        {
+          // /cotizacion (BD-072): noindex a propósito (página de utilidad, docs/10 §3): la auditoría
+          // «se puede indexar» y el puntaje de SEO no aplican. JS ≤ 186 KB (decisión del usuario,
+          // 18 nov 2026): la parte común ya ocupa ~166 KB y la lista con su formulario suma ~18 KB
+          // aun con `zod/mini` descargado al interactuar. BD-047 lo devuelve a 170 KB.
+          matchingUrlPattern: "^https?://[^/]+/cotizacion$",
+          assertions: {
+            ...common,
+            "categories:seo": "off",
+            "is-crawlable": "off",
+            "categories:performance": ["error", { minScore: 0.9 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
+            "total-blocking-time": ["error", { maxNumericValue: 150 }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 186 * KB }],
           },
         },
         {

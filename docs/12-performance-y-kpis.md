@@ -34,8 +34,11 @@ El JS propio de la home pesa poco (reproductor de video y contador: 3.8 KB; layo
 | Inicio | ≤ 165.5 KB (BD-071) | ≤ 25 KB | Póster ≤ 120 KB | 2 familias, ≤ 4 archivos woff2 | ≤ 25 |
 | Catálogo / categoría | ≤ 170 KB | ≤ 25 KB | ≤ 6 tarjetas × 25 KB | 2 familias | ≤ 25 |
 | Ficha | ≤ 172.5 KB (BD-071) | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 26 (BD-071) |
+| Mi cotización (`/cotizacion`) | ≤ 186 KB (BD-072) | ≤ 25 KB | — | 2 familias | ≤ 25 |
 | Dónde comprar | ≤ 170 KB (+ mapa diferido ≤ 60 KB) | ≤ 25 KB (+ CSS de Leaflet diferido) | — | 2 familias | ≤ 25 |
 | Escuelas | ≤ 170 KB | ≤ 25 KB | ≤ 150 KB | 3 familias (incluye Baloo 2) | ≤ 28 |
+
+**Formulario de `/cotizacion` (BD-072, decisión del usuario, 18 nov 2026).** Medido con esbuild: React Hook Form + resolver + `zod/mini` = 19 KB gzip; `zod/mini` solo = 6.2 KB; Zod completo, ~92 KB. Sin margen (la parte común ya ocupa ~166 KB), el formulario valida sin React Hook Form, con un esquema `zod/mini` compartido con la Server Action (`features/quote/schema.ts`). Turbopack no recorta `zod/mini` como esbuild (~25 KB gzip en el navegador), así que el esquema se descarga al primer uso del formulario (foco o envío) y no cuenta en el JS inicial. Lo propio de la página (store, lista, controles, textos) queda en ~18 KB: 185.2 KB en total. Tope propio de **186 KB** para `/cotizacion` (página `noindex`); BD-047 lo devuelve a 170. Lighthouse CI la mide sin la categoría SEO (es `noindex` a propósito).
 
 **Drawer de la cotización (BD-071, 17 nov 2026).** El drawer se descarga al abrirlo (25.4 KB: su chunk con el store, 13.0 KB, y Radix Dialog, 12.7 KB), pero su anfitrión y el clic del contador van en el header: ~0.4 KB comprimidos en todas las páginas. Al crecer el chunk común, Turbopack separa el mapa de los `import()` del layout en otro archivo (339 B, pero una petición más: ~1.6 KB transferidos con sus cabeceras), y no se pudo evitar desde el código (con el `import()` en el header o en `FeedbackHost`, igual). En develop la ficha estaba a 31 bytes del tope: queda en 172.2 KB y 26 peticiones, y la home en 165.2 KB. Ajuste mínimo de los topes: home 165.5 KB, ficha 172.5 KB y 26 peticiones; «Mi cotización (n)» en la barra móvil quedó fuera (el ticket lo condicionaba al presupuesto). BD-047 los devuelve a 165 y 170 KB.
 
