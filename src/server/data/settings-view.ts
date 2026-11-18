@@ -34,5 +34,7 @@ export function toSiteSettings(raw: Record<string, string | undefined>): SiteSet
     minCustomOrder: s.min_custom_order ? Number(s.min_custom_order) : null,
     // Interruptor del admin (BD-035): solo "false" lo apaga; sin el ajuste, encendido.
     erpEnabled: s.erp_enabled !== "false",
+    // Destinatario de las cotizaciones (BD-074); sin el ajuste, MAIL_SALES_TO del entorno.
+    quoteEmailTo: s.quote_email_to ?? null,
   };
 }

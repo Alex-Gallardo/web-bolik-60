@@ -1,3 +1,6 @@
+import { rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { http, HttpResponse, delay } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -35,7 +38,19 @@ vi.mock("@/server/erp/gateway", () => ({
     createSmartK66Gateway({ baseUrl: BASE, apiKey: "clave-de-prueba", sleep: async () => {} }),
 }));
 
+// Correos en modo prueba, en una carpeta temporal (no en la bandeja de desarrollo).
+const MAIL_TMP = path.join(tmpdir(), `bolik-it-mails-${process.pid}`);
+vi.mock("@/server/mail/transport", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/server/mail/transport")>();
+  return {
+    ...original,
+    sendMail: (message: import("@/server/mail/transport").MailMessage) =>
+      original.sendMail(message, { mode: "file", dir: MAIL_TMP }),
+  };
+});
+
 const { submitQuote } = await import("@/features/quote/actions");
+const { listStoredMails } = await import("@/server/mail/transport");
 
 const contact = {
   customerType: "libreria",
@@ -76,6 +91,7 @@ beforeEach(async () => {
   await cleanup();
 });
 afterAll(async () => {
+  await rm(MAIL_TMP, { recursive: true, force: true });
   server.close();
   await cleanup();
   await db.$disconnect();
@@ -121,6 +137,30 @@ describe("submitQuote contra SQL Server (BD-073)", () => {
         unitLabel: "unidades",
       }),
     ]);
+  });
+
+  it("envía el correo interno y el acuse después de responder (BD-074; modo prueba: emailSentAt vacío)", async () => {
+    await rm(MAIL_TMP, { recursive: true, force: true });
+    const result = await submitQuote({ ...contact, email: "ana@ejemplo.com" }, lines, meta);
+    expect(result).toMatchObject({ ok: true });
+    if (!result.ok) return;
+    // Antes de la tarea de después no hay correos.
+    expect(await listStoredMails(20, MAIL_TMP)).toEqual([]);
+    for (const task of state.afterTasks) await task();
+
+    const mails = await listStoredMails(20, MAIL_TMP);
+    const sales = mails.find((m) => m.subject.startsWith("Nueva cotización"));
+    const ack = mails.find((m) => m.subject.startsWith("Recibimos tu cotización"));
+    expect(sales?.subject).toBe(
+      `Nueva cotización ${result.data.folio} · Librería o tienda · Quetzaltenango`,
+    );
+    expect(sales?.html).toContain("/admin/cotizaciones/");
+    expect(ack?.to).toBe("ana@ejemplo.com");
+    expect(ack?.html).not.toContain("/admin");
+    const quote = await db.quoteRequest.findUniqueOrThrow({ where: { folio: result.data.folio } });
+    // En modo prueba (SMTP_MODE=file) nada salió de verdad: emailSentAt no se marca. Con SMTP real
+    // se marca (send-quote-emails.test.ts).
+    expect(quote.emailSentAt).toBeNull();
   });
 
   it("20 envíos simultáneos no repiten folio y quedan consecutivos", async () => {

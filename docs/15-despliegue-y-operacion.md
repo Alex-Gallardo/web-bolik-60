@@ -344,6 +344,14 @@ Ver la lista completa en doc 03 §9 y `starter/.env.example`. Diferencias:
 | `MAIL_SALES_TO` | correo del equipo de desarrollo | `ventas@bolik66.com` |
 | `INDEXNOW_KEY` | vacío (no se envía) | clave real |
 
+### Paso a producción: correo y SAP
+
+Hasta tener la cuenta de correo y el acceso a SMART-K66, todo corre en **modo prueba** (decisión del usuario, 18 nov 2026): `SMTP_MODE=file` (los correos quedan en `MAIL_DIR` y en `/styleguide/correos`) y `ERP_MODE=noop` (las cotizaciones quedan `omitida`, sin llamar a SAP). Cambiarlo es solo configuración, un paso antes de producción:
+
+1. **Correo:** `SMTP_MODE=smtp`, `SMTP_HOST` (`smtp.office365.com`), `SMTP_PORT` (587), `SMTP_USER` y `SMTP_PASSWORD` de `web@bolik66.com`, `MAIL_FROM` y `MAIL_SALES_TO` (o el ajuste `quote_email_to` del admin). Probar con una cotización real y revisar que llegue el interno y el acuse. El acuse ya está limitado (2 por dirección en 24 h, sin nombres con forma de enlace en el saludo) para que el formulario no sirva para mandar correos a terceros desde el dominio; con SMTP real, `emailSentAt` empieza a marcarse.
+2. **SAP:** `ERP_MODE=smartk66`, `ERP_BASE_URL` y `ERP_API_KEY` (BD-035), y el ajuste `erp_enabled` sin `"false"`. Probar contra el SAP de pruebas antes que el real.
+3. Con `APP_ENV=production`, la app no arranca con `SMTP_MODE=file` (env.schema).
+
 ## 12. Staging: primera instalación y despliegue manual (BD-016)
 
 Hasta que exista el pipeline (BD-141), staging se prepara y se despliega a mano con cuatro scripts de `scripts/deploy/`. Los cuatro **solo sirven para staging**: el `web.config` lleva `noindex`, no tiene la regla de `www` y el setup se niega a correr con el dominio de producción. Producción (BD-140) usa el `web.config` de §4.3 y `deploy.ps1`.
@@ -417,7 +425,7 @@ Se puede volver a correr, por ejemplo cuando llega o se renueva el certificado, 
 
 Después, TI completa `staging.env` con los valores de §11: `DATABASE_URL` con `bolik_app`, `DATA_SOURCE`, un `SESSION_SECRET` aleatorio, el correo… Con `APP_ENV=staging`, la app no arranca si queda el `SESSION_SECRET` de ejemplo o el usuario `sa`.
 
-`SMTP_MODE` pasa a `smtp` cuando exista la cuenta de correo (BD-074). En modo `file`, la app escribiría dentro del release, donde la cuenta no tiene permiso.
+Mientras no haya cuenta de correo, staging queda en **modo prueba** (BD-074): `SMTP_MODE=file` con `MAIL_DIR=D:\bolik-stg\logs\mails` (fuera del release, donde la cuenta sí escribe; sin `MAIL_DIR`, escribiría dentro del release y fallaría). Los correos no salen a internet: quedan como `.eml` y se ven en `/styleguide/correos` para presentarlo. `SMTP_MODE` pasa a `smtp` cuando exista la cuenta (ver «Paso a producción: correo y SAP»).
 
 `MIGRATE_DATABASE_URL` **no** va en ese archivo: el servicio no necesita el usuario de DDL. Ninguna de estas variables va al repo.
 

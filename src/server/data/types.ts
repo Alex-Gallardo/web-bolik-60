@@ -228,6 +228,8 @@ export type SiteSettings = {
   minCustomOrder: number | null;
   /** Mandar las cotizaciones a SAP (ajuste erp_enabled, BD-035); false = erpStatus omitida. */
   erpEnabled: boolean;
+  /** A quién llegan las cotizaciones (ajuste quote_email_to); null = MAIL_SALES_TO. */
+  quoteEmailTo: string | null;
 };
 
 /** Fecha ISO de la última edición en la base; null con la fuente de ejemplo (no inventa "ahora"). */

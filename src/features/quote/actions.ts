@@ -8,11 +8,12 @@ import { saveErpOutcome } from "@/server/data/quote-erp";
 import {
   QuoteRateLimitError,
   countRecentQuotesByIp,
-  departmentExists,
+  departmentName,
   resolveQuoteItems,
   saveQuoteRequest,
 } from "@/server/data/quote-requests";
 import { sendQuoteToErp } from "@/server/erp/send-quote";
+import { sendQuoteEmails } from "@/server/mail/send-quote-emails";
 import { log, logError } from "@/server/log";
 import { requestIpHash } from "@/server/request-ip";
 import type { QuoteContactField } from "./form-fields";
@@ -79,7 +80,8 @@ export async function submitQuote(
     if ((await countRecentQuotesByIp(ipHash, since)) >= QUOTE_GUARD.maxPerWindow)
       return { ok: false, error: "rateLimited" };
 
-    if (!(await departmentExists(parsedContact.data.department)))
+    const department = await departmentName(parsedContact.data.department);
+    if (!department)
       return {
         ok: false,
         error: "invalid",
@@ -99,9 +101,30 @@ export async function submitQuote(
       { max: QUOTE_GUARD.maxPerWindow, windowMs: QUOTE_GUARD.windowMs },
     );
 
-    // Después de responder: SAP (docs/03 §5). Con DATA_SOURCE=fixtures no quedó nada en la base que
-    // mandar. Con el interruptor del admin apagado queda `omitida`: así la tarea de reintento (que
-    // toma las `pendiente`) no la manda después. Los correos llegan con BD-074.
+    // Después de responder (el visitante ya tiene su folio), cada cosa por su lado:
+    // - Correos (BD-074): a Ventas y el acuse. Con SMTP_MODE=file quedan en tmp/mails.
+    // - SAP (docs/03 §5), solo si quedó en la base: con el interruptor del admin apagado queda
+    //   `omitida` (la tarea de reintento solo toma las `pendiente`).
+    const c = parsedContact.data;
+    after(() =>
+      sendQuoteEmails(
+        {
+          quoteId: saved.id,
+          folio: saved.folio,
+          customerType: c.customerType,
+          organization: c.organization,
+          name: c.name,
+          phone: c.phone,
+          email: c.email,
+          departmentName: department,
+          municipality: c.municipality,
+          notes: c.notes,
+          items: resolved.items,
+          createdAt: new Date(),
+        },
+        saved.persisted,
+      ),
+    );
     if (saved.persisted)
       after(async () => {
         try {

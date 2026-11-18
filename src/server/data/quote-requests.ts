@@ -17,6 +17,11 @@ import { getDepartment } from "./stores";
 /** Una línea lista para guardar: lo legible lo arma el servidor desde el catálogo. */
 export type QuoteItemDraft = {
   sku: string;
+  /** Las partes de la descripción, para la tabla de los correos (BD-074). */
+  productName: string;
+  colorName: string;
+  /** «Cajilla de 12»; null sin presentación. */
+  packagingName: string | null;
   packagingCode: PackagingCode | null;
   /** «Bolik Ultra Azul PT00058 · Cajilla de 12» (QuoteItem.description, 250). */
   description: string;
@@ -77,6 +82,9 @@ export async function resolveQuoteItems(lines: QuoteLineInput[]): Promise<Resolv
     const base = `${match.product.name} ${match.variant.color.name} ${match.variant.sku}`;
     items.push({
       sku: match.variant.sku,
+      productName: match.product.name,
+      colorName: match.variant.color.name,
+      packagingName: packName,
       packagingCode: line.packaging ?? null,
       description: (packName ? `${base} · ${packName}` : base).slice(0, 250),
       quantity: line.quantity,
@@ -92,9 +100,9 @@ export async function resolveQuoteItems(lines: QuoteLineInput[]): Promise<Resolv
   return keys.size === items.length ? { ok: true, items } : { ok: false, stale: [] };
 }
 
-/** El departamento existe (el formulario manda su slug). */
-export async function departmentExists(slug: string): Promise<boolean> {
-  return (await getDepartment(slug)) !== null;
+/** Nombre del departamento (el formulario manda su slug); null si no existe. */
+export async function departmentName(slug: string): Promise<string | null> {
+  return (await getDepartment(slug))?.name ?? null;
 }
 
 async function getDb() {
@@ -209,4 +217,25 @@ export async function countRecentQuotesByIp(ipHash: string, since: Date): Promis
     return memoryQuotes().filter((q) => q.ipHash === ipHash && q.createdAt >= since.getTime())
       .length;
   return db.quoteRequest.count({ where: { ipHash, createdAt: { gte: since } } });
+}
+
+/** El correo a Ventas salió (BD-074): QuoteRequest.emailSentAt. Sin base, no hay nada que marcar. */
+export async function markQuoteEmailSent(quoteId: number, at: Date = new Date()): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.quoteRequest.update({ where: { id: quoteId }, data: { emailSentAt: at } });
+}
+
+/**
+ * Cotizaciones con este correo desde `since` (BD-074): el acuse no debe servir para mandar
+ * correos a cualquier dirección desde web@bolik66.com (docs/15, «Paso a producción»).
+ */
+export async function countRecentQuotesByEmail(email: string, since: Date): Promise<number> {
+  const db = await getDb();
+  const wanted = email.toLowerCase();
+  if (!db)
+    return memoryQuotes().filter(
+      (q) => q.request.contact.email?.toLowerCase() === wanted && q.createdAt >= since.getTime(),
+    ).length;
+  return db.quoteRequest.count({ where: { email: wanted, createdAt: { gte: since } } });
 }

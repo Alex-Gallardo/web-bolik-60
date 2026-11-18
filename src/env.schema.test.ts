@@ -132,7 +132,16 @@ describe("parseServerEnv", () => {
   it("aplica las reglas cruzadas del correo", () => {
     expect(errorOf({ ...base, SMTP_MODE: "smtp" })).toContain("smtp requiere");
     expect(errorOf({ ...production, SMTP_MODE: "file" })).toContain("en producción debe ser smtp");
-    expect(errorOf({ ...deployed("staging"), SMTP_MODE: "file" })).toBe("");
+    // Modo prueba en staging (BD-074): vale, pero con una carpeta donde la cuenta pueda escribir.
+    expect(errorOf({ ...deployed("staging"), SMTP_MODE: "file" })).toContain("MAIL_DIR");
+    expect(
+      errorOf({
+        ...deployed("staging"),
+        SMTP_MODE: "file",
+        MAIL_DIR: "D:\\bolik-stg\\logs\\mails",
+      }),
+    ).toBe("");
+    expect(errorOf({ ...base, SMTP_MODE: "file" })).toBe("");
   });
 
   describe.each(["staging", "production"] as const)("fuera de desarrollo (%s)", (appEnv) => {
