@@ -987,7 +987,7 @@ La parte común del sitio (Next, React y el layout) ocupa ~160 KB en cualquier p
 1. `pnpm analyze` del layout: qué islas de cliente cargan en todas las páginas (header, contador de cotización, flotantes, avisos, revelado, entrada de página) y cuánto pesa cada una.
 2. Diferir lo que no hace falta en el primer pintado (`dynamic()` al interactuar o en ocioso), sin romper el funcionamiento sin JS ni los avisos de feedback.
 3. Medir de nuevo el 404 (sin código propio) y `/productos`; bajar `resource-summary:script:size` del resto en `lighthouse.config.cjs` y en docs/12 §2 y CLAUDE.md a lo que se logre.
-4. Devolver los topes que subió BD-071 (home 165.5 → 165 KB; ficha 172.5 → 170 KB y 26 → 25 peticiones). Parte del exceso es el mapa de `import()` que Turbopack separa en otro archivo al crecer el chunk común: con un layout más liviano vuelve a ir dentro (docs/12 §2).
+4. Devolver los topes que subieron BD-071 y BD-072 (home 165.5 → 165 KB; ficha 172.5 → 170 KB y 26 → 25 peticiones; `/cotizacion` 186 → 170 KB). Parte del exceso es el mapa de `import()` que Turbopack separa en otro archivo al crecer el chunk común: con un layout más liviano vuelve a ir dentro (docs/12 §2).
 
 **Criterios de aceptación**
 
@@ -1579,8 +1579,20 @@ Formulario corto para pedir la cotización.
 
 **Criterios de aceptación**
 
-- [ ] Formulario completo en ≤ 6 campos obligatorios.
-- [ ] Teclado numérico en teléfono.
+- [x] Formulario completo en ≤ 6 campos obligatorios.
+- [x] Teclado numérico en teléfono.
+
+**Implementado (BD-072)**
+
+- `app/(site)/cotizacion/page.tsx`: estática, `noindex`, un `h1`; departamentos y WhatsApp del servidor. La isla (`components/quote/quote-page-island.tsx`) pinta «Cargando…» (solo con JS) hasta hidratar, porque la lista vive en el navegador (BD-070), y luego la lista (las líneas del drawer, con «Deshacer» en toast: aquí no hay modal) con el formulario, o el estado vacío (catálogo y, con los kits activos, kits). Alto reservado para no mover el pie (CLS). Sin JS, el aviso de doc 17 §5 con el WhatsApp.
+- **Formulario** (`quote-form.tsx`): 5 obligatorios (tipo, institución salvo «Otro», nombre, teléfono o correo, departamento); municipio y notas opcionales. Valida al salir de cada campo y al enviar; con errores, todos a la vez, foco en el primero y toast `forms.invalid`; «al menos un teléfono o un correo» solo después de enviar. Teléfono con `PhoneInput` (`type="tel"`, `inputMode="tel"`). Mientras se envía, los campos quedan bloqueados (`quote.sending`).
+- **Sin React Hook Form** (desviación de CLAUDE.md, Stack, por presupuesto; docs/12 §2): esquema `zod/mini` compartido cliente/servidor en `features/quote/schema.ts` (piezas en `lib/form-schemas-mini.ts`, mismas reglas y mensajes que `lib/form-schemas.ts`); lo que no necesita Zod, en `features/quote/form-fields.ts`. El esquema se descarga al primer uso del formulario. Medidas y tope propio de 186 KB en docs/12 §2 (decisión del usuario, 18 nov 2026).
+- **Borrador** en sessionStorage (`features/quote/draft.ts`): se restaura al volver; `?tipo=libreria|empresa` (CTA del hero) gana sobre el borrador; un departamento que ya no existe se descarta.
+- **Envío:** `features/quote/actions.ts` → `submitQuote(contacto, líneas)` valida en el servidor con el mismo esquema y devuelve los errores por campo. Guardar, folio, correos y SAP son BD-073: mientras tanto responde `unavailable` y la página muestra `quote.failed` con «Enviar por WhatsApp» (mensaje `quote` de `lib/whatsapp`).
+- En `/cotizacion`, «Mi cotización» del header navega en vez de abrir el drawer encima de la misma lista.
+- **Pendientes:** el buscador para agregar productos desde la página (docs/06 §3.16, punto 2) espera a BD-066; la ilustración del estado vacío y «Más pedidos por librerías» (punto 5) llegan con las páginas por público (E10). «Recordar mis datos» (docs/07 §2.3) no se hizo.
+
+*Nota para BD-073:* `submitQuote` ya existe con su firma y sus pruebas (`actions.test.ts`): falta honeypot, tiempo mínimo, límite por IP, comprobar que el departamento exista, la transacción con folio y `after()` para correo y ERP. El formulario ya maneja `{ ok: true, data: { folio } }` (diálogo `quote.sent`, vacía la cotización y el borrador). Tras el éxito, el foco vuelve a un botón que ya no existe: al cerrar el diálogo, llevarlo a un lugar estable.
 
 #### BD-073 · Enviar cotización (server action)
 
