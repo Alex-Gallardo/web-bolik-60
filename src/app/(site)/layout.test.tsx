@@ -17,6 +17,7 @@ const settings: SiteSettings = {
   splashEnabled: true,
   kitsEnabled: false,
   minCustomOrder: null,
+  erpEnabled: true,
 };
 vi.mock("next/cache", () => ({ cacheLife: () => {} }));
 vi.mock("@/server/data/catalog", () => ({ listCategories: async () => [] }));

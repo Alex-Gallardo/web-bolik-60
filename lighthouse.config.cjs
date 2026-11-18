@@ -75,10 +75,9 @@ module.exports = {
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 200 }],
-            // 165.5 KB desde BD-071: el drawer de la cotización suma ~0.4 KB al layout y, al crecer
-            // el chunk común, Turbopack separa su mapa de import() en otro archivo (una petición
-            // más). Ajuste mínimo, documentado en docs/12 §2; BD-047 lo devuelve a 165 KB.
-            "resource-summary:script:size": ["error", { maxNumericValue: 165.5 * KB }],
+            // BD-071 lo había subido a 165.5 KB; BD-073 sacó los mensajes del sistema de la pantalla de
+            // error (−3.9 KB en todas las páginas) y vuelve a 165 KB (docs/12 §2).
+            "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
           },
         },
         {
@@ -124,11 +123,10 @@ module.exports = {
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3500 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
-            // 172.5 KB y 26 peticiones desde BD-071 (en develop la ficha estaba a 31 bytes del
-            // tope): el drawer de la cotización y el archivo aparte del mapa de import() que
-            // Turbopack separa al crecer el chunk común. Ajuste mínimo (docs/12 §2); BD-047 lo
-            // devuelve a 170 KB y 25.
-            "resource-summary:script:size": ["error", { maxNumericValue: 172.5 * KB }],
+            // JS ≤ 170 KB otra vez desde BD-073 (BD-071 lo había subido a 172.5). Las 26 peticiones
+            // siguen (desde BD-071): Turbopack separa el mapa de import() del layout en otro archivo;
+            // BD-047 lo devuelve a 25 (docs/12 §2).
+            "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
             "resource-summary:total:count": ["error", { maxNumericValue: 26 }],
           },
         },

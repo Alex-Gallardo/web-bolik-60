@@ -226,6 +226,8 @@ export type SiteSettings = {
   splashEnabled: boolean;
   kitsEnabled: boolean;
   minCustomOrder: number | null;
+  /** Mandar las cotizaciones a SAP (ajuste erp_enabled, BD-035); false = erpStatus omitida. */
+  erpEnabled: boolean;
 };
 
 /** Fecha ISO de la última edición en la base; null con la fuente de ejemplo (no inventa "ahora"). */

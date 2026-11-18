@@ -987,7 +987,7 @@ La parte común del sitio (Next, React y el layout) ocupa ~160 KB en cualquier p
 1. `pnpm analyze` del layout: qué islas de cliente cargan en todas las páginas (header, contador de cotización, flotantes, avisos, revelado, entrada de página) y cuánto pesa cada una.
 2. Diferir lo que no hace falta en el primer pintado (`dynamic()` al interactuar o en ocioso), sin romper el funcionamiento sin JS ni los avisos de feedback.
 3. Medir de nuevo el 404 (sin código propio) y `/productos`; bajar `resource-summary:script:size` del resto en `lighthouse.config.cjs` y en docs/12 §2 y CLAUDE.md a lo que se logre.
-4. Devolver los topes que subieron BD-071 y BD-072 (home 165.5 → 165 KB; ficha 172.5 → 170 KB y 26 → 25 peticiones; `/cotizacion` 186 → 170 KB). Parte del exceso es el mapa de `import()` que Turbopack separa en otro archivo al crecer el chunk común: con un layout más liviano vuelve a ir dentro (docs/12 §2).
+4. Devolver los topes que siguen subidos (ficha 26 → 25 peticiones, BD-071; `/cotizacion` 186 → 170 KB, BD-072). Los de JS de home y ficha ya volvieron a 165 y 170 KB con BD-073 (mensajes del sistema fuera del JS común). Parte del exceso es el mapa de `import()` que Turbopack separa en otro archivo al crecer el chunk común: con un layout más liviano vuelve a ir dentro (docs/12 §2).
 
 **Criterios de aceptación**
 
@@ -1614,13 +1614,34 @@ Guardar, notificar y enviar a SAP sin hacer esperar al visitante.
 
 **Criterios de aceptación**
 
-- [ ] Respuesta en < 800 ms con SMTP y ERP lentos.
+- [x] Respuesta en < 800 ms con SMTP y ERP lentos.
 
-- [ ] Pruebas de integración del doc 13 §4.
+- [x] Pruebas de integración del doc 13 §4.
 
 **Nota de BD-033:** el folio se pide dentro de la misma `db.$transaction` que crea la cotización y sus líneas (`nextFolio(tx, "COT")`, `src/server/folio.ts`); la validación de un folio que llega de la URL (`/cotizacion/enviada/[folio]`) pasa el texto a mayúsculas y usa `FOLIO_REGEX` de `src/lib/folio.ts`. El bloqueo del contador dura hasta el commit: pedir el folio justo antes del `create` (después de validar y leer), nada de correo ni ERP dentro de la transacción y `db.$transaction(fn, { maxWait: 5_000, timeout: 10_000 })`; no atrapar los errores de `nextFolio` dentro de la transacción.
 
 **Nota de BD-035:** después de guardar, `after(() => sendQuoteToErp(quote.id))` (`server/erp/send-quote.ts`), solo si el ajuste `erp_enabled` no es `"false"` (interruptor del admin; con él apagado, `erpStatus = omitida`). El gateway solo mira `ERP_MODE`. Una llamada puede tardar hasta ~36 s con SMART-K66 caído (4 intentos de 8 s más esperas): no bloquea al visitante porque va en `after()` y no retiene transacción ni conexión de Prisma.
+
+**Implementado (BD-073)**
+
+- `features/quote/actions.ts` → `submitQuote(contacto, líneas, { website, elapsedMs })`, en este orden:
+  1. **Campo trampa** (`website`, fuera de la vista, del tab y del lector): si llega lleno, no guarda y responde `unavailable`. No finge éxito: si fuera una persona (un autocompletado raro), no pierde su cotización creyendo que llegó.
+  2. **Tiempo mínimo** de 3 s medido en el navegador (`elapsedMs`; sin número finito, `tooFast`): toast `forms.tooFast`.
+  3. **Esquema** de BD-072 en el servidor.
+  4. **Límite** de 5 envíos en 10 min por hash de IP: un recuento previo para rechazar rápido y el que vale, dentro de la transacción después del MERGE del folio (ese bloqueo pone en fila a todas: dos envíos simultáneos no ven el mismo recuento; si salta, se revierte y el folio no se gasta). Diálogo `forms.rateLimited` (sin WhatsApp si no hay número: `bodyNoWhatsapp`).
+  5. **Departamento** que exista y **líneas** comprobadas contra el catálogo publicado (`server/data/quote-requests.ts`): SKU visible y presentación de ese producto; descripción («Bolik Ultra Azul PT00058 · Cajilla de 12») y unidad salen del catálogo, nunca del navegador. Las que ya no están vuelven como `staleItems` con sus referencias: diálogo `quote.staleItems` que nombra cuáles quitar. Solo líneas «variante»: kits y categorías, con sus tickets.
+  6. **Transacción**: `QuoteRequest` + `QuoteItem`, folio con `nextFolio` justo antes del create, `{ maxWait: 5_000, timeout: 10_000 }`. Con «Otro» sin institución, `organization` guarda el nombre (la columna no admite NULL).
+  7. **after()**: con el interruptor `erp_enabled` encendido, `sendQuoteToErp`; apagado, `erpStatus = omitida` (la tarea de reintento no la toma). Errores de esa tarea, a `logError`. Los correos llegan con BD-074.
+  8. Respuesta `{ ok: true, data: { folio } }`; si la base falla, `unavailable` con código de referencia (`feedback.system.genericError.reference`), sin datos personales en el log (los errores de Prisma se registran solo con tipo, código y `meta`).
+- **IP** (`server/request-ip.ts`): la ÚLTIMA de `X-Forwarded-For` (la que agrega ARR; las anteriores las puede escribir el visitante), sin puerto ni prefijo `::ffff:`, guardada como HMAC-SHA256 con `SESSION_SECRET` (sin variable nueva). ARR con `includePortInXForwardedFor=False` (docs/15 §4.2, `staging-setup.ps1`). Sin cabecera, «desconocida» y un aviso en el log.
+- **Sin base** (`DATA_SOURCE=fixtures`, desarrollo y CI): se guardan en memoria (tope de 500) con su consecutivo, con el mismo límite por IP; no se programa nada para SAP. Producción exige `db`.
+- **Migración** `indices_cotizacion`: índices de `QuoteItem.quoteId`, `QuoteNote.quoteId`, `QuoteRequest.assignedToId` y `QuoteRequest(ipHash, createdAt)` (solo índices).
+- **Éxito**: diálogo `quote.sent` con el folio; vacía la cotización y el borrador. Al cerrarlo, el foco va a `#contenido` (FriendlyDialog, si quien lo abrió ya no existe).
+- **Pruebas**: unitarias (`actions.test.ts`, `request-ip.test.ts`); integración (`tests/integration/quote.test.ts`: guarda con folio y líneas del catálogo, 20 simultáneos sin repetir folio, 10 simultáneos de una IP → 5, SMART-K66 caído → `pendiente`, < 800 ms con SMART-K66 tardando 5 s y la tarea de después llegando a `enviada`, `erp_enabled=false` → `omitida`, líneas viejas → `staleItems`); E2E (envío con folio y lista vacía, `tooFast`).
+- **JS común −3.9 KB:** la pantalla de error (`error-screen.tsx`, `global-error.tsx`), que Next carga en todas las páginas, importaba todo `content/feedback.ts` y cada mensaje nuevo (como `quote.staleItems`) pesaba en el sitio entero. Ahora usa `content/feedback-system.ts` (`feedback.system` sigue igual). Home 161.5 KB y ficha 168.4 KB: sus topes vuelven a 165 y 170 KB (docs/12 §2).
+- **Pendientes:** UTM y página de llegada se guardan vacíos (el sitio no los captura; BD-127).
+
+*Nota para BD-075:* el diálogo de éxito usa «Seguir viendo productos» como botón principal porque `/cotizacion/enviada/[folio]` no existe todavía: al crearla, volver a `feedback.quote.sent` completo («Ver resumen» → esa página).
 
 #### BD-074 · Correos de notificación
 

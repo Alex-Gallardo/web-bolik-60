@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { PAGE_ID } from "@/components/layout/page-id";
-import { feedback } from "@/content/feedback";
+import { systemFeedback } from "@/content/feedback-system";
 import { whatsappEventData } from "@/lib/whatsapp-event";
 
 type ErrorScreenProps = {
@@ -32,7 +32,7 @@ const pageElement = () => document.getElementById(PAGE_ID);
  * lector de pantalla anuncia el título en lugar de quedarse en <body>.
  */
 export function ErrorScreen({ error, retry }: ErrorScreenProps) {
-  const text = feedback.system.genericError;
+  const text = systemFeedback.genericError;
   const reference = errorReference(error);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const contact = useSyncExternalStore(noSubscribe, pageElement, () => null)?.dataset;
