@@ -18,7 +18,8 @@ import { getSiteSettings } from "@/server/data/content";
  * Layout del sitio público (grupo de rutas: no cambia la URL; docs/06 §2). Estructura:
  * Header (BD-041) · `<main id="contenido">` (con PageEnter: entrada de página A-02) · Footer y
  * flotantes (BD-042) · RevealObserver (BD-044, reveals A-21) · FeedbackHost (BD-024: toasts y
- * diálogos). Las páginas no ponen su propio <main>.
+ * diálogos). Las páginas no ponen su propio <main>. El drawer de la cotización (BD-071) lo monta
+ * el header (QuoteLink).
  * Los datos del header y del pie llegan como props: components/* no llama a server/* (solo
  * importa tipos).
  */

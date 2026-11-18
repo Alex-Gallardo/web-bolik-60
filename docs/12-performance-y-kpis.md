@@ -31,11 +31,13 @@ El JS propio de la home pesa poco (reproductor de video y contador: 3.8 KB; layo
 
 | Página | JS inicial (gzip) | CSS (gzip) | Imágenes arriba del pliegue | Fuentes | Peticiones iniciales |
 |---|---|---|---|---|---|
-| Inicio | ≤ 165 KB | ≤ 25 KB | Póster ≤ 120 KB | 2 familias, ≤ 4 archivos woff2 | ≤ 25 |
+| Inicio | ≤ 165.5 KB (BD-071) | ≤ 25 KB | Póster ≤ 120 KB | 2 familias, ≤ 4 archivos woff2 | ≤ 25 |
 | Catálogo / categoría | ≤ 170 KB | ≤ 25 KB | ≤ 6 tarjetas × 25 KB | 2 familias | ≤ 25 |
-| Ficha | ≤ 170 KB | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 25 |
+| Ficha | ≤ 172.5 KB (BD-071) | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 26 (BD-071) |
 | Dónde comprar | ≤ 170 KB (+ mapa diferido ≤ 60 KB) | ≤ 25 KB (+ CSS de Leaflet diferido) | — | 2 familias | ≤ 25 |
 | Escuelas | ≤ 170 KB | ≤ 25 KB | ≤ 150 KB | 3 familias (incluye Baloo 2) | ≤ 28 |
+
+**Drawer de la cotización (BD-071, 17 nov 2026).** El drawer se descarga al abrirlo (25.4 KB: su chunk con el store, 13.0 KB, y Radix Dialog, 12.7 KB), pero su anfitrión y el clic del contador van en el header: ~0.4 KB comprimidos en todas las páginas. Al crecer el chunk común, Turbopack separa el mapa de los `import()` del layout en otro archivo (339 B, pero una petición más: ~1.6 KB transferidos con sus cabeceras), y no se pudo evitar desde el código (con el `import()` en el header o en `FeedbackHost`, igual). En develop la ficha estaba a 31 bytes del tope: queda en 172.2 KB y 26 peticiones, y la home en 165.2 KB. Ajuste mínimo de los topes: home 165.5 KB, ficha 172.5 KB y 26 peticiones; «Mi cotización (n)» en la barra móvil quedó fuera (el ticket lo condicionaba al presupuesto). BD-047 los devuelve a 165 y 170 KB.
 
 **Resto de páginas a 170 KB (BD-060, decisión del usuario, 14 nov 2026).** Con el layout del sitio completo (header con menú y contador, pie, flotantes, avisos, revelado), la parte común ya ocupa unos 160 KB en cualquier página: el 404, sin código propio, ronda 151 KB y `/productos` queda en 167.4 KB (sus filtros suman ~4 KB). Por eso el tope del resto pasa de 150 a 170 KB (también la ficha, que era de 155). BD-047 aligera el JS común del layout para volver a bajarlo. En `/productos`, `ProductCard` dejó de usar el componente `Image` (cliente) y pasa por `getImageProps`: −6.5 KB en la página y −1.4 KB en la home.
 

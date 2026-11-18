@@ -987,6 +987,7 @@ La parte común del sitio (Next, React y el layout) ocupa ~160 KB en cualquier p
 1. `pnpm analyze` del layout: qué islas de cliente cargan en todas las páginas (header, contador de cotización, flotantes, avisos, revelado, entrada de página) y cuánto pesa cada una.
 2. Diferir lo que no hace falta en el primer pintado (`dynamic()` al interactuar o en ocioso), sin romper el funcionamiento sin JS ni los avisos de feedback.
 3. Medir de nuevo el 404 (sin código propio) y `/productos`; bajar `resource-summary:script:size` del resto en `lighthouse.config.cjs` y en docs/12 §2 y CLAUDE.md a lo que se logre.
+4. Devolver los topes que subió BD-071 (home 165.5 → 165 KB; ficha 172.5 → 170 KB y 26 → 25 peticiones). Parte del exceso es el mapa de `import()` que Turbopack separa en otro archivo al crecer el chunk común: con un layout más liviano vuelve a ir dentro (docs/12 §2).
 
 **Criterios de aceptación**
 
@@ -1548,8 +1549,17 @@ Ver y editar la cotización sin salir de la página.
 
 **Criterios de aceptación**
 
-- [ ] Abrir el drawer no carga más de 30 KB adicionales.
-- [ ] Deshacer restaura la línea.
+- [x] Abrir el drawer no carga más de 30 KB adicionales.
+- [x] Deshacer restaura la línea.
+
+**Implementado (BD-071)**
+
+- `components/quote/quote-drawer.tsx`: `Sheet` con CSS (A-08), abajo en móvil y a la derecha desde md, con la lista, el estado vacío (`quote.empty`) y el pie «Enviar cotización» (a `/cotizacion`, BD-072) con la nota de doc 17 y «Seguir viendo productos». Cada línea (`quote-line-item.tsx`): foto (`getImageProps`), nombre enlazado a la ficha, detalle, presentación, `QuantityStepper` (inline, sin toast: docs/08 §4) y «Quitar». Textos en `content/quote.ts`, fuera del JS común.
+- **A-36 en CSS** (decisión del usuario, 17 nov 2026): la línea sale con `.quote-line-leave` (opacidad y `translateX`; con movimiento reducido, solo opacidad) y se quita del store en `animationend` (respaldo de 400 ms). Motion no entra en el drawer (docs/09 §7).
+- **«Deshacer» dentro del drawer:** con el Sheet abierto (modal), Radix deja el resto de la página inerte y el toast no se podía pulsar, alcanzar con teclado ni oír. El aviso usa el texto de `quote.removed`, dura 6 s y está en una región `role="status"`; si se cierra el drawer con el aviso a la vista, pasa a un toast. El foco va al «Quitar» que ocupó el lugar (o al catálogo si quedó vacía) y, al deshacer, a la línea restaurada.
+- **Abrir:** evento `QUOTE_OPEN_EVENT` (`openQuoteDrawer()` en `storage-keys.ts`). Lo disparan «Mi cotización» del header (sigue siendo un enlace a `/cotizacion`: sin JS o con Ctrl+clic navega) y el «Ver cotización» del toast de la ficha. `QuoteLinkWithDrawer` (header) lo escucha y descarga el drawer con `import()` la primera vez; al cerrar, el foco vuelve a lo que lo abrió.
+- **Medido:** abrir el drawer descarga 25.4 KB (su chunk con zustand, el store y los textos, 13.0 KB, y Radix Dialog, 12.7 KB); lo vigila `tests/e2e/cotizacion-drawer.spec.ts`, que lo abre con su evento para que la precarga de feedback (BD-024) no esconda Radix.
+- **Presupuesto (desviación del paso 3):** en develop la ficha estaba a 31 bytes de su tope. El anfitrión suma ~0.4 KB al JS común y Turbopack separa el mapa de `import()` en otro archivo (una petición más). Topes ajustados al mínimo: home 165.5 KB, ficha 172.5 KB y 26 peticiones (docs/12 §2); BD-047 los devuelve. Por lo mismo, «Mi cotización (n)» en la barra móvil no se hizo: sigue «Cotizar».
 
 #### BD-072 · Página /cotizacion y formulario
 

@@ -3,12 +3,25 @@
 import { cx } from "class-variance-authority";
 import type { Route } from "next";
 import Link from "next/link";
+import { useEffect, useRef, useState, type ComponentType, type MouseEvent } from "react";
+import { OnRouteChange } from "@/components/motion/on-route-change";
+import type { QuoteDrawerProps } from "@/components/quote/quote-drawer";
 import { ui } from "@/content/ui";
 import { useQuoteCount } from "@/features/quote/quote-count";
+import { QUOTE_OPEN_EVENT, openQuoteDrawer } from "@/features/quote/storage-keys";
+
+/** Clic normal abre el drawer; con Ctrl, Cmd, Shift o la rueda, el enlace hace lo suyo. */
+function openDrawer(event: MouseEvent<HTMLAnchorElement>) {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+    return;
+  event.preventDefault();
+  openQuoteDrawer();
+}
 
 /**
  * «Mi cotización» en el header (BD-041): ícono con el contador de líneas y su «pop» (A-05) cuando
- * sube. El número va en el nombre accesible; el globo es solo visual.
+ * sube. El número va en el nombre accesible; el globo es solo visual. Es un enlace a /cotizacion
+ * (sin JS, o con Ctrl+clic); con JS, el clic abre el drawer (BD-071).
  */
 export function QuoteLink() {
   const { count, popKey } = useQuoteCount();
@@ -16,6 +29,9 @@ export function QuoteLink() {
     <Link
       href={ui.header.quote.href as Route}
       prefetch={false}
+      data-quote-link
+      aria-haspopup="dialog"
+      onClick={openDrawer}
       aria-label={ui.header.quoteCount(count)}
       className="relative grid size-11 place-items-center rounded-md text-ink hover:bg-soft"
     >
@@ -50,5 +66,53 @@ export function QuoteLink() {
         </span>
       ) : null}
     </Link>
+  );
+}
+
+/**
+ * «Mi cotización» del header y el anfitrión del drawer (BD-071). Al recibir QUOTE_OPEN_EVENT (este
+ * enlace, el toast «Ver cotización» de la ficha) descarga el drawer con import() la primera vez:
+ * Radix, zustand y sus textos nunca van en el JS de todas las páginas. Todo en este módulo y sin
+ * precarga, para sumar lo mínimo al JS común: la ficha no tenía margen en su presupuesto (docs/12
+ * §2, BD-071).
+ * Al cerrar, el foco vuelve a lo que abrió el drawer o, si ya no existe (el toast se fue), aquí.
+ */
+export function QuoteLinkWithDrawer() {
+  const [open, setOpen] = useState(false);
+  const [Drawer, setDrawer] = useState<ComponentType<QuoteDrawerProps> | null>(null);
+  const opener = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const onOpen = async () => {
+      const active = document.activeElement;
+      opener.current = active instanceof HTMLElement ? active : null;
+      try {
+        const loaded = await import("@/components/quote/quote-drawer");
+        setDrawer(() => loaded.default);
+        setOpen(true);
+      } catch {
+        // Archivos de otro despliegue: recargar trae los nuevos (como el menú móvil). Sin red, el
+        // aviso de sin conexión ya está en pantalla y el próximo toque reintenta.
+        if (navigator.onLine) window.location.reload();
+      }
+    };
+    const listener = () => void onOpen();
+    window.addEventListener(QUOTE_OPEN_EVENT, listener);
+    return () => window.removeEventListener(QUOTE_OPEN_EVENT, listener);
+  }, []);
+
+  const returnFocus = () => {
+    const target = opener.current;
+    if (target?.isConnected && target !== document.body) target.focus();
+    else document.querySelector<HTMLElement>("[data-quote-link]")?.focus();
+  };
+
+  return (
+    <>
+      <QuoteLink />
+      {/* Un enlace del drawer cambió la ruta (ficha, catálogo, /cotizacion): se cierra. */}
+      <OnRouteChange onChange={() => setOpen(false)} />
+      {Drawer ? <Drawer open={open} onOpenChange={setOpen} returnFocus={returnFocus} /> : null}
+    </>
   );
 }

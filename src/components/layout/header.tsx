@@ -6,7 +6,7 @@ import { ui } from "@/content/ui";
 import { HeaderScroll } from "./header-scroll";
 import { MobileMenu } from "./mobile-menu";
 import { ProductsMenu, type NavGroup } from "./products-menu";
-import { QuoteLink } from "./quote-link";
+import { QuoteLinkWithDrawer } from "./quote-link";
 
 type HeaderProps = {
   /** Categorías por línea, para el menú de Productos (las da el layout desde server/data). */
@@ -76,7 +76,7 @@ export function Header({ groups, whatsappUrl }: HeaderProps) {
               <path d="m16 16 4.5 4.5" />
             </svg>
           </Link>
-          <QuoteLink />
+          <QuoteLinkWithDrawer />
           {/* El contenedor se oculta en móvil: en el botón, hidden chocaría con su inline-flex. */}
           <div className="ms-2 hidden lg:block">
             {/* md: 44 px o más, también en tablets táctiles (1024–1366 px). */}

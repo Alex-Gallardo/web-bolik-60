@@ -139,7 +139,7 @@ En la página: `const look = await getSectionAppearance("home.solutions")` → `
 |---|---|---|---|
 | Agregar a cotización | Toast + contador con "pop" + botón "Ver cotización" | Toast | `quote.added` |
 | Cambiar cantidad | Número se actualiza; total con transición | Inline | — |
-| Quitar línea | Línea sale con colapso (A-36) + toast "Deshacer" (6 s) | Toast | `quote.removed` |
+| Quitar línea | Línea sale con A-36 + "Deshacer" (6 s): con el drawer abierto, aviso dentro del drawer (el modal deja inerte el toast); si se cierra antes, pasa a toast | Inline + Toast | `quote.removed` |
 | Enviar cotización (cargando) | Botón con spinner, campos bloqueados | Inline | `quote.sending` |
 | Cotización enviada | Diálogo de éxito con folio y check animado (A-60) | Dialog | `quote.sent` |
 | Error al enviar | Diálogo con "Intentar de nuevo" y "Enviar por WhatsApp" (la cotización no se pierde) | Dialog | `quote.failed` |

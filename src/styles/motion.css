@@ -766,6 +766,20 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   }
 }
 
+/* ── Quitar línea de la cotización, A-36 (BD-071): sale hacia la derecha con opacidad; al
+   terminar (animationend) se quita del store y las de abajo suben sin animar la altura. En CSS y
+   no con Motion: el drawer tiene un tope de 30 KB al abrirse (docs/09 §7). ── */
+@keyframes line-exit {
+  to {
+    opacity: 0;
+    transform: translateX(2rem);
+  }
+}
+.quote-line-leave {
+  animation: line-exit var(--dur-base) var(--ease-in) forwards;
+  pointer-events: none;
+}
+
 /* ── Popover, BD-025: opacidad y escala corta desde el lado del Trigger ── */
 .popover-content {
   transform-origin: var(--radix-popover-content-transform-origin);
@@ -1020,6 +1034,10 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   .popover-content[data-state="closed"] {
     animation-name: fade-out;
   }
+  /* A-36: la línea se va solo con opacidad. */
+  .quote-line-leave {
+    animation-name: fade-out;
+  }
 }
 
 /* ── Movimiento reducido simulado (BD-026) ──
@@ -1096,5 +1114,8 @@ html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) 
 }
 [data-reduced-motion] .sheet-content[data-side][data-state="closed"],
 [data-reduced-motion] .popover-content[data-state="closed"] {
+  animation-name: fade-out;
+}
+[data-reduced-motion] .quote-line-leave {
   animation-name: fade-out;
 }
