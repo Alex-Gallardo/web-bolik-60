@@ -18,6 +18,7 @@ const settings: SiteSettings = {
   kitsEnabled: false,
   minCustomOrder: null,
   erpEnabled: true,
+  quoteEmailTo: null,
 };
 vi.mock("next/cache", () => ({ cacheLife: () => {} }));
 vi.mock("@/server/data/catalog", () => ({ listCategories: async () => [] }));

@@ -7,7 +7,8 @@ import { feedback } from "@/content/feedback";
 const mocks = vi.hoisted(() => ({
   after: vi.fn(),
   count: vi.fn(),
-  departmentExists: vi.fn(),
+  departmentName: vi.fn(),
+  sendEmails: vi.fn(),
   resolve: vi.fn(),
   save: vi.fn(),
   sendToErp: vi.fn(),
@@ -22,12 +23,13 @@ vi.mock("@/server/data/quote-requests", () => ({
   // Sin cargar el módulo real (lee el entorno): la acción solo compara con instanceof.
   QuoteRateLimitError: class QuoteRateLimitError extends Error {},
   countRecentQuotesByIp: mocks.count,
-  departmentExists: mocks.departmentExists,
+  departmentName: mocks.departmentName,
   resolveQuoteItems: mocks.resolve,
   saveQuoteRequest: mocks.save,
 }));
 vi.mock("@/server/data/content", () => ({ getSiteSettings: mocks.settings }));
 vi.mock("@/server/erp/send-quote", () => ({ sendQuoteToErp: mocks.sendToErp }));
+vi.mock("@/server/mail/send-quote-emails", () => ({ sendQuoteEmails: mocks.sendEmails }));
 vi.mock("@/server/log", () => ({
   log: { warn: vi.fn(), info: vi.fn() },
   logError: () => "ABCD1234",
@@ -56,7 +58,7 @@ const item = {
 
 beforeEach(() => {
   mocks.count.mockResolvedValue(0);
-  mocks.departmentExists.mockResolvedValue(true);
+  mocks.departmentName.mockResolvedValue("Quetzaltenango");
   mocks.resolve.mockResolvedValue({ ok: true, items: [item] });
   mocks.save.mockResolvedValue({ id: 7, folio: "COT-2026-000007", persisted: true });
   mocks.settings.mockResolvedValue({ erpEnabled: true });
@@ -99,10 +101,31 @@ describe("submitQuote (BD-073)", () => {
     expect(mocks.saveErpOutcome).toHaveBeenCalledWith(7, { erpStatus: "omitida" });
   });
 
-  it("sin base (fixtures) no programa nada para SAP", async () => {
+  it("sin base (fixtures): solo los correos, nada para SAP", async () => {
     mocks.save.mockResolvedValue({ id: 1, folio: "COT-2026-000001", persisted: false });
     expect(await submitQuote(contact, lines, meta)).toMatchObject({ ok: true });
-    expect(mocks.after).not.toHaveBeenCalled();
+    expect(mocks.after).toHaveBeenCalledTimes(1);
+    await runAfter();
+    expect(mocks.sendEmails).toHaveBeenCalledWith(expect.objectContaining({ quoteId: 1 }), false);
+    expect(mocks.sendToErp).not.toHaveBeenCalled();
+  });
+
+  it("los correos (BD-074) van después de responder, con los datos del cliente y las líneas", async () => {
+    await submitQuote(contact, lines, meta);
+    expect(mocks.sendEmails).not.toHaveBeenCalled();
+    await runAfter();
+    expect(mocks.sendEmails).toHaveBeenCalledWith(
+      expect.objectContaining({
+        quoteId: 7,
+        folio: "COT-2026-000007",
+        customerType: "libreria",
+        name: "Ana López",
+        phone: "55551234",
+        departmentName: "Quetzaltenango",
+        items: [item],
+      }),
+      true,
+    );
   });
 
   it("si la tarea de después falla, se registra y no rompe nada", async () => {
@@ -168,7 +191,7 @@ describe("submitQuote (BD-073)", () => {
   });
 
   it("departamento que no existe o líneas repetidas: invalid", async () => {
-    mocks.departmentExists.mockResolvedValueOnce(false);
+    mocks.departmentName.mockResolvedValueOnce(null);
     expect(await submitQuote(contact, lines, meta)).toEqual({
       ok: false,
       error: "invalid",

@@ -24,6 +24,14 @@ function Links() {
           Datos de ejemplo
         </a>
       </li>
+      <li>
+        <a
+          href="/styleguide/correos"
+          className="flex min-h-11 items-center rounded-md px-3 text-blue hover:bg-soft"
+        >
+          Correos (modo prueba)
+        </a>
+      </li>
     </ol>
   );
 }

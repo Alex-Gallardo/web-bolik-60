@@ -1656,8 +1656,21 @@ Ventas recibe la cotización y el cliente un acuse.
 
 **Criterios de aceptación**
 
-- [ ] El correo interno incluye folio, cliente, líneas y enlace al admin.
-- [ ] El acuse no contiene datos internos.
+- [x] El correo interno incluye folio, cliente, líneas y enlace al admin.
+- [x] El acuse no contiene datos internos.
+
+**Implementado (BD-074) · en modo prueba (decisión del usuario, 18 nov 2026)**
+
+Todavía no hay cuenta de correo ni conexión a SAP: todo queda en **modo prueba** y listo para presentar; pasar a real es solo configuración, un paso antes de producción (docs/15, «Paso a producción: correo y SAP»).
+
+- `server/mail/transport.ts` (nodemailer 10.3.1): `SMTP_MODE=file` no manda nada a internet; cada correo queda en `MAIL_DIR` (por defecto `tmp/mails`; en staging `D:\bolik-stg\logs\mails`, variable nueva) como `.eml` (se abre con Outlook) y `.json` (bandeja), con tope de 200. `SMTP_MODE=smtp` usa Office 365 (587, STARTTLS). Asunto y direcciones en una sola línea (sin inyección de cabeceras).
+- `server/mail/quote-emails.ts` + `content/mail.ts` (doc 17 §8): **interno a Ventas** (asunto `Nueva cotización {folio} · {tipo} · {departamento}`; datos del cliente, tabla producto/color/código/presentación/cantidad, notas, origen —vacío hasta BD-127— y botón «Abrir en el admin» a `/admin/cotizaciones/{id}`; responder le escribe al cliente) y **acuse** (solo si dejó correo; saludo, folio, plazo, líneas y WhatsApp con folio si hay número; nada interno). HTML para Outlook (tablas y estilos en línea, colores de tokens.css copiados con `check-colors-ignore`) y texto plano; todo lo del visitante, escapado.
+- `server/mail/send-quote-emails.ts`: lo llama `submitQuote` con `after()` (también sin base); destinatario del ajuste `quote_email_to` o `MAIL_SALES_TO` (sin ajustes, igual salen); marca `QuoteRequest.emailSentAt` solo cuando el interno salió de verdad (`SMTP_MODE=smtp`; en modo prueba queda vacío); nunca lanza (cada fallo a `logError`, aparte el de marcar). **Acuse contra abuso:** como mucho 2 por dirección en 24 h (Ventas recibe todas) y sin nombre en el saludo si parece un enlace.
+- **Bandeja de prueba `/styleguide/correos`** (como todo /styleguide: en producción solo con sesión de admin): el modo activo de correo y SAP (leído en cada visita: cambiar la configuración en staging y reiniciar basta), a quién llegan, los dos correos con datos de ejemplo y los últimos 20 que generó el sitio (iframe con `sandbox` vacío). Enlace en el índice del styleguide.
+- `nodemailer` en `serverExternalPackages`. Fuera de desarrollo, `SMTP_MODE=file` exige `MAIL_DIR` (env.schema): sin él, staging escribiría en el release y perdería los correos sin aviso.
+- HTML: botón «a prueba de Outlook» (color en la celda), `bgcolor` en los contenedores, `<title>`, y la tabla de líneas con `th scope="col"`.
+- **Pruebas:** unitarias de plantillas (criterios, escape, asunto) y del transporte (`.eml`/`.json`, inyección de cabeceras); integración (`tests/integration/quote.test.ts`: tras la tarea de después, interno y acuse con el folio y `emailSentAt`); E2E (enviar una cotización y verla en la bandeja).
+- **Pendientes:** sin reintento automático de correos (`emailSentAt` vacío los delata); la pantalla del admin a la que apunta el botón llega con su ticket.
 
 #### BD-075 · Confirmación de envío
 

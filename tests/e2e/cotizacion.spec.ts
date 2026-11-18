@@ -153,6 +153,35 @@ test.describe("página /cotizacion (BD-072)", () => {
     expect(errors, "errores en la consola").toEqual([]);
   });
 
+  test("los correos de la cotización se ven en la bandeja de prueba (BD-074)", async ({ page }) => {
+    await ownIp(page);
+    await seedQuote(page);
+    await page.goto("/cotizacion");
+    await fillValid(page);
+    await page.getByLabel(/^Correo/).fill("ana@ejemplo.com");
+    await page.waitForTimeout(3_100);
+    await page.getByRole("button", { name: "Enviar cotización" }).click();
+    const dialog = page.getByRole("alertdialog").or(page.getByRole("dialog"));
+    await expect(dialog).toContainText("¡Listo! Recibimos tu cotización");
+    const folio = (await dialog.textContent())!.match(/COT-\d{4}-\d{6}/)![0];
+
+    // Los correos salen después de responder: se espera a que aparezcan en la bandeja. Sin base, el
+    // folio en memoria vuelve a empezar con cada arranque del servidor y la bandeja puede tener uno
+    // igual de una corrida anterior: los más nuevos van primero.
+    const inbox = page.locator("section", { has: page.locator("#bandeja") });
+    await expect(async () => {
+      await page.goto("/styleguide/correos");
+      await expect(
+        inbox.getByText(`Nueva cotización ${folio} · Librería o tienda`).first(),
+      ).toBeVisible();
+      await expect(inbox.getByText(`Recibimos tu cotización ${folio}`).first()).toBeVisible();
+    }).toPass({ timeout: 15_000 });
+    // axe sobre la página, sin los iframes de cada correo: con sandbox vacío (sin scripts, a propósito)
+    // axe no puede entrar y se queda esperando; el HTML de las plantillas tiene sus propias pruebas.
+    await page.evaluate(() => document.querySelectorAll("iframe").forEach((f) => f.remove()));
+    await expectNoA11yViolations(page);
+  });
+
   test("enviar antes de 3 s: aviso «Dale un momento más» y nada se pierde", async ({ page }) => {
     await ownIp(page);
     await seedQuote(page);
