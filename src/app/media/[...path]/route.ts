@@ -13,6 +13,9 @@ import { MEDIA_WIDTHS } from "@/lib/image-loader";
  * Solo sirve lo que genera server/media/process-image.ts (`…-{ancho}.webp`, en minúsculas) y los
  * videos del hero en `video/…mp4` (BD-050), y nunca sale de MEDIA_DIR, ni siguiendo un enlace
  * simbólico. Los videos responden a `Range` (206): Safari no reproduce un video sin rangos.
+ * Next ≥ 16.4.5 quita el `Content-Length` de las respuestas de los route handlers y las manda en
+ * chunked (BD-018): se deja por si cambia. WebP y MP4 no se comprimen; un tipo comprimible con
+ * `Range` aquí saldría en gzip y el `Content-Range` ya no coincidiría con los bytes enviados.
  */
 
 /** Carpeta o nombre: minúsculas, dígitos y guiones (como las claves de MediaAsset). */
