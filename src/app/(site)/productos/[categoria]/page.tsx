@@ -41,7 +41,8 @@ export async function generateMetadata({
   const category = await getCategory(categoria);
   if (!category) return {};
   const { title, description } = categoryMeta(category);
-  return buildMetadata({ title, description, path: category.href });
+  // La imagen la pone su opengraph-image.tsx (nombre y foto, BD-090).
+  return buildMetadata({ title, description, path: category.href, image: false });
 }
 
 /**

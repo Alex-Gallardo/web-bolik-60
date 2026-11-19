@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 // BD-055: el favicon se pide con prioridad alta en la carga de cada página. Era un ICO de 15 KB con
-// tres cuadros BMP (48, 32 y 16 px); ahora lleva los mismos píxeles de 32 y 16 px como PNG.
+// tres cuadros BMP (48, 32 y 16 px); lleva solo los de 32 y 16 px como PNG. Desde BD-028, el ícono
+// de Mercadeo (BOLIK® en blanco sobre negro).
 describe("favicon.ico (BD-055)", () => {
   const ico = readFileSync("src/app/favicon.ico");
 

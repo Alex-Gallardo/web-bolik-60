@@ -606,8 +606,13 @@ El sitio usa todavía el favicon por defecto de Next.js (la «N»).
 
 **Criterios de aceptación**
 
-- [ ] Ningún ícono de Next.js en el sitio.
-- [ ] `favicon.ico` ≤ 4 KB (se pide con prioridad alta en cada página; prueba en `src/app/favicon.test.ts`).
+- [x] Ningún ícono de Next.js en el sitio.
+- [x] `favicon.ico` ≤ 4 KB (se pide con prioridad alta en cada página; prueba en `src/app/favicon.test.ts`).
+
+**Implementado (con BD-090, 19 nov 2026)**
+
+- Mercadeo entregó el ícono cuadrado: el wordmark BOLIK® en blanco sobre negro (200 px). `src/app/favicon.ico` (1.3 KB) lleva cuadros PNG RGBA de 32 y 16 px (sin el de 48: BD-055 lo quitó por peso) y `src/app/apple-icon.png` es de 180 px. El styleguide los muestra en «Marca».
+- Pendiente: `icon.svg` espera la versión vectorial del ícono.
 
 ### E2 · Datos, medios e integración base
 
@@ -1245,7 +1250,7 @@ Decisión del usuario: la home cierra con una guardia de 3.2 s en Lighthouse y l
     - fuentes estáticas por peso, throttling aplicado (2.2–5.3 s) y diferir el JS propio (3.8 KB).
   - Riesgo: la home queda a 0.6 KB del tope de 165 KB de JS. La analítica (BD-125 a 127) debe cargarse diferida.
   - `lighthouse.config.cjs`: el LCP de la home queda en 3200 como guardia de regresión, ya no «temporal».
-- **Pendiente aparte:** el favicon es todavía el de Next.js (la «N»). Uno de Bolik necesita el archivo de marca: ticket BD-028.
+- **Pendiente aparte:** el favicon es todavía el de Next.js (la «N»). Uno de Bolik necesita el archivo de marca: ticket BD-028 (hecho con BD-090).
 
 #### BD-056 · Hero principal nuevo
 
@@ -1820,8 +1825,17 @@ Título, descripción, canonical y Open Graph correctos.
 
 **Criterios de aceptación**
 
-- [ ] Títulos y descripciones únicos en todo el sitio (prueba `seo.spec.ts`).
-- [ ] Canonical absoluto con `www`.
+- [x] Títulos y descripciones únicos en todo el sitio (prueba `seo.spec.ts`).
+- [x] Canonical absoluto con `www`.
+
+**Implementado (BD-090)**
+
+- **Metadatos:** cada página pública ya usaba `buildMetadata` (title, description, canónica relativa a `metadataBase`, Open Graph, Twitter y robots); se revisaron contra docs/10 §1. La home conserva el título de docs/10 §1 (68 caracteres, sin plantilla) y `/productos` la descripción de doc 17 §6 (132): son los textos aprobados. `productMeta` prueba ahora la descripción corta sin el nombre antes de recortarla (el lápiz de grafito pasaba de 59 a 134 caracteres).
+- **Imágenes Open Graph** (`server/seo/og-image.tsx`, `next/og`, 1200 × 630): fondo navy, logo blanco, título, subtítulo, dominio y «Hecho en Guatemala desde 1966» (`content/og.ts`). La de la marca (`app/opengraph-image.tsx`, estática, se genera en el build) va en toda página sin una propia (`buildMetadata` la pone por defecto, también en las `noindex`); las categorías (nombre, texto corto y la foto de su primer producto con foto) y las fichas (categoría, nombre, tagline y la foto del color por defecto) tienen la suya, con su `og:image:alt` (con `generateImageMetadata`: la URL lleva el id `og`; sin él, `proxy.ts` tomaría `/productos/{categoría}/opengraph-image` por una ficha que no existe), y piden `image: false` (lo que exporta la página manda sobre el archivo del segmento). Las fotos son WebP y `next/og` no lee WebP: `sharp` convierte la de 960 px a PNG; sin foto (la CI no tiene MEDIA_DIR con fotos) sale solo el texto. Los bytes van en `'use cache'` con los tags de lo que muestran (los de `getProduct` o `getCategory`): cada imagen se dibuja la primera vez que se pide y queda en la caché en memoria (unos 115 KB con foto, 64 KB la de la marca); al editar el producto cambian sus textos o su foto y la próxima petición dibuja otra (la vieja sale al invalidarse sus tags o al llenarse la caché). Sin logo o sin foto (un archivo que falta, una unidad que no responde) se guarda solo unos minutos y lo registra en el log (salvo una foto que no existe). Sin la caché, la ruta sería dinámica. La URL de la imagen de la marca (`/opengraph-image`) no lleva versión: si cambia, las redes que ya la guardaron pueden tardar en verla. Fuente: la de `next/og`; las de la marca llegan en WOFF2 con `next/font` y `next/og` no lee WOFF2 (para usarlas habría que guardar sus TTF en el repo).
+- **www:** `env.schema.ts` no arranca en producción si `NEXT_PUBLIC_SITE_URL` no es `https://www.…` (canónicas, Open Graph y, luego, el sitemap salen de ahí; staging usa su subdominio).
+- **Favicon** (BD-028, con el archivo que entregó Mercadeo): ver ese ticket.
+- **Medido:** el JS y las peticiones de Lighthouse quedan iguales a develop (home 162.3 KB/17, ficha 169.3 KB/26, /cotizacion 182.7 KB/21). *Lección:* usar `next/image` en el styleguide hizo que Turbopack separara su `HeadManagerContext` en un chunk que **todas** las páginas precargaban (+1 petición, +1.5 KB): ahí los íconos van con `<img>`.
+- **Pruebas:** `tests/e2e/seo.spec.ts` recorre la home, `/productos`, cada categoría y cada ficha (las que enlaza el catálogo) y comprueba títulos y descripciones únicos, title ≤ 60 (salvo la home), descripción de 140 a 160 (por debajo, solo los textos de doc 17 que quedan cortos, `/productos` y Bolik Ultra, y las fichas de los productos de ejemplo; los de Mercadeo llegan por el admin), robots, canónica absoluta sin barra final y que cada `og:image` responda un PNG de 1200 × 630; `/cotizacion` y `/buscar` siguen `noindex` con la imagen de la marca; favicon e ícono de Apple. Unitarias: `buildMetadata` (imagen por defecto, `image: false`), `productMeta` y la regla de `www`.
 
 #### BD-091 · Datos estructurados JSON-LD
 

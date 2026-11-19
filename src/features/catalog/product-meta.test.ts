@@ -45,6 +45,12 @@ describe("productMeta (BD-062)", () => {
     expect(productMeta({ ...base, tagline: null }).description).toBe(
       `Bolik Ultra: Corto. ${close}`,
     );
+    // Con el nombre no cabe: va sin el nombre, con el cierre (BD-090), antes que recortarla.
+    const medium = `${"palabra ".repeat(9)}fin.`;
+    expect(
+      productMeta({ ...base, name: "N".repeat(20), tagline: null, shortDescription: medium })
+        .description,
+    ).toBe(`${medium.slice(0, -1)}. ${close}`);
     const long = `${"palabra ".repeat(30)}fin.`;
     const description = productMeta({ ...base, tagline: null, shortDescription: long }).description;
     expect(description.length).toBeLessThanOrEqual(160);
