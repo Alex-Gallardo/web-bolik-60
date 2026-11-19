@@ -11,6 +11,7 @@ import { SolutionsSection } from "@/components/home/solutions-section";
 import { StatsBand } from "@/components/home/stats-band";
 import { WhereToBuySection } from "@/components/home/where-to-buy-section";
 import { WholesaleSection } from "@/components/home/wholesale-section";
+import { JsonLd, webSiteJsonLd } from "@/features/seo/jsonld";
 import { SITE, buildMetadata } from "@/features/seo/metadata";
 import { whatsappMessage, whatsappUrl } from "@/lib/whatsapp";
 import { getFeaturedProduct, listCategories } from "@/server/data/catalog";
@@ -37,6 +38,8 @@ export const metadata = buildMetadata({
  * video por capítulos (BD-050), soluciones por público y catálogo destacado (BD-051), producto
  * estrella (BD-052), escuelas, mayoreo y empresas, dónde comprar (BD-053), kits, historia,
  * preguntas frecuentes y el cierre (BD-054). Cada sección lee su fondo de SectionAppearance.
+ * JSON-LD: WebSite con SearchAction (BD-091) y el FAQPage de su sección; el Organization lo pone
+ * el layout.
  */
 export default async function HomePage() {
   const [
@@ -85,6 +88,7 @@ export default async function HomePage() {
       <HistorySection milestones={milestones} />
       <FaqSection faqs={faqs} />
       <FinalCtaSection whatsappUrl={whatsapp} />
+      <JsonLd data={webSiteJsonLd()} />
     </>
   );
 }

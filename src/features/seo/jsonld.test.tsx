@@ -5,8 +5,11 @@ import {
   collectionPageJsonLd,
   faqPageJsonLd,
   JsonLd,
+  ORGANIZATION_ID,
+  organizationJsonLd,
   productGroupJsonLd,
   serializeJsonLd,
+  webSiteJsonLd,
 } from "./jsonld";
 
 describe("JSON-LD (BD-054)", () => {
@@ -104,7 +107,12 @@ describe("JSON-LD de la ficha (BD-062)", () => {
       productGroupID: "bolik-ultra",
       variesBy: "https://schema.org/color",
       brand: { "@type": "Brand", name: "Bolik" },
-      manufacturer: { "@type": "Organization", name: "Industrias Bolik, S.A." },
+      manufacturer: {
+        "@type": "Organization",
+        "@id": ORGANIZATION_ID,
+        name: "Bolik",
+        legalName: "Industrias Bolik, S.A.",
+      },
       countryOfOrigin: "GT",
       additionalProperty: [
         { "@type": "PropertyValue", name: "Tipo de punta", value: "Mediana 1.0 mm" },
@@ -137,5 +145,64 @@ describe("JSON-LD de la ficha (BD-062)", () => {
     const [variant] = data.hasVariant as Record<string, string>[];
     expect(variant!.name).toBe("Bolik Ultra");
     expect(variant!.url).toMatch(/\/bolik-ultra$/);
+  });
+});
+
+describe("Organization y WebSite (BD-091)", () => {
+  const org = {
+    legalName: "Industrias Bolik, S.A.",
+    address: "6a. Avenida 6-31, zona 2, San José Villa Nueva, Guatemala",
+    phone: "+502 6628 2600",
+    sameAs: ["https://www.facebook.com/universoBolik", null],
+  };
+
+  it("Organization con @id estable, datos del pie y fundación en 1966", () => {
+    const data = organizationJsonLd(org);
+    expect(data).toEqual({
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": ORGANIZATION_ID,
+      name: "Bolik",
+      legalName: "Industrias Bolik, S.A.",
+      url: expect.stringMatching(/^https?:\/\/[^/]+\/$/),
+      logo: expect.stringMatching(/\/brand\/bolik-logo\.svg$/),
+      foundingDate: "1966-06",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "6a. Avenida 6-31, zona 2, San José Villa Nueva, Guatemala",
+        addressCountry: "GT",
+      },
+      telephone: "+50266282600",
+      sameAs: ["https://www.facebook.com/universoBolik"],
+    });
+    expect(ORGANIZATION_ID).toMatch(/^https?:\/\/[^/]+\/#organization$/);
+  });
+
+  it("sin redes, teléfono válido ni dirección, no publica esos campos", () => {
+    const data = organizationJsonLd({ ...org, address: "  ", phone: "", sameAs: [null] });
+    expect(data).not.toHaveProperty("telephone");
+    expect(data).not.toHaveProperty("sameAs");
+    expect(data).not.toHaveProperty("address");
+  });
+
+  it("WebSite con SearchAction hacia /buscar?q= y el publicador por @id", () => {
+    const data = webSiteJsonLd();
+    expect(data).toMatchObject({
+      "@type": "WebSite",
+      name: "Bolik",
+      inLanguage: "es-GT",
+      publisher: { "@id": ORGANIZATION_ID },
+      potentialAction: {
+        "@type": "SearchAction",
+        "query-input": "required name=search_term_string",
+      },
+    });
+    const target = (data.potentialAction as { target: { urlTemplate: string } }).target;
+    expect(target.urlTemplate).toMatch(/\/buscar\?q=\{search_term_string\}$/);
+  });
+
+  it("ninguno publica precios, ofertas ni reseñas", () => {
+    const text = JSON.stringify([organizationJsonLd(org), webSiteJsonLd()]);
+    expect(text).not.toMatch(/price|offers|review|rating/i);
   });
 });

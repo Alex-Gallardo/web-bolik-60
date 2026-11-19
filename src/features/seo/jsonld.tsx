@@ -1,9 +1,12 @@
 /**
- * Datos estructurados JSON-LD (docs/10 §4). BD-054 trae lo que pide la home (FAQPage); BD-091
- * suma Organization, WebSite, ProductGroup, ItemList… y los valida en cada plantilla.
- * Regla de docs/10: el texto del JSON-LD es el mismo que se ve en la página, sin campos inventados.
+ * Datos estructurados JSON-LD (docs/10 §4). FAQPage (BD-054), BreadcrumbList y CollectionPage
+ * (BD-060), ProductGroup (BD-062), Organization y WebSite (BD-091). Dónde comprar (Store), la
+ * historia (AboutPage) y la página de preguntas frecuentes suman los suyos en BD-080, BD-109 y
+ * BD-110. Regla de docs/10: el texto del JSON-LD es el mismo que se ve en la página, sin campos
+ * inventados (sin precios, ofertas ni reseñas).
  */
 
+import { toInternationalPhone } from "@/lib/format";
 import { isValidGtin } from "@/lib/gtin";
 import { SITE } from "./metadata";
 
@@ -45,6 +48,85 @@ export function faqPageJsonLd(faqs: readonly FaqEntry[]): JsonLdObject {
 
 /** URL absoluta del sitio para una ruta («/productos» → «https://www.bolik66.com/productos»). */
 const absolute = (path: string) => new URL(path, SITE.url).toString();
+
+/**
+ * @id estable de la organización («https://www.bolik66.com/#organization»): el fabricante de cada
+ * ProductGroup y el publicador del WebSite apuntan aquí, y Google los une en una sola entidad.
+ */
+export const ORGANIZATION_ID = `${absolute("/")}#organization`;
+
+/** Logo de la organización: el SVG de la marca en color (Google acepta SVG; docs/02). */
+const LOGO_PATH = "/brand/bolik-logo.svg";
+
+export type OrganizationInput = {
+  /** Razón social (SiteSetting legal_name): «Industrias Bolik, S.A.». */
+  legalName: string;
+  /** Dirección tal como la muestra el pie (SiteSetting address). */
+  address: string;
+  /** Teléfono como lo muestra el pie; sale en formato internacional (+502…). */
+  phone: string;
+  /** Redes (https) que existan; las vacías no se publican. */
+  sameAs: readonly (string | null)[];
+};
+
+/**
+ * Organization (docs/10 §4: en todas las páginas, con @id estable). Los datos son los del pie
+ * (SiteSetting): razón social, dirección y teléfono; fundación en junio de 1966 (docs/02). La
+ * dirección va completa en streetAddress con el país: partirla en municipio y departamento sería
+ * inventar una estructura que el ajuste no tiene.
+ */
+export function organizationJsonLd(org: OrganizationInput): JsonLdObject {
+  const phone = toInternationalPhone(org.phone);
+  const sameAs = org.sameAs.filter((url): url is string => Boolean(url));
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": ORGANIZATION_ID,
+    name: SITE.name,
+    legalName: org.legalName,
+    url: absolute("/"),
+    logo: absolute(LOGO_PATH),
+    foundingDate: SITE.foundingDate,
+    // Un ajuste vacío no se publica (sería un campo vacío, no un dato).
+    ...(org.address.trim()
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: org.address.trim(),
+            addressCountry: "GT",
+          },
+        }
+      : {}),
+    ...(phone ? { telephone: `+${phone}` } : {}),
+    ...(sameAs.length > 0 ? { sameAs } : {}),
+  };
+}
+
+/**
+ * WebSite con SearchAction (docs/10 §4, solo en la home): el buscador de /buscar?q= responde en
+ * el servidor, también sin JS (BD-066). La plantilla se arma a mano: new URL() codificaría las
+ * llaves de {search_term_string}. Google retiró el cuadro de búsqueda de los resultados (nov 2024):
+ * no da fragmento enriquecido, pero sigue siendo válido y describe el sitio para Bing y las IA.
+ */
+export function webSiteJsonLd(): JsonLdObject {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${absolute("/")}#website`,
+    name: SITE.name,
+    url: absolute("/"),
+    inLanguage: "es-GT",
+    publisher: { "@id": ORGANIZATION_ID },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${absolute("/buscar")}?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
 
 export type Crumb = { name: string; path: string };
 
@@ -140,10 +222,12 @@ export function productGroupJsonLd(product: ProductGroupInput): JsonLdObject {
     description: product.description,
     url,
     brand: { "@type": "Brand", name: product.brand },
+    // El mismo @id y nombre que el Organization del layout (una sola entidad para Google).
     manufacturer: {
       "@type": "Organization",
-      "@id": `${absolute("/")}#organization`,
-      name: product.manufacturer,
+      "@id": ORGANIZATION_ID,
+      name: SITE.name,
+      legalName: product.manufacturer,
     },
     countryOfOrigin: "GT",
     ...(product.images.length > 0 ? { image: product.images.map(mediaUrl) } : {}),
