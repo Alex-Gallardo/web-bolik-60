@@ -1482,10 +1482,23 @@ Búsqueda instantánea por nombre, código o código de barras.
 
 **Criterios de aceptación**
 
-- [ ] "ultra", "pt00058", "759364663092" y "crayon" encuentran resultados.
-- [ ] Sin resultados: sugerencias + WhatsApp.
+- [x] "ultra", "pt00058", "759364663092" y "crayon" encuentran resultados.
+- [x] Sin resultados: sugerencias + WhatsApp.
 
 **Nota de BD-046:** agregar el buscador a la página 404 (`app/not-found.tsx`), sin volverla dinámica.
+
+**Implementado (BD-066)**
+
+- **Índice** (`server/data/search.ts`, `/api/search-index`): un producto visible por entrada con nombre, categoría, **marca** (nota de BD-038), colores, SKU, códigos de barras y cada color con sus códigos (`variants`, para la coincidencia exacta). La ruta sale de `getSearchIndex` (`'use cache'` con los tags de productos y categorías), con `Cache-Control` de 5 min.
+- **Motor** (`lib/search.ts`, el mismo en el servidor y en el navegador): Fuse.js 7.5.0 (`ignoreDiacritics`) en nombre, marca, categoría, colores, códigos y descripción; sin tildes ni mayúsculas; sinónimos de `content/search.ts` (lapicero = bolígrafo, docs/02; se suman los que pidan las búsquedas sin resultado); un SKU o código de barras exacto da la tarjeta «¿Buscas el Bolik Ultra Azul (PT00058)?» que lleva a la ficha con su color, y un código que no existe no trae parecidos. Menos de 2 letras: «Escribe al menos 2 letras».
+- **/buscar sin JS:** con Cache Components, lo que lee `?q=` dentro de Suspense llega en un bloque oculto que solo el JS muestra. Por eso `proxy.ts` reescribe `/buscar?q=…` a `/buscar/-{q}` (la URL del visitante no cambia; el prefijo `-` evita que «.» o «..» se vuelvan segmentos de ruta; la consulta se corta en 100 caracteres sin partir emojis, `lib/search-query.ts`). Esa página se pinta completa en el servidor. Medido con el standalone: la primera vez se genera y la segunda sale de la caché en memoria de Next (`x-nextjs-cache: HIT`), que es LRU con tope (50 MB por defecto): no se escribe nada en disco y las consultas viejas salen solas. Next entrega el parámetro todavía codificado (se decodifica una vez). `/buscar` sin consulta es estática. Las dos, `noindex` con canónica `/buscar`.
+- **Panel** (`components/search/search-panel.tsx`): formulario GET que funciona sin JS (campos con `maxLength` 100); con JS, Fuse y el índice se descargan al enfocar o acercar el puntero y los resultados cambian mientras se escribe. Mientras carga dice «Cargando el buscador…» (nunca muestra los resultados de otra consulta; la última consulta se resuelve al terminar de cargar) y, si no carga, lo avisa (`feedback.search.loadFailed`) y el botón sigue llevando a /buscar. En la página, la URL sigue a lo que se escribe con `replaceState` a los 300 ms; en el diálogo, Enter lleva a /buscar?q=… y un resultado cierra el diálogo. Región `role="status"` que se actualiza a los 500 ms (no en cada tecla). Se cuentan como código solo un SKU (dos letras y 4–6 dígitos) o un código de barras de 8, 12, 13 o 14 dígitos: «1966» se busca como texto.
+- **Buscador instantáneo** (`components/layout/search-link.tsx` en el header): el ícono sigue siendo un enlace a /buscar (sin JS o con Ctrl+clic); con JS abre un diálogo con el panel (`search-dialog.tsx`, descargado al primer uso), también con «/» (fuera de un campo) y Ctrl+K / Cmd+K. Al cerrar, el foco vuelve a lo que lo abrió (el atajo con el diálogo abierto solo enfoca su campo; se ignoran teclas repetidas y la composición de un IME); un resultado cierra el diálogo al navegar. En /buscar, el atajo enfoca el campo de la página. `aria-keyshortcuts="/ Control+K Meta+K"`.
+- **Sin resultados:** sugerencias de doc 17 (con JS las escribe el panel; sin JS, enlaces a /buscar?q=…), WhatsApp si hay número y «Ver todo el catálogo».
+- **404** con el buscador (formulario GET, sin JS: sigue estática) y el texto de doc 17 («Busca un producto o vuelve al inicio»).
+- **Analítica:** `data-event` `search_open` (formularios e ícono), `search` (con `data-query` y `data-results`) y `search_no_results` (docs/12 §4), para BD-127. *Para BD-127:* `data-query` es texto libre del visitante (puede traer un nombre o un teléfono): tratarlo como posible dato personal antes de mandarlo a GA4.
+- `/api/search-index` se guarda 5 min en el navegador y puede usarse hasta un día viejo mientras se renueva (`stale-while-revalidate`): un cambio del admin puede tardar en verse en el buscador instantáneo; /buscar sin JS siempre usa el índice al día.
+- **Pruebas:** unitarias del motor contra el índice real (los cuatro del criterio, sinónimos, código exacto, tildes) e índice con marca y variantes; E2E (`tests/e2e/buscar.spec.ts`): los cuatro del criterio sin JS, resultados mientras se escribe, sin resultados con sugerencias y WhatsApp, menos de 2 letras, diálogo con «/», Ctrl+K y el ícono (foco de vuelta), «/» dentro de un campo, 404 con buscador y axe. Lighthouse CI mide `/buscar?q=ultra` (170 KB, sin la categoría SEO: es `noindex`).
 
 #### BD-067 · WhatsApp contextual
 

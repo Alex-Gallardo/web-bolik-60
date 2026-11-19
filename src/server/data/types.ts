@@ -257,6 +257,10 @@ export type SearchEntryView = {
   skus: string[];
   barcodes: string[];
   sample: boolean;
+  /** Marca del grupo («Fabik»): buscar la marca encuentra sus productos (BD-038). */
+  brand: string;
+  /** Cada color con sus códigos: la tarjeta «¿Buscas el Bolik Ultra Azul (PT00058)?» (BD-066). */
+  variants: { sku: string; barcode: string | null; color: string; colorKey: string }[];
 };
 
 /** Lo que resume /llms.txt (BD-100). */

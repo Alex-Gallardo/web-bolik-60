@@ -2,6 +2,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
 import { featuredCatalog } from "@/content/home";
 import { cn } from "@/lib/cn";
+import { MAX_QUERY_LENGTH } from "@/lib/search-query";
 
 /**
  * Buscador del catálogo (home y /productos): un formulario GET a /buscar (BD-066), sin JS, con
@@ -25,6 +26,7 @@ export function CatalogSearchForm({ id, className }: { id: string; className?: s
         type="search"
         autoComplete="off"
         enterKeyHint="search"
+        maxLength={MAX_QUERY_LENGTH}
         placeholder={featuredCatalog.searchPlaceholder}
         className="sm:flex-1"
       />

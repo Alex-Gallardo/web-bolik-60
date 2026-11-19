@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SITE } from "@/features/seo/metadata";
+import { clampQuery, searchRewritePath } from "@/lib/search-query";
 import { catalogRouteStore } from "@/server/seo/catalog-routes";
 import { redirectHits, redirectStore } from "@/server/seo/redirects";
 
@@ -17,6 +18,9 @@ import { redirectHits, redirectStore } from "@/server/seo/redirects";
  * 4. Acceso por QR (BD-065): /p/{SKU o código de barras} responde 301 a la ficha con su color
  *    (?color=…&utm_source=qr&utm_medium=empaque, docs/06 §3.5); un código que no existe, a la 404
  *    amigable con estado 404. Usa la misma lista en memoria que las rutas del catálogo.
+ * 5. Buscador (BD-066): /buscar?q=… se reescribe a /buscar/{q}, una página que se pinta completa en
+ *    el servidor. Con ?q= en la misma página, Cache Components mandaría los resultados aparte (en un
+ *    bloque oculto que solo muestra el JS) y sin JS no se verían. La URL del visitante no cambia.
  * BD-094 agrega aquí el mapa estático de Joomla; BD-115, la comprobación de la cookie del admin.
  */
 /** /p/{codigo}, con o sin barra final: el código del empaque (BD-065). */
@@ -67,6 +71,11 @@ export async function proxy(request: NextRequest) {
     // Una sola «/» al inicio: «//otro.com/» nunca debe volverse un destino de otro sitio.
     const clean = `/${pathname.replace(/^\/+|\/+$/g, "")}`;
     return NextResponse.redirect(new URL(`${clean}${search}`, SITE.url), 308);
+  }
+
+  if (pathname === "/buscar") {
+    const q = clampQuery(request.nextUrl.searchParams.get("q") ?? "");
+    if (q) return NextResponse.rewrite(new URL(searchRewritePath(q), request.url));
   }
 
   if (!(await catalogRouteStore.exists(pathname))) {

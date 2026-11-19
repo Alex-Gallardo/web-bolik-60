@@ -26,8 +26,15 @@ describe("índice del buscador", () => {
       skus: ["PT00058", "PT00059", "PT00060"],
       barcodes: ["759364663092", "759364663108", "759364663115"],
       sample: false,
+      brand: "Bolik",
     });
     expect(ultra.colors).toEqual(["Azul", "Negro", "Rojo"]);
+    expect(ultra.variants[0]).toEqual({
+      sku: "PT00058",
+      barcode: "759364663092",
+      color: "Azul",
+      colorKey: "azul",
+    });
     // Un producto sin códigos de barras no inventa ninguno.
     expect(index.find((e) => e.sample)!.barcodes).toEqual([]);
     expect(tags).toEqual(expect.arrayContaining([TAGS.searchIndex, TAGS.products]));

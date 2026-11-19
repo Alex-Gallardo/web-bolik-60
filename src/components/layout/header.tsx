@@ -7,6 +7,7 @@ import { HeaderScroll } from "./header-scroll";
 import { MobileMenu } from "./mobile-menu";
 import { ProductsMenu, type NavGroup } from "./products-menu";
 import { QuoteLinkWithDrawer } from "./quote-link";
+import { SearchLink } from "./search-link";
 
 type HeaderProps = {
   /** Categorías por línea, para el menú de Productos (las da el layout desde server/data). */
@@ -56,26 +57,7 @@ export function Header({ groups, whatsappUrl }: HeaderProps) {
           </ul>
         </nav>
         <div className="ms-auto flex items-center gap-1">
-          <Link
-            href={ui.header.search.href as Route}
-            prefetch={false}
-            aria-label={ui.header.search.label}
-            className="grid size-11 place-items-center rounded-md text-ink hover:bg-soft"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              focusable="false"
-              className="size-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <circle cx="11" cy="11" r="6.5" />
-              <path d="m16 16 4.5 4.5" />
-            </svg>
-          </Link>
+          <SearchLink whatsappUrl={whatsappUrl} />
           <QuoteLinkWithDrawer />
           {/* El contenedor se oculta en móvil: en el botón, hidden chocaría con su inline-flex. */}
           <div className="ms-2 hidden lg:block">

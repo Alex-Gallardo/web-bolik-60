@@ -54,6 +54,8 @@ module.exports = {
         `${base}/productos/boligrafos/bolik-ultra`,
         // Mi cotización (BD-072): el formulario más pesado del sitio (noindex).
         `${base}/cotizacion`,
+        // Buscador (BD-066): la página de una búsqueda, con resultados (proxy.ts → /buscar/[q]).
+        `${base}/buscar?q=ultra`,
       ],
       numberOfRuns: 3,
       settings: {
@@ -87,9 +89,24 @@ module.exports = {
           // ~3.0 s por el JS y las fuentes aunque se pinte a los ~0.4 s); JS ≤ 170 KB, porque la
           // parte común (Next, React y el layout) ya ocupa ~160 KB en cualquier página. BD-047
           // aligera el layout para volver a bajar el tope. Sin las fichas (abajo).
-          matchingUrlPattern: "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion$).+",
+          matchingUrlPattern:
+            "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion$)(?!buscar(?:$|\\?)).+",
           assertions: {
             ...common,
+            "categories:performance": ["error", { minScore: 0.9 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
+            "total-blocking-time": ["error", { maxNumericValue: 150 }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
+          },
+        },
+        {
+          // /buscar (BD-066): como el resto, pero noindex a propósito (página de utilidad, docs/10 §3):
+          // la auditoría «se puede indexar» y el puntaje de SEO no aplican.
+          matchingUrlPattern: "^https?://[^/]+/buscar(?:$|\\?)",
+          assertions: {
+            ...common,
+            "categories:seo": "off",
+            "is-crawlable": "off",
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],

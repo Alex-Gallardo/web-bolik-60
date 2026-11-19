@@ -110,6 +110,10 @@ export const feedback = {
     filtersEmpty: { title: "No hay productos con esos filtros", action: "Quitar filtros" },
     pdfReady: { tone: "success" as ToastTone, title: "Descargando la ficha técnica" },
   },
+  /** Buscador (BD-066): si no se pudo descargar el motor o el índice. */
+  search: {
+    loadFailed: "No pudimos cargar el buscador. Toca «Buscar» para ver los resultados.",
+  },
   stores: {
     locating: { tone: "info" as ToastTone, title: "Buscando tiendas cerca de ti…" },
     located: (n: number) => ({
