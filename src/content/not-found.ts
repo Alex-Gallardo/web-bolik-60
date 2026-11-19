@@ -6,8 +6,8 @@ export const notFoundText = {
   /** <title>: la 404 lleva noindex, pero el título nunca sale en inglés. */
   metaTitle: "Página no encontrada",
   title: "Esta página se borró como lápiz.",
-  /** Doc 17 dice «Busca un producto…»: vuelve a ese texto cuando BD-066 agregue el buscador aquí. */
-  body: "Puede que la dirección haya cambiado. Revisa el catálogo o vuelve al inicio.",
+  /** Doc 17 §5, con el buscador de BD-066 en la página. */
+  body: "Puede que la dirección haya cambiado. Busca un producto o vuelve al inicio.",
   links: {
     label: "Sigue por aquí",
     home: { label: "Volver al inicio", href: "/" },

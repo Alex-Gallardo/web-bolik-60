@@ -157,3 +157,36 @@ describe("proxy (BD-046)", () => {
     expect(new URL(response.headers.get("location")!).host).toBe("www.bolik66.com");
   });
 });
+
+describe("proxy: /buscar?q= a la página que pinta los resultados en el servidor (BD-066)", () => {
+  const rewriteOf = async (url: string) => {
+    find.mockResolvedValue(null);
+    const response = await proxy(new NextRequest(url));
+    const target = response.headers.get("x-middleware-rewrite");
+    return target ? new URL(target).pathname : null;
+  };
+
+  it("reescribe a /buscar/-{consulta}; la URL del visitante no cambia", async () => {
+    expect(await rewriteOf("http://127.0.0.1:3000/buscar?q=ultra")).toBe("/buscar/-ultra");
+    expect(await rewriteOf("http://127.0.0.1:3000/buscar?q=%20cray%C3%B3n%20")).toBe(
+      "/buscar/-cray%C3%B3n",
+    );
+  });
+
+  it("sin consulta, o solo espacios, sigue a /buscar (la página estática)", async () => {
+    expect(await rewriteOf("http://127.0.0.1:3000/buscar")).toBeNull();
+    expect(await rewriteOf("http://127.0.0.1:3000/buscar?q=%20%20")).toBeNull();
+  });
+
+  it("«.» o «..» no se vuelven segmentos de ruta (el prefijo los deja como nombre)", async () => {
+    expect(await rewriteOf("http://127.0.0.1:3000/buscar?q=..")).toBe("/buscar/-..");
+    expect(await rewriteOf("http://127.0.0.1:3000/buscar?q=.")).toBe("/buscar/-.");
+    expect(await rewriteOf("http://127.0.0.1:3000/buscar?q=a%2Fb")).toBe("/buscar/-a%2Fb");
+  });
+
+  it("corta en 100 caracteres sin partir un emoji (no responde 500)", async () => {
+    const long = `${"a".repeat(99)}✏️🙂`;
+    const path = await rewriteOf(`http://127.0.0.1:3000/buscar?q=${encodeURIComponent(long)}`);
+    expect(decodeURIComponent(path!.slice("/buscar/-".length))).toBe(`${"a".repeat(99)}✏`);
+  });
+});

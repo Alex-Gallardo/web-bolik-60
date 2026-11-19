@@ -1,6 +1,7 @@
 import { cx } from "class-variance-authority";
 import type { Metadata } from "next";
 import { Illustration } from "@/components/brand/illustration";
+import { CatalogSearchForm } from "@/components/catalog/catalog-search-form";
 import { MainContent } from "@/components/layout/main-content";
 import { notFoundText } from "@/content/not-found";
 import { listCategories } from "@/server/data/catalog";
@@ -17,7 +18,7 @@ const linkClass =
  * su propio <main id="contenido"> y ofrece por dónde seguir (inicio, catálogo, dónde comprar y las
  * líneas de producto). Las URLs viejas con redirección nunca llegan aquí: proxy.ts responde 301.
  * El resto se cuenta en NotFoundLog con un aviso desde el navegador (not-found-beacon.ts): la
- * página sigue estática. El buscador llega con BD-066.
+ * página sigue estática. Con el buscador de BD-066 (un formulario GET, sin JS).
  */
 export default async function NotFound() {
   const categories = await listCategories();
@@ -32,6 +33,8 @@ export default async function NotFound() {
             {notFoundText.body}
           </p>
         </div>
+        {/* Formulario GET a /buscar (BD-066): sin JS propio, la 404 sigue estática. */}
+        <CatalogSearchForm id="no-existe-buscar" className="w-full max-w-xl" />
         {/* <a> y no <Link>: next/link sumaría JS a una página que no lo necesita. */}
         <nav aria-label={links.label} className="flex flex-wrap gap-3">
           <a
