@@ -71,6 +71,10 @@ export const serverEnvSchema = z
       );
     if (deployed && !v.NEXT_PUBLIC_SITE_URL.startsWith("https://"))
       fail("NEXT_PUBLIC_SITE_URL", "fuera de desarrollo debe usar https");
+    // Canónicas, sitemap y Open Graph salen de aquí: una sola versión del dominio, con www (BD-090,
+    // docs/10 §3; IIS redirige bolik66.com a www, docs/15). Staging usa su propio subdominio.
+    if (v.APP_ENV === "production" && !v.NEXT_PUBLIC_SITE_URL.startsWith("https://www."))
+      fail("NEXT_PUBLIC_SITE_URL", "en producción debe ser https://www.…");
     if (deployed && v.SESSION_SECRET === SESSION_SECRET_PLACEHOLDER)
       fail("SESSION_SECRET", "usa un valor aleatorio propio (openssl rand -base64 32)");
     // La web usa un login propio con permisos solo sobre su BD (docs/05), nunca el administrador.

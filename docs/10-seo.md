@@ -62,7 +62,8 @@ export async function generateMetadata({ params }: PageProps<"/productos/[catego
     title: p.seoTitle ?? `${p.name}, ${p.tagline ?? p.category.name}`,
     description: p.seoDescription ?? defaultProductDescription(p),
     path: `/productos/${categoria}/${producto}`,
-    image: `/productos/${categoria}/${producto}/opengraph-image`,
+    // Su opengraph-image.tsx pone la imagen: si la página exportara una, mandaría sobre ese archivo.
+    image: false,
   });
 }
 ```
@@ -72,7 +73,7 @@ export async function generateMetadata({ params }: PageProps<"/productos/[catego
 Checklist por página pública:
 - [ ] `title` único (≤ 60 caracteres) y `description` única (140–160).
 - [ ] Canónica absoluta correcta.
-- [ ] Imagen Open Graph 1200 × 630 (`opengraph-image.tsx` generado con `next/og` para productos y categorías; imagen por defecto en `public/og/default.png`).
+- [ ] Imagen Open Graph 1200 × 630 (`opengraph-image.tsx` generado con `next/og` para productos y categorías; la de la marca, para el resto, en `src/app/opengraph-image.tsx`).
 - [ ] Un solo `h1` que contiene la palabra clave principal.
 - [ ] `h2` por sección, sin saltar niveles.
 - [ ] JSON-LD válido (ver §4).

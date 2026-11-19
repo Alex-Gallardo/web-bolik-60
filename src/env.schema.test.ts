@@ -144,6 +144,15 @@ describe("parseServerEnv", () => {
     expect(errorOf({ ...base, SMTP_MODE: "file" })).toBe("");
   });
 
+  it("en producción, la URL del sitio lleva www (canónicas, BD-090); staging no", () => {
+    expect(errorOf({ ...production, NEXT_PUBLIC_SITE_URL: "https://example.com" })).toContain(
+      "en producción debe ser https://www.",
+    );
+    expect(
+      errorOf({ ...deployed("staging"), NEXT_PUBLIC_SITE_URL: "https://staging.example.com" }),
+    ).toBe("");
+  });
+
   describe.each(["staging", "production"] as const)("fuera de desarrollo (%s)", (appEnv) => {
     const env = deployed(appEnv);
 

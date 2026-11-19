@@ -65,7 +65,8 @@ export async function generateMetadata({
   if (!product) return {};
   const { title, description } = productMeta(product);
   // Canónica sin ?color=: una sola URL por producto (docs/06 §3.4).
-  return buildMetadata({ title, description, path: product.href });
+  // La imagen la pone su opengraph-image.tsx (nombre y foto, BD-090).
+  return buildMetadata({ title, description, path: product.href, image: false });
 }
 
 /** Un conjunto de fotos por color (sus fotos y las generales); uno solo si tiene un color. */

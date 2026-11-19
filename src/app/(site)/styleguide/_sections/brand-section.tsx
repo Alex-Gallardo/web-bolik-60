@@ -1,7 +1,6 @@
 import { Illustration, type IllustrationName } from "@/components/brand/illustration";
 import { Logo } from "@/components/brand/logo";
 import { Section } from "@/components/layout/section";
-import { Pending } from "../_components/pending";
 import { SgSection } from "../_components/sg-section";
 
 /** Dónde se usa cada ilustración (docs/08 §5). */
@@ -71,7 +70,24 @@ export function BrandSection() {
         </div>
         <span className="text-sm text-muted">Área libre: la altura de la «B»</span>
       </div>
-      <Pending what="Favicon e isotipo" ticket="el material de Mercadeo (docs/referencia/marca)" />
+      {/* BD-028: el wordmark en blanco sobre negro que entregó Mercadeo (el logo no tiene isotipo). */}
+      <div className="flex flex-wrap items-center gap-6">
+        {/* <img> y no next/image: con next/image aquí, Turbopack separa su HeadManagerContext en un
+            chunk que todas las páginas precargan (+1 petición; BD-090). Archivos fijos, sin optimizar. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/apple-icon.png"
+          alt="Ícono de la pantalla de inicio"
+          width={90}
+          height={90}
+          className="rounded-lg"
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/favicon.ico" alt="Favicon" width={32} height={32} />
+        <p className="text-sm text-muted">
+          Favicon (16 y 32 px) e ícono de la pantalla de inicio en iPhone (180 px).
+        </p>
+      </div>
       <h3>Ilustraciones</h3>
       <ul className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
         {ILLUSTRATIONS.map(([name, use]) => (

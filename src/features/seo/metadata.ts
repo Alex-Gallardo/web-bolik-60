@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ogText } from "@/content/og";
 import { publicEnv } from "@/env.public";
 
 /**
@@ -17,6 +18,13 @@ export const SITE = {
   foundingDate: "1966-06",
 } as const;
 
+/** Imagen Open Graph de la marca (BD-090): la genera app/opengraph-image.tsx en el build. */
+export const DEFAULT_OG_IMAGE = {
+  url: "/opengraph-image",
+  alt: ogText.defaultAlt,
+  type: "image/png",
+} as const;
+
 type BuildArgs = {
   /**
    * Sin « | Bolik»: lo agrega la plantilla de rootMetadata. `{ absolute }` sale tal cual (la
@@ -27,8 +35,12 @@ type BuildArgs = {
   description: string;
   /** Ruta canónica: «/productos/boligrafos/bolik-ultra». */
   path: string;
-  /** Imagen Open Graph (absoluta o relativa a metadataBase). */
-  image?: string;
+  /**
+   * Imagen Open Graph (absoluta o relativa a metadataBase); sin ella, la de la marca
+   * (app/opengraph-image.tsx). false: la página tiene su propio opengraph-image.tsx (categorías y
+   * fichas). Las imágenes que pone aquí la página mandarían sobre las de ese archivo.
+   */
+  image?: { url: string; alt: string; type?: string } | false;
   noindex?: boolean;
   type?: "website" | "article";
 };
@@ -44,7 +56,7 @@ export function buildMetadata({
   title,
   description,
   path,
-  image,
+  image = DEFAULT_OG_IMAGE,
   noindex,
   type = "website",
 }: BuildArgs): Metadata {
@@ -73,7 +85,7 @@ export function buildMetadata({
       url: canonical,
       title: plain,
       description,
-      ...(image ? { images: [{ url: image, width: 1200, height: 630, alt: plain }] } : {}),
+      ...(image ? { images: [{ ...image, width: 1200, height: 630 }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
@@ -86,8 +98,8 @@ export function buildMetadata({
 
 /**
  * Metadata raíz (src/app/layout.tsx). Sin canónica ni robots: cada página pone los suyos con
- * buildMetadata (si estuvieran aquí, toda página los heredaría). Íconos y manifest llegan con el
- * isotipo de Mercadeo; las verificaciones de buscadores, con su ticket de SEO.
+ * buildMetadata (si estuvieran aquí, toda página los heredaría). Íconos (BD-028): favicon.ico y
+ * apple-icon.png de src/app; el manifest y las verificaciones de buscadores, con su ticket de SEO.
  */
 export const rootMetadata: Metadata = {
   metadataBase: new URL(SITE.url),

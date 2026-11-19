@@ -25,10 +25,10 @@ function cut(text: string, max: number): string {
  * Title y description de una ficha (BD-062, docs/10 §1, docs/17 §6): los propios si los tiene
  * (seed o admin); si no, el nombre y la plantilla de docs/10 §1: «{nombre}: {tagline}. {dato
  * clave}. {cierre}». Se usa el primer dato clave con el que cabe en 160 caracteres; si ninguno
- * cabe, va sin dato clave, luego con la descripción corta en lugar del tagline y, al final, la
- * descripción corta recortada. Title de respaldo, plantilla de docs/10 §2: «{nombre}, {tagline o
- * categoría}» si cabe en 52; si no, «{nombre}, {categoría}» o el nombre. El nombre de cada producto
- * es único: ni titles ni descripciones se repiten.
+ * cabe, va sin dato clave, luego con la descripción corta en lugar del tagline, después sin el
+ * nombre y, al final, la descripción corta recortada. Title de respaldo, plantilla de docs/10 §2:
+ * «{nombre}, {tagline o categoría}» si cabe en 52; si no, «{nombre}, {categoría}» o el nombre. El
+ * nombre de cada producto es único: ni titles ni descripciones se repiten.
  */
 export function productMeta(
   product: Pick<
@@ -47,6 +47,8 @@ export function productMeta(
         ]
       : []),
     `${name}: ${sentence(shortDescription)}. ${DESCRIPTION_CLOSE}`,
+    // Sin el nombre (la descripción corta casi siempre lo dice): mejor que recortarla (BD-090).
+    `${sentence(shortDescription)}. ${DESCRIPTION_CLOSE}`,
   ];
   return {
     title:
