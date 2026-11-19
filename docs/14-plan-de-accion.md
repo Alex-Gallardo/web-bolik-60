@@ -54,7 +54,7 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 |---|---|---|---|
 | **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
 | **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 16.25 (9.25 / 7) |
-| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 22.75 (13 / 9.75) |
+| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 23 (13 / 10) |
 | **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 22.5 (11 / 11.5) |
 | **S4** | lun 21 dic – vie 8 ene 2027 | Estabilización, pruebas, contenido, producción · feriados 24-25 dic y 31 dic-1 ene · **código congelado el 6 ene** | 19.25 (7.5 / 11.75) |
 | **S5** | lun 11 ene – vie 22 ene 2027 | **Lanzamiento** e hipercuidado | 3 (1 / 2) |
@@ -126,7 +126,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 
 | Épica | Nombre | Tickets | Días |
 |---|---|---|---|
-| E0 | Fundaciones del repositorio | 17 | 9.25 |
+| E0 | Fundaciones del repositorio | 18 | 9.5 |
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
 | E2 | Datos, medios e integración base | 10 | 11 |
 | E3 | Estructura global, splash y movimiento | 9 | 5 |
@@ -142,7 +142,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **125** | **93.75** |
+| | **Total** | **126** | **94** |
 
 ## 6. Tickets
 
@@ -453,6 +453,28 @@ La conexión a la base real llega casi al final del proyecto y BD-010/BD-030 est
 - [ ] El script se puede correr de nuevo sin romper nada.
 - [ ] Ningún secreto en el repo.
 - [ ] Sin privilegios, `localhost:1433` responde y `bolik_app` se conecta a las tres bases.
+
+#### BD-018 · Actualizar Next.js por avisos de seguridad
+
+**Sprint** S2 · **Días** 0.25 · **Prioridad** Must · **Pista** B · **Depende de** — · **Docs** 03, 15 · *Ticket nuevo (19 nov 2026)*
+
+`next build` con 16.4.3 se detenía al primer intento con `SecurityFatalError` (versión con vulnerabilidades conocidas). `pnpm audit`: GHSA-vc7v-qv4w-wrv8 y GHSA-mfr8-8qww-v76h (moderadas, `'use cache'`), corregidas en 16.4.5 junto con otras de Cache Components y de apps autohospedadas.
+
+**Pasos**
+
+1. Subir `next`, `@next/env` y `eslint-config-next` al último parche de 16.x, sin cambiar de versión mayor.
+2. Revisar las notas de las versiones intermedias y probar lo que toquen.
+
+**Criterios de aceptación**
+
+- [x] `pnpm build` pasa al primer intento, sin aviso de seguridad.
+- [x] `pnpm audit --prod` sin avisos de `next`.
+
+**Implementado (BD-018)**
+
+- 16.4.3 → **16.4.6** (`next`, `@next/env`, `eslint-config-next`).
+- **Cambio de comportamiento (16.4.5/16.4.6):** las respuestas de los route handlers salen sin `Content-Length` (Next lo quita por GHSA-pc58-hwjq-p385) y las comprimibles van con gzip (`/api/search-index` ahora se comprime). `/media` (solo sin IIS: desarrollo, CI y `start:local`) responde los rangos de video como `206` con `Content-Range` y cuerpo `chunked`: el video carga en WebKit y Chromium (probado). En el servidor, IIS sirve `/media` y no pasa por Node.
+- **Medido con 16.4.6** (Lighthouse CI, JS transferido / peticiones): home 162.2 KB / 17, /productos 166.9 / 21, categoría 166.9 / 24, ficha 169.1 / 26, /cotizacion 182.5 / 21, /buscar 169.0 / 20; entre 0.1 y 0.2 KB menos que con 16.4.3.
 
 ### E1 · Sistema de diseño y /styleguide
 

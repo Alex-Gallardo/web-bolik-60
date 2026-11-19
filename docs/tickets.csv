@@ -67,6 +67,9 @@ BD-017,E0,Fundaciones del repositorio,Base de datos local de desarrollo (SQL Ser
 3. Escribe las cadenas en `.env.local` sin mostrar la contraseña.","- El script se puede correr de nuevo sin romper nada.
 - Ningún secreto en el repo.
 - `localhost:1433` responde y bolik_app se conecta a las tres bases.",Sí
+BD-018,E0,Fundaciones del repositorio,Actualizar Next.js por avisos de seguridad,S2,0.25,Must,B,,"03, 15","Ticket nuevo: next build con 16.4.3 se detenía con SecurityFatalError (avisos de 'use cache' y Cache Components, corregidos en 16.4.5).","1. Subir next, @next/env y eslint-config-next al último parche de 16.x.
+2. Revisar las notas de las versiones intermedias y probar lo que toquen.","- pnpm build pasa al primer intento, sin aviso de seguridad.
+- pnpm audit --prod sin avisos de next.",Sí
 BD-020,E1,Sistema de diseño y /styleguide,Componente Section con fondos configurables,S1,0.5,Must,A,BD-007,08 §3,Toda sección del sitio usa `Section` con fondo y tono elegibles.,"1. `components/layout/section.tsx` y `container.tsx` (código en doc 08).
 2. Props: `bg` (9 presets), `tone`, `spacing`, `id`, `as`.
 3. Leer la apariencia por sección desde `SectionAppearance` cuando exista `appearanceKey`.","- Los 9 fondos se ven en `/styleguide`.

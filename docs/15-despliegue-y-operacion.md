@@ -101,7 +101,7 @@ Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowe
 - Ruta física: `D:\bolik\iis` (solo contiene `web.config`).
 - Directorio virtual `/_next/static` → `D:\bolik\app\current\.next\static`.
 - Directorio virtual `/media` → `D:\bolik\media`. Tiene prioridad sobre la ruta `/media` de Node (BD-034), que existe para desarrollo y pruebas: si el directorio virtual faltara, Node también serviría los archivos, pero sin la caché estática de IIS.
-- **Compresión dinámica desactivada** en el sitio (Next ya comprime el HTML y comprimir de nuevo rompe el streaming). Compresión estática (Brotli + gzip) activada.
+- **Compresión dinámica desactivada** en el sitio (Next ya comprime el HTML y, desde 16.4.5, las respuestas de los route handlers, BD-018; comprimir de nuevo rompe el streaming). Compresión estática (Brotli + gzip) activada.
 
 `D:\bolik\iis\web.config`:
 
