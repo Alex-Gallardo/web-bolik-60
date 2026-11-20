@@ -1,5 +1,7 @@
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Section } from "@/components/layout/section";
 import { QuotePageIsland } from "@/components/quote/quote-page-island";
+import { breadcrumbsText } from "@/content/breadcrumbs";
 import { quotePage } from "@/content/quote";
 import { buildMetadata } from "@/features/seo/metadata";
 import { formatPhone } from "@/lib/format";
@@ -31,7 +33,13 @@ export default async function QuotePage() {
     : null;
   return (
     <Section spacing="sm">
-      <h1 className="text-[length:var(--fs-h1)]">{quotePage.title}</h1>
+      {/* Migas sin JSON-LD: es noindex (docs/06 §3, BD-093). */}
+      <Breadcrumbs
+        crumbs={[breadcrumbsText.home, { name: quotePage.title, path: PATH }]}
+        structuredData={false}
+        prefetch={false}
+      />
+      <h1 className="mt-4 text-[length:var(--fs-h1)]">{quotePage.title}</h1>
       <noscript>
         <p className="mt-4 rounded-lg border-2 border-s-4 border-line border-s-warning bg-paper px-4 py-3">
           {quotePage.noScript}

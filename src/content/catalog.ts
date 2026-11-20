@@ -11,7 +11,6 @@ export const catalogPage = {
   title: "Catálogo Bolik",
   intro:
     "Útiles escolares y de oficina fabricados en Guatemala. Filtra por uso o busca por código.",
-  breadcrumbs: { home: "Inicio", label: "Migas de pan" },
   filters: {
     label: "Filtrar productos",
     groups: { linea: "Línea", uso: "Uso", color: "Color" },

@@ -169,6 +169,7 @@ Mapa inicial (completar con el rastreo):
 - Dónde comprar → cada departamento; cada departamento → departamentos vecinos.
 - Escuelas ↔ kits escolares; mayoreo ↔ empresas.
 - Textos de enlace descriptivos ("Ver marcadores de pizarra"), nunca "clic aquí".
+- Ninguna página pública a más de 3 clics de la home. Lo vigila `tests/e2e/seo.spec.ts` (BD-093): recorre el sitio desde la home y exige que cada URL del sitemap quede a 3 clics o menos, migas en todas las páginas salvo la home y ningún enlace genérico («clic aquí», «ver más»). Las páginas noindex (`/buscar`, `/cotizacion`) llevan migas visibles sin `BreadcrumbList`.
 
 ## 8. Imágenes
 

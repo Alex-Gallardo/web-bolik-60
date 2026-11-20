@@ -4,6 +4,7 @@ import { CatalogSearchForm } from "@/components/catalog/catalog-search-form";
 import { CategoryCard } from "@/components/catalog/category-card";
 import { ProductCard } from "@/components/catalog/product-card";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { breadcrumbsText } from "@/content/breadcrumbs";
 import { Section } from "@/components/layout/section";
 import { catalogPage } from "@/content/catalog";
 import { feedback } from "@/content/feedback";
@@ -59,16 +60,13 @@ export default async function CatalogPage() {
   const searchId = "catalogo-buscar";
   const options = filterOptions(products, useTags);
   const colorKeys = (p: ProductCardView) => [...new Set(p.colors.map((c) => c.key))];
-  const crumbs = [
-    { name: catalogPage.breadcrumbs.home, path: "/" },
-    { name: catalogPage.title, path: PATH },
-  ];
+  const crumbs = [breadcrumbsText.home, { name: catalogPage.title, path: PATH }];
 
   return (
     <>
       <Section spacing="sm" className="pb-0">
         <div className="flex max-w-3xl flex-col gap-4">
-          <Breadcrumbs crumbs={crumbs} label={catalogPage.breadcrumbs.label} />
+          <Breadcrumbs crumbs={crumbs} />
           <h1 className="text-[length:var(--fs-h1)]">{catalogPage.title}</h1>
           <p className="text-[length:var(--fs-lead)] text-muted">{catalogPage.intro}</p>
           <CatalogSearchForm id={searchId} />

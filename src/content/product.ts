@@ -3,13 +3,6 @@
  * usa el servidor; lo que necesita la isla de compra va en product-purchase.ts.
  */
 export const productPage = {
-  /** Migas: Inicio › Catálogo Bolik › {categoría} › {producto}. */
-  breadcrumbs: {
-    home: "Inicio",
-    catalog: "Catálogo Bolik",
-    catalogHref: "/productos",
-    label: "Migas de pan",
-  },
   /** Chip de marca del grupo (BD-038), cuando no es Bolik. */
   brandLabel: (brand: string) => `Marca ${brand}`,
   gallery: {

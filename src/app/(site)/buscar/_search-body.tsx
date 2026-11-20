@@ -1,5 +1,7 @@
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Section } from "@/components/layout/section";
 import { SearchPanel } from "@/components/search/search-panel";
+import { breadcrumbsText } from "@/content/breadcrumbs";
 import { searchSynonyms, searchText as t } from "@/content/search";
 import { createSearcher } from "@/lib/search";
 import { whatsappMessage, whatsappUrl } from "@/lib/whatsapp";
@@ -19,6 +21,12 @@ export async function SearchBody({ query }: { query: string }) {
   return (
     <Section spacing="sm">
       <div className="flex max-w-3xl flex-col gap-6">
+        {/* Migas sin JSON-LD: es noindex (docs/06 §3, BD-093). */}
+        <Breadcrumbs
+          crumbs={[breadcrumbsText.home, { name: t.title, path: "/buscar" }]}
+          structuredData={false}
+          prefetch={false}
+        />
         <h1 className="text-[length:var(--fs-h1)]">{t.title}</h1>
         {/* key: si cambia la consulta del servidor (otra navegación a /buscar), el panel empieza de
             nuevo en vez de conservar lo que tenía escrito. */}

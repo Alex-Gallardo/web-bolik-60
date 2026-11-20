@@ -17,6 +17,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Chip } from "@/components/ui/chip";
 import { Tabs, type TabItem } from "@/components/ui/tabs";
+import { breadcrumbsText } from "@/content/breadcrumbs";
 import { feedback } from "@/content/feedback";
 import { productPage as t } from "@/content/product";
 import { ui } from "@/content/ui";
@@ -162,8 +163,8 @@ export default async function ProductPage({
       )
     : null;
   const crumbs = [
-    { name: t.breadcrumbs.home, path: "/" },
-    { name: t.breadcrumbs.catalog, path: t.breadcrumbs.catalogHref },
+    breadcrumbsText.home,
+    breadcrumbsText.catalog,
     { name: product.category.name, path: `/productos/${product.category.slug}` },
     { name: product.name, path: product.href },
   ];
@@ -333,7 +334,7 @@ export default async function ProductPage({
       ) : null}
       <Section spacing="sm">
         {/* Sin precarga: el JS del catálogo y de la categoría contaría en el de la ficha (docs/12 §2). */}
-        <Breadcrumbs crumbs={crumbs} label={t.breadcrumbs.label} prefetch={false} />
+        <Breadcrumbs crumbs={crumbs} prefetch={false} />
         <div className="mt-6 grid gap-8 lg:grid-cols-2 lg:gap-12">
           <div className="lg:sticky lg:top-[calc(var(--header-h)+1.5rem)] lg:self-start">
             <ProductGallery

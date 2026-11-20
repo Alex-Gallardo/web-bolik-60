@@ -23,3 +23,21 @@ describe("Breadcrumbs (BD-060)", () => {
     expect(ld.itemListElement).toHaveLength(2);
   });
 });
+
+describe("Breadcrumbs en páginas con noindex (BD-093)", () => {
+  it("por defecto se llama «Migas de pan»; con structuredData={false} no lleva JSON-LD", () => {
+    const { container } = render(
+      <Breadcrumbs
+        structuredData={false}
+        crumbs={[
+          { name: "Inicio", path: "/" },
+          { name: "Mi cotización", path: "/cotizacion" },
+        ]}
+      />,
+    );
+    const nav = screen.getByRole("navigation", { name: "Migas de pan" });
+    expect(within(nav).getByRole("link", { name: "Inicio" })).toBeTruthy();
+    expect(within(nav).getByText("Mi cotización").getAttribute("aria-current")).toBe("page");
+    expect(container.querySelector('script[type="application/ld+json"]')).toBeNull();
+  });
+});
