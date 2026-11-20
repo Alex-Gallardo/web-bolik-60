@@ -2006,6 +2006,14 @@ Imágenes que también posicionan.
 
 *Nota de BD-092:* `SitemapEntriesView.products[].images` llega vacío en las dos fuentes (`server/data/db/source.ts` y `fixtures/source.ts`). Este ticket lo llena con las URL absolutas de las fotos publicadas y `buildSitemap` las pasa en `images` (sitemap de imágenes de Next).
 
+**Implementado (BD-097)**
+
+- **Imágenes en el sitemap:** cada ficha lleva en `<image:image>` sus fotos visibles, las mismas que la galería (generales o de un color publicado; una variante despublicada se lleva las suyas), con la URL absoluta del WebP de 1920 px, que `process-image` siempre genera. Las dos fuentes llenan `SitemapEntriesView.products[].images` y `buildSitemap` las vuelve absolutas sin repetir. Las categorías no tienen foto propia.
+- **`alt` obligatorio:** `imageAltSchema()` (`src/lib/image-names.ts`): 1–200 caracteres que describan la foto (ni nombre de archivo ni «foto 1»). Hoy lo usa el esquema del seed (`media.json`); el editor de productos y la biblioteca de medios lo usan con sus mensajes (notas en BD-116 y BD-122). Si en la base una foto queda con `alt` vacío, la capa de datos usa el `defaultAlt` del medio y, si tampoco hay, el texto de docs/17 §5 «{Producto} {color}, vista {n}» con datos reales del producto (`imageAlt`, `content/product.ts`).
+- **Nombres descriptivos:** `pnpm import:media` omite las fotos con nombre de cámara, captura o genérico (`isGenericImageName`) y pide la convención de docs/02 (`producto_color_vista.jpg`); `--permitir-nombres` las importa igual. El esquema del seed exige que la clave de cada foto de producto empiece con el slug de su producto (el más largo que encaja: `bolik-ultra-fino-…` no es del Bolik Ultra).
+- **Criterio de axe:** E2E (`seo.spec.ts`) que recorre cada página del sitemap con las reglas de imágenes de axe (`image-alt`, `role-img-alt`, `svg-img-alt`, `input-image-alt`, `area-alt`): 0 violaciones. Las miniaturas de la galería y el póster del hero siguen con `alt=""` a propósito (la miniatura está en un enlace con `aria-label`; el póster es decorativo).
+- **Pruebas:** unitarias (sitemap de imágenes, `imageAlt`, nombres genéricos y esquema del `alt`, guardias del seed), de integración (las fotos van al sitemap en el orden de la galería; las de un color despublicado no) y E2E (cada imagen del sitemap responde un WebP; axe en todas las páginas del sitemap).
+
 ### E9 · IA y automatización de indexación
 
 #### BD-100 · llms.txt y llms-full.txt
@@ -2287,6 +2295,8 @@ Crear y editar fichas completas sin tocar código.
 
 **Nota de BD-034:** subir imágenes con `processImage` (`server/media/process-image.ts`) y `saveMediaAsset` (`server/data/media.ts`); su `MediaError` (`too-large`, `unsupported`, `too-many-pixels`, `invalid-folder`) va a un mensaje de `feedback.ts` (HEIC de iPhone: «guárdala como JPEG»). Cualquier otro error es del disco o de la base. Al guardar `ProductImage`, las fuentes de datos dejan de devolver `image: null`: armar el `ImageView` (`src` = `/media/` + `key`, ancho, alto, `blurDataUrl`, `alt`) en `db/source.ts` y en los JSON de ejemplo.
 
+*Nota de BD-097:* el `alt` de cada foto se valida con `imageAltSchema()` (`src/lib/image-names.ts`): 1–200 caracteres y que describa la foto (ni nombre de archivo ni «foto 1»). Pásale los mensajes de `admin.altMissing` (docs/08, matriz de feedback): sin `alt` no deja publicar. El mensaje para un `alt` que no describe la foto (`generic`) no existe todavía: sale de docs/17 o se agrega a `feedback.ts` en este ticket, no se escribe en el componente. Al agregar, quitar u ordenar fotos, actualizar el `updatedAt` del producto: la fecha del sitemap (que ya lleva las fotos) sale de ahí. Mientras tanto, una foto con `alt` vacío en la base sale con el respaldo de docs/17 §5 («{Producto} {color}, vista {n}», `imageAlt` en `server/data/product-images.ts`).
+
 #### BD-117 · Categorías y FAQs
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-115 · **Docs** 06 §4
@@ -2387,6 +2397,8 @@ Subir y reutilizar imágenes y videos.
 **Nota de BD-050:**
 - Al subir un video, ponerle un hash en el nombre, como a las imágenes. Así los videos pueden ir con caché de un año, que es lo que ya hace IIS con todo `/media`; sin hash, un video reemplazado seguiría viéndose viejo.
 - Cambiar un `MediaAsset` (alt, medidas, archivo) debe invalidar `TAGS.content`: el póster del hero se resuelve desde ahí.
+
+*Nota de BD-097:* al subir, el nombre del archivo da el de la imagen publicada: rechazar los de cámara o genéricos con `isGenericImageName()` (`src/lib/image-names.ts`, el mismo que usa `pnpm import:media`) y pedir la convención de docs/02 (`producto_color_vista.jpg`). El `defaultAlt` del medio se valida con `imageAltSchema()`.
 
 #### BD-123 · Redirecciones y 404
 
@@ -2708,6 +2720,8 @@ Cargar textos, fotos y tiendas entregados por las otras áreas.
 **Criterios de aceptación**
 
 - [ ] 0 textos de ejemplo en producción (búsqueda de "lorem", "ejemplo", "XXXX").
+
+*Nota de BD-097:* `pnpm import:media` omite las fotos con nombre de cámara o genérico (`IMG_4521.jpg`, «WhatsApp Image…», `foto1.jpg`) y pide la convención de docs/02: `producto_color_vista.jpg` (por ejemplo `bolik-ultra_azul_punta.jpg`). Pedírsela a Mercadeo con la entrega; `--permitir-nombres` las importa igual.
 
 #### BD-151 · Ensayo general del corte
 

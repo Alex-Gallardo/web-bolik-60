@@ -18,6 +18,12 @@ export const productPage = {
     thumb: (n: number, total: number) => `Foto ${n} de ${total}`,
     /** Sin fotos todavía: el cuadro muestra el color. */
     noPhoto: (name: string, color: string) => `${name} ${color.toLowerCase()}, sin foto todavía`,
+    /**
+     * docs/17 §5 «Imagen sin cargar»: alt de respaldo de una foto que quedó sin el suyo en la base
+     * (BD-097). Sin color, la foto es general del producto.
+     */
+    fallbackAlt: (name: string, color: string | null, n: number) =>
+      color ? `${name} ${color.toLowerCase()}, vista ${n}` : `${name}, vista ${n}`,
   },
   /** docs/17 §3: «¿Cuántas {presentación} necesitas?» (con «Cuántos» si es masculina). */
   quantityQuestion: (plural: string, masculine: boolean) =>

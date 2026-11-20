@@ -9,6 +9,7 @@ import {
   STORE_TYPES,
 } from "../../src/lib/constants";
 import { isValidGtin } from "../../src/lib/gtin";
+import { imageAltSchema } from "../../src/lib/image-names";
 
 /**
  * Formato de los datos de prisma/seed/*.json (BD-037). Los lee la fuente de ejemplo de la web
@@ -55,7 +56,8 @@ export const mediaSchema = z.object({
   width: z.number().int().positive(),
   height: z.number().int().positive(),
   bytes: z.number().int().positive(),
-  alt: text(200),
+  /** Describe lo que se ve: no un nombre de archivo ni «foto 1» (BD-097, docs/10 §8). */
+  alt: imageAltSchema(),
   sample,
 });
 
@@ -441,6 +443,8 @@ export const seedDataSchema = z
     // La fuente fixtures solo resuelve pósters del manifiesto; un póster de la demo debe ir marcado
     // como sampleMedia para que el perfil prod lo quite (y el manifiesto, como sample).
     const media = new Map(data.media.map((m) => [m.key, m]));
+    const slugsByLength = data.products.map((p) => p.slug).sort((a, b) => b.length - a.length);
+    const photoOwner = (key: string) => slugsByLength.find((s) => key.startsWith(`products/${s}-`));
     data.products.forEach((p, i) => {
       const colors = new Set(p.variants.map((v) => v.colorKey));
       const keys = p.images.map((image) => image.mediaKey);
@@ -450,6 +454,12 @@ export const seedDataSchema = z
           fail(["products", i], `foto ${image.mediaKey} no está en media.json`);
         if (image.colorKey && !colors.has(image.colorKey))
           fail(["products", i], `foto de un color que no tiene: ${image.colorKey}`);
+        // Nombre descriptivo desde el slug (BD-097, docs/10 §8): products/bolik-ultra-azul-…. La
+        // dueña es la del slug más largo que encaja: «bolik-ultra-fino-…» no es del Bolik Ultra.
+        // Solo revisa la carpeta products/; una foto compartida entre productos (de familia) iría
+        // en otra carpeta, como las del hero.
+        if (image.mediaKey.startsWith("products/") && photoOwner(image.mediaKey) !== p.slug)
+          fail(["products", i], `la foto ${image.mediaKey} debe empezar con products/${p.slug}-`);
       }
     });
     data.content.heroChapters.forEach((h, i) => {

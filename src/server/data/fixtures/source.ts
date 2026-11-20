@@ -365,7 +365,8 @@ export const fixturesSource: DataSource = {
           slug: p.slug,
           categorySlug: p.categorySlug,
           updatedAt: null,
-          images: [],
+          // Las mismas fotos que la galería (BD-097).
+          images: toImages(p).map((image) => image.src),
         })),
       departments: data.departments
         .filter((d) => withStores.has(d.slug))

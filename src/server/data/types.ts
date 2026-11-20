@@ -238,6 +238,7 @@ export type UpdatedAt = string | null;
 /** Lo que necesita el sitemap (BD-092): solo páginas publicadas, con su fecha real. */
 export type SitemapEntriesView = {
   categories: { slug: string; updatedAt: UpdatedAt }[];
+  /** `images`: ruta base de cada foto visible («/media/products/bolik-ultra-azul-…»), BD-097. */
   products: { slug: string; categorySlug: string; updatedAt: UpdatedAt; images: string[] }[];
   /** Solo departamentos con al menos un punto de venta publicado. */
   departments: { slug: string; updatedAt: UpdatedAt }[];

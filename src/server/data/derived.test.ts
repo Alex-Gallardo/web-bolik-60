@@ -59,12 +59,17 @@ describe("entradas del sitemap", () => {
     tags.length = 0;
     const { categories, products, departments, contentUpdatedAt } = await listSitemapEntries();
     expect(categories).toHaveLength(8);
-    expect(products.find((p) => p.slug === "bolik-ultra")).toEqual({
+    const ultra = products.find((p) => p.slug === "bolik-ultra")!;
+    expect(ultra).toEqual({
       slug: "bolik-ultra",
       categorySlug: "boligrafos",
       updatedAt: null,
-      images: [],
+      images: expect.any(Array),
     });
+    // Las fotos de la galería (BD-097): rutas base, sin ancho; buildSitemap las vuelve absolutas.
+    expect(ultra.images).toHaveLength(9);
+    expect(ultra.images).toContain("/media/products/bolik-ultra-azul-principal-c9384adc");
+    expect(ultra.images.every((src) => src.startsWith("/media/products/bolik-ultra-"))).toBe(true);
     expect(departments.map((d) => d.slug)).toContain("quetzaltenango");
     expect(departments.map((d) => d.slug)).not.toContain("peten"); // sin tiendas
     expect(contentUpdatedAt).toBeNull();

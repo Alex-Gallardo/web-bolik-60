@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import type { APIRequestContext } from "@playwright/test";
-import { expect, test } from "./helpers";
+import AxeBuilder from "@axe-core/playwright";
+import { expect, skipSplash, test } from "./helpers";
 
 // Metadatos en todas las rutas (BD-090, docs/10 §3). Criterios: títulos y descripciones únicos en
 // todo el sitio; canonical absoluto (el «con www» de producción lo exige src/env.schema.ts).
@@ -178,21 +179,31 @@ test.describe("metadatos (BD-090)", () => {
   });
 });
 
+/** El XML de /sitemap.xml. */
+async function sitemapXml(request: APIRequestContext): Promise<string> {
+  const response = await request.get("/sitemap.xml");
+  expect(response.status()).toBe(200);
+  expect(response.headers()["content-type"]).toMatch(/xml/);
+  return response.text();
+}
+
+/** Ruta de cada `<tag>`, sin el dominio (NEXT_PUBLIC_SITE_URL puede no ser el de la prueba). */
+function xmlPaths(xml: string, tag: "loc" | "image:loc"): string[] {
+  const pattern = new RegExp(`<${tag}>([^<]*)</${tag}>`, "g");
+  const urls = [...xml.matchAll(pattern)].map((m) => decode(m[1]!));
+  for (const url of urls) expect(url, url).toMatch(/^https?:\/\//);
+  return urls.map((url) => new URL(url).pathname);
+}
+
+/** Las rutas de cada página del sitemap. */
+async function sitemapPaths(request: APIRequestContext): Promise<string[]> {
+  return xmlPaths(await sitemapXml(request), "loc");
+}
+
 test.describe("sitemap.xml y robots.txt (BD-092)", () => {
   test.beforeEach(({}, testInfo) => {
     test.skip(testInfo.project.name !== "escritorio", "HTML del servidor: una vez basta");
   });
-
-  /** Las rutas de cada <loc>, sin el dominio (NEXT_PUBLIC_SITE_URL puede no ser el de la prueba). */
-  async function sitemapPaths(request: APIRequestContext): Promise<string[]> {
-    const response = await request.get("/sitemap.xml");
-    expect(response.status()).toBe(200);
-    expect(response.headers()["content-type"]).toMatch(/xml/);
-    const xml = await response.text();
-    const locs = [...xml.matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => decode(m[1]!));
-    for (const loc of locs) expect(loc, loc).toMatch(/^https?:\/\//);
-    return locs.map((loc) => new URL(loc).pathname);
-  }
 
   test("solo páginas publicadas e indexables: cada URL responde 200, index y canónica propia", async ({
     request,
@@ -246,6 +257,55 @@ test.describe("sitemap.xml y robots.txt (BD-092)", () => {
     const sitemap = lines.find((line) => line.startsWith("Sitemap: "));
     expect(sitemap, "anuncia el sitemap").toBeTruthy();
     expect(new URL(sitemap!.slice("Sitemap: ".length)).pathname).toBe("/sitemap.xml");
+  });
+});
+
+test.describe("SEO de imágenes (BD-097)", () => {
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== "escritorio", "una vez basta");
+  });
+
+  test("las fichas publican sus fotos en el sitemap y cada una responde un WebP", async ({
+    request,
+  }) => {
+    const xml = await sitemapXml(request);
+    expect(xml).toContain('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"');
+    const images = xmlPaths(xml, "image:loc");
+    expect(images.length, "las fotos del Bolik Ultra y del Ultra fino").toBeGreaterThan(10);
+    expect(new Set(images).size, "sin repetidas").toBe(images.length);
+    for (const image of images) expect(image).toMatch(/^\/media\/products\/[a-z0-9-]+-1920\.webp$/);
+    // Las fotos van dentro de la <url> de su ficha.
+    const ultra = xml.match(/<url>\s*<loc>[^<]*\/bolik-ultra<\/loc>[\s\S]*?<\/url>/)?.[0] ?? "";
+    expect(ultra).toContain("/media/products/bolik-ultra-azul-principal-");
+    expect(ultra).not.toContain("/media/products/bolik-ultra-fino-");
+    for (let i = 0; i < images.length; i += 6)
+      await Promise.all(
+        images.slice(i, i + 6).map(async (image) => {
+          const response = await request.get(image);
+          expect(response.status(), image).toBe(200);
+          expect(response.headers()["content-type"], image).toBe("image/webp");
+        }),
+      );
+  });
+
+  test("ninguna imagen sin texto alternativo en las páginas del sitemap (axe)", async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(180_000);
+    await skipSplash(page);
+    const paths = await sitemapPaths(request);
+    const problems: string[] = [];
+    for (const path of paths) {
+      await page.goto(path);
+      const results = await new AxeBuilder({ page })
+        .withRules(["image-alt", "role-img-alt", "svg-img-alt", "input-image-alt", "area-alt"])
+        .analyze();
+      for (const violation of results.violations)
+        for (const node of violation.nodes)
+          problems.push(`${path}: ${violation.id} en ${node.target.join(" ")}`);
+    }
+    expect(problems).toEqual([]);
   });
 });
 

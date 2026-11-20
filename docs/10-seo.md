@@ -172,9 +172,9 @@ Mapa inicial (completar con el rastreo):
 
 ## 8. Imágenes
 
-- `next/image` con `alt` real (obligatorio en el admin), `width`/`height` (sin CLS), `sizes` acorde al diseño.
-- Nombres de archivo descriptivos generados desde el slug: `bolik-ultra-azul-punta-a1b2c3-960.webp`.
-- Imágenes de producto incluidas en el sitemap.
+- `next/image` con `alt` real (obligatorio en el admin), `width`/`height` (sin CLS), `sizes` acorde al diseño. El `alt` se valida con `imageAltSchema()` (`src/lib/image-names.ts`): describe la foto, no es un nombre de archivo ni «foto 1». Si en la base queda vacío, sale el `defaultAlt` del medio o el respaldo de docs/17 §5 («{Producto} {color}, vista {n}»): ninguna foto sin `alt` (BD-097).
+- Nombres de archivo descriptivos generados desde el slug: `bolik-ultra-azul-punta-a1b2c3-960.webp`. `pnpm import:media` omite las fotos con nombre de cámara o genérico (`IMG_4521.jpg`, «WhatsApp Image…») y pide la convención de docs/02 (`producto_color_vista.jpg`).
+- Imágenes de producto incluidas en el sitemap: en la `<url>` de cada ficha, sus fotos visibles (las de la galería) con la URL absoluta del WebP de 1920 px.
 - Formato WebP (y AVIF opcional); el LCP de cada página con `priority`.
 
 ## 9. SEO local

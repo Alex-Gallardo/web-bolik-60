@@ -10,7 +10,7 @@ import {
   type ProductImageKind,
 } from "@/lib/constants";
 import { db } from "@/server/db";
-import { cardImage, visibleImages } from "../product-images";
+import { cardImage, withAlts, type ImageWithAltSource } from "../product-images";
 import { toSiteSettings } from "../settings-view";
 import type {
   CategoryView,
@@ -50,21 +50,28 @@ const bySortOrder: [{ sortOrder: "asc" }, { id: "asc" }] = [{ sortOrder: "asc" }
 /** Productos visibles: publicados y de una categoría publicada. */
 const visibleProduct = { published: true, category: { published: true } } as const;
 
+/**
+ * Fotos de una ficha (BD-062): solo de imágenes ya procesadas; el color sale de su variante. Las
+ * usan la galería, la tarjeta y el sitemap de imágenes (BD-097), con la misma regla.
+ */
+const productImagesSelect = {
+  where: { media: { kind: { in: [...MEDIA_IMAGE_KINDS] } } },
+  orderBy: bySortOrder,
+  select: {
+    kind: true,
+    alt: true,
+    variant: { select: { colorKey: true, colorName: true } },
+    media: {
+      select: { key: true, width: true, height: true, blurDataUrl: true, defaultAlt: true },
+    },
+  },
+} satisfies Prisma.Product$imagesArgs;
+
 const cardInclude = {
   category: { select: { slug: true, name: true, lineGroup: true } },
   variants: { where: { published: true }, orderBy: bySortOrder },
   uses: { select: { useTag: { select: { slug: true } } }, orderBy: { useTag: { id: "asc" } } },
-  // Fotos (BD-062): solo de imágenes ya procesadas; el color sale de su variante.
-  images: {
-    where: { media: { kind: { in: [...MEDIA_IMAGE_KINDS] } } },
-    orderBy: bySortOrder,
-    select: {
-      kind: true,
-      alt: true,
-      variant: { select: { colorKey: true } },
-      media: { select: { key: true, width: true, height: true, blurDataUrl: true } },
-    },
-  },
+  images: productImagesSelect,
 } satisfies Prisma.ProductInclude;
 
 type CardRow = Prisma.ProductGetPayload<{ include: typeof cardInclude }>;
@@ -75,13 +82,22 @@ const toImageKind = (value: string): ProductImageKind =>
     ? (value as ProductImageKind)
     : "detail";
 
-function toImages(p: CardRow): ProductImageView[] {
-  const images = p.images.flatMap((image): ProductImageView[] =>
+type ImageRow = CardRow["images"][number];
+
+/** Fotos visibles: generales o de un color publicado (`colorKeys`, las variantes publicadas). */
+function toImages(
+  rows: readonly ImageRow[],
+  productName: string,
+  colorKeys: readonly string[],
+): ProductImageView[] {
+  const images = rows.flatMap((image): ImageWithAltSource[] =>
     image.media.width && image.media.height
       ? [
           {
             src: `/media/${image.media.key}`,
             alt: image.alt,
+            defaultAlt: image.media.defaultAlt,
+            colorName: image.variant?.colorName,
             width: image.media.width,
             height: image.media.height,
             blurDataUrl: image.media.blurDataUrl,
@@ -91,11 +107,16 @@ function toImages(p: CardRow): ProductImageView[] {
         ]
       : [],
   );
-  return visibleImages(
-    images,
+  return withAlts(images, productName, colorKeys);
+}
+
+/** Las fotos de la tarjeta y de la galería de la ficha. */
+const productImages = (p: CardRow) =>
+  toImages(
+    p.images,
+    p.name,
     p.variants.map((v) => v.colorKey),
   );
-}
 
 function toVariant(v: CardRow["variants"][number]): VariantView {
   return {
@@ -127,7 +148,7 @@ function toCard(p: CardRow): ProductCardView {
     useSlugs: p.uses.map((u) => u.useTag.slug),
     featured: p.featured,
     sample: p.isSample,
-    image: cardImage(toImages(p), p.variants.find((v) => v.isDefault)?.colorKey),
+    image: cardImage(productImages(p), p.variants.find((v) => v.isDefault)?.colorKey),
   };
 }
 
@@ -171,7 +192,7 @@ function toProduct(p: ProductRow): ProductView {
     seoDescription: p.seoDescription,
     // La ficha también cambia con sus variantes (sincronización con SAP), como en el sitemap.
     updatedAt: maxDate([p.updatedAt, ...p.variants.map((v) => v.updatedAt)]),
-    images: toImages(p),
+    images: productImages(p),
     tagline: p.tagline,
     description: p.description,
     keyFacts: parseKeyFacts(p.keyFacts),
@@ -543,13 +564,12 @@ export const dbSource: DataSource = {
         where: { ...visibleProduct, variants: { some: { published: true } } },
         select: {
           slug: true,
+          name: true,
           updatedAt: true,
           category: { select: { slug: true } },
-          variants: {
-            select: { updatedAt: true },
-            orderBy: { updatedAt: "desc" },
-            take: 1,
-          },
+          // Todas: la fecha toma la más reciente; las fotos, solo las de un color publicado.
+          variants: { select: { updatedAt: true, published: true, colorKey: true } },
+          images: productImagesSelect,
         },
         orderBy: bySortOrder,
       }),
@@ -575,7 +595,12 @@ export const dbSource: DataSource = {
       slug: p.slug,
       categorySlug: p.category.slug,
       updatedAt: maxDate([p.updatedAt, ...p.variants.map((v) => v.updatedAt)]),
-      images: [], // las fotos de producto en el sitemap llegan con BD-097
+      // Las mismas fotos que la galería (BD-097): generales o de un color publicado.
+      images: toImages(
+        p.images,
+        p.name,
+        p.variants.filter((v) => v.published).map((v) => v.colorKey),
+      ).map((image) => image.src),
     }));
     return {
       // Una categoría cambia con ella misma y con cualquiera de sus productos.
