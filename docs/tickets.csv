@@ -289,8 +289,8 @@ BD-090,E8,SEO técnico,Metadatos en todas las rutas,S2,1,Must,B,BD-037,10 §3,"T
 BD-091,E8,SEO técnico,Datos estructurados JSON-LD,S2,0.5,Must,B,BD-090,10 §4,Datos que Google y las IA entienden.,"1. Copiar `features/seo/jsonld.tsx` y usarlo en cada plantilla.
 2. Validar con la Prueba de resultados enriquecidos y validator.schema.org.","- 0 errores en las plantillas: home, categoría, ficha, FAQ, dónde comprar.
 - Capturas de la validación adjuntas al ticket.",Sí
-BD-092,E8,SEO técnico,sitemap.xml y robots.txt,S2,0.25,Must,B,BD-032,10 §5,Mapa del sitio con fechas reales y reglas para bots.,1. Copiar `app/sitemap.ts` y `app/robots.ts`.
-2. `robots.txt` con `Disallow: /styleguide` y `Disallow: /admin`; ninguno de los dos en el sitemap (BD-026).,"- El sitemap solo incluye páginas publicadas e indexables.
+BD-092,E8,SEO técnico,sitemap.xml y robots.txt,S2,0.25,Must,B,BD-032,10 §5,Mapa del sitio con fechas reales y reglas para bots.,"1. Copiar `app/sitemap.ts` y `app/robots.ts`.
+2. `robots.txt` con `Disallow: /styleguide` y `Disallow: /admin`; ninguno de los dos en el sitemap (BD-026).","- El sitemap solo incluye páginas publicadas e indexables.
 - En staging robots bloquea todo.",Sí
 BD-093,E8,SEO técnico,Migas de pan y enlazado interno,S2,0.5,Must,B,BD-061,10 §7,Ayuda a usuarios y buscadores a entender la jerarquía.,"1. Componente `Breadcrumbs` visible + `BreadcrumbList`.
 2. Bloques de enlaces relacionados (categorías hermanas, productos relacionados, departamentos).",- Ninguna página pública queda a más de 3 clics de la home.,Sí

@@ -1782,6 +1782,8 @@ Encontrar una tienda cercana en segundos.
 
 *Nota de BD-091:* el JSON-LD de esta página y de los departamentos (BD-082) va con este ticket: `ItemList` de `Store` (dirección; coordenadas solo si están verificadas) y `BreadcrumbList`, con un helper nuevo en `features/seo/jsonld.tsx`. El `Organization` ya lo pone el layout. Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
 
+*Nota de BD-092:* `/donde-comprar` entra al sitemap en `STATIC_PAGES` (`src/features/seo/sitemap.ts`); su fecha sale de las tiendas: sumar una fuente `stores` (la más reciente de `entries.departments`) a `buildSitemap`.
+
 #### BD-081 · Mapa y "cerca de mí"
 
 **Sprint** S3 · **Días** 1 · **Prioridad** Should · **Pista** A · **Depende de** BD-080 · **Docs** 06 §3.7
@@ -1813,6 +1815,8 @@ Una página por departamento con tiendas (SEO local).
 
 - [ ] Solo se generan departamentos con al menos 1 tienda.
 - [ ] Títulos tipo "Dónde comprar Bolik en Quetzaltenango".
+
+*Nota de BD-092:* `listSitemapEntries()` ya devuelve `departments` (solo los que tienen tiendas publicadas, con la fecha de su tienda más reciente), pero `buildSitemap` no los publica porque la página no existe. Este ticket los suma con su ruta y su prueba unitaria.
 
 #### BD-083 · Registro de clics salientes
 
@@ -1909,6 +1913,14 @@ Mapa del sitio con fechas reales y reglas para bots.
 - [ ] El sitemap solo incluye páginas publicadas e indexables.
 - [ ] En staging robots bloquea todo.
 
+**Implementado (BD-092)**
+
+- **`/sitemap.xml`** (`src/app/sitemap.ts`, lógica en `features/seo/sitemap.ts`): home, `/productos`, cada categoría publicada y cada ficha visible (publicada, en categoría publicada y con al menos un color publicado, como `catalog-routes.ts`: si no, respondería 404), con URL absoluta y sin barra final. Solo páginas que ya existen: las del pie que llegan en S3 (dónde comprar, escuelas, mayoreo…) entran con su ticket por `STATIC_PAGES` (nota en BD-080, BD-082 y BD-105 a BD-112); los departamentos, con BD-082; las imágenes, con BD-097. Nunca entran `/buscar`, `/cotizacion`, `/styleguide` ni `/admin`.
+- **`lastModified` real:** la de cada categoría y ficha (`listSitemapEntries`); `/productos`, la más reciente del catálogo; la home, la más reciente entre contenido y catálogo. Con la fuente de ejemplo no hay fechas y se omite (no se inventa «ahora»).
+- **Caché:** los tags de `SITEMAP_TAGS` lo regeneran al momento; `cacheLife("hours")` es el respaldo de docs/10 §5 (antes `max`).
+- **`/robots.txt`** (`src/app/robots.ts`, lógica en `features/seo/robots.ts`), según el `APP_ENV` del build. Producción: `Allow: /` con `Disallow` en `/admin`, `/api/` y `/styleguide`, un grupo explícito para los bots de IA de doc 11 §2 (repite los mismos `Disallow`: un bot con grupo propio ignora el de `*`) y `Sitemap:`. Staging: `Disallow: /` sin sitemap. Desarrollo sale igual que producción: es localhost y así Lighthouse CI y la E2E (con `APP_ENV=development`) revisan las reglas reales; con `Disallow: /` la auditoría «is-crawlable» daba 0 y el SEO caía a 0.69. `/buscar` y `/cotizacion` no se bloquean: llevan `noindex, follow` y Google tiene que poder leerlo (docs/10 §2).
+- **Pruebas:** unitarias de robots en los tres entornos (bots de IA y utilidades incluidas) y del armado del sitemap (rutas, fechas, sin fecha, dominio); E2E (`seo.spec.ts`): cada URL del sitemap responde 200, `index, follow` y canónica propia, sin repetidas ni utilidades; toda página indexable que enlaza el catálogo está en el sitemap; robots.txt trae las reglas de producción (Disallow, bots de IA y `Sitemap:`).
+
 #### BD-093 · Migas de pan y enlazado interno
 
 **Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-061 · **Docs** 10 §7
@@ -1991,6 +2003,8 @@ Imágenes que también posicionan.
 **Criterios de aceptación**
 
 - [ ] Ninguna `<img>` sin `alt` (axe).
+
+*Nota de BD-092:* `SitemapEntriesView.products[].images` llega vacío en las dos fuentes (`server/data/db/source.ts` y `fixtures/source.ts`). Este ticket lo llena con las URL absolutas de las fotos publicadas y `buildSitemap` las pasa en `images` (sitemap de imágenes de Next).
 
 ### E9 · IA y automatización de indexación
 
@@ -2094,6 +2108,8 @@ Página con estilo infantil y formulario de visita.
 - [ ] Animaciones lúdicas (A-50…) solo con transform/opacity.
 - [ ] Lighthouse ≥ 95.
 
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
 #### BD-106 · Mayoreo y distribuidores
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-076 · **Docs** 06 §3.10
@@ -2108,6 +2124,8 @@ Información para librerías y solicitud de distribuidor.
 
 - [ ] CTA a cotización con tipo "librería" preseleccionado.
 
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
 #### BD-107 · Empresas y universidades
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-072 · **Docs** 06 §3.11
@@ -2121,6 +2139,8 @@ Bolígrafos personalizados con logo.
 **Criterios de aceptación**
 
 - [ ] El pedido mínimo se edita desde el admin.
+
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
 
 #### BD-108 · Kits escolares
 
@@ -2138,6 +2158,8 @@ Kits por grado que se agregan completos a la cotización.
 
 - [ ] Kits con `published = false` no aparecen ni en sitemap.
 
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
 #### BD-109 · Nuestra historia
 
 **Sprint** S4 · **Días** 0.5 · **Prioridad** Should · **Pista** A · **Depende de** BD-044 · **Docs** 06 §3.13
@@ -2153,6 +2175,8 @@ Línea de tiempo desde 1966.
 - [ ] Revelado por hito sin CLS.
 
 *Nota de BD-091:* JSON-LD `AboutPage` cuyo `about` apunta al `@id` de la organización (`ORGANIZATION_ID` de `features/seo/jsonld.tsx`; el `Organization` con `foundingDate` 1966-06 ya va en el layout). Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
+
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
 
 #### BD-110 · Preguntas frecuentes
 
@@ -2170,6 +2194,8 @@ Todas las FAQs agrupadas.
 
 *Nota de BD-091:* un solo `FAQPage` con todas las preguntas que se ven (`faqPageJsonLd`). Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
 
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
 #### BD-111 · Contacto
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-076 · **Docs** 06 §3.15
@@ -2184,6 +2210,8 @@ Datos de contacto y formulario.
 
 - [ ] Sin librerías de mapa en esta página.
 
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
 #### BD-112 · Páginas legales
 
 **Sprint** S3 · **Días** 0.25 · **Prioridad** Must · **Pista** A · **Depende de** BD-040 · **Docs** 06 §3.18
@@ -2197,6 +2225,8 @@ Privacidad, términos y cookies.
 **Criterios de aceptación**
 
 - [ ] Enlazadas desde el footer y los formularios.
+
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
 
 ### E11 · Panel administrativo
 

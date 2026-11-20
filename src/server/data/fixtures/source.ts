@@ -358,12 +358,15 @@ export const fixturesSource: DataSource = {
     const withStores = new Set(data.stores.filter((s) => s.published).map((s) => s.departmentSlug));
     return {
       categories: [...categories].map((slug) => ({ slug, updatedAt: null })),
-      products: visibleProducts(data).map((p) => ({
-        slug: p.slug,
-        categorySlug: p.categorySlug,
-        updatedAt: null,
-        images: [],
-      })),
+      // Sin un color publicado la ficha responde 404 (catalog-routes.ts): no va al sitemap.
+      products: visibleProducts(data)
+        .filter((p) => p.variants.some((v) => v.published))
+        .map((p) => ({
+          slug: p.slug,
+          categorySlug: p.categorySlug,
+          updatedAt: null,
+          images: [],
+        })),
       departments: data.departments
         .filter((d) => withStores.has(d.slug))
         .map((d) => ({ slug: d.slug, updatedAt: null })),

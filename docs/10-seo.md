@@ -38,7 +38,7 @@ Slugs de categorías: `boligrafos`, `lapices-y-lapices-de-colores`, `crayones-de
 | Minúsculas, guiones, sin acentos | Función `slugify()` en `lib/slug.ts`; validación en el admin |
 | Canónica en cada página | `alternates.canonical` vía `buildMetadata()` |
 | Parámetros | `?color=`, `?linea=`, `utm_*` → canónica sin parámetros |
-| Utilidades sin indexar | `noindex, follow` en `/buscar`, `/cotizacion`, `/cotizacion/enviada/*`, `/styleguide`; `/admin` y `/api` además en `Disallow` |
+| Utilidades sin indexar | `noindex, follow` en `/buscar`, `/cotizacion`, `/cotizacion/enviada/*`, sin `Disallow` (el bot tiene que leer el noindex); `/styleguide` (`noindex, nofollow`, 404 en producción), `/admin` y `/api/` en `Disallow` (BD-092) |
 | Staging | `robots.txt` con `Disallow: /` + cabecera `X-Robots-Tag: noindex` en IIS + contraseña básica |
 | 404 reales | Con Cache Components, `notFound()` en una ruta dinámica llega con el layout ya enviado (200 + `noindex`): por eso `proxy.ts` valida los slugs del catálogo en memoria (`server/seo/catalog-routes.ts`, BD-061) y responde 404 real. Páginas de departamento sin tiendas → 404 o `noindex` |
 | Paginación | No se necesita en el MVP (catálogo pequeño) |
@@ -125,7 +125,8 @@ Ejemplo de salida (Bolik Ultra, abreviado):
 
 - `src/app/sitemap.ts`: una sola URL `/sitemap.xml` con páginas estáticas, categorías, productos publicados (con sus imágenes) y departamentos con tiendas. `lastModified` = `updatedAt` real.
 - Se regenera con los mismos tags de caché que los datos; tiene respaldo de revalidación cada hora.
-- `src/app/robots.ts`: producción permite todo excepto utilidades; staging bloquea todo. Bots de IA permitidos explícitamente (doc 11).
+- `src/app/robots.ts`: producción permite todo excepto `/admin`, `/api/` y `/styleguide`; staging bloquea todo y desarrollo (localhost) sale igual que producción para que Lighthouse CI evalúe las reglas reales. Bots de IA permitidos explícitamente (doc 11), con los mismos `Disallow` (un bot con grupo propio ignora el de `*`). `/buscar` y `/cotizacion` no van en `Disallow`: llevan `noindex, follow` y el bot tiene que poder entrar a leerlo.
+- Solo entran al sitemap las páginas que ya existen e indexan: cada página pública nueva se suma a `STATIC_PAGES` (`src/features/seo/sitemap.ts`) y la E2E `seo.spec.ts` comprueba que cada URL responda 200 con `index` y canónica propia (BD-092).
 - Al publicar: enviar el sitemap en Google Search Console y Bing Webmaster Tools (ticket BD-096); IndexNow notifica cambios a Bing y otros (doc 11).
 
 ## 6. Redirecciones desde el sitio Joomla
