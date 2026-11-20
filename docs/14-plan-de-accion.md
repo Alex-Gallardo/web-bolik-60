@@ -1728,6 +1728,8 @@ Cierre claro con folio y siguientes pasos.
 - [ ] El carrito queda vacío.
 - [ ] Evento `quote_submit`.
 
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página («Inicio › Mi cotización › Enviada»), con `structuredData={false}` porque es noindex.
+
 #### BD-076 · Formularios de escuelas, distribuidores y contacto
 
 **Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-073 · **Docs** 06
@@ -1784,6 +1786,8 @@ Encontrar una tienda cercana en segundos.
 
 *Nota de BD-092:* `/donde-comprar` entra al sitemap en `STATIC_PAGES` (`src/features/seo/sitemap.ts`); su fecha sale de las tiendas: sumar una fuente `stores` (la más reciente de `entries.departments`) a `buildSitemap`.
 
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: dónde comprar enlaza cada departamento.
+
 #### BD-081 · Mapa y "cerca de mí"
 
 **Sprint** S3 · **Días** 1 · **Prioridad** Should · **Pista** A · **Depende de** BD-080 · **Docs** 06 §3.7
@@ -1817,6 +1821,8 @@ Una página por departamento con tiendas (SEO local).
 - [ ] Títulos tipo "Dónde comprar Bolik en Quetzaltenango".
 
 *Nota de BD-092:* `listSitemapEntries()` ya devuelve `departments` (solo los que tienen tiendas publicadas, con la fecha de su tienda más reciente), pero `buildSitemap` no los publica porque la página no existe. Este ticket los suma con su ruta y su prueba unitaria.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: cada departamento enlaza a sus departamentos vecinos.
 
 #### BD-083 · Registro de clics salientes
 
@@ -1937,6 +1943,12 @@ Ayuda a usuarios y buscadores a entender la jerarquía.
 **Criterios de aceptación**
 
 - [ ] Ninguna página pública queda a más de 3 clics de la home.
+
+**Implementado (BD-093)**
+
+- **Migas en todas las páginas salvo la home:** catálogo, categorías y fichas ya las tenían (BD-060 a BD-062); ahora también `/buscar` y `/cotizacion`, sin JSON-LD porque son noindex (`structuredData={false}`). Los tramos comunes («Inicio», «Catálogo Bolik») y el nombre del `<nav>` viven en `content/breadcrumbs.ts` (antes repetidos en `catalog.ts`, `category.ts` y `product.ts`; `catalog.ts`, que va al navegador con la isla de filtros, ya no los lleva). El styleguide muestra el componente en lugar del pendiente.
+- **Enlazado (docs/10 §7):** ya estaba: categoría → sus fichas y «Otras categorías»; ficha → su categoría (migas), relacionados, dónde comprar y «Cotizar por mayor»; el pie enlaza cada categoría. Lo que falta depende de páginas de S3 (departamentos, escuelas ↔ kits, mayoreo ↔ empresas): nota en BD-080, BD-082 y BD-105 a BD-112. Los enlaces del header, del pie y de la ficha a esas páginas responden 404 hasta que cada ticket las cree.
+- **Criterio (3 clics):** E2E en `seo.spec.ts` que recorre el sitio desde la home por niveles siguiendo sus enlaces internos y exige que cada URL del sitemap quede a 3 clics o menos (hoy: fichas a 2, home → categoría del pie → ficha). Otras E2E: migas de «Inicio» a la página actual (con `aria-current`) en cada página del sitemap, `/buscar` y `/cotizacion`, y la home sin migas; cada ficha enlaza su categoría desde las migas; cada categoría enlaza todas sus hermanas en «Otras categorías»; ningún enlace dice «clic aquí», «aquí», «ver más», «leer más» ni «más información».
 
 #### BD-094 · Redirecciones desde el sitio Joomla
 
@@ -2118,6 +2130,8 @@ Página con estilo infantil y formulario de visita.
 
 *Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
 
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: escuelas ↔ kits escolares (BD-108).
+
 #### BD-106 · Mayoreo y distribuidores
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-076 · **Docs** 06 §3.10
@@ -2134,6 +2148,8 @@ Información para librerías y solicitud de distribuidor.
 
 *Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
 
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: mayoreo ↔ empresas (BD-107).
+
 #### BD-107 · Empresas y universidades
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-072 · **Docs** 06 §3.11
@@ -2149,6 +2165,8 @@ Bolígrafos personalizados con logo.
 - [ ] El pedido mínimo se edita desde el admin.
 
 *Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: empresas ↔ mayoreo (BD-106).
 
 #### BD-108 · Kits escolares
 
@@ -2168,6 +2186,8 @@ Kits por grado que se agregan completos a la cotización.
 
 *Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
 
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: kits escolares ↔ escuelas (BD-105).
+
 #### BD-109 · Nuestra historia
 
 **Sprint** S4 · **Días** 0.5 · **Prioridad** Should · **Pista** A · **Depende de** BD-044 · **Docs** 06 §3.13
@@ -2185,6 +2205,8 @@ Línea de tiempo desde 1966.
 *Nota de BD-091:* JSON-LD `AboutPage` cuyo `about` apunta al `@id` de la organización (`ORGANIZATION_ID` de `features/seo/jsonld.tsx`; el `Organization` con `foundingDate` 1966-06 ya va en el layout). Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
 
 *Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home.
 
 #### BD-110 · Preguntas frecuentes
 
@@ -2204,6 +2226,8 @@ Todas las FAQs agrupadas.
 
 *Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
 
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home.
+
 #### BD-111 · Contacto
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-076 · **Docs** 06 §3.15
@@ -2220,6 +2244,8 @@ Datos de contacto y formulario.
 
 *Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
 
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home.
+
 #### BD-112 · Páginas legales
 
 **Sprint** S3 · **Días** 0.25 · **Prioridad** Must · **Pista** A · **Depende de** BD-040 · **Docs** 06 §3.18
@@ -2235,6 +2261,8 @@ Privacidad, términos y cookies.
 - [ ] Enlazadas desde el footer y los formularios.
 
 *Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home.
 
 ### E11 · Panel administrativo
 

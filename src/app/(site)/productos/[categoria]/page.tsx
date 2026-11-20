@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Section } from "@/components/layout/section";
 import { Accordion } from "@/components/ui/accordion";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { breadcrumbsText } from "@/content/breadcrumbs";
 import { catalogPage } from "@/content/catalog";
 import { categoryPage } from "@/content/category";
 import { categoryMeta } from "@/features/catalog/category-meta";
@@ -63,8 +64,8 @@ export default async function CategoryPage({ params }: PageProps<"/productos/[ca
   ]);
   const siblings = categories.filter((c) => c.slug !== category.slug);
   const crumbs = [
-    { name: categoryPage.breadcrumbs.home, path: "/" },
-    { name: categoryPage.breadcrumbs.catalog, path: categoryPage.breadcrumbs.catalogHref },
+    breadcrumbsText.home,
+    breadcrumbsText.catalog,
     { name: category.name, path: category.href },
   ];
 
@@ -72,7 +73,7 @@ export default async function CategoryPage({ params }: PageProps<"/productos/[ca
     <>
       <Section spacing="sm">
         <div className="flex max-w-3xl flex-col gap-4">
-          <Breadcrumbs crumbs={crumbs} label={catalogPage.breadcrumbs.label} />
+          <Breadcrumbs crumbs={crumbs} />
           <h1 className="text-[length:var(--fs-h1)]">{category.name}</h1>
           <p className="text-[length:var(--fs-lead)] text-muted">{category.shortText}</p>
         </div>

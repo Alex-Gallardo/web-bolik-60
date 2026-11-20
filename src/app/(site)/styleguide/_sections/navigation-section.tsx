@@ -1,5 +1,7 @@
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Accordion } from "@/components/ui/accordion";
 import { Tabs, type TabItem } from "@/components/ui/tabs";
+import { breadcrumbsText } from "@/content/breadcrumbs";
 import type { FaqView, ProductView } from "@/server/data/types";
 import { Pending } from "../_components/pending";
 import { SgSection } from "../_components/sg-section";
@@ -60,7 +62,7 @@ function productTabs(featured: ProductView): TabItem[] {
   ];
 }
 
-/** 9 · Navegación: overlays, pestañas, acordeón, header y pie; breadcrumbs y paginación después. */
+/** 9 · Navegación: overlays, pestañas, acordeón, migas, header y pie; paginación después. */
 export function NavigationSection({ featured, faqs }: NavigationSectionProps) {
   return (
     <SgSection
@@ -84,6 +86,25 @@ export function NavigationSection({ featured, faqs }: NavigationSectionProps) {
           content: <p>{faq.answer}</p>,
         }))}
       />
+      <h3>Migas de pan</h3>
+      {/* Las de la ficha (BD-093), sin JSON-LD: el styleguide no es una página para buscadores. */}
+      <Breadcrumbs
+        label="Ejemplo de migas de pan"
+        structuredData={false}
+        crumbs={[
+          breadcrumbsText.home,
+          breadcrumbsText.catalog,
+          ...(featured
+            ? [
+                {
+                  name: featured.category.name,
+                  path: `/productos/${featured.category.slug}`,
+                },
+                { name: featured.name, path: featured.href },
+              ]
+            : []),
+        ]}
+      />
       <h3>Header, pie y flotantes</h3>
       {/* Sin copia en miniatura: un segundo <header>/<footer> duplicaría los landmarks. */}
       <p className="max-w-[var(--measure)]">
@@ -93,7 +114,6 @@ export function NavigationSection({ featured, faqs }: NavigationSectionProps) {
       </p>
       <h3>Por llegar</h3>
       <div className="grid gap-3 md:grid-cols-2">
-        <Pending what="Breadcrumbs" ticket="BD-093" />
         <Pending what="Paginación (admin)" ticket="BD-115" />
       </div>
     </SgSection>

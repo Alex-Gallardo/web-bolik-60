@@ -1,21 +1,29 @@
 import type { Route } from "next";
 import Link from "next/link";
+import { breadcrumbsText } from "@/content/breadcrumbs";
 import { breadcrumbListJsonLd, JsonLd, type Crumb } from "@/features/seo/jsonld";
 
 type BreadcrumbsProps = {
   /** De la home a la página actual; la última es la página (sin enlace, aria-current). */
   crumbs: readonly Crumb[];
-  /** Nombre del <nav> para lectores de pantalla. */
-  label: string;
+  /** Nombre del <nav> para lectores de pantalla; por defecto «Migas de pan». */
+  label?: string;
   /** Prefetch de los enlaces (por defecto el de Next); false donde el presupuesto de JS es justo. */
   prefetch?: boolean;
+  /** false en las páginas con noindex (/buscar, /cotizacion): migas visibles, sin JSON-LD. */
+  structuredData?: boolean;
 };
 
 /**
- * Migas de pan (docs/06 §3.2; BD-060 las trae y BD-093 las lleva a todas las páginas) con su
- * BreadcrumbList del mismo texto (docs/10 §4). Server Component sin JS.
+ * Migas de pan (docs/06 §3; BD-060 las trae y BD-093 las lleva a todas las páginas, salvo la home)
+ * con su BreadcrumbList del mismo texto (docs/10 §4). Server Component sin JS.
  */
-export function Breadcrumbs({ crumbs, label, prefetch }: BreadcrumbsProps) {
+export function Breadcrumbs({
+  crumbs,
+  label = breadcrumbsText.label,
+  prefetch,
+  structuredData = true,
+}: BreadcrumbsProps) {
   return (
     <nav aria-label={label}>
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
@@ -43,7 +51,7 @@ export function Breadcrumbs({ crumbs, label, prefetch }: BreadcrumbsProps) {
           );
         })}
       </ol>
-      <JsonLd data={breadcrumbListJsonLd(crumbs)} />
+      {structuredData ? <JsonLd data={breadcrumbListJsonLd(crumbs)} /> : null}
     </nav>
   );
 }

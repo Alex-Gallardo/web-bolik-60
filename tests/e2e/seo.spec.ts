@@ -309,6 +309,126 @@ test.describe("SEO de imágenes (BD-097)", () => {
   });
 });
 
+/** Enlaces internos de una página, sin parámetros ni ancla ni barra final («/productos»). */
+function internalLinks(html: string): string[] {
+  const hrefs = [...html.matchAll(/<a\b[^>]*\bhref="(\/[^"]*)"/g)].map((m) => decode(m[1]!));
+  return [
+    ...new Set(
+      hrefs
+        .map((href) => href.split(/[?#]/)[0]!.replace(/(.)\/+$/, "$1"))
+        .filter((path) => path && !/^\/(_next|media|api)(\/|$)/.test(path)),
+    ),
+  ];
+}
+
+/** El <nav> de migas de pan de la página, o null (su nombre es `breadcrumbsText.label`). */
+const breadcrumbsNav = (html: string) =>
+  html.match(/<nav aria-label="Migas de pan">([\s\S]*?)<\/nav>/)?.[1] ?? null;
+
+test.describe("migas y enlazado interno (BD-093)", () => {
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== "escritorio", "HTML del servidor: una vez basta");
+  });
+
+  test("ninguna página del sitemap queda a más de 3 clics de la home", async ({ request }) => {
+    test.setTimeout(180_000);
+    const MAX_CLICKS = 3;
+    const depth = new Map<string, number>([["/", 0]]);
+    let level = ["/"];
+    // Recorrido por niveles: solo hace falta abrir las páginas a menos de 3 clics.
+    for (let clicks = 1; clicks <= MAX_CLICKS && level.length > 0; clicks++) {
+      const next: string[] = [];
+      for (let i = 0; i < level.length; i += 6)
+        await Promise.all(
+          level.slice(i, i + 6).map(async (path) => {
+            const response = await request.get(path);
+            // Una 404 es una página de S3 que aún no existe; cualquier otro error falla aquí.
+            if (response.status() === 404) return;
+            expect(response.status(), path).toBe(200);
+            for (const link of internalLinks(await response.text()))
+              if (!depth.has(link)) {
+                depth.set(link, clicks);
+                next.push(link);
+              }
+          }),
+        );
+      level = next;
+    }
+    const far = (await sitemapPaths(request)).filter((path) => !depth.has(path));
+    expect(far, "páginas del sitemap a más de 3 clics (o sin enlaces)").toEqual([]);
+  });
+
+  test("todas las páginas, salvo la home, tienen migas de Inicio a la página actual", async ({
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    const paths = [...(await sitemapPaths(request)), "/buscar", "/cotizacion"];
+    const home = await (await request.get("/")).text();
+    expect(breadcrumbsNav(home), "la home no lleva migas").toBeNull();
+    for (const path of paths.filter((p) => p !== "/")) {
+      const response = await request.get(path);
+      expect(response.status(), path).toBe(200);
+      const html = await response.text();
+      const nav = breadcrumbsNav(html);
+      expect(nav, `${path}: migas`).not.toBeNull();
+      const links = [...nav!.matchAll(/<a\b[^>]*\bhref="([^"]*)"[^>]*>([^<]*)<\/a>/g)];
+      expect(links[0]?.[1], `${path}: la primera miga`).toBe("/");
+      expect(links[0]?.[2], `${path}: la primera miga`).toBe("Inicio");
+      // La última miga es la página actual: el mismo texto que su h1.
+      const current = nav!.match(/aria-current="page"[^>]*>([^<]*)</)?.[1];
+      const h1 = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)?.[1]?.replace(/<[^>]+>/g, "");
+      expect(current && decode(current).trim(), `${path}: la página actual`).toBe(
+        h1 && decode(h1).trim(),
+      );
+      // Las páginas noindex llevan migas visibles, sin BreadcrumbList.
+      if (path === "/buscar" || path === "/cotizacion")
+        expect(
+          jsonLdBlocks(html, path).filter((b) => b["@type"] === "BreadcrumbList"),
+          path,
+        ).toEqual([]);
+      // La ficha enlaza su categoría desde las migas (docs/10 §7).
+      const segments = path.split("/").filter(Boolean);
+      if (segments[0] === "productos" && segments.length === 3)
+        expect(
+          links.map((l) => l[1]),
+          path,
+        ).toContain(`/productos/${segments[1]}`);
+    }
+  });
+
+  test("cada categoría enlaza a sus categorías hermanas", async ({ request }) => {
+    const categories = (await sitemapPaths(request)).filter((p) => /^\/productos\/[^/]+$/.test(p));
+    expect(categories.length).toBeGreaterThan(1);
+    for (const category of categories) {
+      const html = await (await request.get(category)).text();
+      const block = html.split('aria-labelledby="categoria-otras"')[1]?.split("</section>")[0];
+      expect(block, `${category}: «Otras categorías»`).toBeTruthy();
+      const links = internalLinks(block!);
+      expect(links.sort(), category).toEqual(categories.filter((c) => c !== category).sort());
+    }
+  });
+
+  test("los enlaces dicen a dónde llevan: nada de «clic aquí» ni «ver más»", async ({
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    const GENERIC =
+      /^(haz )?(clic|click) aqu[ií]$|^aqu[ií]$|^(ver|leer) m[aá]s$|^m[aá]s( información)?$/i;
+    const problems: string[] = [];
+    for (const path of [...(await sitemapPaths(request)), "/buscar", "/cotizacion"]) {
+      const html = await (await request.get(path)).text();
+      for (const [, attrs, inner] of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)) {
+        const label = attrs!.match(/\baria-label="([^"]*)"/)?.[1];
+        const text = decode(label ?? inner!.replace(/<[^>]+>/g, " "))
+          .replace(/\s+/g, " ")
+          .trim();
+        if (GENERIC.test(text)) problems.push(`${path}: «${text}»`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+});
+
 type JsonLdBlock = Record<string, unknown> & { "@type": string };
 
 /** Los bloques JSON-LD del HTML, ya leídos (falla si alguno no es JSON válido). */

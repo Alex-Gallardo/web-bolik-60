@@ -3,8 +3,6 @@
  * ese lo lleva la isla de filtros al navegador, este solo lo usa el servidor.
  */
 export const categoryPage = {
-  /** Migas: Inicio › Catálogo Bolik › {categoría}. */
-  breadcrumbs: { home: "Inicio", catalog: "Catálogo Bolik", catalogHref: "/productos" },
   /** Botones de docs/06 §3.3 («Dónde comprar» es el texto de docs/17). */
   ctas: {
     wholesale: { label: "Cotizar esta línea por mayor", href: "/mayoreo" },
