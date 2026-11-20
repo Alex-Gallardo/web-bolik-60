@@ -86,3 +86,35 @@ describe("sitemap.xml (BD-092, docs/10 §5)", () => {
     );
   });
 });
+
+describe("imágenes de producto en el sitemap (BD-097, docs/10 §8)", () => {
+  const withPhotos = entries({
+    products: [
+      {
+        slug: "bolik-ultra",
+        categorySlug: "boligrafos",
+        updatedAt: null,
+        images: [
+          "/media/products/bolik-ultra-azul-principal-c9384adc",
+          "/media/products/bolik-ultra-azul-punta-fb7192e5",
+          "/media/products/bolik-ultra-azul-principal-c9384adc",
+        ],
+      },
+      { slug: "marcador-pizarra", categorySlug: "marcadores", updatedAt: null, images: [] },
+    ],
+  });
+
+  it("cada ficha lleva sus fotos como URL absoluta del WebP más grande, sin repetir", () => {
+    const ultra = buildSitemap(withPhotos, SITE_URL).find((e) => e.url.endsWith("/bolik-ultra"))!;
+    expect(ultra.images).toEqual([
+      "https://www.bolik66.com/media/products/bolik-ultra-azul-principal-c9384adc-1920.webp",
+      "https://www.bolik66.com/media/products/bolik-ultra-azul-punta-fb7192e5-1920.webp",
+    ]);
+  });
+
+  it("sin fotos no publica `images`; las páginas fijas y las categorías no llevan", () => {
+    const sitemap = buildSitemap(withPhotos, SITE_URL);
+    const withImages = sitemap.filter((e) => "images" in e).map((e) => e.url);
+    expect(withImages).toEqual(["https://www.bolik66.com/productos/boligrafos/bolik-ultra"]);
+  });
+});

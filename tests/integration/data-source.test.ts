@@ -218,9 +218,11 @@ describe("fuente db: sitemap", () => {
     expect(categories.map((c) => c.slug)).toEqual(
       data.categories.filter((c) => c.published).map((c) => c.slug),
     );
+    // Las fotos de la galería en su orden (BD-097), las mismas que da la fuente de ejemplo.
+    const seedUltra = data.products.find((p) => p.slug === "bolik-ultra")!;
     expect(products.find((p) => p.slug === "bolik-ultra")).toMatchObject({
       categorySlug: "boligrafos",
-      images: [],
+      images: seedUltra.images.map((image) => `/media/${image.mediaKey}`),
     });
     // La fecha de la ficha es la más reciente entre el producto y sus variantes.
     const ultra = await db.product.findUniqueOrThrow({
@@ -241,6 +243,26 @@ describe("fuente db: sitemap", () => {
     expect(departments.map((d) => d.slug).sort()).toEqual([...withStores].sort());
     expect(departments.every((d) => d.updatedAt !== null)).toBe(true);
     expect(contentUpdatedAt).not.toBeNull();
+  });
+
+  it("las fotos de la ficha van al sitemap; las de un color despublicado no (BD-097)", async () => {
+    const before = (await dbSource.listSitemapEntries()).products.find(
+      (p) => p.slug === "bolik-ultra",
+    )!;
+    const { colorKey } = await db.productVariant.findUniqueOrThrow({ where: { sku: "PT00060" } });
+    expect(before.images.some((src) => src.includes(`-${colorKey}-`))).toBe(true);
+    expect(before.images.every((src) => src.startsWith("/media/products/bolik-ultra-"))).toBe(true);
+    await withChange(
+      () => db.productVariant.update({ where: { sku: "PT00060" }, data: { published: false } }),
+      () => db.productVariant.update({ where: { sku: "PT00060" }, data: { published: true } }),
+      async () => {
+        const ultra = (await dbSource.listSitemapEntries()).products.find(
+          (p) => p.slug === "bolik-ultra",
+        )!;
+        expect(ultra.images.length).toBeLessThan(before.images.length);
+        expect(ultra.images.some((src) => src.includes(`-${colorKey}-`))).toBe(false);
+      },
+    );
   });
 
   it("una ficha sin colores publicados sale del sitemap (respondería 404)", async () => {

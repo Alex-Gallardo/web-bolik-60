@@ -1,11 +1,15 @@
-// pnpm import:media <carpeta> [--folder products] [--remoto] (BD-034, docs/03 §7): procesa en lote
-// las fotos de una carpeta (JPEG, PNG, WebP, AVIF) y las registra en MediaAsset. Escribe los WebP
-// en MEDIA_DIR y la fila en la base de DATABASE_URL. Idempotente: la misma foto con el mismo
-// nombre da la misma clave (hash del contenido), así que volver a correrlo no duplica nada.
+// pnpm import:media <carpeta> [--folder products] [--remoto] [--permitir-nombres]
+// (BD-034, docs/03 §7): procesa en lote las fotos de una carpeta (JPEG, PNG, WebP, AVIF) y las
+// registra en MediaAsset. Escribe los WebP en MEDIA_DIR y la fila en la base de DATABASE_URL.
+// Idempotente: la misma foto con el mismo nombre da la misma clave (hash del contenido), así que
+// volver a correrlo no duplica nada.
 // Lee los .env como `next dev`.
 // Los archivos y las filas deben quedar en el mismo entorno: por defecto solo corre contra una
 // base de desarrollo o de pruebas (…_Dev, …_Test). Para staging o producción, se corre EN ese
 // servidor (con su MEDIA_DIR) y con --remoto.
+// El nombre del archivo da el de la imagen publicada (docs/10 §8): una foto con el nombre de la
+// cámara (IMG_4521.jpg, WhatsApp Image…, foto1.jpg) se omite y pide la convención de docs/02
+// (`producto_color_vista.jpg`, BD-097). --permitir-nombres la importa igual.
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -13,6 +17,7 @@ import nextEnv from "@next/env";
 import { PrismaMssql } from "@prisma/adapter-mssql";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { saveMediaAsset } from "../src/server/data/media";
+import { isGenericImageName } from "../src/lib/image-names";
 import { MediaError, processImage } from "../src/server/media/process-image";
 
 nextEnv.loadEnvConfig(process.cwd(), process.env.NODE_ENV !== "production", {
@@ -20,7 +25,8 @@ nextEnv.loadEnvConfig(process.cwd(), process.env.NODE_ENV !== "production", {
   error: console.error,
 });
 
-const USAGE = "Uso: pnpm import:media <carpeta> [--folder products] [--remoto].";
+const USAGE =
+  "Uso: pnpm import:media <carpeta> [--folder products] [--remoto] [--permitir-nombres].";
 
 function fail(message: string): never {
   console.error(`✖ ${message}`);
@@ -33,6 +39,7 @@ function readArgs() {
       options: {
         folder: { type: "string", default: "products" },
         remoto: { type: "boolean", default: false },
+        "permitir-nombres": { type: "boolean", default: false },
       },
       allowPositionals: true,
       strict: true,
@@ -91,6 +98,13 @@ try {
       `Importando ${names.length} imágenes de ${source} a ${mediaDir}/${folder} (base ${database}).`,
     );
     for (const name of names) {
+      if (isGenericImageName(name) && !args.values["permitir-nombres"]) {
+        skipped += 1;
+        console.warn(
+          `  ⚠ ${name}: el nombre no describe la foto. Renómbrala como producto_color_vista (por ejemplo bolik-ultra_azul_punta.jpg, docs/02) o usa --permitir-nombres.`,
+        );
+        continue;
+      }
       try {
         const input = await readFile(path.join(source, name));
         const image = await processImage(input, {
