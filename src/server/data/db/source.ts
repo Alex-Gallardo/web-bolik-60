@@ -536,15 +536,16 @@ export const dbSource: DataSource = {
         select: { slug: true, updatedAt: true },
         orderBy: bySortOrder,
       }),
-      // La fecha de una ficha también cambia con sus variantes (sincronización con SAP).
+      // Como las rutas del catálogo (catalog-routes.ts): sin un color publicado la ficha responde
+      // 404 y no va al sitemap. La fecha también cambia con sus variantes (sincronización con
+      // SAP), publicadas o no: despublicar un color cambia la página.
       db.product.findMany({
-        where: visibleProduct,
+        where: { ...visibleProduct, variants: { some: { published: true } } },
         select: {
           slug: true,
           updatedAt: true,
           category: { select: { slug: true } },
           variants: {
-            where: { published: true },
             select: { updatedAt: true },
             orderBy: { updatedAt: "desc" },
             take: 1,
@@ -574,7 +575,7 @@ export const dbSource: DataSource = {
       slug: p.slug,
       categorySlug: p.category.slug,
       updatedAt: maxDate([p.updatedAt, ...p.variants.map((v) => v.updatedAt)]),
-      images: [], // las fotos llegan con BD-034
+      images: [], // las fotos de producto en el sitemap llegan con BD-097
     }));
     return {
       // Una categoría cambia con ella misma y con cualquiera de sus productos.

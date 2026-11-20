@@ -178,6 +178,77 @@ test.describe("metadatos (BD-090)", () => {
   });
 });
 
+test.describe("sitemap.xml y robots.txt (BD-092)", () => {
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== "escritorio", "HTML del servidor: una vez basta");
+  });
+
+  /** Las rutas de cada <loc>, sin el dominio (NEXT_PUBLIC_SITE_URL puede no ser el de la prueba). */
+  async function sitemapPaths(request: APIRequestContext): Promise<string[]> {
+    const response = await request.get("/sitemap.xml");
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toMatch(/xml/);
+    const xml = await response.text();
+    const locs = [...xml.matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => decode(m[1]!));
+    for (const loc of locs) expect(loc, loc).toMatch(/^https?:\/\//);
+    return locs.map((loc) => new URL(loc).pathname);
+  }
+
+  test("solo páginas publicadas e indexables: cada URL responde 200, index y canónica propia", async ({
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    const paths = await sitemapPaths(request);
+    expect(paths.length, "home, catálogo, categorías y fichas").toBeGreaterThan(10);
+    expect(new Set(paths).size, "sin URLs repetidas").toBe(paths.length);
+    for (const path of paths) {
+      expect(path, "sin utilidades ni admin").not.toMatch(
+        /^\/(buscar|cotizacion|styleguide|admin|api)(\/|$)/,
+      );
+      if (path !== "/") expect(path.endsWith("/"), path).toBe(false);
+    }
+    // readMeta ya exige 200.
+    for (let i = 0; i < paths.length; i += 6)
+      await Promise.all(
+        paths.slice(i, i + 6).map(async (path) => {
+          const page = await readMeta(request, path);
+          expect(page.robots, path).toMatch(/^index, follow/);
+          expect(new URL(page.canonical!).pathname, `${path}: canónica`).toBe(path);
+        }),
+      );
+  });
+
+  test("toda página indexable del catálogo está en el sitemap", async ({ request }) => {
+    test.setTimeout(120_000);
+    const [inSitemap, linked] = await Promise.all([sitemapPaths(request), indexablePaths(request)]);
+    const missing = linked.filter((path) => !inSitemap.includes(path));
+    expect(missing, "enlazadas pero fuera del sitemap").toEqual([]);
+  });
+
+  test("robots.txt abre el sitio salvo admin, API y styleguide, con bots de IA y sitemap", async ({
+    request,
+  }) => {
+    // En E2E APP_ENV es development (docs/13 §5), que sale igual que producción; el bloqueo total
+    // de staging se prueba en src/features/seo/robots.test.ts.
+    const response = await request.get("/robots.txt");
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toMatch(/text\/plain/);
+    const lines = (await response.text()).split("\n").map((line) => line.trim());
+    expect(lines).toContain("User-Agent: *");
+    expect(lines).toContain("Allow: /");
+    for (const path of ["/admin", "/api/", "/styleguide"])
+      expect(lines).toContain(`Disallow: ${path}`);
+    expect(lines, "no bloquea todo").not.toContain("Disallow: /");
+    for (const bot of ["GPTBot", "ClaudeBot", "PerplexityBot"])
+      expect(lines).toContain(`User-Agent: ${bot}`);
+    // Las utilidades con noindex no se bloquean: el bot tiene que leer su noindex.
+    expect(lines.some((line) => /^Disallow: \/(buscar|cotizacion)/.test(line))).toBe(false);
+    const sitemap = lines.find((line) => line.startsWith("Sitemap: "));
+    expect(sitemap, "anuncia el sitemap").toBeTruthy();
+    expect(new URL(sitemap!.slice("Sitemap: ".length)).pathname).toBe("/sitemap.xml");
+  });
+});
+
 type JsonLdBlock = Record<string, unknown> & { "@type": string };
 
 /** Los bloques JSON-LD del HTML, ya leídos (falla si alguno no es JSON válido). */

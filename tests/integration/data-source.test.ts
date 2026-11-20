@@ -242,6 +242,21 @@ describe("fuente db: sitemap", () => {
     expect(departments.every((d) => d.updatedAt !== null)).toBe(true);
     expect(contentUpdatedAt).not.toBeNull();
   });
+
+  it("una ficha sin colores publicados sale del sitemap (respondería 404)", async () => {
+    const skus = ["PT00058", "PT00059", "PT00060"];
+    await withChange(
+      () =>
+        db.productVariant.updateMany({ where: { sku: { in: skus } }, data: { published: false } }),
+      () =>
+        db.productVariant.updateMany({ where: { sku: { in: skus } }, data: { published: true } }),
+      async () => {
+        const { products } = await dbSource.listSitemapEntries();
+        expect(products.some((p) => p.slug === "bolik-ultra")).toBe(false);
+        expect(products.length).toBeGreaterThan(0);
+      },
+    );
+  });
 });
 
 // BD-054: lo que guardará el editor de apariencia (BD-121) es lo que lee <Section appearanceKey>.
