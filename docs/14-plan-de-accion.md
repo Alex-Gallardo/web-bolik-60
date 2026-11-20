@@ -1780,6 +1780,8 @@ Encontrar una tienda cercana en segundos.
 - [ ] Funciona sin JS (lista completa).
 - [ ] Eventos `store_filter`, `maps_click`, `retailer_click`.
 
+*Nota de BD-091:* el JSON-LD de esta página y de los departamentos (BD-082) va con este ticket: `ItemList` de `Store` (dirección; coordenadas solo si están verificadas) y `BreadcrumbList`, con un helper nuevo en `features/seo/jsonld.tsx`. El `Organization` ya lo pone el layout. Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
+
 #### BD-081 · Mapa y "cerca de mí"
 
 **Sprint** S3 · **Días** 1 · **Prioridad** Should · **Pista** A · **Depende de** BD-080 · **Docs** 06 §3.7
@@ -1880,6 +1882,16 @@ Datos que Google y las IA entienden.
 *Nota de BD-054:* `features/seo/jsonld.tsx` ya existe con `JsonLd` (escapa `<`) y `faqPageJsonLd` (la home publica su `FAQPage`). Este ticket suma los demás tipos (Organization, WebSite, ProductGroup…) sobre esa base.
 
 *Nota de BD-038:* `brand` del `ProductGroup` sale de `Product.brand` (`BRAND_LABELS`), no fijo en Bolik.
+
+**Implementado (BD-091)**
+
+- **Organization** (`organizationJsonLd`) en el layout del sitio: una vez en cada página pública, en el HTML estático. `@id` estable `{sitio}/#organization` (`ORGANIZATION_ID`), `name` Bolik, `legalName`, dirección (`PostalAddress` con la dirección completa en `streetAddress` y país GT: partirla en municipio y departamento sería inventar), teléfono en formato internacional y `sameAs` con las redes que tenga `SiteSetting` (hoy Facebook), todos los datos del pie; `foundingDate` 1966-06 y el logo SVG de la marca.
+- **WebSite** (`webSiteJsonLd`) en la home, con `SearchAction` hacia `/buscar?q={search_term_string}` (el buscador responde en el servidor, también sin JS) y el `publisher` por `@id`. Google retiró el cuadro de búsqueda de sus resultados (nov 2024): no da fragmento enriquecido, pero es válido y describe el sitio para Bing y las IA.
+- **ProductGroup** revisado contra docs/10 §4: ya cumplía (variantes con `sku`, `color` y `gtin12` solo con verificador válido; marca del producto; GT; sin precios ni reseñas). El `manufacturer` ahora lleva el mismo `@id` y nombre que el `Organization` (Bolik) y la razón social en `legalName`: una sola entidad.
+- **Plantillas de otros tickets:** dónde comprar (`Store`), historia (`AboutPage`) y la página de preguntas frecuentes llevan su JSON-LD con BD-080/082, BD-109 y BD-110 (nota en cada uno); el criterio «0 errores» se revisa con lo que hoy existe: home, catálogo, categoría y ficha (FAQ y dónde comprar quedan con BD-110 y BD-080). `/productos` no muestra preguntas, así que no lleva `FAQPage` (no se inventan); las categorías lo publican cuando tienen.
+- **Capturas de la validación** (Prueba de resultados enriquecidos y validator.schema.org): **pendientes**. El JSON-LD de cada plantilla, con las URL de producción, se pega en esas herramientas (no hay staging público todavía) y las capturas se adjuntan al Issue #111 antes de cerrarlo.
+- **Logo:** el SVG apaisado de la marca. Google lo acepta; cuando Mercadeo entregue un PNG cuadrado (≥ 112 px, junto con `icon.svg` de BD-028), conviene usarlo.
+- **Pruebas:** unitarias de `organizationJsonLd` y `webSiteJsonLd` (campos, sin teléfono ni redes vacías, plantilla de búsqueda, sin precios) y del fabricante; E2E (`tests/e2e/seo.spec.ts`): en cada página indexable, cada bloque es JSON válido con `@context`, un solo `Organization` con el mismo `@id`, los tipos de su plantilla (home: WebSite y FAQPage; catálogo y categorías: CollectionPage y BreadcrumbList; fichas: ProductGroup y BreadcrumbList), el fabricante y el publicador apuntan a la organización y nada de precios, ofertas ni reseñas.
 
 #### BD-092 · sitemap.xml y robots.txt
 
@@ -2140,6 +2152,8 @@ Línea de tiempo desde 1966.
 
 - [ ] Revelado por hito sin CLS.
 
+*Nota de BD-091:* JSON-LD `AboutPage` cuyo `about` apunta al `@id` de la organización (`ORGANIZATION_ID` de `features/seo/jsonld.tsx`; el `Organization` con `foundingDate` 1966-06 ya va en el layout). Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
+
 #### BD-110 · Preguntas frecuentes
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-103 · **Docs** 06 §3.14
@@ -2153,6 +2167,8 @@ Todas las FAQs agrupadas.
 **Criterios de aceptación**
 
 - [ ] El contenido de las respuestas está en el HTML aunque el acordeón esté cerrado.
+
+*Nota de BD-091:* un solo `FAQPage` con todas las preguntas que se ven (`faqPageJsonLd`). Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
 
 #### BD-111 · Contacto
 

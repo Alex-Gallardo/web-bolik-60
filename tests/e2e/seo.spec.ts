@@ -177,3 +177,88 @@ test.describe("metadatos (BD-090)", () => {
     expect(pngSize(await appleIcon.body())).toEqual({ width: 180, height: 180 });
   });
 });
+
+type JsonLdBlock = Record<string, unknown> & { "@type": string };
+
+/** Los bloques JSON-LD del HTML, ya leídos (falla si alguno no es JSON válido). */
+function jsonLdBlocks(html: string, path: string): JsonLdBlock[] {
+  // Con otros atributos también (un nonce de la CSP, BD-142).
+  const pattern = /<script[^>]*\btype="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g;
+  return [...html.matchAll(pattern)].map((match) => {
+    let data: JsonLdBlock;
+    try {
+      data = JSON.parse(match[1]!) as JsonLdBlock;
+    } catch {
+      throw new Error(`${path}: JSON-LD inválido: ${match[1]!.slice(0, 80)}`);
+    }
+    expect(data["@context"], `${path}: @context`).toBe("https://schema.org");
+    return data;
+  });
+}
+
+/** Tipos que pide docs/10 §4 en cada plantilla (además del Organization de todas). */
+function expectedTypes(path: string): string[] {
+  if (path === "/") return ["WebSite", "FAQPage"];
+  if (path === "/productos") return ["CollectionPage", "BreadcrumbList"];
+  if (path.split("/").length === 3) return ["CollectionPage", "BreadcrumbList"];
+  return ["ProductGroup", "BreadcrumbList"];
+}
+
+// Datos estructurados (BD-091, docs/10 §4). Criterio: 0 errores en las plantillas. Aquí: JSON
+// válido con @context, los tipos de cada plantilla, una sola organización (el fabricante de cada
+// ficha y el publicador del sitio apuntan a su @id) y nada inventado (sin precios ni reseñas).
+// La validación con las herramientas de Google y schema.org se hace aparte (doc 14, BD-091).
+test.describe("datos estructurados (BD-091)", () => {
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name !== "escritorio", "HTML del servidor: una vez basta");
+  });
+
+  test("cada página indexable trae su JSON-LD, una sola Organization y nada inventado", async ({
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    const paths = await indexablePaths(request);
+    let organizationId: string | null = null;
+
+    for (const path of paths) {
+      const response = await request.get(path);
+      expect(response.status(), path).toBe(200);
+      const blocks = jsonLdBlocks(await response.text(), path);
+      expect(blocks.length, `${path}: JSON-LD`).toBeGreaterThan(0);
+      const types = blocks.map((block) => block["@type"]);
+
+      const organizations = blocks.filter((block) => block["@type"] === "Organization");
+      expect(organizations, `${path}: un Organization`).toHaveLength(1);
+      const org = organizations[0]!;
+      organizationId ??= org["@id"] as string;
+      expect(org["@id"], `${path}: mismo @id`).toBe(organizationId);
+      expect(org).toMatchObject({ name: "Bolik", foundingDate: "1966-06" });
+
+      for (const type of expectedTypes(path)) expect(types, `${path}: ${type}`).toContain(type);
+
+      const product = blocks.find((block) => block["@type"] === "ProductGroup");
+      if (product)
+        expect((product.manufacturer as { "@id": string })["@id"], `${path}: fabricante`).toBe(
+          organizationId,
+        );
+      const site = blocks.find((block) => block["@type"] === "WebSite");
+      if (site) {
+        expect((site.publisher as { "@id": string })["@id"]).toBe(organizationId);
+        const action = site.potentialAction as { target: { urlTemplate: string } };
+        expect(action.target.urlTemplate).toMatch(/\/buscar\?q=\{search_term_string\}$/);
+      }
+
+      expect(JSON.stringify(blocks), `${path}: sin precios ni reseñas`).not.toMatch(
+        /"(price|offers|review|aggregateRating)"/i,
+      );
+    }
+    expect(organizationId).toMatch(/\/#organization$/);
+  });
+
+  // «Bolik Ultra» viene del seed de ejemplo (perfil e2e), como en ficha.spec.ts.
+  test("el buscador del SearchAction responde con resultados", async ({ request }) => {
+    const response = await request.get("/buscar?q=ultra");
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain("Bolik Ultra");
+  });
+});

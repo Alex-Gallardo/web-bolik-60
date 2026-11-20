@@ -8,6 +8,7 @@ import { PageEnter } from "@/components/motion/page-enter";
 import { RevealObserver } from "@/components/motion/reveal-observer";
 import type { NavGroup } from "@/components/layout/products-menu";
 import { feedback } from "@/content/feedback";
+import { JsonLd, organizationJsonLd } from "@/features/seo/jsonld";
 import { LINE_GROUPS } from "@/lib/constants";
 import { formatPhone, toInternationalPhone } from "@/lib/format";
 import { whatsappMessage, whatsappUrl } from "@/lib/whatsapp";
@@ -21,7 +22,8 @@ import { getSiteSettings } from "@/server/data/content";
  * diálogos). Las páginas no ponen su propio <main>. El drawer de la cotización (BD-071) lo monta
  * el header (QuoteLink).
  * Los datos del header y del pie llegan como props: components/* no llama a server/* (solo
- * importa tipos).
+ * importa tipos). JSON-LD: el Organization de todas las páginas (BD-091, docs/10 §4), con los datos
+ * del pie.
  */
 export default async function SiteLayout({ children }: LayoutProps<"/">) {
   const [categories, settings] = await Promise.all([listCategories(), getSiteSettings()]);
@@ -70,6 +72,14 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       <RevealObserver />
       <FeedbackHost
         messages={{ offline: feedback.system.offline, online: feedback.system.online }}
+      />
+      <JsonLd
+        data={organizationJsonLd({
+          legalName: settings.legalName,
+          address: settings.address,
+          phone: settings.phone,
+          sameAs: [settings.socialFacebook],
+        })}
       />
     </>
   );
