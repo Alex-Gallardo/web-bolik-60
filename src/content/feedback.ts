@@ -175,6 +175,15 @@ export const feedback = {
       title: "SAP no respondió",
       description: "Lo intentaremos de nuevo automáticamente en 30 minutos.",
     },
+    /** Login (BD-114): el mismo mensaje para un correo que no existe y una contraseña errónea. */
+    loginInvalid: { title: "El correo o la contraseña no coinciden" },
+    /** Sin base de datos (DATA_SOURCE=fixtures) o la base no respondió. */
+    loginUnavailable: {
+      title: "El panel no está disponible en este momento",
+      body: "Inténtalo más tarde.",
+    },
+    forbidden: { tone: "warning" as ToastTone, title: "No tienes permiso para esa sección" },
+    loggedOut: { tone: "success" as ToastTone, title: "Cerraste sesión" },
     loginLocked: {
       title: "Cuenta bloqueada por 15 minutos",
       body: "Hubo 5 intentos fallidos. Si olvidaste tu contraseña, pide a un administrador que la restablezca.",

@@ -506,3 +506,13 @@ curl.exe -sI https://staging.bolik66.com/ | Select-String "HTTP/|X-Robots-Tag"
 ```
 
 Debe responder `200` con `X-Robots-Tag: noindex, nofollow`. En las páginas, la cabecera sale dos veces, una de Next y otra de IIS, y es normal. Desde una IP fuera de `-AllowedIps`, IIS responde `403`.
+
+### 5. Usuarios del admin (BD-114)
+
+El admin inicial lo crea el seed (`-SeedAdminEmail`, §2). Para los demás, en el servidor y con las variables de ese entorno (`DATABASE_URL`):
+
+```powershell
+pnpm admin:create --remoto
+```
+
+Pide correo, nombre, rol (`admin`, `editor` o `ventas`) y la contraseña sin mostrarla (12 caracteres o más). Si el correo ya existe, no lo cambia. Sin `--remoto` solo corre contra una base de desarrollo o de pruebas. El acceso necesita `DATA_SOURCE=db`: con `fixtures`, `/admin/login` responde que el panel no está disponible. `SESSION_SECRET` debe ser propio de cada entorno (`openssl rand -base64 32`); cambiarlo cierra todas las sesiones.

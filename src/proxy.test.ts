@@ -11,6 +11,10 @@ vi.mock("@/server/seo/redirects", () => ({
   redirectHits: { record: (...args: unknown[]) => record(...args) },
 }));
 vi.mock("@/features/seo/metadata", () => ({ SITE: { url: "https://www.bolik66.com" } }));
+const appEnv = vi.hoisted(() => ({
+  APP_ENV: "development" as "development" | "staging" | "production",
+}));
+vi.mock("@/env", () => ({ env: appEnv }));
 const exists = vi.fn();
 const resolveCode = vi.fn();
 vi.mock("@/server/seo/catalog-routes", () => ({
@@ -27,6 +31,8 @@ beforeEach(() => {
   exists.mockResolvedValue(true);
   resolveCode.mockReset();
   resolveCode.mockResolvedValue({ status: "missing" });
+  find.mockResolvedValue(null);
+  appEnv.APP_ENV = "development";
 });
 
 const ULTRA_AZUL = { path: "/productos/boligrafos/bolik-ultra", color: "azul" };
@@ -188,5 +194,60 @@ describe("proxy: /buscar?q= a la página que pinta los resultados en el servidor
     const long = `${"a".repeat(99)}✏️🙂`;
     const path = await rewriteOf(`http://127.0.0.1:3000/buscar?q=${encodeURIComponent(long)}`);
     expect(decodeURIComponent(path!.slice("/buscar/-".length))).toBe(`${"a".repeat(99)}✏`);
+  });
+});
+
+describe("proxy: admin (BD-114)", () => {
+  it("sin cookie, /admin/* va al login con la ruta de vuelta y noindex", async () => {
+    const response = await proxy(new NextRequest("http://127.0.0.1:3000/admin/productos?orden=a"));
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "https://www.bolik66.com/admin/login?siguiente=%2Fadmin%2Fproductos%3Forden%3Da",
+    );
+    expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow");
+  });
+
+  it("el login no necesita cookie; con cookie pasa la ruta pedida a la página", async () => {
+    const login = await proxy(new NextRequest("http://127.0.0.1:3000/admin/login"));
+    expect(login.headers.get("location")).toBeNull();
+    const withCookie = await proxy(
+      new NextRequest("http://127.0.0.1:3000/admin", { headers: { cookie: "bolik_admin=x" } }),
+    );
+    expect(withCookie.headers.get("location")).toBeNull();
+    expect(withCookie.headers.get("x-middleware-request-x-bolik-path")).toBe("/admin");
+  });
+
+  it("fuera del admin quita la cabecera x-bolik-path que mande el cliente", async () => {
+    const response = await proxy(
+      new NextRequest("http://127.0.0.1:3000/productos", {
+        headers: { "x-bolik-path": "/admin/otra" },
+      }),
+    );
+    // Next reescribe las cabeceras de la petición sin la que se quitó.
+    expect(response.headers.has("x-middleware-override-headers")).toBe(true);
+    expect(response.headers.get("x-middleware-request-x-bolik-path")).toBeNull();
+  });
+});
+
+describe("proxy: /styleguide en producción (BD-026, BD-114)", () => {
+  it("sin la cookie del admin responde la 404 real", async () => {
+    appEnv.APP_ENV = "production";
+    for (const path of ["/styleguide", "/styleguide/correos"]) {
+      const response = await proxy(new NextRequest(`http://127.0.0.1:3000${path}`));
+      expect(response.headers.get("x-middleware-rewrite"), path).toMatch(/\/_no-existe$/);
+    }
+  });
+
+  it("con cookie decide el layout; en desarrollo y staging se ve siempre", async () => {
+    appEnv.APP_ENV = "production";
+    const withCookie = await proxy(
+      new NextRequest("http://127.0.0.1:3000/styleguide", { headers: { cookie: "bolik_admin=x" } }),
+    );
+    expect(withCookie.headers.get("x-middleware-rewrite")).toBeNull();
+    for (const env of ["development", "staging"] as const) {
+      appEnv.APP_ENV = env;
+      const response = await proxy(new NextRequest("http://127.0.0.1:3000/styleguide"));
+      expect(response.headers.get("x-middleware-rewrite"), env).toBeNull();
+    }
   });
 });
