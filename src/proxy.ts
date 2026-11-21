@@ -1,5 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { env } from "@/env";
 import { SITE } from "@/features/seo/metadata";
+import {
+  ADMIN_COOKIE,
+  ADMIN_HOME_PATH,
+  ADMIN_LOGIN_PATH,
+  ADMIN_PATH_HEADER,
+  loginUrl,
+} from "@/lib/admin-access";
 import { clampQuery, searchRewritePath } from "@/lib/search-query";
 import { catalogRouteStore } from "@/server/seo/catalog-routes";
 import { redirectHits, redirectStore } from "@/server/seo/redirects";
@@ -21,7 +29,14 @@ import { redirectHits, redirectStore } from "@/server/seo/redirects";
  * 5. Buscador (BD-066): /buscar?q=… se reescribe a /buscar/{q}, una página que se pinta completa en
  *    el servidor. Con ?q= en la misma página, Cache Components mandaría los resultados aparte (en un
  *    bloque oculto que solo muestra el JS) y sin JS no se verían. La URL del visitante no cambia.
- * BD-094 agrega aquí el mapa estático de Joomla; BD-115, la comprobación de la cookie del admin.
+ * 6. Admin (BD-114, ADR-08): sin la cookie bolik_admin, /admin/* (menos el login) redirige al login
+ *    con la ruta de vuelta. Solo mira que exista: la sesión y el rol se validan en cada página y
+ *    acción con requireRole (src/server/auth/guards.ts). Pasa la ruta pedida en `x-bolik-path`
+ *    para que requireRole vuelva a ella si la sesión ya venció.
+ * 7. /styleguide en producción sin la cookie (BD-026): 404 real aquí, porque el layout decide
+ *    dentro de un <Suspense> y ahí la respuesta ya salió con 200. Con cookie, decide el layout.
+ * `x-bolik-path` solo la pone este proxy: si la manda el cliente fuera del admin, se quita.
+ * BD-094 agrega aquí el mapa estático de Joomla.
  */
 /** /p/{codigo}, con o sin barra final: el código del empaque (BD-065). */
 const QR_PATH = /^\/p\/([^/]+)\/?$/;
@@ -55,6 +70,23 @@ async function qrRedirect(request: NextRequest, segment: string) {
   return response;
 }
 
+/** /admin/*: sin cookie, al login (que no la necesita); con cookie, sigue con la ruta en la cabecera. */
+function adminGate(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  if (pathname === ADMIN_LOGIN_PATH) return NextResponse.next();
+  if (!request.cookies.has(ADMIN_COOKIE)) {
+    const response = NextResponse.redirect(
+      new URL(loginUrl(`${pathname}${search}`), SITE.url),
+      307,
+    );
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
+  }
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(ADMIN_PATH_HEADER, `${pathname}${search}`);
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const target = await redirectStore.find(pathname, search);
@@ -78,10 +110,24 @@ export async function proxy(request: NextRequest) {
     if (q) return NextResponse.rewrite(new URL(searchRewritePath(q), request.url));
   }
 
+  if (pathname === ADMIN_HOME_PATH || pathname.startsWith(`${ADMIN_HOME_PATH}/`)) {
+    return adminGate(request);
+  }
+
+  const isStyleguide = pathname === "/styleguide" || pathname.startsWith("/styleguide/");
+  if (isStyleguide && env.APP_ENV === "production" && !request.cookies.has(ADMIN_COOKIE)) {
+    return NextResponse.rewrite(new URL("/_no-existe", request.url));
+  }
+
   if (!(await catalogRouteStore.exists(pathname))) {
     return NextResponse.rewrite(new URL("/_no-existe", request.url));
   }
 
+  if (request.headers.has(ADMIN_PATH_HEADER)) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.delete(ADMIN_PATH_HEADER);
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
   return NextResponse.next();
 }
 

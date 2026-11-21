@@ -249,7 +249,7 @@ Privacidad y términos en Markdown (`src/content/legal`). Indexables, enlazadas 
 
 ## 4. Admin (`/admin`)
 
-**Dinámico, sin caché, `noindex`, fuera del sitemap.** Layout: menú lateral colapsable (desktop), menú inferior (móvil), encabezado con usuario y "Ver sitio". Todas las tablas con búsqueda, filtros, paginación y estados vacíos. Toda acción muestra toast y, si es destructiva, confirmación.
+**Dinámico, sin caché, `noindex`, fuera del sitemap.** Layout: menú lateral colapsable (desktop), menú inferior (móvil), encabezado con usuario y "Ver sitio". Todas las tablas con búsqueda, filtros, paginación y estados vacíos. Toda acción muestra toast y, si es destructiva, confirmación. **Excepción a «visible sin JavaScript»:** el admin lee la cookie de sesión, así que con Cache Components sus páginas van dentro de un `<Suspense>` y llegan ocultas hasta que corre el JS (BD-114). Es una herramienta interna; las páginas públicas siguen la regla.
 
 | Vista | Ruta | Roles | Contenido |
 |---|---|---|---|

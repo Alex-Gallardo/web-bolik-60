@@ -1022,6 +1022,8 @@ La parte común del sitio (Next, React y el layout) ocupa ~160 KB en cualquier p
 - [ ] Rendimiento ≥ 0.95 en las páginas que no son la home (hoy ≥ 0.90; `/productos` da 0.94).
 - [ ] Sin cambios visibles ni de accesibilidad; E2E en verde.
 
+*Nota de BD-114:* una isla cliente en el admin (la primera llega con BD-115) hace que Turbopack parta el chunk común de las páginas públicas en dos (+~1.5 KB transferidos y una petición más en cada página; medido con el login de BD-114, que por eso quedó sin isla). Este ticket debe dejar margen para ese costo antes de BD-115.
+
 #### BD-048 · Header sin desborde entre 1024 y 1280 px
 
 **Sprint** S2 · **Días** 0.25 · **Prioridad** Must · **Pista** A · **Depende de** BD-041 · **Docs** 06 §2 · *Ticket nuevo (14 nov 2026, de BD-061)*
@@ -1762,6 +1764,8 @@ Proteger formularios sin captcha molesto.
 - [ ] El sexto envío en 10 min recibe un mensaje amable.
 - [ ] Un bot que llena el honeypot recibe éxito falso y no se guarda.
 
+*Nota de BD-114:* el login del admin tiene bloqueo por cuenta (5 intentos, 15 min), pero no límite por IP: al crear `server/rate-limit.ts`, aplicarlo también a la acción `login` (`features/admin/actions.ts`) contra quien prueba muchos correos desde la misma IP. Es prioritario: bcryptjs es JS puro y cada intento ocupa ~230 ms de CPU en el mismo proceso que sirve el sitio público, y sin límite por IP cualquiera puede bloquear las cuentas cuyos correos adivine (5 intentos cada 15 minutos).
+
 ### E7 · Dónde comprar
 
 #### BD-080 · Dónde comprar: lista y filtros
@@ -2286,6 +2290,17 @@ Inicio de sesión seguro para el equipo interno.
 - [ ] Rol `ventas` no puede editar productos (prueba).
 - [ ] Cookie `httpOnly`, `secure`, `sameSite=lax`.
 
+**Implementado (BD-114)**
+
+- **Sesión:** `iron-session` 9.0.1 (`src/server/auth/session.ts`): `{ userId, role }` cifrado con `SESSION_SECRET` en la cookie `bolik_admin`, 8 h (la cookie vence un minuto antes que el sello). Atributos (`adminCookieOptions`, `src/lib/admin-access.ts`): `httpOnly`, `sameSite=lax`, `secure` en staging y producción (en desarrollo y en la E2E, sobre http, el navegador no la guardaría) y `path=/`, no `/admin`, para que `/styleguide` la lea en producción. Una cookie vencida, dañada o de otra clave se lee como sesión vacía.
+- **Guardias** (`src/server/auth/guards.ts`): `requireRole(...ADMIN_PERMISSIONS.x)` al inicio de cada página y acción; `checkRole` devuelve el resultado sin redirigir. Leen el usuario de la base en cada petición: desactivarlo, bloquearlo o cambiarle el rol se aplica al momento; manda el rol de la base, no el de la cookie. Sin sesión, al login con `?siguiente=`; vencida, con `&vencida=1`; sin permiso, a `/admin?sin-permiso=1`. No se usa `forbidden()` de Next: sigue experimental en Next 16. Los permisos por sección son la tabla de docs/06 §4 (`ADMIN_PERMISSIONS`).
+- **Login** (`/admin/login`, acción `login` en `features/admin/actions.ts`, lógica en `server/auth/login.ts`): Zod en el servidor; bcrypt corre siempre (con un hash de relleno si el correo no existe) y el error es el mismo, sin revelar qué correos existen; al quinto intento fallido, bloqueo de 15 minutos registrado en `AuditLog` (`lock`). La condición «no bloqueada» va en la misma escritura del intento y del acceso correcto (`updateMany`): una ráfaga de intentos a la vez no se salta el bloqueo, cuenta solo hasta el quinto y una contraseña correcta que llega mientras otro intento bloqueaba no entra ni lo levanta. Un correo que no existe también «se bloquea» al quinto intento (contador en memoria por hash del correo) y el login tarda al menos 600 ms: ni el mensaje ni el tiempo delatan qué correos están registrados. El contador de fallos no vence: 4 fallos viejos más uno nuevo bloquean (decisión; BD-124 puede reiniciarlo). Un acceso correcto reinicia el contador, guarda `lastLoginAt` y se registra (`login`, IP en hash). La ruta de vuelta solo acepta rutas del admin (`safeAdminNext`). Es un `<form action>` de servidor, **sin isla de cliente** (decisión del usuario, 21 nov 2026): con un componente cliente en el admin, Turbopack partía el JS común de las páginas públicas en dos archivos (+~1.5 KB transferidos y una petición más), y `/buscar` y la ficha pasaban de 170 KB y la ficha de 26 peticiones. El navegador pide los campos (`required`, `type="email"`) y la acción valida con Zod; un error vuelve al login con `?error=invalid|locked|unavailable` y la ruta de vuelta, nunca el correo (no queda escrito tras un error y no hay estado «Entrando…»). Con `DATA_SOURCE=fixtures` responde que el panel no está disponible. Sin JavaScript el login no se ve: el admin va dentro de un `<Suspense>` (lee la cookie) y el contenido llega oculto hasta que corre el JS. Textos aprobados en docs/17 §5 (`content/admin.ts` y `feedback.admin`).
+- **Proxy:** sin la cookie, `/admin/*` (menos el login) responde 307 al login con la ruta de vuelta y `X-Robots-Tag: noindex`; con cookie pasa la ruta en `x-bolik-path` (para que `requireRole` vuelva a ella). Una cookie inventada pasa el proxy y la rechaza la página: con Cache Components la respuesta ya empezó (200) y la redirección va en el HTML, sin el contenido.
+- **`/admin` provisional:** saludo y «Cerrar sesión» hasta el dashboard de BD-115 (nota en ese ticket).
+- **`pnpm admin:create`** (`scripts/admin-create.mts`): correo, nombre, rol y contraseña sin eco (12 caracteres a 72 bytes); no cambia un correo que ya existe; `--remoto` fuera de `_Dev`/`_Test` (docs/15 §12.5).
+- **Styleguide:** en producción, sin la cookie, `proxy.ts` responde la 404 real (el layout decide dentro de un `<Suspense>` y ahí la respuesta ya saldría con 200); con cookie, `canViewStyleguide()` valida la sesión. En desarrollo y staging se ve directo, también sin JS. `proxy.ts` quita la cabecera `x-bolik-path` si la manda el cliente fuera del admin.
+- **Pruebas:** unitarias (permisos: `ventas` no entra a `products`; ruta de vuelta segura, incluso con `..`; atributos de la cookie); integración contra SQL Server (`tests/integration/admin-auth.test.ts`: entrar, mismo error para correo inexistente y contraseña errónea, bloqueo al quinto intento aun con la contraseña correcta, inactivo, rol de la base, cookie dañada, cerrar sesión); E2E (`tests/e2e/admin.spec.ts`, sin base): redirección sin cookie con la ruta de vuelta, cookie inventada rechazada, login `noindex` con un h1 y axe, intento fallido que vuelve al login con el aviso y la ruta de vuelta, sin el correo en la URL; avisos de sesión vencida y cerrada. **Excepción a la definición de terminado §6:** entrar de punta a punta en la E2E (camino feliz) espera a que la CI tenga una base en ese job: `test.fixme` en `admin.spec.ts` que apunta a BD-131; mientras tanto lo cubre la integración con cookies y redirección simuladas.
+
 #### BD-115 · Layout del admin y dashboard
 
 **Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-114 · **Docs** 06 §4, 12 §6
@@ -2300,6 +2315,8 @@ Panel con indicadores principales.
 **Criterios de aceptación**
 
 - [ ] Carga del dashboard < 1 s con datos de prueba.
+
+*Nota de BD-114:* la sesión y las guardias ya existen: cada página llama a `requireRole(...ADMIN_PERMISSIONS.x)` (`src/server/auth/guards.ts`, permisos de docs/06 §4 en `src/lib/admin-access.ts`) y devuelve el usuario (nombre y rol para el encabezado). `/admin` es un inicio provisional (saludo y «Cerrar sesión», acción `logout`); este ticket lo reemplaza por el dashboard. El layout del admin ya envuelve las páginas en `<Suspense>` (leer la cookie las hace dinámicas). **Presupuesto:** el primer componente cliente del admin (menú, avisos) parte el JS común de las páginas públicas (+~1.5 KB y una petición, medido en BD-114): BD-047 va antes para ganar ese margen; medir con `pnpm lhci` al agregarlo. Los avisos de sesión vencida, sesión cerrada y sin permiso se muestran hoy en la página (`role="status"`); con el `FeedbackHost` del admin pasan a toast (docs/08: `admin.sessionExpired`, `admin.forbidden`, `admin.loggedOut`).
 
 #### BD-116 · Editor de productos
 
@@ -2463,6 +2480,8 @@ Administración del propio panel.
 **Criterios de aceptación**
 
 - [ ] Solo el rol admin ve estas vistas.
+
+*Nota de BD-114:* desbloquear es poner `failedLogins = 0` y `lockedUntil = null` en `AdminUser` (los escribe `server/data/admin-users.ts`); el bloqueo se registra en `AuditLog` con `action = "lock"`. Crear usuarios ya se puede con `pnpm admin:create`. Desactivar (`active = false`) o cambiar el rol se aplica en la siguiente petición: `requireRole` lee el usuario de la base. Pendiente: cerrar sesión o cambiar la contraseña no revoca una cookie robada (iron-session no guarda estado; vale hasta 8 h). Agregar `sessionVersion` en `AdminUser`, guardarla en la sesión y compararla en `getActiveAdmin`, con un botón «Cerrar todas las sesiones». Valorar también que `failedLogins` venza tras 15 minutos sin fallos.
 
 ### E12 · Analítica e integración SAP
 
