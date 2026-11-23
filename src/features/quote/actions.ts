@@ -15,10 +15,17 @@ import {
 import { sendQuoteToErp } from "@/server/erp/send-quote";
 import { sendQuoteEmails } from "@/server/mail/send-quote-emails";
 import { log, logError } from "@/server/log";
+import { formRateLimiter } from "@/server/rate-limit";
 import { requestIpHash } from "@/server/request-ip";
+import { FORM_GUARD, checkFormMeta, type FormMeta } from "@/lib/form-guard";
 import type { QuoteContactField } from "./form-fields";
-import { QUOTE_GUARD } from "./guard";
-import { contactErrors, quoteContactSchema, quoteLinesSchema } from "./schema";
+import {
+  contactErrors,
+  quoteContactSchema,
+  quoteLinesSchema,
+  type QuoteContact,
+  type QuoteLineInput,
+} from "./schema";
 
 export type SubmitQuoteResult =
   | { ok: true; data: { folio: string } }
@@ -37,13 +44,8 @@ export type SubmitQuoteResult =
       reference?: string;
     };
 
-/** Lo que manda el formulario además de los datos: el honeypot y el tiempo de llenado. */
-export type SubmitQuoteMeta = {
-  /** Campo trampa, oculto para las personas: si llega con algo, lo llenó un bot. */
-  website?: unknown;
-  /** Milisegundos desde que se abrió el formulario (reloj del navegador, sin comparar relojes). */
-  elapsedMs?: unknown;
-};
+/** Lo que manda el formulario además de los datos: el campo trampa y el tiempo de llenado. */
+export type SubmitQuoteMeta = FormMeta;
 
 /**
  * Enviar la cotización (BD-073, docs/03 §5): valida, guarda con su folio en una transacción y
@@ -55,18 +57,15 @@ export async function submitQuote(
   lines: unknown,
   meta: SubmitQuoteMeta = {},
 ): Promise<SubmitQuoteResult> {
-  // Honeypot lleno: no se guarda. Respuesta de «no se pudo» y no de éxito: si fuera una persona (un
-  // autocompletado raro), no pierde su cotización creyendo que llegó; el diálogo ofrece WhatsApp.
-  if (typeof meta.website === "string" && meta.website.trim() !== "") {
+  // Campo trampa lleno: no se guarda. Respuesta de «no se pudo» y no de éxito falso (decisión del
+  // usuario en BD-077, distinta del resto de formularios): si fuera una persona (un autocompletado
+  // raro), no pierde su cotización creyendo que llegó; el diálogo ofrece WhatsApp.
+  const guard = checkFormMeta(meta);
+  if (guard === "bot") {
     log.warn("Cotización descartada: campo trampa lleno");
     return { ok: false, error: "unavailable" };
   }
-  if (
-    typeof meta.elapsedMs !== "number" ||
-    !Number.isFinite(meta.elapsedMs) ||
-    meta.elapsedMs < QUOTE_GUARD.minFillMs
-  )
-    return { ok: false, error: "tooFast" };
+  if (guard === "tooFast") return { ok: false, error: "tooFast" };
 
   const parsedContact = z.safeParse(quoteContactSchema, contact);
   if (!parsedContact.success)
@@ -74,13 +73,33 @@ export async function submitQuote(
   const parsedLines = z.safeParse(quoteLinesSchema, lines);
   if (!parsedLines.success) return { ok: false, error: "invalid" };
 
+  let ipHash: string;
   try {
-    const ipHash = await requestIpHash();
-    const since = new Date(Date.now() - QUOTE_GUARD.windowMs);
-    if ((await countRecentQuotesByIp(ipHash, since)) >= QUOTE_GUARD.maxPerWindow)
+    ipHash = await requestIpHash();
+  } catch (error) {
+    const reference = logError(error, { action: "submitQuote" });
+    return { ok: false, error: "unavailable", reference };
+  }
+  // Límite en memoria (BD-077): quien ya guardó 5 en 10 min no llega a consultar la base. Cuenta solo
+  // los envíos que se guardan: si este termina de otra forma, devuelve el cupo.
+  const slot = formRateLimiter("quote").take(ipHash);
+  if (!slot.ok) return { ok: false, error: "rateLimited" };
+  const result = await saveQuote(parsedContact.data, parsedLines.data, ipHash);
+  if (!result.ok) slot.release();
+  return result;
+}
+
+async function saveQuote(
+  contact: QuoteContact,
+  lines: QuoteLineInput[],
+  ipHash: string,
+): Promise<SubmitQuoteResult> {
+  try {
+    const since = new Date(Date.now() - FORM_GUARD.windowMs);
+    if ((await countRecentQuotesByIp(ipHash, since)) >= FORM_GUARD.maxPerWindow)
       return { ok: false, error: "rateLimited" };
 
-    const department = await departmentName(parsedContact.data.department);
+    const department = await departmentName(contact.department);
     if (!department)
       return {
         ok: false,
@@ -88,7 +107,7 @@ export async function submitQuote(
         fields: { department: feedback.forms.errors.required },
       };
     // Un producto que ya no se ve o una presentación que no es suya (lista vieja o alterada).
-    const resolved = await resolveQuoteItems(parsedLines.data);
+    const resolved = await resolveQuoteItems(lines);
     if (!resolved.ok)
       return resolved.stale.length > 0
         ? { ok: false, error: "staleItems", stale: resolved.stale }
@@ -97,28 +116,27 @@ export async function submitQuote(
     // El recuento de arriba evita trabajo con una IP que ya pasó el límite; el que vale se repite
     // dentro de la transacción (dos envíos simultáneos no se lo saltan).
     const saved = await saveQuoteRequest(
-      { contact: parsedContact.data, items: resolved.items, ipHash },
-      { max: QUOTE_GUARD.maxPerWindow, windowMs: QUOTE_GUARD.windowMs },
+      { contact, items: resolved.items, ipHash },
+      { max: FORM_GUARD.maxPerWindow, windowMs: FORM_GUARD.windowMs },
     );
 
     // Después de responder (el visitante ya tiene su folio), cada cosa por su lado:
     // - Correos (BD-074): a Ventas y el acuse. Con SMTP_MODE=file quedan en tmp/mails.
     // - SAP (docs/03 §5), solo si quedó en la base: con el interruptor del admin apagado queda
     //   `omitida` (la tarea de reintento solo toma las `pendiente`).
-    const c = parsedContact.data;
     after(() =>
       sendQuoteEmails(
         {
           quoteId: saved.id,
           folio: saved.folio,
-          customerType: c.customerType,
-          organization: c.organization,
-          name: c.name,
-          phone: c.phone,
-          email: c.email,
+          customerType: contact.customerType,
+          organization: contact.organization,
+          name: contact.name,
+          phone: contact.phone,
+          email: contact.email,
           departmentName: department,
-          municipality: c.municipality,
-          notes: c.notes,
+          municipality: contact.municipality,
+          notes: contact.notes,
           items: resolved.items,
           createdAt: new Date(),
         },

@@ -50,6 +50,7 @@ vi.mock("@/server/mail/transport", async (importOriginal) => {
 });
 
 const { submitQuote } = await import("@/features/quote/actions");
+const { formRateLimiter } = await import("@/server/rate-limit");
 const { listStoredMails } = await import("@/server/mail/transport");
 
 const contact = {
@@ -230,6 +231,40 @@ describe("submitQuote contra SQL Server (BD-073)", () => {
     );
     expect(results.filter((r) => r.ok)).toHaveLength(5);
     expect(results.filter((r) => !r.ok && r.error === "rateLimited")).toHaveLength(5);
+    expect(
+      await db.quoteRequest.count({
+        where: { organization: { startsWith: "Librería de prueba BD-073" } },
+      }),
+    ).toBe(5);
+  }, 60_000);
+
+  // BD-077: el límite en memoria rechaza antes; estas dos prueban el respaldo de la base, que vale
+  // aunque el proceso se reinicie (memoria vacía) o el límite en memoria no estuviera.
+  it("tras un reinicio (memoria vacía), la base sigue rechazando el sexto envío", async () => {
+    for (let i = 0; i < 5; i += 1)
+      expect(await submitQuote(contact, lines, meta)).toMatchObject({ ok: true });
+    formRateLimiter("quote").reset();
+    expect(await submitQuote(contact, lines, meta)).toEqual({ ok: false, error: "rateLimited" });
+    expect(
+      await db.quoteRequest.count({
+        where: { organization: { startsWith: "Librería de prueba BD-073" } },
+      }),
+    ).toBe(5);
+  });
+
+  it("sin el límite en memoria, 10 envíos simultáneos: la transacción guarda solo 5", async () => {
+    const take = vi
+      .spyOn(formRateLimiter("quote"), "take")
+      .mockReturnValue({ ok: true, release: () => {} });
+    try {
+      const results = await Promise.all(
+        Array.from({ length: 10 }, () => submitQuote(contact, lines, meta)),
+      );
+      expect(results.filter((r) => r.ok)).toHaveLength(5);
+      expect(results.filter((r) => !r.ok && r.error === "rateLimited")).toHaveLength(5);
+    } finally {
+      take.mockRestore();
+    }
     expect(
       await db.quoteRequest.count({
         where: { organization: { startsWith: "Librería de prueba BD-073" } },

@@ -230,8 +230,8 @@ Implementado en BD-034: `server/media/process-image.ts` (sharp) genera los 6 anc
 |---|---|
 | Transporte | HTTPS obligatorio, HSTS, redirección http→https y sin-www→www en IIS |
 | Cabeceras | CSP, `X-Content-Type-Options`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, `frame-ancestors 'none'` (ver doc 15) |
-| Formularios | Zod en servidor, honeypot, tiempo mínimo 3 s, límite 5 envíos/10 min por IP (hash), tamaño máximo |
-| Admin | iron-session (cookie `bolik_admin` cifrada, `httpOnly`, `secure`, `sameSite=lax`), contraseñas con bcryptjs (coste 12), sesión de 8 h, roles, bloqueo tras 5 intentos, `/admin` fuera de robots y sitemap |
+| Formularios | Zod en servidor, honeypot, tiempo mínimo 3 s, límite 5 envíos/10 min por IP (hash), tamaño máximo. Compartido (BD-077): `lib/form-guard.ts` (trampa y tiempo) y `server/rate-limit.ts` (límite en memoria, con la cuenta de la base como respaldo; IPv6 por su prefijo /64). Campo trampa lleno: la cotización responde «no se pudo» y no guarda; el resto de formularios, éxito falso (BD-076) |
+| Admin | iron-session (cookie `bolik_admin` cifrada, `httpOnly`, `secure`, `sameSite=lax`), contraseñas con bcryptjs (coste 12), sesión de 8 h, roles, bloqueo tras 5 intentos por cuenta y límite de 10 intentos fallidos en 15 min por IP (BD-077, antes de bcrypt; solo con la IP real del visitante), `/admin` fuera de robots y sitemap |
 | BD | Usuario SQL con permisos mínimos (sin `db_owner` en producción); migraciones con otro usuario |
 | ERP | API key en variable de entorno, solo desde servidor, timeout 8 s, reintentos con backoff |
 | Datos personales | Solo lo necesario; IP guardada como hash; retención de solicitudes 24 meses; página de privacidad |

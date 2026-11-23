@@ -267,10 +267,12 @@ BD-075,E6,Cotización y formularios,Confirmación de envío,S3,0.5,Must,A,BD-073
 - Evento `quote_submit`.",Sí
 BD-076,E6,Cotización y formularios,"Formularios de escuelas, distribuidores y contacto",S3,1,Must,B,BD-073,06,"Mismo patrón, distinto destino.","1. Server actions `submitSchoolVisit`, `submitDistributor`, `submitContact` reutilizando validación y anti-spam.
 2. Folios ESC y DIS; correo a la bandeja correspondiente.","- Cada formulario muestra su diálogo de éxito.
-- Registros visibles en el admin.",Sí
+- Registros visibles en el admin.
+- Un bot que llena el campo trampa recibe éxito falso y no se guarda (de BD-077).",Sí
 BD-077,E6,Cotización y formularios,Anti-spam compartido,S3,0.5,Must,B,BD-073,03 §8,Proteger formularios sin captcha molesto.,"1. `server/rate-limit.ts`: 5 envíos/10 min por hash de IP (memoria + respaldo en BD).
 2. Honeypot y tiempo mínimo de 3 s.","- El sexto envío en 10 min recibe un mensaje amable.
-- Un bot que llena el honeypot recibe éxito falso y no se guarda.",Sí
+- En la cotización, un bot que llena el honeypot recibe «no se pudo» y no se guarda (decisión del usuario, 23 nov 2026; el éxito falso pasa a BD-076).
+- Login del admin: 10 intentos fallidos en 15 min por IP (decisión del usuario).",Sí
 BD-080,E7,Dónde comprar,Dónde comprar: lista y filtros,S3,1,Must,A,BD-037 BD-023,06 §3.7,Encontrar una tienda cercana en segundos.,"1. Selector de departamento, lista de tiendas, cadenas con compra en línea.
 2. ""Cómo llegar"" abre Maps con coordenadas.","- Funciona sin JS (lista completa).
 - Eventos `store_filter`, `maps_click`, `retailer_click`.",Sí

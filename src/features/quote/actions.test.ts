@@ -36,7 +36,8 @@ vi.mock("@/server/log", () => ({
 }));
 
 const { submitQuote } = await import("./actions");
-const { QUOTE_GUARD } = await import("./guard");
+const { FORM_GUARD } = await import("@/lib/form-guard");
+const { formRateLimiter } = await import("@/server/rate-limit");
 
 const contact = {
   customerType: "libreria",
@@ -57,6 +58,8 @@ const item = {
 };
 
 beforeEach(() => {
+  // Todas las pruebas usan la misma IP: el límite en memoria (BD-077) empieza vacío en cada una.
+  formRateLimiter("quote").reset();
   mocks.count.mockResolvedValue(0);
   mocks.departmentName.mockResolvedValue("Quetzaltenango");
   mocks.resolve.mockResolvedValue({ ok: true, items: [item] });
@@ -85,7 +88,7 @@ describe("submitQuote (BD-073)", () => {
         items: [item],
         ipHash: "a".repeat(64),
       },
-      { max: QUOTE_GUARD.maxPerWindow, windowMs: QUOTE_GUARD.windowMs },
+      { max: FORM_GUARD.maxPerWindow, windowMs: FORM_GUARD.windowMs },
     );
     // SAP no corrió todavía: va en after().
     expect(mocks.sendToErp).not.toHaveBeenCalled();
@@ -159,7 +162,7 @@ describe("submitQuote (BD-073)", () => {
   });
 
   it("antes del tiempo mínimo o sin medirlo: tooFast, sin guardar", async () => {
-    for (const elapsedMs of [QUOTE_GUARD.minFillMs - 1, undefined, "9999", Number.NaN])
+    for (const elapsedMs of [FORM_GUARD.minFillMs - 1, undefined, "9999", Number.NaN])
       expect(await submitQuote(contact, lines, { ...meta, elapsedMs })).toEqual({
         ok: false,
         error: "tooFast",
@@ -168,11 +171,40 @@ describe("submitQuote (BD-073)", () => {
   });
 
   it("5 envíos de la misma IP en 10 minutos: rateLimited", async () => {
-    mocks.count.mockResolvedValue(QUOTE_GUARD.maxPerWindow);
+    mocks.count.mockResolvedValue(FORM_GUARD.maxPerWindow);
     expect(await submitQuote(contact, lines, meta)).toEqual({ ok: false, error: "rateLimited" });
     const since = mocks.count.mock.calls[0]![1] as Date;
-    expect(Date.now() - since.getTime()).toBeCloseTo(QUOTE_GUARD.windowMs, -3);
+    expect(Date.now() - since.getTime()).toBeCloseTo(FORM_GUARD.windowMs, -3);
     expect(mocks.save).not.toHaveBeenCalled();
+  });
+
+  it("límite en memoria (BD-077): el sexto envío guardado no llega a consultar la base", async () => {
+    for (let i = 0; i < FORM_GUARD.maxPerWindow; i++)
+      expect((await submitQuote(contact, lines, meta)).ok).toBe(true);
+    mocks.count.mockClear();
+    expect(await submitQuote(contact, lines, meta)).toEqual({ ok: false, error: "rateLimited" });
+    expect(mocks.count).not.toHaveBeenCalled();
+    expect(mocks.save).toHaveBeenCalledTimes(FORM_GUARD.maxPerWindow);
+  });
+
+  it("límite en memoria: un envío que no se guarda no gasta cupo", async () => {
+    mocks.departmentName.mockResolvedValue(null);
+    for (let i = 0; i < FORM_GUARD.maxPerWindow + 2; i++)
+      expect((await submitQuote(contact, lines, meta)).ok).toBe(false);
+    mocks.departmentName.mockResolvedValue("Quetzaltenango");
+    expect((await submitQuote(contact, lines, meta)).ok).toBe(true);
+  });
+
+  it("límite en memoria: un guardado que falla (también por el límite de la base) devuelve el cupo", async () => {
+    const { QuoteRateLimitError } = await import("@/server/data/quote-requests");
+    mocks.save.mockRejectedValue(new QuoteRateLimitError());
+    for (let i = 0; i < FORM_GUARD.maxPerWindow; i++)
+      expect(await submitQuote(contact, lines, meta)).toEqual({ ok: false, error: "rateLimited" });
+    mocks.save.mockRejectedValue(new Error("la base no respondió"));
+    for (let i = 0; i < FORM_GUARD.maxPerWindow; i++)
+      expect(await submitQuote(contact, lines, meta)).toMatchObject({ error: "unavailable" });
+    mocks.save.mockResolvedValue({ id: 7, folio: "COT-2026-000007", persisted: true });
+    expect((await submitQuote(contact, lines, meta)).ok).toBe(true);
   });
 
   it("datos inválidos: el error de cada campo, sin tocar la base", async () => {

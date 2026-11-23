@@ -46,7 +46,42 @@ export function hashIp(ip: string, secret: string = env.SESSION_SECRET): string 
   return createHmac("sha256", secret).update(ip).digest("hex");
 }
 
+/**
+ * Lo que identifica a quien visita para los límites (BD-077): la IPv4 entera y, en IPv6, solo el
+ * prefijo /64. Un acceso residencial con IPv6 recibe un /64 completo y podría estrenar dirección en
+ * cada intento para saltarse el límite (y llenar la memoria del limitador).
+ */
+export function ipKey(ip: string): string {
+  if (!ip.includes(":")) return ip;
+  const [head = "", tail] = ip.split("::");
+  const left = head ? head.split(":") : [];
+  const right = tail ? tail.split(":") : [];
+  const groups =
+    tail === undefined
+      ? left
+      : [...left, ...Array(8 - left.length - right.length).fill("0"), ...right];
+  return `${groups
+    .slice(0, 4)
+    .map((g) => g.replace(/^0+(?=.)/, ""))
+    .join(":")}::/64`;
+}
+
+/**
+ * ¿Es la IP real del visitante? No lo es «desconocida» (sin cabecera) ni la del propio servidor:
+ * sin X-Forwarded-For de ARR, Next pone la dirección del socket (127.0.0.1 o ::1, el proxy). En ese
+ * caso todos compartirían una clave y el límite por IP del login dejaría fuera a todo el equipo.
+ */
+export function isVisitorIp(ip: string): boolean {
+  return ip !== "desconocida" && ip !== "::1" && !/^127./.test(ip);
+}
+
 /** Hash de la IP de la petición en curso (Server Action o route handler). */
 export async function requestIpHash(): Promise<string> {
-  return hashIp(clientIp(await headers()));
+  return (await requestIp()).hash;
+}
+
+/** El hash y si es la IP de un visitante (el login solo limita por IP cuando lo es, BD-077). */
+export async function requestIp(): Promise<{ hash: string; visitor: boolean }> {
+  const ip = clientIp(await headers());
+  return { hash: hashIp(ipKey(ip)), visitor: isVisitorIp(ip) };
 }
