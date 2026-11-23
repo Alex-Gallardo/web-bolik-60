@@ -13,6 +13,12 @@ export const ADMIN_SESSION_SECONDS = 8 * 60 * 60;
 /** Bloqueo tras 5 intentos fallidos, por 15 minutos (feedback.admin.loginLocked). */
 export const LOGIN_MAX_ATTEMPTS = 5;
 export const LOGIN_LOCK_MINUTES = 15;
+/**
+ * Límite por IP (BD-077, decisión del usuario): 10 intentos fallidos en 15 minutos desde la misma IP,
+ * con cualquier correo. Pasado, responde como una cuenta bloqueada, sin correr bcrypt.
+ */
+export const LOGIN_IP_MAX_FAILURES = 10;
+export const LOGIN_IP_WINDOW_MINUTES = 15;
 /** Coste de bcrypt (docs/05 §2): el seed, admin:create y el hash de relleno del login. */
 export const BCRYPT_COST = 12;
 /**

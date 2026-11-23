@@ -95,6 +95,8 @@ Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowe
 Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowedServerVariables' -name '.' -value @{name='HTTP_X_FORWARDED_HOST'}
 ```
 
+> **Comprobar tras desplegar (BD-077):** que Node reciba la IP del visitante y no la del propio servidor. Sin `X-Forwarded-For`, Next toma la del socket (127.0.0.1 o ::1, el proxy): los formularios comparten entonces un solo cupo de 5 envíos en 10 minutos y el login deja de limitar por IP (le queda el bloqueo por cuenta). El límite por IP del login vive en la memoria del proceso: con un solo proceso de Node (el servicio de §5) hay un solo cupo por IP.
+
 ### 4.3 Sitio IIS
 
 - Sitio `bolik66` con enlaces `https://www.bolik66.com:443` y `https://bolik66.com:443` (SNI) y `http` en el 80 para redirigir.

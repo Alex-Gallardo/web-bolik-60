@@ -124,6 +124,7 @@ bolik-digital/
 │  │  ├─ redirect-path.ts       # rutas normalizadas y mapa de redirecciones (BD-046)
 │  │  ├─ folio.ts               # formato, regex y año (hora de Guatemala) de los folios (BD-033)
 │  │  ├─ form-schemas.ts        # piezas de Zod compartidas (teléfono GT, correo, NIT, cantidad)
+│  │  ├─ form-guard.ts          # antiabuso de formularios: campo trampa, tiempo mínimo y las cifras de FORM_GUARD (BD-077)
 │  ├─ content/                  # textos de interfaz
 │  │  ├─ feedback.ts            # todos los mensajes de toasts y diálogos
 │  │  ├─ ui.ts                  # textos de interfaz que no son feedback (Enviando…, Guardando…)

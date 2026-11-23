@@ -16,7 +16,7 @@ import {
 import { authenticate } from "@/server/auth/login";
 import { createAdminSession, destroyAdminSession } from "@/server/auth/session";
 import { logError } from "@/server/log";
-import { requestIpHash } from "@/server/request-ip";
+import { requestIp } from "@/server/request-ip";
 import { loginSchema } from "./schema";
 
 /** De vuelta al login con el error y la ruta pedida; nunca el correo (no va en la URL). */
@@ -47,7 +47,10 @@ export async function login(form: FormData): Promise<void> {
   const started = performance.now();
   let outcome;
   try {
-    outcome = await authenticate(parsed.data.email, parsed.data.password, await requestIpHash());
+    const ip = await requestIp();
+    outcome = await authenticate(parsed.data.email, parsed.data.password, ip.hash, new Date(), {
+      limitByIp: ip.visitor,
+    });
   } catch (error) {
     logError(error, { action: "admin.login" });
     backToLogin("unavailable", next);

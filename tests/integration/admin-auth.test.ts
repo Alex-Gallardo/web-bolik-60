@@ -41,9 +41,10 @@ vi.mock("next/navigation", () => ({
 }));
 
 const { login, logout } = await import("@/features/admin/actions");
-const { authenticate } = await import("@/server/auth/login");
+const { authenticate, resetLoginMemory } = await import("@/server/auth/login");
 const { checkRole, requireRole, hasAdminSession } = await import("@/server/auth/guards");
-const { ADMIN_PERMISSIONS } = await import("@/lib/admin-access");
+const { ADMIN_PERMISSIONS, LOGIN_IP_MAX_FAILURES, LOGIN_IP_WINDOW_MINUTES } =
+  await import("@/lib/admin-access");
 
 const PASSWORD = "contraseña-de-prueba-BD-114";
 const PREFIX = "it-bd114-";
@@ -78,6 +79,8 @@ afterAll(async () => {
 
 beforeEach(async () => {
   state.jar.clear();
+  // Las pruebas repiten la IP "hash": el límite por IP (BD-077) empieza vacío en cada una.
+  resetLoginMemory();
   await db.adminUser.updateMany({
     where: { email: { startsWith: PREFIX } },
     data: { failedLogins: 0, lockedUntil: null, active: true },
@@ -176,8 +179,9 @@ describe("login (BD-114)", () => {
   it("una ráfaga de 10 intentos fallidos a la vez bloquea una sola vez y cuenta solo hasta el quinto", async () => {
     const now = new Date();
     const results = await Promise.all(
-      Array.from({ length: 10 }, () =>
-        authenticate(email("admin"), "mala-contraseña-1", "hash", now),
+      // Una IP por intento: aquí se prueba el bloqueo por cuenta, no el límite por IP (BD-077).
+      Array.from({ length: 10 }, (_, i) =>
+        authenticate(email("admin"), "mala-contraseña-1", `rafaga-${i}`, now),
       ),
     );
     const errors = results.map((r) => (r.ok ? "ok" : r.error));
@@ -231,6 +235,97 @@ describe("login (BD-114)", () => {
       ok: false,
       error: "invalid",
     });
+  });
+});
+
+describe("límite de intentos por IP (BD-077)", () => {
+  /** Correos distintos que no existen: sin bloquear ninguna cuenta, solo cuenta la IP. */
+  const ghost = (i: number) => `${PREFIX}ip-${i}-${Date.now()}@bolik66.test`;
+
+  it("pasados 10 intentos fallidos desde una IP, el siguiente se rechaza sin correr bcrypt, aun con la contraseña correcta", async () => {
+    const now = new Date();
+    for (let i = 0; i < LOGIN_IP_MAX_FAILURES; i++)
+      expect(await authenticate(ghost(i), "una-clave-x", "ip-a", now)).toEqual({
+        ok: false,
+        error: "invalid",
+      });
+    const compare = vi.spyOn(bcrypt, "compare");
+    try {
+      expect(await authenticate(email("admin"), PASSWORD, "ip-a", now)).toEqual({
+        ok: false,
+        error: "locked",
+      });
+      expect(compare).not.toHaveBeenCalled();
+    } finally {
+      compare.mockRestore();
+    }
+    // La cuenta no quedó bloqueada: desde otra IP entra.
+    expect((await authenticate(email("admin"), PASSWORD, "ip-b", now)).ok).toBe(true);
+    // Pasada la ventana, la IP vuelve a poder intentar.
+    const later = new Date(now.getTime() + LOGIN_IP_WINDOW_MINUTES * 60_000 + 1);
+    expect((await authenticate(email("admin"), PASSWORD, "ip-a", later)).ok).toBe(true);
+  });
+
+  it("un acceso correcto no gasta cupo de la IP", async () => {
+    const now = new Date();
+    for (let i = 0; i < LOGIN_IP_MAX_FAILURES - 1; i++)
+      await authenticate(ghost(i), "una-clave-x", "ip-c", now);
+    expect((await authenticate(email("editor"), PASSWORD, "ip-c", now)).ok).toBe(true);
+    expect(await authenticate(ghost(99), "una-clave-x", "ip-c", now)).toEqual({
+      ok: false,
+      error: "invalid",
+    });
+    expect(await authenticate(ghost(100), "una-clave-x", "ip-c", now)).toEqual({
+      ok: false,
+      error: "locked",
+    });
+  });
+
+  it("una ráfaga de 20 intentos a la vez desde una IP corre bcrypt solo 10 veces", async () => {
+    const now = new Date();
+    const compare = vi.spyOn(bcrypt, "compare");
+    try {
+      const outcomes = await Promise.all(
+        Array.from({ length: 20 }, (_, i) => authenticate(ghost(i), "una-clave-x", "ip-d", now)),
+      );
+      expect(compare).toHaveBeenCalledTimes(LOGIN_IP_MAX_FAILURES);
+      expect(outcomes.filter((o) => !o.ok && o.error === "locked")).toHaveLength(10);
+    } finally {
+      compare.mockRestore();
+    }
+  });
+
+  it("sin la IP del visitante (ARR sin X-Forwarded-For: la del servidor), no se limita por IP", async () => {
+    state.ip = "127.0.0.1";
+    try {
+      for (let i = 0; i < LOGIN_IP_MAX_FAILURES + 2; i++)
+        await submitLogin({ email: ghost(i), password: "una-clave-x", siguiente: "/admin" });
+      const { redirect } = await submitLogin({
+        email: email("admin"),
+        password: PASSWORD,
+        siguiente: "/admin",
+      });
+      expect(redirect).toBe("/admin");
+    } finally {
+      state.ip = "10.0.0.7";
+    }
+  });
+
+  it("la acción de login pasado el límite vuelve al login con el aviso de bloqueo", async () => {
+    state.ip = "10.0.0.77";
+    try {
+      for (let i = 0; i < LOGIN_IP_MAX_FAILURES; i++)
+        await submitLogin({ email: ghost(i), password: "una-clave-x", siguiente: "/admin" });
+      const { redirect } = await submitLogin({
+        email: email("admin"),
+        password: PASSWORD,
+        siguiente: "/admin",
+      });
+      expect(loginError(redirect)).toBe("locked");
+      expect(state.jar.size).toBe(0);
+    } finally {
+      state.ip = "10.0.0.7";
+    }
   });
 });
 

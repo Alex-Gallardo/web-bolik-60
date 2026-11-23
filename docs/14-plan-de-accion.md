@@ -1758,6 +1758,9 @@ Mismo patrón, distinto destino.
 
 - [ ] Cada formulario muestra su diálogo de éxito.
 - [ ] Registros visibles en el admin.
+- [ ] Un bot que llena el campo trampa recibe éxito falso y no se guarda (de BD-077).
+
+*Nota de BD-077:* el antiabuso ya es compartido. En cada acción: `checkFormMeta(meta)` (`lib/form-guard.ts`: `bot` o `tooFast`), `formRateLimiter("school" | "distributor" | "contact").take(ipHash)` (`server/rate-limit.ts`) antes de tocar la base y `release()` si el envío no se guarda, y la cuenta por IP de su tabla (`ipHash`, 5 en 10 min, `FORM_GUARD`) repetida al guardar. Campo trampa lleno: **éxito falso sin guardar** (criterio de BD-077). En contacto no hay folio; escuelas y distribuidores sí lo tienen (ESC, DIS): decidir en este ticket si el éxito falso muestra un folio inventado o se responde «no se pudo», como la cotización (BD-077 explica por qué ahí se eligió lo segundo).
 
 #### BD-077 · Anti-spam compartido
 
@@ -1773,9 +1776,20 @@ Proteger formularios sin captcha molesto.
 **Criterios de aceptación**
 
 - [ ] El sexto envío en 10 min recibe un mensaje amable.
-- [ ] Un bot que llena el honeypot recibe éxito falso y no se guarda.
+- [ ] ~~Un bot que llena el honeypot recibe éxito falso y no se guarda.~~ En la cotización responde «no se pudo» y no guarda (decisión del usuario, 23 nov 2026); el éxito falso pasa a los criterios de BD-076.
 
-*Nota de BD-114:* el login del admin tiene bloqueo por cuenta (5 intentos, 15 min), pero no límite por IP: al crear `server/rate-limit.ts`, aplicarlo también a la acción `login` (`features/admin/actions.ts`) contra quien prueba muchos correos desde la misma IP. Es prioritario: bcryptjs es JS puro y cada intento ocupa ~230 ms de CPU en el mismo proceso que sirve el sitio público, y sin límite por IP cualquiera puede bloquear las cuentas cuyos correos adivine (5 intentos cada 15 minutos).
+**Implementado (BD-077)**
+
+- **`server/rate-limit.ts`:** `createRateLimiter({ max, windowMs })` cuenta por clave (el hash de la IP) en una ventana deslizante en memoria. `take` revisa y cuenta en el mismo paso, sin `await`, así una ráfaga a la vez no se lo salta; `release` devuelve el cupo si al final no debía contar. Tope de 10 000 claves (olvida las usadas hace más tiempo). `formRateLimiter(form)` da el de cada formulario (5 en 10 min).
+- **`lib/form-guard.ts`:** `FORM_GUARD` (3 s, 5 envíos en 10 min) y `checkFormMeta` (campo trampa y tiempo mínimo), antes dentro de `features/quote` (`guard.ts` se borró).
+- **Cotización:** `submitQuote` usa los dos. El límite en memoria va antes de la base (un bot que insiste no hace consultas) y cuenta solo envíos guardados; la cuenta de la base sigue valiendo y se repite en la transacción (sobrevive a un reinicio). El sexto envío en 10 min recibe `rateLimited` con su mensaje amable (`feedback.forms.rateLimited`).
+- **Campo trampa en la cotización (decisión del usuario, 23 nov 2026):** sigue respondiendo «no se pudo» (`unavailable`) y no éxito falso: si fuera una persona con un autocompletado raro, no pierde su cotización creyendo que llegó. El éxito falso del criterio queda para los formularios de BD-076 (nota en ese ticket).
+- **Clave de los límites** (`server/request-ip.ts`, `ipKey`): la IPv4 entera y, en IPv6, el prefijo /64; un acceso residencial recibe un /64 entero y podría estrenar dirección en cada intento. Vale para la cotización y el login.
+- **Login del admin (decisión del usuario: 10 intentos fallidos en 15 min por IP):** `authenticate` cuenta el intento por IP antes de buscar el correo y de correr bcrypt; pasado el límite responde `locked`, el mismo aviso que una cuenta bloqueada (sin texto nuevo y sin delatar nada), con el mismo tiempo mínimo de 600 ms. Un acceso correcto devuelve el cupo; un fallo de la base también. Solo en memoria (por proceso: si IIS levantara más de un proceso de Node, cada uno llevaría su cupo): el bloqueo por cuenta ya queda en la base y una fila por intento fallido dejaría a un atacante llenar `AuditLog`. Sin la IP real del visitante (sin X-Forwarded-For, o con la del propio servidor, 127.0.0.1 o ::1: Next pone la del socket) no limita por IP: todos compartirían un cupo y diez fallos de cualquiera dejarían fuera al equipo; queda el bloqueo por cuenta. El aviso en el log sale como mucho una vez por minuto (los rechazos no corren bcrypt).
+- **Aviso al visitante:** pasado el límite por IP se muestra `admin.loginLocked` («Cuenta bloqueada por 15 minutos · Hubo 5 intentos fallidos…»), que en ese caso no es exacto (la cuenta no está bloqueada). Pendiente un texto neutro del usuario para docs/17 que sirva para los dos casos.
+- **Pruebas:** unitarias del limitador (ventana, ráfaga, `release`, tope de claves), de `checkFormMeta` y de `ipKey`/`isVisitorIp`; `submitQuote` (el sexto envío no consulta la base; un envío que no se guarda, por validación, por el límite de la base o por un error, no gasta cupo); integración de la cotización (tras un reinicio la base sigue rechazando el sexto; sin el límite en memoria, una ráfaga de 10 guarda solo 5); integración del login (el intento 11 desde una IP se rechaza sin correr bcrypt aun con la contraseña correcta, otra IP entra, una ráfaga de 20 corre bcrypt solo 10 veces, con 127.0.0.1 no se limita, la acción vuelve con `?error=locked`). Los criterios de la cotización (sexto envío, campo trampa sin guardar) ya los cubrían `quote.test.ts` y `actions.test.ts`.
+
+*Nota de BD-114 (hecha en BD-077):* el login del admin tiene bloqueo por cuenta (5 intentos, 15 min), pero no límite por IP: al crear `server/rate-limit.ts`, aplicarlo también a la acción `login` (`features/admin/actions.ts`) contra quien prueba muchos correos desde la misma IP. Es prioritario: bcryptjs es JS puro y cada intento ocupa ~230 ms de CPU en el mismo proceso que sirve el sitio público, y sin límite por IP cualquiera puede bloquear las cuentas cuyos correos adivine (5 intentos cada 15 minutos).
 
 ### E7 · Dónde comprar
 
@@ -2483,6 +2497,8 @@ Administración del propio panel.
 1. CRUD de usuarios y roles, desbloquear.
 2. Bitácora filtrable.
 3. Historial de `SyncRun` y "Sincronizar ahora".
+
+*Nota de BD-077:* «desbloquear» limpia el bloqueo por cuenta (base), no el límite de 10 intentos por IP en 15 minutos, que vive en la memoria del proceso: si alguien sigue viendo el aviso tras desbloquearlo, es ese límite (el log lo dice: «demasiados intentos fallidos desde la misma IP»). Decidir aquí si «desbloquear» también lo vacía o la interfaz lo explica.
 
 **Notas de la revisión de BD-030**
 
