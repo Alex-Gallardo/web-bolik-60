@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import type { Prisma, PrismaClient } from "../../src/generated/prisma/client";
+import { BCRYPT_COST } from "../../src/lib/admin-access";
 import type { Role } from "../../src/lib/constants";
 import { dataForProfile, seedMode, type SeedMode, type SeedProfile } from "./profiles";
 import type { SeedData } from "./schema";
@@ -23,8 +24,8 @@ export type SeedAdmin = { email: string; password: string; name?: string };
 
 export type SeedOptions = { profile: SeedProfile; admin?: SeedAdmin };
 
-/** Coste de bcrypt del doc 05 §2. */
-export const BCRYPT_COST = 12;
+/** Coste de bcrypt del doc 05 §2: uno solo para el seed, admin:create y el login. */
+export { BCRYPT_COST };
 
 /** Las tablas que llena el seed y cuántas filas tienen al terminar. */
 export type SeedReport = Record<string, number>;

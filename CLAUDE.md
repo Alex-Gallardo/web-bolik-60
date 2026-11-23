@@ -49,6 +49,7 @@ pnpm db:status        # ¿la base está al día con las migraciones?
 pnpm db:generate      # regenera el cliente (también corre en pnpm install)
 pnpm db:reset:test    # borra y recrea BolikDigital_Test (manual; nunca lo corre un agente)
 pnpm db:seed          # datos iniciales: --profile dev (por defecto) | e2e | prod (solo crea lo que falta, sin ejemplos)
+pnpm admin:create     # crea un usuario del admin (pide la contraseña sin mostrarla; --remoto fuera de _Dev/_Test)
 pnpm import:media     # procesa en lote las fotos de una carpeta (WebP 320…1920) y las registra en MediaAsset
 pnpm media:samples    # pósters y videos del hero y fotos de producto provisionales en MEDIA_DIR (carpetas de la demo y de fotos; no van al repo)
 pnpm sync:catalog     # sincroniza artículos desde SMART-K66

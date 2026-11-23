@@ -260,6 +260,13 @@ La fuente única de toasts y diálogos es `src/content/feedback.ts` (starter). E
 | Cerrar diálogo | Cerrar |
 | Admin, tabla vacía | Todavía no hay {elementos}. |
 | Admin, sin resultados | No encontramos {elementos} con esos filtros. |
+| Admin, login: título y h1 | Panel de Bolik |
+| Admin, login: campos y botón | Correo · Contraseña · Entrar |
+| Admin, login: datos incorrectos | El correo o la contraseña no coinciden |
+| Admin, login: sin base de datos | El panel no está disponible en este momento. Inténtalo más tarde. |
+| Admin, sin permiso | No tienes permiso para esa sección |
+| Admin, inicio provisional (BD-114) | Hola, {nombre} · Cerrar sesión |
+| Admin, al cerrar sesión | Cerraste sesión |
 
 ## 6. Metadatos
 

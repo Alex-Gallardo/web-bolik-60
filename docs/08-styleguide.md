@@ -161,6 +161,11 @@ En la página: `const look = await getSectionAppearance("home.solutions")` → `
 | Admin: subir imagen | Barra de progreso → toast "Imagen lista" | Inline + Toast | `admin.uploadOk` |
 | Admin: falta alt | Advertencia junto a la imagen; no deja publicar | Inline | `admin.altMissing` |
 | Admin: sesión vencida | Toast + redirección al login conservando el formulario | Toast | `admin.sessionExpired` |
+| Admin: login con datos incorrectos | Aviso arriba del formulario (vuelve al login); el mismo para un correo que no existe | Inline | `admin.loginInvalid` |
+| Admin: cuenta bloqueada (5 intentos) | Aviso arriba del formulario | Inline | `admin.loginLocked` |
+| Admin: panel no disponible (sin base) | Aviso arriba del formulario | Inline | `admin.loginUnavailable` |
+| Admin: sección sin permiso | Redirección al inicio del admin con aviso (toast con BD-115) | Inline | `admin.forbidden` |
+| Admin: cerrar sesión | Vuelve al login con aviso | Inline | `admin.loggedOut` |
 
 ### `FriendlyDialog`
 

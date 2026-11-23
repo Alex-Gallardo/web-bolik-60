@@ -41,7 +41,7 @@ model AuditLog {
   id        Int        @id @default(autoincrement())
   userId    Int?
   user      AdminUser? @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  action    String     @db.VarChar(40) // create | update | delete | publish | login | sync
+  action    String     @db.VarChar(40) // create | update | delete | publish | login | lock | sync
   entity    String     @db.VarChar(40)
   entityId  String     @db.VarChar(60)
   diff      String?    @db.NVarChar(Max) // JSON con antes/después
