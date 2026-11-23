@@ -97,6 +97,30 @@ describe("datos de prisma/seed", () => {
     expect(issuesOf(data)).toContain("ruta interna que empieza con una sola /");
   });
 
+  it("el CTA secundario del hero es interno y lleva texto y enlace (BD-050)", () => {
+    const data = clone();
+    data.content.heroChapters[0]!.secondaryCtaHref = "//evil.example.com";
+    expect(issuesOf(data)).toContain("ruta interna que empieza con una sola /");
+    const sinTexto = clone();
+    delete (sinTexto.content.heroChapters[1] as { secondaryCtaLabel?: string }).secondaryCtaLabel;
+    expect(issuesOf(sinTexto)).toContain("el CTA secundario lleva texto y enlace, o ninguno");
+  });
+
+  it("el póster del hero existe en media.json y, si es de ejemplo, va marcado (BD-050)", () => {
+    const data = clone();
+    data.content.heroChapters[0]!.posterKey = "hero/no-existe-00000000";
+    expect(issuesOf(data)).toContain("póster hero/no-existe-00000000 no está en media.json");
+    const sinMarca = clone();
+    sinMarca.content.heroChapters[0]!.sampleMedia = false;
+    expect(issuesOf(sinMarca)).toContain("un póster de ejemplo requiere sampleMedia");
+    const claveMala = clone();
+    claveMala.media[0]!.key = "Hero/Planta.jpg";
+    expect(issuesOf(claveMala)).toContain("clave carpeta/nombre-hash8 de process-image.ts");
+    const repetida = clone();
+    repetida.media.push({ ...repetida.media[0]! });
+    expect(issuesOf(repetida)).toContain("hero/planta-c6dcd764 repetido");
+  });
+
   it("rechaza una clave de ajuste desconocida", () => {
     const data = clone();
     (data.settings as Record<string, string>).color_favorito = "azul";

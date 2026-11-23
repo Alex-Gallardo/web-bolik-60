@@ -34,6 +34,15 @@
   --on-dark: #dce3ff;
   --on-dark-muted: #aab6e6;
 
+  /* ── Por tono (BD-054): backgrounds.css los cambia en data-tone="dark" ── */
+  --heading: var(--ink); /* títulos y etiquetas fuertes */
+  --accent-text: var(--blue); /* textos de acento: eyebrows, años, íconos */
+  /* Copias del tono claro, fijadas en :root: [data-tone="light"] las restaura dentro de una
+     sección oscura (una tarjeta blanca sobre navy). */
+  --text-light: var(--text);
+  --muted-light: var(--muted);
+  --line-light: var(--line);
+
   /* ── Sub-paleta escuelas (solo /escuelas y su sección en home) ── */
   --sun: #ffd23f;
   --coral: #ff5a4e;

@@ -48,6 +48,19 @@ export function newRequestId(): string {
 }
 
 /**
+ * Los errores de Prisma pueden traer en el mensaje los datos de la llamada (nombres, notas): de
+ * ellos solo se registra el tipo, el código y `meta`. redact() oculta correos y teléfonos, no
+ * nombres.
+ */
+function safeError(error: unknown): unknown {
+  if (error instanceof Error && error.name.startsWith("PrismaClient")) {
+    const { code, meta } = error as Error & { code?: unknown; meta?: unknown };
+    return { name: error.name, code, meta };
+  }
+  return error;
+}
+
+/**
  * Registra un error de una Server Action y devuelve su código de referencia para el mensaje al
  * visitante. El contexto se limpia igual que todo el log, pero no le pases datos personales.
  */
@@ -57,7 +70,7 @@ export function logError(
   logger: Logger = log,
 ): string {
   const requestId = newRequestId();
-  logger.error({ ...context, requestId, err: error }, "error en acción");
+  logger.error({ ...context, requestId, err: safeError(error) }, "error en acción");
   return requestId;
 }
 

@@ -112,7 +112,9 @@ export default function FriendlyDialog({ request, open, busy }: FriendlyDialogPr
         onEscapeKeyDown={block}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
-          takeReturnFocus()?.focus();
+          // Si lo que lo abrió ya no existe (un formulario que se vació al enviar), el foco va al
+          // contenido principal y no se pierde en <body>.
+          (takeReturnFocus() ?? document.getElementById("contenido"))?.focus();
         }}
         onInteractOutside={block}
         // Confirmación destructiva: el foco empieza en «Cancelar», no en «Sí, eliminar».

@@ -7,6 +7,18 @@
 @import "../styles/motion.css" layer(components);
 @import "../styles/backgrounds.css" layer(components);
 
+/* Controles que solo funcionan con JS (filtros del catálogo, BD-060): sin JS no se muestran. Fuera
+   de las capas: ninguna utilidad de display (flex, block) le gana. */
+html:not(.js) .js-only {
+  display: none;
+}
+/* En /productos, la barra de filtros (fija en móvil) se suma al header: el foco no queda debajo. */
+@media (max-width: 63.99rem) {
+  html:has(#catalogo-filtros) {
+    scroll-padding-top: calc(var(--header-h) + 4.5rem);
+  }
+}
+
 /* Tailwind v4
    1) Colores: se mapean desde tokens.css con nombres distintos (sin referencias circulares).
       Se quita la paleta por defecto de Tailwind: solo existen los colores de la marca.
@@ -46,6 +58,8 @@
   --color-paper: var(--paper);
   --color-on-dark: var(--on-dark);
   --color-on-dark-muted: var(--on-dark-muted);
+  --color-heading: var(--heading);
+  --color-accent-text: var(--accent-text);
   --color-sun: var(--sun);
   --color-coral: var(--coral);
   --color-kblue: var(--kblue);
@@ -111,7 +125,7 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    color: var(--ink);
+    color: var(--heading);
     letter-spacing: var(--tracking-tight);
     line-height: var(--lh-heading);
     text-wrap: balance;

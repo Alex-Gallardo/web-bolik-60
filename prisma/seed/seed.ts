@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import type { Prisma, PrismaClient } from "../../src/generated/prisma/client";
+import { BCRYPT_COST } from "../../src/lib/admin-access";
 import type { Role } from "../../src/lib/constants";
 import { dataForProfile, seedMode, type SeedMode, type SeedProfile } from "./profiles";
 import type { SeedData } from "./schema";
@@ -23,8 +24,8 @@ export type SeedAdmin = { email: string; password: string; name?: string };
 
 export type SeedOptions = { profile: SeedProfile; admin?: SeedAdmin };
 
-/** Coste de bcrypt del doc 05 §2. */
-export const BCRYPT_COST = 12;
+/** Coste de bcrypt del doc 05 §2: uno solo para el seed, admin:create y el login. */
+export { BCRYPT_COST };
 
 /** Las tablas que llena el seed y cuántas filas tienen al terminar. */
 export type SeedReport = Record<string, number>;
@@ -65,6 +66,8 @@ export async function seedDatabase(
       lineGroup: c.lineGroup,
       shortText: c.shortText,
       intro: c.intro ?? null,
+      seoTitle: c.seoTitle ?? null,
+      seoDescription: c.seoDescription ?? null,
       published: c.published,
       sortOrder,
     };
@@ -183,6 +186,66 @@ export async function seedDatabase(
     });
   }
 
+  // Imágenes ya procesadas (media.json, BD-050): la fila de MediaAsset que resuelve el póster del
+  // hero. Los archivos los pone `pnpm media:samples` en MEDIA_DIR; en prod no hay ejemplos.
+  for (const m of data.media) {
+    const row = {
+      kind: "image",
+      originalName: m.originalName,
+      mime: "image/webp",
+      width: m.width,
+      height: m.height,
+      bytes: m.bytes,
+      defaultAlt: m.alt,
+    };
+    await db.mediaAsset.upsert({
+      where: { key: m.key },
+      create: { key: m.key, ...row },
+      update: updateFor(mode, row),
+    });
+  }
+
+  // Fotos de cada producto (BD-062), ya con sus MediaAsset. Como las relaciones: en prod solo
+  // los productos recién creados (no se pisa lo editado en el admin).
+  const mediaIds = new Map(
+    (await db.mediaAsset.findMany({ select: { id: true, key: true } })).map((m) => [m.key, m.id]),
+  );
+  for (const p of data.products) {
+    const productId = productIds.get(p.slug);
+    if (productId === undefined) continue;
+    if (mode === "create-only" && !createdProducts.has(p.slug)) continue;
+    const colorIds = new Map(
+      (
+        await db.productVariant.findMany({
+          where: { productId },
+          select: { id: true, colorKey: true },
+        })
+      ).map((v) => [v.colorKey, v.id]),
+    );
+    const images = p.images.flatMap((image) => {
+      const mediaId = mediaIds.get(image.mediaKey);
+      return mediaId === undefined ? [] : [{ ...image, mediaId }];
+    });
+    await db.$transaction(async (tx) => {
+      await tx.productImage.deleteMany({
+        where: { productId, mediaId: { notIn: images.map((i) => i.mediaId) } },
+      });
+      for (const [sortOrder, image] of images.entries()) {
+        const row = {
+          variantId: image.colorKey ? (colorIds.get(image.colorKey) ?? null) : null,
+          kind: image.kind,
+          alt: data.media.find((m) => m.key === image.mediaKey)!.alt,
+          sortOrder,
+        };
+        await tx.productImage.upsert({
+          where: { productId_mediaId: { productId, mediaId: image.mediaId } },
+          create: { productId, mediaId: image.mediaId, ...row },
+          update: row,
+        });
+      }
+    }, TX_OPTIONS);
+  }
+
   await seedContent(db, data.content, mode);
 
   const skuIds = new Map(
@@ -278,6 +341,7 @@ async function upsertProduct(
 ): Promise<number> {
   const row = {
     name: p.name,
+    brand: p.brand,
     tagline: p.tagline ?? null,
     shortDescription: p.shortDescription,
     description: p.description ?? null,
@@ -287,6 +351,8 @@ async function upsertProduct(
     featured: p.featured,
     published: p.published,
     isSample: p.sample,
+    seoTitle: p.seoTitle ?? null,
+    seoDescription: p.seoDescription ?? null,
     sortOrder,
   };
   const { id: productId } = await tx.product.upsert({
@@ -421,6 +487,8 @@ async function seedContent(db: Db, content: SeedData["content"], mode: SeedMode)
       ctaKind: h.ctaKind,
       ctaHref: h.ctaHref ?? null,
       ctaQuoteType: h.ctaQuoteType ?? null,
+      secondaryCtaLabel: h.secondaryCtaLabel ?? null,
+      secondaryCtaHref: h.secondaryCtaHref ?? null,
       videoDesktop: h.videoDesktop ?? null,
       videoMobile: h.videoMobile ?? null,
       posterKey: h.posterKey ?? null,

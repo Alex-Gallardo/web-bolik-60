@@ -5,12 +5,16 @@ import type {
   CategoryView,
   DataSource,
   DepartmentView,
+  ImageView,
   ProductCardView,
+  ProductImageView,
   ProductView,
   SpecGroupView,
   StoreView,
   VariantView,
 } from "../types";
+import { settingsForProfile } from "../../../../prisma/seed/profiles";
+import { cardImage, visibleImages } from "../product-images";
 import { toSiteSettings } from "../settings-view";
 import { seedData } from "./load";
 
@@ -24,6 +28,14 @@ type Product = SeedData["products"][number];
 
 const categoryHref = (slug: string) => `/productos/${slug}`;
 const productHref = (categorySlug: string, slug: string) => `/productos/${categorySlug}/${slug}`;
+
+/** Imagen del manifiesto media.json (BD-050), con la misma forma que la de MediaAsset. */
+function mediaImage(key: string): ImageView | null {
+  const m = seedData().media.find((asset) => asset.key === key);
+  return m
+    ? { src: `/media/${m.key}`, alt: m.alt, width: m.width, height: m.height, blurDataUrl: null }
+    : null;
+}
 
 /** Productos visibles: publicados y de una categoría publicada. */
 function visibleProducts(data: SeedData): Product[] {
@@ -40,20 +52,34 @@ function toVariant(variant: Product["variants"][number]): VariantView {
   };
 }
 
+/** Fotos de la galería con las medidas y el alt del manifiesto (media.json). */
+function toImages(product: Product): ProductImageView[] {
+  const images = product.images.flatMap((image): ProductImageView[] => {
+    const media = mediaImage(image.mediaKey);
+    return media ? [{ ...media, kind: image.kind, colorKey: image.colorKey ?? null }] : [];
+  });
+  return visibleImages(
+    images,
+    product.variants.filter((v) => v.published).map((v) => v.colorKey),
+  );
+}
+
 function toCard(data: SeedData, product: Product): ProductCardView {
   const category = data.categories.find((c) => c.slug === product.categorySlug)!;
   const variants = product.variants.filter((v) => v.published);
   return {
     slug: product.slug,
     name: product.name,
+    brand: product.brand,
     href: productHref(category.slug, product.slug),
     category: { slug: category.slug, name: category.name, lineGroup: category.lineGroup },
     shortDescription: product.shortDescription,
     colors: variants.map((v) => ({ key: v.colorKey, name: v.colorName, hex: v.colorHex })),
     skus: variants.map((v) => v.sku),
+    useSlugs: data.useTags.filter((u) => product.uses.includes(u.slug)).map((u) => u.slug),
     featured: product.featured,
     sample: product.sample,
-    image: null, // las fotos llegan con BD-034
+    image: cardImage(toImages(product), variants.find((v) => v.isDefault)?.colorKey),
   };
 }
 
@@ -67,6 +93,10 @@ function toProduct(data: SeedData, product: Product): ProductView {
   }
   return {
     ...toCard(data, product),
+    seoTitle: product.seoTitle ?? null,
+    seoDescription: product.seoDescription ?? null,
+    updatedAt: null, // los JSON no dicen cuándo cambió (no se inventa "ahora")
+    images: toImages(product),
     tagline: product.tagline ?? null,
     description: product.description ?? null,
     keyFacts: product.keyFacts,
@@ -113,6 +143,8 @@ function toCategory(data: SeedData, category: SeedData["categories"][number]): C
     lineGroup: category.lineGroup,
     shortText: category.shortText,
     intro: category.intro ?? null,
+    seoTitle: category.seoTitle ?? null,
+    seoDescription: category.seoDescription ?? null,
     href: categoryHref(category.slug),
     productCount: visibleProducts(data).filter((p) => p.categorySlug === category.slug).length,
   };
@@ -252,9 +284,13 @@ export const fixturesSource: DataSource = {
             ? // El esquema exige ctaQuoteType con quote y ctaHref con link.
               { kind: "quote" as const, label: h.ctaLabel, quoteType: h.ctaQuoteType! }
             : { kind: "link" as const, label: h.ctaLabel, href: h.ctaHref! },
+        secondaryCta:
+          h.secondaryCtaLabel && h.secondaryCtaHref
+            ? { label: h.secondaryCtaLabel, href: h.secondaryCtaHref }
+            : null,
         videoDesktop: h.videoDesktop ?? null,
         videoMobile: h.videoMobile ?? null,
-        posterKey: h.posterKey ?? null,
+        poster: h.posterKey ? mediaImage(h.posterKey) : null,
       }));
   },
 
@@ -311,7 +347,8 @@ export const fixturesSource: DataSource = {
   },
 
   async getSiteSettings() {
-    return toSiteSettings(seedData().settings);
+    // Como el perfil dev del seed: con el número de prueba de WhatsApp (BD-062).
+    return toSiteSettings(settingsForProfile(seedData().settings, "dev"));
   },
 
   // Sin fechas: los JSON no dicen cuándo cambió cada cosa y el sitemap no inventa "ahora".
@@ -321,12 +358,16 @@ export const fixturesSource: DataSource = {
     const withStores = new Set(data.stores.filter((s) => s.published).map((s) => s.departmentSlug));
     return {
       categories: [...categories].map((slug) => ({ slug, updatedAt: null })),
-      products: visibleProducts(data).map((p) => ({
-        slug: p.slug,
-        categorySlug: p.categorySlug,
-        updatedAt: null,
-        images: [],
-      })),
+      // Sin un color publicado la ficha responde 404 (catalog-routes.ts): no va al sitemap.
+      products: visibleProducts(data)
+        .filter((p) => p.variants.some((v) => v.published))
+        .map((p) => ({
+          slug: p.slug,
+          categorySlug: p.categorySlug,
+          updatedAt: null,
+          // Las mismas fotos que la galería (BD-097).
+          images: toImages(p).map((image) => image.src),
+        })),
       departments: data.departments
         .filter((d) => withStores.has(d.slug))
         .map((d) => ({ slug: d.slug, updatedAt: null })),

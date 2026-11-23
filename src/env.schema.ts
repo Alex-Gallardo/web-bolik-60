@@ -36,6 +36,8 @@ export const serverEnvSchema = z
     MAIL_SALES_TO: z.email(),
     MAIL_SCHOOLS_TO: z.email().optional(),
     MAIL_DISTRIBUTORS_TO: z.email().optional(),
+    /** SMTP_MODE=file: carpeta de los correos de prueba (BD-074); por defecto tmp/mails. */
+    MAIL_DIR: z.string().min(1).optional(),
     MEDIA_DIR: z.string().min(1),
     MEDIA_PUBLIC_PATH: z.string().default("/media"),
     INDEXNOW_KEY: z
@@ -60,8 +62,19 @@ export const serverEnvSchema = z
       fail("SMTP_MODE", "smtp requiere SMTP_HOST, SMTP_USER y SMTP_PASSWORD");
     if (v.APP_ENV === "production" && v.SMTP_MODE !== "smtp")
       fail("SMTP_MODE", "en producción debe ser smtp");
+    // Modo prueba en un servidor (staging): sin MAIL_DIR escribiría dentro del release, donde la
+    // cuenta del servicio no puede, y los correos se perderían sin aviso (docs/15 §11).
+    if (deployed && v.SMTP_MODE === "file" && !v.MAIL_DIR)
+      fail(
+        "MAIL_DIR",
+        "con SMTP_MODE=file fuera de desarrollo, indica una carpeta con permiso de escritura",
+      );
     if (deployed && !v.NEXT_PUBLIC_SITE_URL.startsWith("https://"))
       fail("NEXT_PUBLIC_SITE_URL", "fuera de desarrollo debe usar https");
+    // Canónicas, sitemap y Open Graph salen de aquí: una sola versión del dominio, con www (BD-090,
+    // docs/10 §3; IIS redirige bolik66.com a www, docs/15). Staging usa su propio subdominio.
+    if (v.APP_ENV === "production" && !v.NEXT_PUBLIC_SITE_URL.startsWith("https://www."))
+      fail("NEXT_PUBLIC_SITE_URL", "en producción debe ser https://www.…");
     if (deployed && v.SESSION_SECRET === SESSION_SECRET_PLACEHOLDER)
       fail("SESSION_SECRET", "usa un valor aleatorio propio (openssl rand -base64 32)");
     // La web usa un login propio con permisos solo sobre su BD (docs/05), nunca el administrador.

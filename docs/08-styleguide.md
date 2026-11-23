@@ -48,7 +48,7 @@ Cada componente vive en `src/components/ui` (primitivas) o en su carpeta de domi
 | `primary` | `--blue` / blanco | Acción principal sobre fondo claro |
 | `accent` | `--yellow` / `--ink` | Acción principal sobre fondo oscuro (hero, navy) |
 | `dark` | `--ink` / blanco | Alternativa sobria |
-| `outline` | transparente / `--ink`, borde 2 px | Secundario sobre claro |
+| `outline` | transparente / `--heading`, borde 2 px | Secundario; sigue el tono de la sección (tinta sobre claro, blanco sobre oscuro) |
 | `ghost-light` | transparente / blanco, borde blanco | Secundario sobre oscuro |
 | `whatsapp` | `--whatsapp` / blanco | Solo WhatsApp |
 | `link` | sin fondo / `--blue` | Acciones terciarias |
@@ -139,7 +139,7 @@ En la página: `const look = await getSectionAppearance("home.solutions")` → `
 |---|---|---|---|
 | Agregar a cotización | Toast + contador con "pop" + botón "Ver cotización" | Toast | `quote.added` |
 | Cambiar cantidad | Número se actualiza; total con transición | Inline | — |
-| Quitar línea | Línea sale con colapso (A-36) + toast "Deshacer" (6 s) | Toast | `quote.removed` |
+| Quitar línea | Línea sale con A-36 + "Deshacer" (6 s): con el drawer abierto, aviso dentro del drawer (el modal deja inerte el toast); si se cierra antes, pasa a toast | Inline + Toast | `quote.removed` |
 | Enviar cotización (cargando) | Botón con spinner, campos bloqueados | Inline | `quote.sending` |
 | Cotización enviada | Diálogo de éxito con folio y check animado (A-60) | Dialog | `quote.sent` |
 | Error al enviar | Diálogo con "Intentar de nuevo" y "Enviar por WhatsApp" (la cotización no se pierde) | Dialog | `quote.failed` |
@@ -161,6 +161,11 @@ En la página: `const look = await getSectionAppearance("home.solutions")` → `
 | Admin: subir imagen | Barra de progreso → toast "Imagen lista" | Inline + Toast | `admin.uploadOk` |
 | Admin: falta alt | Advertencia junto a la imagen; no deja publicar | Inline | `admin.altMissing` |
 | Admin: sesión vencida | Toast + redirección al login conservando el formulario | Toast | `admin.sessionExpired` |
+| Admin: login con datos incorrectos | Aviso arriba del formulario (vuelve al login); el mismo para un correo que no existe | Inline | `admin.loginInvalid` |
+| Admin: cuenta bloqueada (5 intentos) | Aviso arriba del formulario | Inline | `admin.loginLocked` |
+| Admin: panel no disponible (sin base) | Aviso arriba del formulario | Inline | `admin.loginUnavailable` |
+| Admin: sección sin permiso | Redirección al inicio del admin con aviso (toast con BD-115) | Inline | `admin.forbidden` |
+| Admin: cerrar sesión | Vuelve al login con aviso | Inline | `admin.loggedOut` |
 
 ### `FriendlyDialog`
 

@@ -84,6 +84,37 @@ test.describe("header", () => {
     expect((await cotizar.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   });
 
+  test("a 1024 px el header cabe aunque haya barra de desplazamiento (BD-048)", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "escritorio", "menú de escritorio");
+    // Playwright no dibuja barra de desplazamiento: se mide lo que pide el contenido del header y
+    // se compara con el ancho útil de 1024 px menos una barra de 17 px (Windows) y los márgenes.
+    await page.setViewportSize({ width: 1024, height: 768 });
+    for (const path of ["/", "/productos"]) {
+      await page.goto(path);
+      // Con la fuente de reserva los textos miden distinto: se mide con las fuentes ya cargadas.
+      await page.evaluate(() => document.fonts.ready);
+      const { needed, padding } = await page.evaluate(() => {
+        const bar = document.querySelector<HTMLElement>(".site-header__bar")!;
+        const style = getComputedStyle(bar);
+        const items = [...bar.children].filter(
+          (el) => getComputedStyle(el).display !== "none" && el.getBoundingClientRect().width > 0,
+        );
+        const widths = items.reduce((sum, el) => {
+          const s = getComputedStyle(el);
+          return sum + el.getBoundingClientRect().width + parseFloat(s.marginRight);
+        }, 0);
+        const gaps = parseFloat(style.columnGap) * (items.length - 1);
+        return {
+          needed: widths + gaps,
+          padding: parseFloat(style.paddingLeft) + parseFloat(style.paddingRight),
+        };
+      });
+      expect(needed, `contenido del header en ${path}`).toBeLessThanOrEqual(1024 - 17 - padding);
+    }
+  });
+
   test("Productos se cierra cuando el foco sale con Tab", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "escritorio", "menú de escritorio");
     await page.goto("/");
@@ -136,7 +167,21 @@ test.describe("header", () => {
     await page.addInitScript(() =>
       localStorage.setItem(
         "bolik_quote",
-        JSON.stringify({ state: { lines: [{}, {}, {}] }, version: 1 }),
+        JSON.stringify({
+          state: {
+            lines: ["PT00058", "PT00059", "PT00060"].map((sku) => ({
+              key: `variante:${sku}:cajilla12`,
+              type: "variante",
+              ref: sku,
+              name: "Bolik Ultra",
+              packaging: "cajilla12",
+              quantity: 2,
+              url: "/productos/boligrafos/bolik-ultra",
+              addedAt: 0,
+            })),
+          },
+          version: 1,
+        }),
       ),
     );
     await page.goto("/");

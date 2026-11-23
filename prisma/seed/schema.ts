@@ -1,12 +1,15 @@
 import { z } from "zod";
 import {
   BACKGROUND_PRESETS,
+  BRANDS,
   FAQ_SCOPES,
   LINE_GROUPS,
   PACKAGING_CODES,
+  PRODUCT_IMAGE_KINDS,
   STORE_TYPES,
 } from "../../src/lib/constants";
 import { isValidGtin } from "../../src/lib/gtin";
+import { imageAltSchema } from "../../src/lib/image-names";
 
 /**
  * Formato de los datos de prisma/seed/*.json (BD-037). Los lee la fuente de ejemplo de la web
@@ -29,6 +32,34 @@ const lat = z.number().min(-90).max(90);
 const lng = z.number().min(-180).max(180);
 /** Dato de ejemplo (de la demo, sin validar): se ve con DATA_SOURCE=fixtures, nunca va a producción. */
 const sample = z.boolean().default(false);
+/** Clave de MediaAsset (BD-034): carpeta/nombre-hash8, la misma que genera process-image.ts. */
+const mediaKey = z
+  .string()
+  .max(200)
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*\/[a-z0-9]+(?:-[a-z0-9]+)*-[0-9a-f]{8}$/,
+    "clave carpeta/nombre-hash8 de process-image.ts",
+  );
+
+/**
+ * Imágenes de ejemplo ya procesadas (media.json, BD-050): sus medidas, para que la fuente
+ * `fixtures` arme la vista sin base y el seed registre la fila de MediaAsset. Los archivos no van
+ * al repo: los genera `pnpm media:samples` en MEDIA_DIR, y en la CI se usan reemplazos con la
+ * misma clave (scripts/ci/sample-media.mjs). `originalName` es la ruta del archivo dentro de la
+ * carpeta de origen (la de la demo o la de fotos de Mercadeo). Las fotos de producto provisionales
+ * (BD-062: 750 px y en CMYK) también van como `sample`: no llegan a producción hasta tener los
+ * originales que pide «Fotos de producto para bolik66.com».
+ */
+export const mediaSchema = z.object({
+  key: mediaKey,
+  originalName: text(200),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  bytes: z.number().int().positive(),
+  /** Describe lo que se ve: no un nombre de archivo ni «foto 1» (BD-097, docs/10 §8). */
+  alt: imageAltSchema(),
+  sample,
+});
 
 export const categorySchema = z.object({
   slug,
@@ -36,6 +67,12 @@ export const categorySchema = z.object({
   lineGroup: z.enum(LINE_GROUPS),
   shortText: text(200),
   intro: z.string().trim().min(1).optional(),
+  /**
+   * Title y description de su página (docs/10 §1, docs/17 §6); sin ellos, los arma la página.
+   * Title ≤ 52: con « | Bolik» queda en 60. Descripción de 140–160 caracteres.
+   */
+  seoTitle: text(52).optional(),
+  seoDescription: z.string().trim().min(140).max(160).optional(),
   published: z.boolean().default(true),
 });
 
@@ -57,6 +94,8 @@ export const variantSchema = z.object({
 export const productSchema = z.object({
   slug,
   name: text(120),
+  /** Marca del grupo (BD-038); los productos sin marca son Bolik. */
+  brand: z.enum(BRANDS).default("bolik"),
   categorySlug: slug,
   sample,
   tagline: text(160).optional(),
@@ -91,6 +130,26 @@ export const productSchema = z.object({
   benefits: z
     .array(z.object({ iconKey: key, title: text(80), text: text(200).optional() }))
     .default([]),
+  /**
+   * Fotos de la galería (BD-062), en orden: imágenes de media.json con su toma y, si son de un
+   * color, la clave de la variante. El texto alternativo es el del manifiesto.
+   */
+  images: z
+    .array(
+      z.object({
+        mediaKey,
+        kind: z.enum(PRODUCT_IMAGE_KINDS),
+        colorKey: key.optional(),
+      }),
+    )
+    .default([]),
+  /**
+   * Title y description de la ficha (docs/10 §1, docs/17 §6); sin ellos, los arma la página
+   * (features/catalog/product-meta.ts). Title ≤ 52: con « | Bolik» queda en 60. La descripción
+   * admite desde 120: la del Bolik Ultra (docs/17 §6) tiene 137.
+   */
+  seoTitle: text(52).optional(),
+  seoDescription: z.string().trim().min(120).max(160).optional(),
 });
 
 export const departmentSchema = z.object({
@@ -145,13 +204,22 @@ export const contentSchema = z.object({
         ctaKind: z.enum(["link", "quote"]),
         ctaHref: internalPath.optional(),
         ctaQuoteType: z.enum(["empresa", "libreria"]).optional(),
+        // CTA secundario de doc 17 §2 (BD-050): siempre un enlace interno.
+        secondaryCtaLabel: text(40).optional(),
+        secondaryCtaHref: internalPath.optional(),
         videoDesktop: internalPath.optional(),
         videoMobile: internalPath.optional(),
-        posterKey: z.string().optional(),
+        posterKey: mediaKey.optional(),
+        // Póster y videos de la demo (media.json): el perfil prod los quita, nunca van a producción.
+        sampleMedia: sample,
         published: z.boolean().default(true),
       })
       .refine((h) => h.ctaKind !== "link" || h.ctaHref, "un CTA link requiere ctaHref")
-      .refine((h) => h.ctaKind !== "quote" || h.ctaQuoteType, "un CTA quote requiere ctaQuoteType"),
+      .refine((h) => h.ctaKind !== "quote" || h.ctaQuoteType, "un CTA quote requiere ctaQuoteType")
+      .refine(
+        (h) => !h.secondaryCtaLabel === !h.secondaryCtaHref,
+        "el CTA secundario lleva texto y enlace, o ninguno",
+      ),
   ),
   stats: z.array(
     z.object({
@@ -226,6 +294,11 @@ export const settingsSchema = z
       .string()
       .regex(/^\d{8,15}$/)
       .optional(), // sin inventar: vacío hasta tenerlo
+    /** Número de prueba (BD-062): solo dev, e2e y fixtures; nunca prod (settingsForProfile). */
+    sample_whatsapp_number: z
+      .string()
+      .regex(/^\d{8,15}$/)
+      .optional(),
     splash_enabled: z.enum(["true", "false"]),
     kits_enabled: z.enum(["true", "false"]),
     show_kit_prices: z.enum(["true", "false"]).optional(),
@@ -247,6 +320,7 @@ export const seedDataSchema = z
     content: contentSchema,
     kits: z.array(kitSchema),
     settings: settingsSchema,
+    media: z.array(mediaSchema),
   })
   .superRefine((data, ctx) => {
     const fail = (path: (string | number)[], message: string) =>
@@ -361,6 +435,39 @@ export const seedDataSchema = z
       for (const item of k.items)
         if (item.variantSku && !skus.has(item.variantSku))
           fail(["kits", i], `${item.variantSku} no existe`);
+    });
+    unique(
+      "media",
+      data.media.map((m) => m.key),
+    );
+    // La fuente fixtures solo resuelve pósters del manifiesto; un póster de la demo debe ir marcado
+    // como sampleMedia para que el perfil prod lo quite (y el manifiesto, como sample).
+    const media = new Map(data.media.map((m) => [m.key, m]));
+    const slugsByLength = data.products.map((p) => p.slug).sort((a, b) => b.length - a.length);
+    const photoOwner = (key: string) => slugsByLength.find((s) => key.startsWith(`products/${s}-`));
+    data.products.forEach((p, i) => {
+      const colors = new Set(p.variants.map((v) => v.colorKey));
+      const keys = p.images.map((image) => image.mediaKey);
+      if (new Set(keys).size !== keys.length) fail(["products", i], "foto repetida");
+      for (const image of p.images) {
+        if (!media.has(image.mediaKey))
+          fail(["products", i], `foto ${image.mediaKey} no está en media.json`);
+        if (image.colorKey && !colors.has(image.colorKey))
+          fail(["products", i], `foto de un color que no tiene: ${image.colorKey}`);
+        // Nombre descriptivo desde el slug (BD-097, docs/10 §8): products/bolik-ultra-azul-…. La
+        // dueña es la del slug más largo que encaja: «bolik-ultra-fino-…» no es del Bolik Ultra.
+        // Solo revisa la carpeta products/; una foto compartida entre productos (de familia) iría
+        // en otra carpeta, como las del hero.
+        if (image.mediaKey.startsWith("products/") && photoOwner(image.mediaKey) !== p.slug)
+          fail(["products", i], `la foto ${image.mediaKey} debe empezar con products/${p.slug}-`);
+      }
+    });
+    data.content.heroChapters.forEach((h, i) => {
+      const poster = h.posterKey ? media.get(h.posterKey) : undefined;
+      if (h.posterKey && !poster)
+        fail(["content", "heroChapters", i], `póster ${h.posterKey} no está en media.json`);
+      if (poster?.sample && !h.sampleMedia)
+        fail(["content", "heroChapters", i], "un póster de ejemplo requiere sampleMedia");
     });
   });
 

@@ -85,20 +85,21 @@ flowchart TB
 
 | # | Sección | Contenido y componentes | Móvil | Desktop | Animación |
 |---|---|---|---|---|---|
-| 1 | **Hero con capítulos de video** | `VideoHero`: video de fondo + capa oscura; chip "60 años · Hecho en Guatemala"; `h1` "De la materia prima a tu primer trazo." con subrayado de tinta; texto y CTA que cambian por capítulo; 4 pestañas Planta · Aula · Oficina · Librería con barra de progreso | Video vertical 4:5 o solo póster; pestañas con scroll horizontal; CTA a ancho completo | Video 16:9; texto a la izquierda, pestañas abajo | A-10 crossfade, A-11 subrayado, A-12 cambio de texto, A-13 progreso |
+| 1 | **Hero principal** (BD-056) | `MainHero` sobre `brand`, a pantalla completa: chip "60 años · Hecho en Guatemala"; el único `h1` "De la materia prima a tu primer trazo." con subrayado de tinta; texto de marca; CTA "Ver productos" y "Cotizar por mayor"; el Bolik Ultra ilustrado (SVG). El LCP es el texto del `h1` | Texto y CTA arriba, ilustración debajo | Texto a la izquierda, ilustración a la derecha | A-11 subrayado, entrada de la ilustración |
 | 2 | **Cifras** | `StatsBand` sobre `--blue`: 60 años · 150+ productos · 1,800+ puntos de venta · 22 departamentos (desde `SiteStat`) | 2 × 2 | 4 columnas | A-20 conteo |
-| 3 | **Soluciones** | "Un Bolik para cada etapa": 5 tarjetas de color (Colegios, Universidades, Empresas, Librerías, Distribuidores) que llevan a su página o abren cotización | Carrusel con *scroll snap* | 5 columnas | A-21 reveal escalonado, A-30 hover |
-| 4 | **Catálogo destacado** | Buscador grande + chips de línea + 8 `CategoryCard` | 2 columnas | 4 columnas | A-21, A-30 |
-| 5 | **Bolik Ultra** | `ProductSpotlight`: ilustración/foto, 4 beneficios, chips de color con código, CTAs "Ver ficha" y "Dónde comprar" | Apilado | 2 columnas | A-31 cambio de color |
-| 6 | **Bolik en tu escuela** (estilo infantil) | Fondo `sun`, título en Baloo 2, 3 cifras, 4 actividades en tarjetas inclinadas, CTA "Lleva Bolik a tu escuela" | 1 columna | 4 columnas | A-40 tarjetas, A-41 garabatos |
-| 7 | **Mayoreo y empresas** | 2 tarjetas grandes: Librerías y distribuidores (azul) · Empresas y universidades (navy) | Apiladas | 2 columnas | A-21 |
-| 8 | **Dónde comprar** | Selector de departamento (lleva a `/donde-comprar/[dep]`), botones Walmart y La Torre, 4 tiendas destacadas | Apilado | 2 columnas | A-21 |
-| 9 | **Kits escolares 2027** | 3 `KitCard` (si están publicados) | Carrusel | 3 columnas | A-21 |
-| 10 | **Historia** | 4 hitos verificados + enlace "Conoce nuestra historia" | Línea vertical | Línea horizontal | A-50 trazo de línea |
-| 11 | **Preguntas frecuentes** | 6 preguntas (scope `home`) en acordeón | — | Centrado 860 px | A-35 acordeón |
-| 12 | **CTA final** | "¿Compras por mayor?" + Cotizar + WhatsApp | — | — | — |
+| 3 | **Así nace un Bolik** (video por capítulos, BD-050) | `VideoHero`: `h2` "Así nace un Bolik"; video de fondo + capa oscura; texto y CTA que cambian por capítulo; 4 pestañas Planta · Aula · Oficina · Librería con barra de progreso. Póster y video se piden después de `load` y al entrar la sección en pantalla | Video vertical 4:5 o solo póster; pestañas con scroll horizontal; CTA a ancho completo | Video 16:9; texto a la izquierda, pestañas abajo | A-10 crossfade, A-12 cambio de texto, A-13 progreso |
+| 4 | **Soluciones** | "Un Bolik para cada etapa": 5 tarjetas de color (Colegios, Universidades, Empresas, Librerías, Distribuidores) que llevan a su página o abren cotización | Carrusel con *scroll snap* | 5 columnas | A-21 reveal escalonado, A-30 hover |
+| 5 | **Catálogo destacado** | Buscador grande + chips de línea + 8 `CategoryCard` | 2 columnas | 4 columnas | A-21, A-30 |
+| 6 | **Bolik Ultra** | `ProductSpotlight`: ilustración/foto, 4 beneficios, chips de color con código, CTAs "Ver ficha" y "Dónde comprar" | Apilado | 2 columnas | A-31 cambio de color |
+| 7 | **Bolik en tu escuela** (estilo infantil) | Fondo `sun`, título en Baloo 2, 3 cifras, 4 actividades en tarjetas inclinadas, CTA "Lleva Bolik a tu escuela" | 1 columna | 4 columnas | A-40 tarjetas, A-41 garabatos |
+| 8 | **Mayoreo y empresas** | 2 tarjetas grandes: Librerías y distribuidores (azul) · Empresas y universidades (navy) | Apiladas | 2 columnas | A-21 |
+| 9 | **Dónde comprar** | Selector de departamento (lleva a `/donde-comprar/[dep]`), botones Walmart y La Torre, 4 tiendas destacadas | Apilado | 2 columnas | A-21 |
+| 10 | **Kits escolares 2027** | 3 `KitCard` (si están publicados) | Carrusel | 3 columnas | A-21 |
+| 11 | **Historia** | 4 hitos verificados + enlace "Conoce nuestra historia" | Línea vertical | Línea horizontal | A-50 trazo de línea |
+| 12 | **Preguntas frecuentes** | 6 preguntas (scope `home`) en acordeón | — | Centrado 860 px | A-35 acordeón |
+| 13 | **CTA final** | "¿Compras por mayor?" + Cotizar + WhatsApp | — | — | — |
 
-**Eventos:** `hero_chapter_view`, `hero_cta_click`, `solution_click`, `category_click`, `search_open`, `retailer_click`, `quote_open`.
+**Eventos:** `hero_chapter_view`, `hero_cta_click`, `solution_click`, `category_click`, `search_open`, `spotlight_click` (Ver ficha del producto estrella), `retailer_click`, `quote_open`.
 
 ### 3.2 `/productos` Catálogo
 **Busca posicionar:** "útiles escolares Bolik", "catálogo Bolik".
@@ -106,7 +107,7 @@ flowchart TB
 
 1. Encabezado: breadcrumbs, `h1` "Catálogo Bolik", bajada, buscador.
 2. Barra de filtros sticky bajo el header: **Línea** (Escritura, Escolar, Arte, Oficina), **Uso** (Escolar, Oficina, Manualidades), **Color** (cuando aplica). En móvil, botón "Filtros" que abre un sheet con contador de resultados en vivo.
-3. Resultados: grilla de `ProductCard` (imagen 1:1, chip de línea, nombre, colores disponibles como puntos, "Ver producto"). Contador "12 productos".
+3. Resultados: grilla de `ProductCard` (imagen 1:1, chip de línea y, si no es Bolik, chip de la marca del grupo, nombre, colores disponibles como puntos, "Ver producto"). Contador "12 productos".
 4. Estado vacío amable: "No hay productos con esos filtros" + botón "Quitar filtros".
 5. Bloque SEO al final: texto corto sobre la marca y enlaces a cada categoría.
 
@@ -160,7 +161,7 @@ Los filtros se reflejan en la URL (`?linea=escolar&uso=oficina`) con `history.re
 - **Eventos:** `product_view`, `color_select`, `pack_select`, `quote_add`, `retailer_click`, `whatsapp_open`, `pdf_download`, `dimension_open`.
 
 ### 3.5 `/p/[codigo]` Acceso por QR
-Route handler: busca la variante por `sku` o `barcode` y responde **301** a `/productos/{categoria}/{producto}?color={colorKey}&utm_source=qr&utm_medium=empaque`. Si no existe, 302 a `/buscar?q={codigo}`.
+En `proxy.ts` (BD-065): busca la variante por `sku` o `barcode` (normalizados: sin espacios ni guiones, en mayúsculas) y responde **301** a `/productos/{categoria}/{producto}?color={colorKey}&utm_source=qr&utm_medium=empaque`. Si no existe, la **404 amigable** con estado 404 (decisión del usuario; la 404 suma el buscador con BD-066).
 
 ### 3.6 `/buscar`
 **noindex, follow.** Campo grande enfocado, resultados en vivo (Fuse.js con índice de `/api/search-index`), búsqueda por nombre, sinónimo ("lapicero" = "bolígrafo"), código SKU o código de barras. Si hay coincidencia exacta de código, muestra la tarjeta destacada "¿Buscas el Bolik Ultra Azul (PT00058)?". Sugerencias cuando no hay resultados. Atajo de teclado `/` abre el buscador en desktop.
@@ -248,7 +249,7 @@ Privacidad y términos en Markdown (`src/content/legal`). Indexables, enlazadas 
 
 ## 4. Admin (`/admin`)
 
-**Dinámico, sin caché, `noindex`, fuera del sitemap.** Layout: menú lateral colapsable (desktop), menú inferior (móvil), encabezado con usuario y "Ver sitio". Todas las tablas con búsqueda, filtros, paginación y estados vacíos. Toda acción muestra toast y, si es destructiva, confirmación.
+**Dinámico, sin caché, `noindex`, fuera del sitemap.** Layout: menú lateral colapsable (desktop), menú inferior (móvil), encabezado con usuario y "Ver sitio". Todas las tablas con búsqueda, filtros, paginación y estados vacíos. Toda acción muestra toast y, si es destructiva, confirmación. **Excepción a «visible sin JavaScript»:** el admin lee la cookie de sesión, así que con Cache Components sus páginas van dentro de un `<Suspense>` y llegan ocultas hasta que corre el JS (BD-114). Es una herramienta interna; las páginas públicas siguen la regla.
 
 | Vista | Ruta | Roles | Contenido |
 |---|---|---|---|

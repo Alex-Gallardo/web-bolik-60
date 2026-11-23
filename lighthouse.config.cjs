@@ -4,12 +4,12 @@
  * Con LHCI_BASE_URL (la CI, que prueba el artefacto) no se levanta servidor.
  *
  * Las aserciones usan el default de LHCI ("optimistic"): la mejor de las 3 corridas. Los tiempos
- * (LCP, TBT, puntaje de rendimiento) varían entre corridas iguales (LCP de la home: 1.9–2.7 s) y la
+ * (LCP, TBT, puntaje de rendimiento) varían entre corridas iguales (LCP de la home: 2.9–3.2 s) y la
  * mediana fallaría al azar; los tamaños (JS, CSS, peticiones) no varían. El reporte del PR muestra
  * la corrida mediana.
  *
  * Cada ticket que publica una página agrega aquí su URL; los presupuestos de "el resto" ya aplican.
- * La ficha de producto (docs/12 §2: 155 KB de JS) necesitará su propia entrada en assertMatrix.
+ * La ficha de producto entra en «el resto» (170 KB de JS desde BD-060).
  * Los KB de JS son transferidos (gzip + cabeceras): Next 16 + React 19 ya ocupan ~146 KB (docs/12 §2).
  */
 const PORT = "3100";
@@ -46,7 +46,17 @@ module.exports = {
         ? {}
         : // start:local copia public/ antes de arrancar: con imágenes y video tarda más de 10 s.
           { startServerCommand: "pnpm start:local", startServerReadyTimeout: 60_000 }),
-      url: [`${base}/`],
+      url: [
+        `${base}/`,
+        `${base}/productos`,
+        `${base}/productos/boligrafos`,
+        // La ficha (BD-062): la página más importante para SEO y cotización.
+        `${base}/productos/boligrafos/bolik-ultra`,
+        // Mi cotización (BD-072): el formulario más pesado del sitio (noindex).
+        `${base}/cotizacion`,
+        // Buscador (BD-066): la página de una búsqueda, con resultados (proxy.ts → /buscar/[q]).
+        `${base}/buscar?q=ultra`,
+      ],
       numberOfRuns: 3,
       settings: {
         // Los runners de Linux de GitHub no permiten el sandbox de Chrome.
@@ -56,25 +66,85 @@ module.exports = {
     assert: {
       assertMatrix: [
         {
-          // Home: ≥ 90 en rendimiento por el video, JS ≤ 165 KB. LCP 2.5 s hasta BD-050 (luego 2.0 s).
+          // Home: ≥ 90 en rendimiento y JS ≤ 165 KB. LCP: guardia de regresión en 3.2 s (BD-055).
+          // El LCP es el texto del h1 y el navegador lo pinta a los ~0.5 s, pero la simulación de
+          // Lantern le carga todo lo pedido antes del primer pintado (~146 KB de Next/React, el JS
+          // de la página y las fuentes): da 2.9–3.2 s y ningún ajuste lo bajó de ahí (docs/12 §1).
+          // La meta de 2.0 s es de campo (p75 móvil) y se mide con usuarios reales en BD-126.
           matchingUrlPattern: "^https?://[^/]+/$",
           assertions: {
             ...common,
             "categories:performance": ["error", { minScore: 0.9 }],
-            "largest-contentful-paint": ["error", { maxNumericValue: 2500 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 200 }],
+            // BD-071 lo había subido a 165.5 KB; BD-073 sacó los mensajes del sistema de la pantalla de
+            // error (−3.9 KB en todas las páginas) y vuelve a 165 KB (docs/12 §2).
             "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
           },
         },
         {
-          // El resto: ≥ 95 en rendimiento, LCP ≤ 2.0 s, JS ≤ 150 KB (CLAUDE.md).
-          matchingUrlPattern: "^https?://[^/]+/.+",
+          // El resto (BD-060, decisiones del usuario): ≥ 90 en rendimiento, como la home (el puntaje
+          // cae por el mismo LCP simulado); LCP con la misma guardia
+          // de regresión de 3.2 s que la home (la meta de 2.0 s es de campo, BD-126: Lantern da
+          // ~3.0 s por el JS y las fuentes aunque se pinte a los ~0.4 s); JS ≤ 170 KB, porque la
+          // parte común (Next, React y el layout) ya ocupa ~160 KB en cualquier página. BD-047
+          // aligera el layout para volver a bajar el tope. Sin las fichas (abajo).
+          matchingUrlPattern:
+            "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion$)(?!buscar(?:$|\\?)).+",
           assertions: {
             ...common,
-            "categories:performance": ["error", { minScore: 0.95 }],
-            "largest-contentful-paint": ["error", { maxNumericValue: 2000 }],
+            "categories:performance": ["error", { minScore: 0.9 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
-            "resource-summary:script:size": ["error", { maxNumericValue: 150 * KB }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
+          },
+        },
+        {
+          // /buscar (BD-066): como el resto, pero noindex a propósito (página de utilidad, docs/10 §3):
+          // la auditoría «se puede indexar» y el puntaje de SEO no aplican.
+          matchingUrlPattern: "^https?://[^/]+/buscar(?:$|\\?)",
+          assertions: {
+            ...common,
+            "categories:seo": "off",
+            "is-crawlable": "off",
+            "categories:performance": ["error", { minScore: 0.9 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
+            "total-blocking-time": ["error", { maxNumericValue: 150 }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
+          },
+        },
+        {
+          // /cotizacion (BD-072): noindex a propósito (página de utilidad, docs/10 §3): la auditoría
+          // «se puede indexar» y el puntaje de SEO no aplican. JS ≤ 186 KB (decisión del usuario,
+          // 18 nov 2026): la parte común ya ocupa ~166 KB y la lista con su formulario suma ~18 KB
+          // aun con `zod/mini` descargado al interactuar. BD-047 lo devuelve a 170 KB.
+          matchingUrlPattern: "^https?://[^/]+/cotizacion$",
+          assertions: {
+            ...common,
+            "categories:seo": "off",
+            "is-crawlable": "off",
+            "categories:performance": ["error", { minScore: 0.9 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
+            "total-blocking-time": ["error", { maxNumericValue: 150 }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 186 * KB }],
+          },
+        },
+        {
+          // Fichas de producto (BD-062, decisión del usuario): lo mismo que el resto, pero el LCP
+          // es la foto principal (no texto) y Lantern le suma el documento, que pesa más (el
+          // contenido de la ficha y su payload RSC): da ~3.4 s aunque la foto llegue a los ~0.6 s.
+          // Guardia de 3.5 s; la meta de 2.0 s sigue siendo de campo (BD-126).
+          matchingUrlPattern: "^https?://[^/]+/productos/[^/]+/[^/]+$",
+          assertions: {
+            ...common,
+            "categories:performance": ["error", { minScore: 0.9 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 3500 }],
+            "total-blocking-time": ["error", { maxNumericValue: 150 }],
+            // JS ≤ 170 KB otra vez desde BD-073 (BD-071 lo había subido a 172.5). Las 26 peticiones
+            // siguen (desde BD-071): Turbopack separa el mapa de import() del layout en otro archivo;
+            // BD-047 lo devuelve a 25 (docs/12 §2).
+            "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
+            "resource-summary:total:count": ["error", { maxNumericValue: 26 }],
           },
         },
       ],

@@ -1,14 +1,14 @@
 import "server-only";
 import { env } from "@/env";
 import { isStyleguideVisible } from "@/lib/styleguide-access";
+import { hasAdminSession } from "./guards";
 
 /**
- * Acceso a /styleguide (BD-026): lo usa su layout para responder 404 en producción.
- *
- * La sesión de admin llega con BD-114: aquí se suma `await hasAdminSession()`. Leer la cookie hace
- * dinámica la vista (con Cache Components, dentro de un <Suspense>). Hasta entonces no hay sesión
- * posible y en producción siempre responde 404.
+ * Acceso a /styleguide (BD-026, BD-114): en desarrollo y staging siempre (sin leer la cookie, así
+ * la vista sigue estática); en producción solo con sesión de admin, y si no, 404. Leer la cookie
+ * hace dinámica la vista: el layout del styleguide la llama dentro de un <Suspense>.
  */
 export async function canViewStyleguide(): Promise<boolean> {
-  return isStyleguideVisible(env.APP_ENV, false);
+  if (isStyleguideVisible(env.APP_ENV, false)) return true;
+  return isStyleguideVisible(env.APP_ENV, await hasAdminSession());
 }

@@ -87,7 +87,7 @@ Implementado en BD-013. Puntos clave del archivo de la raíz:
 
 - Proyectos `movil` (Pixel 7, primero: el sitio es mobile first), `escritorio` (Desktop Chrome) e `iphone` (iPhone 14, WebKit), este último solo con las pruebas marcadas `@critico`.
 - Navegadores, una vez por máquina: `pnpm exec playwright install chromium webkit` (en la CI, con `--with-deps`).
-- Corre contra el **build de producción**: local, `pnpm build` y luego `pnpm test:e2e`; Playwright levanta siempre un `pnpm start:local` nuevo en `127.0.0.1:3100` (el puerto debe estar libre; no usa el 3000 para no confundirse con `pnpm dev`). `start:local` carga los `.env*` del proyecto, como lo haría el servicio en IIS, pero Playwright fuerza `ERP_MODE=noop` y `SMTP_MODE=file`. Ojo: `APP_ENV` sigue siendo el de tu `.env.local` (`development`), así que lo que dependa de él (analítica, robots) no se comporta como en producción.
+- Corre contra el **build de producción**: local, `pnpm build` y luego `pnpm test:e2e`; Playwright levanta siempre un `pnpm start:local` nuevo en `127.0.0.1:3100` (el puerto debe estar libre; no usa el 3000 para no confundirse con `pnpm dev`). `start:local` carga los `.env*` del proyecto, como lo haría el servicio en IIS, pero Playwright fuerza `ERP_MODE=noop` y `SMTP_MODE=file`. Ojo: `APP_ENV` sigue siendo el de tu `.env.local` (`development`), así que lo que dependa de él (analítica) no se comporta como en producción; `robots.txt` sí: development sale igual que producción (BD-092).
 - Con `E2E_BASE_URL` no se levanta servidor: la CI (BD-014) arranca el artefacto con `node server.js` y prueba contra esa dirección.
 - En CI: `retries: 2`, `forbidOnly` y traza en el primer reintento.
 

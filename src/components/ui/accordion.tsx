@@ -40,7 +40,7 @@ export function Accordion({ items, exclusive, className }: AccordionProps) {
               viewBox="0 0 24 24"
               aria-hidden="true"
               focusable="false"
-              className="accordion-icon size-5 shrink-0 text-blue"
+              className="accordion-icon size-5 shrink-0 text-accent-text"
               fill="none"
               stroke="currentColor"
               strokeWidth="2.5"

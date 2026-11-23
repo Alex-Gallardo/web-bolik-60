@@ -10,17 +10,43 @@
 | TTFB (servidor) | ≤ 400 ms | ≤ 800 ms |
 | FCP | ≤ 1.5 s | ≤ 1.8 s |
 
-Laboratorio (Lighthouse móvil, throttling por defecto) en CI: **Rendimiento ≥ 95** (≥ 90 tolerado en home por el video), **Accesibilidad ≥ 95**, **Buenas prácticas ≥ 95**, **SEO = 100**.
+Laboratorio (Lighthouse móvil, throttling por defecto) en CI: **Rendimiento ≥ 90** en todas las páginas (BD-060, decisión del usuario: el puntaje cae por el LCP simulado de ~3.0 s; era ≥ 95 salvo la home; BD-047 busca recuperarlo), **Accesibilidad ≥ 95**, **Buenas prácticas ≥ 95**, **SEO = 100**.
+
+**LCP en laboratorio (BD-055 en la home; BD-060 en todas las páginas):** la meta de 2.0 s de esta tabla es de campo (p75 móvil, BD-126). En Lighthouse cada página tiene una guardia de regresión de **3.2 s** (las fichas de producto, **3.5 s**: ver abajo), no de 2.0 s (`/productos` dio entre 2.0 y 3.1 s en 3 corridas). El LCP es el texto del h1 y el navegador lo pinta a los ~0.5 s, pero Lantern simula la red lenta cargándole todo lo que se pidió antes del primer pintado (~146 KB de Next/React, el JS de la página y las fuentes), y eso da 2.9–3.2 s. Lo que se probó en BD-055, con el mejor de 3 corridas:
+
+**Fichas de producto (BD-062, decisión del usuario del 16 nov 2026):** guardia de LCP de **3.5 s**. Su LCP es la foto principal, no texto, y Lantern le suma el documento, más pesado que el de una categoría (27 KB comprimido contra 17: el contenido de la ficha y su payload RSC). Medido: 3.39 s en Lighthouse, con la foto en el navegador a los ~0.6 s (`fetchpriority="high"`, sin competir con las fotos de los otros colores). El JS (≤ 170 KB) y el rendimiento (≥ 0.90) son los mismos que en el resto; la ficha entra en Lighthouse CI.
+
+| Ajuste | LCP | Resultado |
+|---|---|---|
+| Base (dos fuentes precargadas) | 3.05 s | — |
+| Favicon de 15 KB a 1.4 KB (sin el cuadro de 48 px) | 3.08 s | Se queda (menos bytes, sin efecto en el LCP) |
+| Solo la fuente del h1 precargada | 2.96 s | Se descarta: en la CI, el texto cambia de fuente después del splash (CLS 0.002) y el LCP queda dentro de la variación entre corridas |
+| Ninguna fuente precargada | 2.94 s | Se descarta: 0.02 s menos a cambio de un salto del h1 (CLS 0.023); se prefiere CLS 0 |
+| Fuentes estáticas por peso | — | Se descarta: 4 o 5 archivos por ~18 KB menos |
+| Throttling aplicado (`devtools`) en vez de simulado | 2.2–5.3 s | Se descarta: muy variable |
+
+El JS propio de la home pesa poco (reproductor de video y contador: 3.8 KB; layout: 8.8 KB): diferirlo no mueve el número.
 
 ## 2. Presupuestos por página
 
 | Página | JS inicial (gzip) | CSS (gzip) | Imágenes arriba del pliegue | Fuentes | Peticiones iniciales |
 |---|---|---|---|---|---|
 | Inicio | ≤ 165 KB | ≤ 25 KB | Póster ≤ 120 KB | 2 familias, ≤ 4 archivos woff2 | ≤ 25 |
-| Catálogo / categoría | ≤ 150 KB | ≤ 25 KB | ≤ 6 tarjetas × 25 KB | 2 familias | ≤ 25 |
-| Ficha | ≤ 155 KB | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 25 |
-| Dónde comprar | ≤ 150 KB (+ mapa diferido ≤ 60 KB) | ≤ 25 KB (+ CSS de Leaflet diferido) | — | 2 familias | ≤ 25 |
-| Escuelas | ≤ 150 KB | ≤ 25 KB | ≤ 150 KB | 3 familias (incluye Baloo 2) | ≤ 28 |
+| Catálogo / categoría | ≤ 170 KB | ≤ 25 KB | ≤ 6 tarjetas × 25 KB | 2 familias | ≤ 25 |
+| Ficha | ≤ 170 KB | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 26 (BD-071) |
+| Mi cotización (`/cotizacion`) | ≤ 186 KB (BD-072) | ≤ 25 KB | — | 2 familias | ≤ 25 |
+| Dónde comprar | ≤ 170 KB (+ mapa diferido ≤ 60 KB) | ≤ 25 KB (+ CSS de Leaflet diferido) | — | 2 familias | ≤ 25 |
+| Escuelas | ≤ 170 KB | ≤ 25 KB | ≤ 150 KB | 3 familias (incluye Baloo 2) | ≤ 28 |
+
+**Formulario de `/cotizacion` (BD-072, decisión del usuario, 18 nov 2026).** Medido con esbuild: React Hook Form + resolver + `zod/mini` = 19 KB gzip; `zod/mini` solo = 6.2 KB; Zod completo, ~92 KB. Sin margen (la parte común ya ocupa ~166 KB), el formulario valida sin React Hook Form, con un esquema `zod/mini` compartido con la Server Action (`features/quote/schema.ts`). Turbopack no recorta `zod/mini` como esbuild (~25 KB gzip en el navegador), así que el esquema se descarga al primer uso del formulario (foco o envío) y no cuenta en el JS inicial. Lo propio de la página (store, lista, controles, textos) queda en ~18 KB: 185.2 KB en total. Tope propio de **186 KB** para `/cotizacion` (página `noindex`); BD-047 lo devuelve a 170. Lighthouse CI la mide sin la categoría SEO (es `noindex` a propósito).
+
+**Buscador (BD-066).** En el JS común solo entra el ícono del header con su atajo (`search-link.tsx`); el diálogo, Radix, Fuse.js y el índice (`/api/search-index`) se descargan al usar el buscador. `/buscar?q=` se pinta completa en el servidor (proxy.ts → `/buscar/-{q}`) y Next la guarda en su caché en memoria (LRU, 50 MB por defecto): nada en disco. Lighthouse CI la mide con 170 KB y sin la categoría SEO (es `noindex`).
+
+**Mensajes del sistema fuera del JS común (BD-073, 18 nov 2026).** La pantalla de error de Next (`error.tsx`, `global-error.tsx`) se carga en todas las páginas e importaba todo `content/feedback.ts`: cada mensaje nuevo pesaba en el sitio entero. Ahora usa `content/feedback-system.ts` (los mismos textos, expuestos como `feedback.system`): −3.9 KB gzip en todas las páginas. Medido: home 161.5 KB, `/productos` 166.2 KB, ficha 168.4 KB, `/cotizacion` 181.8 KB. Los topes de home y ficha vuelven a 165 y 170 KB; siguen las 26 peticiones de la ficha (BD-071) y los 186 KB de `/cotizacion` (BD-072).
+
+**Drawer de la cotización (BD-071, 17 nov 2026).** El drawer se descarga al abrirlo (25.4 KB: su chunk con el store, 13.0 KB, y Radix Dialog, 12.7 KB), pero su anfitrión y el clic del contador van en el header: ~0.4 KB comprimidos en todas las páginas. Al crecer el chunk común, Turbopack separa el mapa de los `import()` del layout en otro archivo (339 B, pero una petición más: ~1.6 KB transferidos con sus cabeceras), y no se pudo evitar desde el código (con el `import()` en el header o en `FeedbackHost`, igual). En develop la ficha estaba a 31 bytes del tope: queda en 172.2 KB y 26 peticiones, y la home en 165.2 KB. Ajuste mínimo de los topes: home 165.5 KB, ficha 172.5 KB y 26 peticiones; «Mi cotización (n)» en la barra móvil quedó fuera (el ticket lo condicionaba al presupuesto). BD-047 los devuelve a 165 y 170 KB.
+
+**Resto de páginas a 170 KB (BD-060, decisión del usuario, 14 nov 2026).** Con el layout del sitio completo (header con menú y contador, pie, flotantes, avisos, revelado), la parte común ya ocupa unos 160 KB en cualquier página: el 404, sin código propio, ronda 151 KB y `/productos` queda en 167.4 KB (sus filtros suman ~4 KB). Por eso el tope del resto pasa de 150 a 170 KB (también la ficha, que era de 155). BD-047 aligera el JS común del layout para volver a bajarlo. En `/productos`, `ProductCard` dejó de usar el componente `Image` (cliente) y pasa por `getImageProps`: −6.5 KB en la página y −1.4 KB en la home.
 
 **Por qué estos números (BD-015, 3 nov 2026).** La guía original pedía 120 KB en la home y 100 KB en el resto, pensando en un runtime de Next de ~100 KB. Con Next 16.4.3 + React 19.3, una app **vacía** ya carga 132 KB gzip y nuestra home sin código de cliente, 146 KB transferidos (Lighthouse cuenta también las cabeceras). Se mantuvo el margen que daba la guía sobre el runtime: ~+20 KB en la home (hero, splash, drawer) y ~+10 KB en la ficha; en el resto la guía no dejaba margen y aquí queda una holgura mínima (+4 KB). JS inicial = todo script que se descarga mientras Lighthouse mide la carga, **incluidos** los chunks de `dynamic()` que cargan al montar o en ocioso (splash, drawer); solo queda fuera lo que se carga al interactuar (clic, scroll a la sección). Al actualizar Next o React, medir de nuevo el runtime (app vacía) y ajustar si cambia.
 
@@ -51,7 +77,8 @@ Verificación: `pnpm analyze` (bundle analyzer) y `pnpm lhci` con las aserciones
 - [ ] `next/image` siempre; `sizes` exactos; `priority` solo en el LCP; `loading="lazy"` en el resto (por defecto).
 - [ ] Formato WebP (AVIF opcional), 6 anchos generados al subir; `placeholder="blur"` con `blurDataURL`.
 - [ ] Contenedores con proporción fija (`aspect-ratio`) para evitar CLS.
-- [ ] Video del hero: póster es el LCP; video tras `load` y en ocioso; sin video con Save-Data o 2g/3g; `preload="none"` en capítulos no activos.
+- [ ] Video por capítulos (sección 3 desde BD-056): póster y video tras `load` y al entrar la sección en pantalla; sin video con Save-Data o 2g/3g; `preload="none"` en capítulos no activos. El LCP de la home es el texto del h1 del hero principal.
+- [ ] Se precargan las dos fuentes del sitio (Bricolage y DM Sans); Baloo 2, no (BD-055).
 - [ ] Mapa estático (imagen) en `/contacto`; mapa interactivo solo en `/donde-comprar` y al entrar en pantalla.
 
 ### Interacción (INP)
@@ -67,7 +94,7 @@ Nombres en `snake_case`. Implementación en `src/features/analytics/track.ts` co
 | Evento | Cuándo | Parámetros |
 |---|---|---|
 | `hero_chapter_view` | Cambia el capítulo del hero (por clic) | `chapter` |
-| `hero_cta_click` | Clic en CTA del hero | `chapter`, `cta` |
+| `hero_cta_click` | Clic en CTA del hero principal o de la sección de video | `chapter` (`principal` en el hero principal; la clave del capítulo en el video), `cta` (`productos`/`mayoreo` en el hero principal; `principal`/`secundario` en el video) |
 | `solution_click` | Tarjeta de público en home | `audience` |
 | `category_click` | Tarjeta de categoría | `category` |
 | `search_open` / `search` / `search_no_results` | Buscador | `query`, `results` |

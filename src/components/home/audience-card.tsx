@@ -31,7 +31,10 @@ type AudienceCardProps = VariantProps<typeof audienceCardVariants> & {
   headingLevel?: 2 | 3 | 4;
   /** Prefetch del Link; false donde la página todavía no existe. */
   prefetch?: boolean;
-};
+} & DataAttributes;
+
+/** data-* para la analítica (data-event, BD-051) que pasan tal cual al enlace. */
+type DataAttributes = { [key: `data-${string}`]: string | undefined };
 
 export function AudienceCard({
   title,
@@ -40,10 +43,16 @@ export function AudienceCard({
   tone,
   headingLevel = 3,
   prefetch,
+  ...data
 }: AudienceCardProps) {
   const Heading = `h${headingLevel}` as const;
   return (
-    <Link href={href as Route} prefetch={prefetch} className={audienceCardVariants({ tone })}>
+    <Link
+      {...data}
+      href={href as Route}
+      prefetch={prefetch}
+      className={audienceCardVariants({ tone })}
+    >
       <Heading className="text-xl leading-tight text-current">{title}</Heading>
       <p className="text-current">{text}</p>
       <svg

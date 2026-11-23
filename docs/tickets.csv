@@ -67,6 +67,9 @@ BD-017,E0,Fundaciones del repositorio,Base de datos local de desarrollo (SQL Ser
 3. Escribe las cadenas en `.env.local` sin mostrar la contraseña.","- El script se puede correr de nuevo sin romper nada.
 - Ningún secreto en el repo.
 - `localhost:1433` responde y bolik_app se conecta a las tres bases.",Sí
+BD-018,E0,Fundaciones del repositorio,Actualizar Next.js por avisos de seguridad,S2,0.25,Must,B,,"03, 15","Ticket nuevo: next build con 16.4.3 se detenía con SecurityFatalError (avisos de 'use cache' y Cache Components, corregidos en 16.4.5).","1. Subir next, @next/env y eslint-config-next al último parche de 16.x.
+2. Revisar las notas de las versiones intermedias y probar lo que toquen.","- pnpm build pasa al primer intento, sin aviso de seguridad.
+- pnpm audit --prod sin avisos de next.",Sí
 BD-020,E1,Sistema de diseño y /styleguide,Componente Section con fondos configurables,S1,0.5,Must,A,BD-007,08 §3,Toda sección del sitio usa `Section` con fondo y tono elegibles.,"1. `components/layout/section.tsx` y `container.tsx` (código en doc 08).
 2. Props: `bg` (9 presets), `tone`, `spacing`, `id`, `as`.
 3. Leer la apariencia por sección desde `SectionAppearance` cuando exista `appearanceKey`.","- Los 9 fondos se ven en `/styleguide`.
@@ -96,6 +99,9 @@ BD-026,E1,Sistema de diseño y /styleguide,Vista /styleguide,S1,1,Must,A,BD-020 
 BD-027,E1,Sistema de diseño y /styleguide,Logo e ilustraciones,S1,0.5,Must,A,BD-007,02,Logo como componente SVG y las ilustraciones de los diálogos.,"1. `components/brand/logo.tsx` con el logo oficial de Mercadeo: variantes `full`, `inverse` y `wordmark` (BOLIK® en un color; el logo no tiene isotipo, así que no hay `mark`). Archivos optimizados con SVGO en `public/brand`.
 2. Ilustraciones SVG en línea (éxito, error, vacío, sin resultados, sin conexión).","- Cada ilustración y el wordmark pesan < 4 KB; el archivo del logo completo, ≤ 25 KB (7 KB gzip: el trazo de crayón oficial no baja más sin perder detalle).
 - El logo tiene `aria-label=""Bolik""`.",No
+BD-028,E1,Sistema de diseño y /styleguide,Favicon e íconos de Bolik,S3,0.25,Must,A,BD-027,02,"Ticket nuevo (de BD-055): el sitio usa todavía el favicon por defecto de Next.js.","1. Pedir a Mercadeo la versión cuadrada para el ícono (el logo no tiene isotipo).
+2. `src/app/favicon.ico` con cuadros PNG de 16, 32 y 48 px; `icon.svg` y `apple-icon.png` (180 px).","- Ningún ícono de Next.js en el sitio.
+- `favicon.ico` ≤ 4 KB.",Sí
 BD-030,E2,"Datos, medios e integración base",Esquema completo y migraciones,S0,0.5,Must,B,BD-010,05,Todas las tablas del MVP.,"1. Usar `starter/prisma/schema.prisma` completo.
 2. `pnpm db:migrate --name schema_mvp`.
 3. Revisar índices del doc 05 §6.","- `prisma validate` OK.
@@ -138,8 +144,15 @@ BD-038,E2,"Datos, medios e integración base",Catálogo real 2026-2027,S2,1.5,Mu
 2. Emparejar cada variante con su código SAP (PT…) usando el código de barras como puente, con la exportación de artículos de SAP; sin código SAP no se carga como real.
 3. Ampliar `PACKAGING_CODES` con las presentaciones del catálogo y revisar las categorías.
 4. Decidir cómo se muestran las marcas del grupo (Fabik, Coloreto, EcoBol, K-Pen).
-5. Quitar los productos de ejemplo que el catálogo real ya cubre.","- Cada producto del catálogo con su código SAP está en `products.json` sin `sample`.
+5. Quitar los productos de ejemplo que el catálogo real ya cubre.","- ~~Cada producto del catálogo con su código SAP está en `products.json` sin `sample`~~: pasó a BD-039 (sin credenciales de SMART-K66).
 - Todos los códigos de barras pasan la validación y `pnpm db:seed` dos veces no duplica datos.",Sí
+BD-039,E2,"Datos, medios e integración base",Productos reales del catálogo con su código SAP,S3,1,Must,B,BD-038,"05 §6, §8","Ticket nuevo (de BD-038): cargar como reales los productos del catálogo 2026-2027 cuando haya códigos SAP.","1. Fuente: el Excel del catálogo de Mercadeo (69 productos, 122 códigos), fuera del repo.
+2. Códigos SAP con `pnpm erp:articles` (credenciales en `.env.local`) o una exportación de SAP; emparejar por código de barras.
+3. `products.json` con marca, categoría, colores, códigos y presentaciones genéricas.
+4. Mapear las 16 categorías del catálogo a las del sitio y publicar `tablas-y-estuches`.
+5. Quitar los ejemplos cubiertos y ajustar las E2E.
+6. Confirmar con Mercadeo los productos sin código de barras y los nombres repetidos.","- Cada producto del catálogo con su código SAP está en `products.json` sin `sample`.
+- `pnpm db:seed` dos veces no duplica datos.",Sí
 BD-040,E3,"Estructura global, splash y movimiento",Layout raíz del sitio,S1,0.5,Must,A,BD-008 BD-024,06 §2,"HTML base, metadatos raíz y proveedores mínimos.","1. `app/layout.tsx`: `<html lang=""es-GT"">`, fuentes, `rootMetadata`, enlace ""Saltar al contenido"".
 2. `app/(site)/layout.tsx`: Header, `<main id=""contenido"">`, Footer, Toaster, RevealObserver.
 3. Script del splash en `<head>`.","- Una sola etiqueta `<main>` por página.
@@ -164,18 +177,25 @@ BD-045,E3,"Estructura global, splash y movimiento",MotionProvider diferido,S1,0.
 BD-046,E3,"Estructura global, splash y movimiento",Páginas 404 y 500,S2,0.5,Must,B,BD-040 BD-037,"06 §3.19, 10 §6",Errores amables que ayudan a seguir navegando.,"1. `not-found.tsx`: busca redirección en BD (tabla `Redirect`); si no hay, registra `NotFoundLog` y muestra buscador + categorías. Conserva su `<MainContent>` (BD-040: queda fuera de los layouts de grupo) y revisa que no salga el `<title>` de Next en inglés.
 2. `error.tsx` con WhatsApp y ""Reintentar"".","- Una URL vieja registrada en `Redirect` responde 301.
 - Las demás registran el 404 con contador.",Sí
+BD-047,E3,"Estructura global, splash y movimiento",Aligerar el JS común del layout,S3,1,Should,A,BD-040 BD-041 BD-042,12 §2,"Ticket nuevo (de BD-060): la parte común del sitio ocupa ~160 KB de JS en cualquier página; bajarla para volver a bajar el tope del resto (hoy 170 KB).","1. `pnpm analyze` del layout: islas de cliente de todas las páginas y su peso.
+2. Diferir lo que no hace falta en el primer pintado sin romper el sitio sin JS ni el feedback.
+3. Medir de nuevo el 404 y `/productos` y bajar el tope en `lighthouse.config.cjs`, docs/12 §2 y CLAUDE.md.","- El 404 baja de ~151 KB de JS y el tope del resto baja de 170 KB.
+- Sin cambios visibles ni de accesibilidad; E2E en verde.",No
+BD-048,E3,"Estructura global, splash y movimiento",Header sin desborde entre 1024 y 1280 px,S2,0.25,Must,A,BD-041,06 §2,"Ticket nuevo (14 nov 2026, de BD-061): con barra de desplazamiento, a 1024 px el header salía de la página (11 px con una barra de 17 px).","1. Medir el contenido del header contra el ancho útil con barra de desplazamiento.
+2. Compactar solo entre lg y xl: logo sin margen extra, separaciones de 4 px y «Cotizar» con 16 px de padding.","- A 1024 px con barra de desplazamiento, nada desborda (E2E).
+- Sin cambios desde 1280 px ni en móvil; «Cotizar» sigue ≥ 44 px de alto.",Sí
 BD-050,E4,Inicio,Hero con video por capítulos,S2,1.5,Must,A,BD-037 BD-034 BD-044,"06 §3.1, 09","El hero de la demo, llevado a producción.","1. Copiar `starter/src/components/hero/video-hero.tsx`.
 2. Datos desde `HeroChapter` (título, texto, CTA, póster, video).
 3. Póster del capítulo 1 con `priority` (es el LCP).
-4. Video solo tras `load`, en ocioso y sin Save-Data/2g/3g/movimiento reducido.","- LCP de la home ≤ 2.0 s en Lighthouse móvil.
+4. Video solo tras `load`, en ocioso y sin Save-Data/2g/3g/movimiento reducido.","- LCP de la home ≤ 2.0 s en Lighthouse móvil (pasó a BD-055; límite temporal de 3.2 s).
 - Capítulos navegables con flechas del teclado.
 - El video se pausa fuera de pantalla.",Sí
 BD-051,E4,Inicio,Soluciones por público y categorías,S2,0.5,Must,A,BD-023 BD-037,06 §3.1,Accesos rápidos a lo que busca cada visitante.,"1. ""Un Bolik para cada etapa"": 5 tarjetas (Colegios, Universidades, Empresas, Librerías, Distribuidores) y 8 categorías con buscador grande (doc 06 §3.1, secciones 3–4).
 2. Eventos `solution_click` y `category_click`.","- Las tarjetas enlazan a rutas reales.
-- Revelado escalonado (A-30).",Sí
-BD-052,E4,Inicio,Producto estrella y cifras,S2,0.5,Must,A,BD-051,06 §3.1,Bolik Ultra destacado y cifras de la empresa.,"1. Bloque del Ultra con colores, empaques y CTA ""Cotizar"" / ""Dónde comprar"".
+- Revelado escalonado (A-21) y elevación al pasar el mouse (A-30).",Sí
+BD-052,E4,Inicio,Producto estrella y cifras,S2,0.5,Must,A,BD-051,06 §3.1,Bolik Ultra destacado y cifras de la empresa.,"1. Bloque del Ultra con colores, empaques y CTA «Ver ficha» / «Dónde comprar» (doc 17; decía «Cotizar»).
 2. Cifras desde `SiteStat` con `CountUp`.","- El servidor renderiza los números finales (SEO).
-- Solo se muestran cifras con `isVerified = true`.",Sí
+- Solo se muestran cifras validadas: `SiteStat.published = true`.",Sí
 BD-053,E4,Inicio,"Dónde comprar, escuelas e historia en la home",S2,0.5,Must,A,BD-051,06 §3.1,Resúmenes que llevan a las páginas internas.,"1. Resumen de puntos de venta con cadenas y compra en línea.
 2. Bloque de escuelas con estilo infantil.
 3. Bloque de historia (1966 → hoy).","- Los enlaces externos llevan `rel=""noopener""` y registran `retailer_click`.",Sí
@@ -183,9 +203,18 @@ BD-054,E4,Inicio,"FAQ, CTA final y apariencia por sección",S2,0.5,Must,A,BD-051
 2. 6 FAQs (scope `home`) con `FAQPage`.
 3. CTA final a cotización y WhatsApp.
 4. Cada sección lee su fondo desde `SectionAppearance`.",- Cambiar el fondo en el admin se refleja en la home tras guardar.,Sí
-BD-055,E4,Inicio,Ajuste de rendimiento de la home,S2,0.5,Must,A,BD-050 BD-054,12,La home cumple los presupuestos.,"1. Bundle analyzer; mover a carga diferida lo que no se ve arriba.
+BD-055,E4,Inicio,Ajuste de rendimiento de la home,S2,0.5,Must,A,BD-050 BD-054 BD-056,12,La home cumple los presupuestos.,"1. Bundle analyzer; mover a carga diferida lo que no se ve arriba.
 2. Lighthouse móvil 3 corridas.","- JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
-- Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.",Sí
+- Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.
+- ~~LCP de la home ≤ 2.0 s en Lighthouse móvil~~: pasó a medición de campo en BD-126 (decisión del 12 nov 2026).
+- LCP de la home ≤ 3.2 s en Lighthouse móvil como guardia de regresión.",Sí
+BD-056,E4,Inicio,Hero principal nuevo,S2,1.5,Must,A,BD-050,"06 §3.1, 09, 12","Ticket nuevo: un hero visualmente atractivo e impactante abre la home; el hero de video por capítulos pasa a una sección más abajo.","1. Definir con el usuario el diseño del hero nuevo.
+2. El hero nuevo lleva el único h1 y el elemento LCP de la home.
+3. El hero de video pasa a la sección 3 o 4: título h2, pósters con loading lazy y sin prioridad alta, video después de load y cerca de la pantalla.
+4. Actualizar doc 06 §3.1 y doc 09 §5.","- Un solo h1 en la home, en el hero nuevo.
+- La sección de video no pide pósters ni video en la carga inicial.
+- ~~LCP de la home ≤ 2.0 s en Lighthouse móvil, junto con BD-055~~: pasó a medición de campo en BD-126.
+- Visible sin JavaScript y con movimiento reducido respetado.",Sí
 BD-060,E5,"Catálogo, fichas y búsqueda",Catálogo /productos,S2,1,Must,A,BD-023 BD-037,06 §3.2,Todos los productos con filtros por uso.,"1. Server Component con la grilla completa.
 2. Isla cliente para filtros (uso, línea, color) que actualiza la URL (`?uso=oficina`) sin recargar.
 3. Estado vacío amigable.","- Filtrar no hace peticiones al servidor.
@@ -193,9 +222,9 @@ BD-060,E5,"Catálogo, fichas y búsqueda",Catálogo /productos,S2,1,Must,A,BD-02
 BD-061,E5,"Catálogo, fichas y búsqueda",Página de categoría,S2,0.5,Must,A,BD-060,"06 §3.3, 10","Página optimizada para búsquedas como ""crayones de cera Guatemala"".","1. Intro SEO desde `Category`, grilla, FAQs de la categoría, enlaces a categorías hermanas.
 2. `generateStaticParams` para las 8 categorías.","- Título y descripción únicos.
 - BreadcrumbList válido.",Sí
-BD-062,E5,"Catálogo, fichas y búsqueda",Ficha de producto: información y variantes,S2,2,Must,A,BD-061 BD-034,06 §3.4,La página más importante para SEO y cotización.,"1. Galería (A-40) con zoom en escritorio y deslizamiento en móvil.
+BD-062,E5,"Catálogo, fichas y búsqueda",Ficha de producto: información y variantes,S2,2,Must,A,BD-061 BD-034,06 §3.4,La página más importante para SEO y cotización.,"1. Galería (A-31 al cambiar de color) con zoom en escritorio y deslizamiento en móvil.
 2. Selector de color → cambia imagen, SKU, código de barras y URL (`?color=`).
-3. Selector de empaque (blister 1/3/5, cajilla 12, fardo).
+3. Selector de empaque (las presentaciones de cada producto: blíster, cajilla, estuche, fardo…).
 4. Datos clave, especificaciones, beneficios, usos.
 5. Botones: Agregar a cotización, WhatsApp, Dónde comprar.","- Todo el contenido está en el HTML del servidor.
 - Cambiar color no recarga la página.
@@ -260,8 +289,8 @@ BD-090,E8,SEO técnico,Metadatos en todas las rutas,S2,1,Must,B,BD-037,10 §3,"T
 BD-091,E8,SEO técnico,Datos estructurados JSON-LD,S2,0.5,Must,B,BD-090,10 §4,Datos que Google y las IA entienden.,"1. Copiar `features/seo/jsonld.tsx` y usarlo en cada plantilla.
 2. Validar con la Prueba de resultados enriquecidos y validator.schema.org.","- 0 errores en las plantillas: home, categoría, ficha, FAQ, dónde comprar.
 - Capturas de la validación adjuntas al ticket.",Sí
-BD-092,E8,SEO técnico,sitemap.xml y robots.txt,S2,0.25,Must,B,BD-032,10 §5,Mapa del sitio con fechas reales y reglas para bots.,1. Copiar `app/sitemap.ts` y `app/robots.ts`.
-2. `robots.txt` con `Disallow: /styleguide` y `Disallow: /admin`; ninguno de los dos en el sitemap (BD-026).,"- El sitemap solo incluye páginas publicadas e indexables.
+BD-092,E8,SEO técnico,sitemap.xml y robots.txt,S2,0.25,Must,B,BD-032,10 §5,Mapa del sitio con fechas reales y reglas para bots.,"1. Copiar `app/sitemap.ts` y `app/robots.ts`.
+2. `robots.txt` con `Disallow: /styleguide` y `Disallow: /admin`; ninguno de los dos en el sitemap (BD-026).","- El sitemap solo incluye páginas publicadas e indexables.
 - En staging robots bloquea todo.",Sí
 BD-093,E8,SEO técnico,Migas de pan y enlazado interno,S2,0.5,Must,B,BD-061,10 §7,Ayuda a usuarios y buscadores a entender la jerarquía.,"1. Componente `Breadcrumbs` visible + `BreadcrumbList`.
 2. Bloques de enlaces relacionados (categorías hermanas, productos relacionados, departamentos).",- Ninguna página pública queda a más de 3 clics de la home.,Sí

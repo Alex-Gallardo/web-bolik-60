@@ -71,13 +71,13 @@ describe("Button", () => {
   it("con asChild aplica el estilo a un enlace", () => {
     render(
       <Button asChild variant="outline" endIcon={<svg data-testid="icono" />}>
-        <a href="/productos">Ver catálogo</a>
+        <a href="/ruta-de-prueba">Ver catálogo</a>
       </Button>,
     );
     const link = screen.getByRole("link", { name: "Ver catálogo" });
-    expect(link.getAttribute("href")).toBe("/productos");
+    expect(link.getAttribute("href")).toBe("/ruta-de-prueba");
     expect(link.getAttribute("type")).toBeNull();
-    expect(link.className).toContain("border-ink");
+    expect(link.className).toContain("border-heading");
     expect(link.contains(screen.getByTestId("icono"))).toBe(true);
   });
 
@@ -97,7 +97,7 @@ describe("Button", () => {
   it("con asChild y cargando, el spinner y el ícono quedan dentro del enlace antes del texto", () => {
     render(
       <Button asChild loading endIcon={<svg data-testid="fin" />}>
-        <a href="/productos">Ver catálogo</a>
+        <a href="/ruta-de-prueba">Ver catálogo</a>
       </Button>,
     );
     const link = screen.getByRole("link", { name: "Ver catálogo" });
@@ -114,7 +114,7 @@ describe("Button", () => {
     const onClick = vi.fn();
     render(
       <Button asChild disabled onClick={onClick}>
-        <a href="/productos">Ver catálogo</a>
+        <a href="/ruta-de-prueba">Ver catálogo</a>
       </Button>,
     );
     fireEvent.click(screen.getByRole("link", { name: "Ver catálogo" }));
@@ -149,7 +149,7 @@ describe("Button", () => {
   it("un enlace deshabilitado sale del orden de tabulación", () => {
     render(
       <Button asChild disabled>
-        <a href="/productos">Ver catálogo</a>
+        <a href="/ruta-de-prueba">Ver catálogo</a>
       </Button>,
     );
     const link = screen.getByRole("link", { name: "Ver catálogo" });

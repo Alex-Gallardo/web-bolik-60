@@ -40,7 +40,10 @@ describe("fuente db: lo mismo que la fuente de ejemplo", () => {
   it("las tarjetas, fichas, tiendas y contenido coinciden con fixtures", async () => {
     expect(await dbSource.listCategories()).toEqual(await fixturesSource.listCategories());
     expect(await dbSource.listProducts()).toEqual(await fixturesSource.listProducts());
-    expect(await dbSource.getProduct("boligrafos", "bolik-ultra")).toEqual(
+    // La base sabe cuándo cambió la ficha (BD-062); los JSON no, y la fuente de ejemplo da null.
+    const dbUltra = await dbSource.getProduct("boligrafos", "bolik-ultra");
+    expect(dbUltra?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect({ ...dbUltra, updatedAt: null }).toEqual(
       await fixturesSource.getProduct("boligrafos", "bolik-ultra"),
     );
     expect(await dbSource.listUseTags()).toEqual(await fixturesSource.listUseTags());
@@ -59,7 +62,7 @@ describe("fuente db: lo mismo que la fuente de ejemplo", () => {
       expect(await dbSource.listFaqs({ scope })).toEqual(await fixturesSource.listFaqs({ scope }));
     }
     expect(await dbSource.listPublishedFaqs()).toEqual(await fixturesSource.listPublishedFaqs());
-    for (const key of ["home.hero", "no.existe"]) {
+    for (const key of ["prueba.sin-registro", "no.existe"]) {
       expect(await dbSource.getSectionAppearance(key)).toEqual(
         await fixturesSource.getSectionAppearance(key),
       );
@@ -211,10 +214,15 @@ describe("fuente db: sitemap", () => {
     const data = parseSeedData();
     const { categories, products, departments, contentUpdatedAt } =
       await dbSource.listSitemapEntries();
-    expect(categories.map((c) => c.slug)).toEqual(data.categories.map((c) => c.slug));
+    // Solo las publicadas: una categoría sin publicar (tablas-y-estuches, BD-038) no va al sitemap.
+    expect(categories.map((c) => c.slug)).toEqual(
+      data.categories.filter((c) => c.published).map((c) => c.slug),
+    );
+    // Las fotos de la galería en su orden (BD-097), las mismas que da la fuente de ejemplo.
+    const seedUltra = data.products.find((p) => p.slug === "bolik-ultra")!;
     expect(products.find((p) => p.slug === "bolik-ultra")).toMatchObject({
       categorySlug: "boligrafos",
-      images: [],
+      images: seedUltra.images.map((image) => `/media/${image.mediaKey}`),
     });
     // La fecha de la ficha es la más reciente entre el producto y sus variantes.
     const ultra = await db.product.findUniqueOrThrow({
@@ -235,5 +243,62 @@ describe("fuente db: sitemap", () => {
     expect(departments.map((d) => d.slug).sort()).toEqual([...withStores].sort());
     expect(departments.every((d) => d.updatedAt !== null)).toBe(true);
     expect(contentUpdatedAt).not.toBeNull();
+  });
+
+  it("las fotos de la ficha van al sitemap; las de un color despublicado no (BD-097)", async () => {
+    const before = (await dbSource.listSitemapEntries()).products.find(
+      (p) => p.slug === "bolik-ultra",
+    )!;
+    const { colorKey } = await db.productVariant.findUniqueOrThrow({ where: { sku: "PT00060" } });
+    expect(before.images.some((src) => src.includes(`-${colorKey}-`))).toBe(true);
+    expect(before.images.every((src) => src.startsWith("/media/products/bolik-ultra-"))).toBe(true);
+    await withChange(
+      () => db.productVariant.update({ where: { sku: "PT00060" }, data: { published: false } }),
+      () => db.productVariant.update({ where: { sku: "PT00060" }, data: { published: true } }),
+      async () => {
+        const ultra = (await dbSource.listSitemapEntries()).products.find(
+          (p) => p.slug === "bolik-ultra",
+        )!;
+        expect(ultra.images.length).toBeLessThan(before.images.length);
+        expect(ultra.images.some((src) => src.includes(`-${colorKey}-`))).toBe(false);
+      },
+    );
+  });
+
+  it("una ficha sin colores publicados sale del sitemap (respondería 404)", async () => {
+    const skus = ["PT00058", "PT00059", "PT00060"];
+    await withChange(
+      () =>
+        db.productVariant.updateMany({ where: { sku: { in: skus } }, data: { published: false } }),
+      () =>
+        db.productVariant.updateMany({ where: { sku: { in: skus } }, data: { published: true } }),
+      async () => {
+        const { products } = await dbSource.listSitemapEntries();
+        expect(products.some((p) => p.slug === "bolik-ultra")).toBe(false);
+        expect(products.length).toBeGreaterThan(0);
+      },
+    );
+  });
+});
+
+// BD-054: lo que guardará el editor de apariencia (BD-121) es lo que lee <Section appearanceKey>.
+// En el sitio, el guardado llama a updateTag(TAGS.appearance) y la home se regenera con el fondo.
+describe("fuente db: apariencia por sección", () => {
+  it("un fondo guardado para una sección de la home se lee tal cual; sin fila, null", async () => {
+    expect(await dbSource.getSectionAppearance("home.faq")).toBeNull();
+    await withChange(
+      () =>
+        db.sectionAppearance.create({
+          data: { sectionKey: "home.faq", backgroundPreset: "navy", tone: "dark" },
+        }),
+      () => db.sectionAppearance.delete({ where: { sectionKey: "home.faq" } }),
+      async () => {
+        expect(await dbSource.getSectionAppearance("home.faq")).toEqual({
+          backgroundPreset: "navy",
+          tone: "dark",
+        });
+      },
+    );
+    expect(await dbSource.getSectionAppearance("home.faq")).toBeNull();
   });
 });

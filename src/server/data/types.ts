@@ -1,8 +1,10 @@
 import type {
   BackgroundPreset,
+  Brand,
   FAQ_SCOPES,
   LINE_GROUPS,
   PackagingCode,
+  ProductImageKind,
   STORE_TYPES,
 } from "@/lib/constants";
 
@@ -20,6 +22,9 @@ export type CategoryView = {
   lineGroup: LineGroup;
   shortText: string;
   intro: string | null;
+  /** Title y description propios (docs/10 §1, docs/17 §6, editables en el admin); null = los arma categoryMeta. */
+  seoTitle: string | null;
+  seoDescription: string | null;
   href: string;
   productCount: number;
 };
@@ -47,15 +52,22 @@ export type ImageView = {
 export type ProductCardView = {
   slug: string;
   name: string;
+  /** Marca del grupo (BD-038): la tarjeta muestra un chip cuando no es Bolik. */
+  brand: Brand;
   href: string;
   category: { slug: string; name: string; lineGroup: LineGroup };
   shortDescription: string;
   colors: ColorView[];
   skus: string[];
+  /** Slugs de sus usos (Escolar, Oficina…), en el orden de UseTag: filtros del catálogo (BD-060). */
+  useSlugs: string[];
   featured: boolean;
   /** Producto de ejemplo (no existe en el catálogo real): nunca llega a producción. */
   sample: boolean;
-  /** Imagen principal; null hasta que haya fotos (BD-034): la tarjeta muestra sus colores. */
+  /**
+   * Foto principal del color por defecto (o la primera que haya); null sin fotos: la tarjeta
+   * muestra sus colores.
+   */
   image: ImageView | null;
 };
 
@@ -82,7 +94,20 @@ export type PackagingView = {
 
 export type BenefitView = { iconKey: string; title: string; text: string | null };
 
+/** Foto de la galería (BD-062): su toma y, si es de un color, la clave de esa variante. */
+export type ProductImageView = ImageView & {
+  kind: ProductImageKind;
+  colorKey: string | null;
+};
+
 export type ProductView = ProductCardView & {
+  /** Title y description propios (docs/10 §1, editables en el admin); null = los arma productMeta. */
+  seoTitle: string | null;
+  seoDescription: string | null;
+  /** Última edición del producto o de sus variantes; null con la fuente de ejemplo. */
+  updatedAt: UpdatedAt;
+  /** Galería en orden; solo de colores visibles. Vacía hasta tener fotos. */
+  images: ProductImageView[];
   tagline: string | null;
   description: string | null;
   keyFacts: string[];
@@ -146,9 +171,12 @@ export type HeroChapterView = {
   cta:
     | { kind: "link"; label: string; href: string }
     | { kind: "quote"; label: string; quoteType: "empresa" | "libreria" };
+  /** Segundo CTA de doc 17 §2 (BD-050): siempre un enlace interno. */
+  secondaryCta: { label: string; href: string } | null;
   videoDesktop: string | null;
   videoMobile: string | null;
-  posterKey: string | null;
+  /** Póster del capítulo (MediaAsset); null si no hay o si la clave no existe. */
+  poster: ImageView | null;
 };
 
 export type SiteStatView = {
@@ -198,6 +226,10 @@ export type SiteSettings = {
   splashEnabled: boolean;
   kitsEnabled: boolean;
   minCustomOrder: number | null;
+  /** Mandar las cotizaciones a SAP (ajuste erp_enabled, BD-035); false = erpStatus omitida. */
+  erpEnabled: boolean;
+  /** A quién llegan las cotizaciones (ajuste quote_email_to); null = MAIL_SALES_TO. */
+  quoteEmailTo: string | null;
 };
 
 /** Fecha ISO de la última edición en la base; null con la fuente de ejemplo (no inventa "ahora"). */
@@ -206,6 +238,7 @@ export type UpdatedAt = string | null;
 /** Lo que necesita el sitemap (BD-092): solo páginas publicadas, con su fecha real. */
 export type SitemapEntriesView = {
   categories: { slug: string; updatedAt: UpdatedAt }[];
+  /** `images`: ruta base de cada foto visible («/media/products/bolik-ultra-azul-…»), BD-097. */
   products: { slug: string; categorySlug: string; updatedAt: UpdatedAt; images: string[] }[];
   /** Solo departamentos con al menos un punto de venta publicado. */
   departments: { slug: string; updatedAt: UpdatedAt }[];
@@ -225,6 +258,10 @@ export type SearchEntryView = {
   skus: string[];
   barcodes: string[];
   sample: boolean;
+  /** Marca del grupo («Fabik»): buscar la marca encuentra sus productos (BD-038). */
+  brand: string;
+  /** Cada color con sus códigos: la tarjeta «¿Buscas el Bolik Ultra Azul (PT00058)?» (BD-066). */
+  variants: { sku: string; barcode: string | null; color: string; colorKey: string }[];
 };
 
 /** Lo que resume /llms.txt (BD-100). */

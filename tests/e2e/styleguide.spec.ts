@@ -51,9 +51,12 @@ test.describe("styleguide", () => {
     }
     await expect(nav).toBeVisible();
     const links = nav.getByRole("link");
-    await expect(links).toHaveCount(SECTIONS.length + 1);
+    // Las secciones y, al final, las páginas aparte: datos (BD-037) y correos de prueba (BD-074).
+    await expect(links).toHaveCount(SECTIONS.length + 2);
     for (const [index, id] of SECTIONS.entries())
       await expect(links.nth(index)).toHaveAttribute("href", `#${id}`);
+    await expect(links.nth(SECTIONS.length)).toHaveAttribute("href", "/styleguide/datos");
+    await expect(links.nth(SECTIONS.length + 1)).toHaveAttribute("href", "/styleguide/correos");
     await nav.getByRole("link", { name: /Movimiento/ }).click();
     await expect(page).toHaveURL(/#movimiento$/);
   });

@@ -26,6 +26,19 @@ if (process.env.MEDIA_DIR && !isAbsolute(process.env.MEDIA_DIR)) {
   process.env.MEDIA_DIR = resolve(root, process.env.MEDIA_DIR);
 }
 
+// Pósters y videos de ejemplo del hero (BD-050): si faltan (no se corrió `pnpm media:samples`), se
+// ponen reemplazos con la misma clave para que Playwright y Lighthouse no vean errores 404.
+// Nunca pisa los archivos que ya están.
+if (process.env.MEDIA_DIR) {
+  const { ensureSampleMedia } = await import("./ci/sample-media.mjs");
+  const written = await ensureSampleMedia(process.env.MEDIA_DIR);
+  if (written) {
+    console.log(
+      `Medios de ejemplo: ${written} reemplazos en ${process.env.MEDIA_DIR} (las ilustraciones de la demo se ponen con pnpm media:samples).`,
+    );
+  }
+}
+
 cpSync(`${root}public`, `${standalone}/public`, { recursive: true });
 cpSync(`${root}.next/static`, `${standalone}/.next/static`, { recursive: true });
 

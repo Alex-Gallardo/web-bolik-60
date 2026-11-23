@@ -10,6 +10,7 @@
   --dur-slower: 700ms; /* crossfade del hero, trazos */
   --dur-splash: 2000ms; /* splash completo */
   --dur-shake: 360ms; /* error de campo */
+  --dur-cota: 320ms; /* cota del diagrama de medidas (A-33, docs/09) */
   --dur-shimmer: 1200ms; /* brillo del skeleton (bucle) */
   --dur-spin: 800ms; /* una vuelta del spinner (bucle) */
 
@@ -142,6 +143,14 @@
   animation: fade-up var(--dur-base) var(--ease-out) both;
 }
 
+/* ── Reordenar la grilla A-22, BD-060 ──
+   Al filtrar el catálogo, las tarjetas que vuelven a aparecer entran con fade (quitar hidden
+   reinicia la animación). data-filtered lo pone el primer cambio de filtro: la primera carga no
+   se anima. Con movimiento reducido dura 1 ms (regla global). */
+[data-filtered] [data-product]:not([hidden]) {
+  animation: fade-in var(--dur-base) var(--ease-out);
+}
+
 /* ── Reveal al hacer scroll A-21, BD-044 ──
    Solo se oculta cuando RevealObserver está listo (data-reveal-ready en <html>): antes revela lo que
    ya está en pantalla. Sin JS, mientras el JS carga o con movimiento reducido, todo es visible.
@@ -251,6 +260,88 @@ html[data-reveal-ready] [data-reveal][data-revealed="instant"] {
 .ink-draw {
   stroke-dasharray: var(--path-length, 1000);
   animation: draw var(--dur-slower) var(--ease-out) both;
+}
+/* El subrayado del h1 del hero espera a que se vea el título (docs/09: 400 ms de retraso). */
+.ink-draw-late {
+  animation-delay: var(--dur-slow);
+}
+
+/* ── Ilustración del hero principal A-14, BD-056 ──
+   Sube con fade-up después del título; solo con JS (sin JS se ve quieta desde el inicio). No es
+   el LCP (el LCP es el texto del h1). */
+.js .hero-art {
+  animation: fade-up var(--dur-slower) var(--ease-out) var(--dur-base) both;
+}
+
+/* ── Hero con video (A-10, A-12, A-13), BD-050 ──
+   A-10: las capas (póster + video) están apiladas y solo cambia su opacidad.
+   A-12: el texto del capítulo entra con fade-up, solo al cambiar de capítulo (data-enter lo pone
+   el cliente): el primero ya está en el HTML y se ve sin esperar ninguna animación.
+   A-13: la barra de la pestaña avanza con scaleX (lineal, al ritmo de timeupdate), nunca con width. */
+.hero-layer {
+  opacity: 0;
+  transition: opacity var(--dur-slower) var(--ease-in-out);
+}
+.hero-layer[data-on] {
+  opacity: 1;
+}
+/* Sin JS se ven los cuatro capítulos; con JS, solo el activo. Al volver a mostrarse (de
+   display:none a visible) la animación arranca de nuevo. */
+/* El display va aquí y no con la utilidad flex: en la capa utilities le ganaría a este none. */
+.hero-chapter {
+  display: flex;
+  flex-direction: column;
+}
+.js .hero-chapter:not([data-active]) {
+  display: none;
+}
+.hero-chapter[data-enter] {
+  animation: fade-up var(--dur-base) var(--ease-out);
+}
+.hero-bar {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-base) linear;
+}
+
+/* ── Línea de tiempo A-50, BD-053 ──
+   La línea se traza desde el origen cuando su bloque (data-reveal) se revela: scaleY en móvil
+   (vertical) y scaleX desde md (horizontal). Sin JS o con movimiento reducido se ve completa. */
+.timeline-line {
+  transform-origin: left top;
+  transition: transform var(--dur-slower) var(--ease-out) var(--dur-base);
+}
+html[data-reveal-ready] [data-reveal]:not([data-revealed]) .timeline-line {
+  transform: scaleY(0);
+}
+@media (min-width: 48rem) {
+  html[data-reveal-ready] [data-reveal]:not([data-revealed]) .timeline-line {
+    transform: scaleX(0);
+  }
+}
+
+/* ── Tarjetas infantiles A-40, BD-053 ──
+   Inclinadas ±1.5° (--tilt en el elemento); al pasar el mouse se enderezan y crecen un poco. Con
+   movimiento reducido, sin rotación. */
+.kids-tilt {
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform var(--dur-base) var(--ease-out);
+}
+@media (hover: hover) {
+  .kids-tilt:hover {
+    transform: rotate(0deg) scale(1.03);
+  }
+}
+
+/* ── Garabato A-41, BD-053 ──
+   Se dibuja (stroke-dashoffset) cuando su envoltorio data-reveal entra en pantalla, no al cargar:
+   la sección está lejos del inicio. Sin JS se ve completo. */
+.scribble path {
+  stroke-dasharray: 1;
+  transition: stroke-dashoffset var(--dur-slower) var(--ease-out) var(--dur-base);
+}
+html[data-reveal-ready] [data-reveal]:not([data-revealed]) .scribble path {
+  stroke-dashoffset: 1;
 }
 
 /* ── Skeleton ── */
@@ -474,7 +565,8 @@ body[data-scroll-locked] .floating-item {
 }
 /* Al imprimir no salen. */
 @media print {
-  .floating-actions {
+  .floating-actions,
+  .product-bar {
     display: none;
   }
 }
@@ -674,6 +766,20 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   }
 }
 
+/* ── Quitar línea de la cotización, A-36 (BD-071): sale hacia la derecha con opacidad; al
+   terminar (animationend) se quita del store y las de abajo suben sin animar la altura. En CSS y
+   no con Motion: el drawer tiene un tope de 30 KB al abrirse (docs/09 §7). ── */
+@keyframes line-exit {
+  to {
+    opacity: 0;
+    transform: translateX(2rem);
+  }
+}
+.quote-line-leave {
+  animation: line-exit var(--dur-base) var(--ease-in) forwards;
+  pointer-events: none;
+}
+
 /* ── Popover, BD-025: opacidad y escala corta desde el lado del Trigger ── */
 .popover-content {
   transform-origin: var(--radix-popover-content-transform-origin);
@@ -725,6 +831,126 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   }
 }
 
+/* ── Ficha de producto (BD-062) ──
+   Color: cada conjunto de fotos y cada línea de código lleva data-color-variant; solo se ve el del radio
+   de color marcado (regla por color en la página, features/catalog/variant-color.ts). Sin :has,
+   el del color por defecto. A-31: al cambiar de color (data-color-changed, nunca en el primer
+   pintado) el conjunto nuevo entra con opacidad y el anillo del color elegido crece. */
+[data-ficha] [data-color-variant] {
+  display: none;
+}
+@supports not selector(:has(*)) {
+  [data-ficha] [data-color-variant][data-default] {
+    display: block;
+  }
+}
+[data-color-changed] .gallery-set {
+  animation: fade-in var(--dur-base) var(--ease-in-out);
+}
+.swatch .swatch-dot {
+  transition: transform var(--dur-base) var(--ease-in-out);
+}
+.swatch:has(:checked) .swatch-dot {
+  transform: scale(1.12);
+}
+/* Galería: una tira con scroll-snap por color (se desliza en móvil); cada foto, cuadrada. */
+/* relative: cada foto mide su offsetLeft desde la tira (miniaturas, product-gallery-island). */
+.gallery-track {
+  position: relative;
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.gallery-track::-webkit-scrollbar {
+  display: none;
+}
+.gallery-slide {
+  position: relative;
+  flex: 0 0 100%;
+  overflow: hidden;
+  aspect-ratio: 1;
+  scroll-snap-align: start;
+}
+.gallery-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+/* Zoom con mouse: solo transform, hacia donde está el puntero; el aumento (--zoom-scale) lo
+   calcula la isla según la resolución de la foto (lib/zoom.ts). */
+.gallery-slide[data-zoomable] {
+  cursor: zoom-in;
+}
+.gallery-slide[data-zoomed] .gallery-image {
+  transform: scale(var(--zoom-scale, 2));
+  transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
+}
+.gallery-thumb[aria-current] {
+  border-color: var(--blue);
+}
+/* Con JS, la barra de abajo de la ficha (Agregar + WhatsApp) reemplaza a la del sitio. */
+.js body:has(.product-bar) .floating-actions .mobile-bar {
+  display: none;
+}
+
+/* ── Diagrama de medidas (BD-063, A-33) ──
+   Sin parte elegida se ven todas las cotas. Al elegir una (radios del diagrama, sin JS) las demás
+   se atenúan y la suya se resalta: su línea se dibuja (stroke-dashoffset) y la etiqueta aparece
+   (opacity). Las partes son las de PEN_PARTS (dimension-diagram.tsx). */
+/* Color de la línea aquí y no con una utilidad (stroke-ink): la utilidad le ganaría al azul. */
+.dimension-diagram .cota-line {
+  stroke: var(--ink);
+  fill: none;
+}
+.dimension-diagram svg [data-part] {
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.dimension-diagram:has([data-dimension-part]:checked) svg [data-part] {
+  opacity: 0.25;
+}
+.dimension-diagram:has([data-dimension-part="body"]:checked) svg [data-part="body"],
+.dimension-diagram:has([data-dimension-part="cap"]:checked) svg [data-part="cap"],
+.dimension-diagram:has([data-dimension-part="tip_length"]:checked) svg [data-part="tip_length"],
+.dimension-diagram:has([data-dimension-part="tip_diameter"]:checked) svg [data-part="tip_diameter"],
+.dimension-diagram:has([data-dimension-part="mark"]:checked) svg [data-part="mark"] {
+  opacity: 1;
+}
+.dimension-diagram:has([data-dimension-part="body"]:checked) [data-part="body"] .cota-line,
+.dimension-diagram:has([data-dimension-part="cap"]:checked) [data-part="cap"] .cota-line,
+.dimension-diagram:has([data-dimension-part="tip_length"]:checked)
+  [data-part="tip_length"]
+  .cota-line,
+.dimension-diagram:has([data-dimension-part="tip_diameter"]:checked)
+  [data-part="tip_diameter"]
+  .cota-line,
+.dimension-diagram:has([data-dimension-part="mark"]:checked) [data-part="mark"] .cota-line {
+  stroke: var(--blue);
+  stroke-dasharray: 1;
+  animation: cota-draw var(--dur-cota) var(--ease-out);
+}
+.dimension-diagram:has([data-dimension-part="body"]:checked) [data-part="body"] .cota-label,
+.dimension-diagram:has([data-dimension-part="cap"]:checked) [data-part="cap"] .cota-label,
+.dimension-diagram:has([data-dimension-part="tip_length"]:checked)
+  [data-part="tip_length"]
+  .cota-label,
+.dimension-diagram:has([data-dimension-part="tip_diameter"]:checked)
+  [data-part="tip_diameter"]
+  .cota-label,
+.dimension-diagram:has([data-dimension-part="mark"]:checked) [data-part="mark"] .cota-label {
+  animation: fade-in var(--dur-cota) var(--ease-out);
+}
+@keyframes cota-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* ── Movimiento reducido: sin desplazamientos, solo opacidad breve ── */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -738,6 +964,17 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   }
   html[data-reveal-ready] [data-reveal]:not([data-revealed]) {
     opacity: 1;
+    transform: none;
+  }
+  /* Línea de tiempo y garabato completos desde el inicio; tarjetas infantiles sin rotación. */
+  html[data-reveal-ready] [data-reveal]:not([data-revealed]) .timeline-line {
+    transform: none;
+  }
+  html[data-reveal-ready] [data-reveal]:not([data-revealed]) .scribble path {
+    stroke-dashoffset: 0;
+  }
+  .kids-tilt,
+  .kids-tilt:hover {
     transform: none;
   }
   /* Sin giro: el spinner queda quieto y el texto anuncia la carga. */
@@ -770,6 +1007,19 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   .confetti {
     display: none;
   }
+  /* Subrayado del h1 del hero (A-11): fijo al instante, sin esperar el retraso. */
+  .ink-draw-late {
+    animation-delay: 0ms;
+  }
+  /* Ilustración del hero: solo opacidad, sin subir. */
+  .js .hero-art {
+    animation-name: fade-in;
+    animation-delay: 0ms;
+  }
+  /* Zoom de la galería: amplía, pero desde el centro (no se desplaza con el puntero). */
+  .gallery-slide[data-zoomed] .gallery-image {
+    transform-origin: 50% 50%;
+  }
   /* Sheet y Popover: aparecen y se van solo con opacidad. */
   /* El * de arriba no alcanza ::details-content: el acordeón abre al instante. */
   .accordion-item::details-content {
@@ -782,6 +1032,10 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   }
   .sheet-content[data-side][data-state="closed"],
   .popover-content[data-state="closed"] {
+    animation-name: fade-out;
+  }
+  /* A-36: la línea se va solo con opacidad. */
+  .quote-line-leave {
     animation-name: fade-out;
   }
 }
@@ -803,6 +1057,16 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
 }
 html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) {
   opacity: 1;
+  transform: none;
+}
+html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) .timeline-line {
+  transform: none;
+}
+html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) .scribble path {
+  stroke-dashoffset: 0;
+}
+[data-reduced-motion] .kids-tilt,
+[data-reduced-motion] .kids-tilt:hover {
   transform: none;
 }
 [data-reduced-motion] .spin {
@@ -831,8 +1095,18 @@ html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) 
 [data-reduced-motion] .confetti {
   display: none;
 }
+[data-reduced-motion] .ink-draw-late {
+  animation-delay: 0ms;
+}
+.js[data-reduced-motion] .hero-art {
+  animation-name: fade-in;
+  animation-delay: 0ms;
+}
 [data-reduced-motion] .accordion-item::details-content {
   transition: none;
+}
+[data-reduced-motion] .gallery-slide[data-zoomed] .gallery-image {
+  transform-origin: 50% 50%;
 }
 [data-reduced-motion] .sheet-content[data-side][data-state="open"],
 [data-reduced-motion] .popover-content[data-state="open"] {
@@ -840,5 +1114,8 @@ html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) 
 }
 [data-reduced-motion] .sheet-content[data-side][data-state="closed"],
 [data-reduced-motion] .popover-content[data-state="closed"] {
+  animation-name: fade-out;
+}
+[data-reduced-motion] .quote-line-leave {
   animation-name: fade-out;
 }

@@ -2,7 +2,7 @@ import { Children, isValidElement, type ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { FloatingActions } from "@/components/layout/floating-actions";
 import { Header } from "@/components/layout/header";
-import { floatingText } from "@/content/footer";
+import { whatsappText } from "@/content/whatsapp";
 import type { SiteSettings } from "@/server/data/types";
 
 // Datos del layout sin fuente real. El árbol no se renderiza (el pie es async, de servidor): se
@@ -17,6 +17,8 @@ const settings: SiteSettings = {
   splashEnabled: true,
   kitsEnabled: false,
   minCustomOrder: null,
+  erpEnabled: true,
+  quoteEmailTo: null,
 };
 vi.mock("next/cache", () => ({ cacheLife: () => {} }));
 vi.mock("@/server/data/catalog", () => ({ listCategories: async () => [] }));
@@ -43,7 +45,7 @@ describe("layout del sitio (BD-042)", () => {
     for (const href of urls) {
       const url = new URL(href!);
       expect(url.origin + url.pathname).toBe("https://wa.me/50255555555");
-      expect(url.searchParams.get("text")).toBe(floatingText.whatsappMessage);
+      expect(url.searchParams.get("text")).toBe(whatsappText.general);
     }
   });
 

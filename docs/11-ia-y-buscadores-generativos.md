@@ -27,7 +27,7 @@ Decisión recomendada para Bolik: **permitir** a los bots de búsqueda y de IA. 
 | `Applebot`, `Applebot-Extended` | Apple | Siri/Spotlight e IA de Apple | Permitir |
 | `Bingbot` | Microsoft | Bing y Copilot | Permitir |
 
-Implementado en `starter/src/app/robots.ts`. Si Gerencia decide no permitir entrenamiento, basta mover `GPTBot`, `ClaudeBot`, `Google-Extended` y `Applebot-Extended` a una regla con `Disallow: /` (las búsquedas en vivo siguen funcionando con los demás).
+Implementado en `src/features/seo/robots.ts` (`AI_BOTS`, BD-092), que usa `src/app/robots.ts`. Si Gerencia decide no permitir entrenamiento, basta mover `GPTBot`, `ClaudeBot`, `Google-Extended` y `Applebot-Extended` a una regla con `Disallow: /` (las búsquedas en vivo siguen funcionando con los demás).
 
 **Ojo con el firewall:** confirmar con TI que el WAF/IIS no bloquea estos user-agents (es frecuente que se bloqueen por error como "bots").
 

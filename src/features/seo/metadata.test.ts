@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { publicEnv } from "@/env.public";
-import { SITE, buildMetadata, canonicalPath, rootMetadata } from "./metadata";
+import { DEFAULT_OG_IMAGE, SITE, buildMetadata, canonicalPath, rootMetadata } from "./metadata";
 
 describe("metadata (BD-040, docs/10)", () => {
   it("canónica sin barra final, salvo la home", () => {
@@ -15,14 +15,14 @@ describe("metadata (BD-040, docs/10)", () => {
       title: "Bolik Ultra",
       description: "Bolígrafo hexagonal de punta mediana.",
       path: "/productos/boligrafos/bolik-ultra/",
-      image: "/og/bolik-ultra.png",
+      image: { url: "/og/bolik-ultra.png", alt: "Bolik Ultra" },
     });
     expect(meta.alternates?.canonical).toBe("/productos/boligrafos/bolik-ultra");
     expect(meta.openGraph).toMatchObject({
       url: "/productos/boligrafos/bolik-ultra",
       locale: "es_GT",
       siteName: "Bolik",
-      images: [{ url: "/og/bolik-ultra.png", width: 1200, height: 630 }],
+      images: [{ url: "/og/bolik-ultra.png", alt: "Bolik Ultra", width: 1200, height: 630 }],
     });
     expect(meta.robots).toMatchObject({ index: true, follow: true });
   });
@@ -35,7 +35,15 @@ describe("metadata (BD-040, docs/10)", () => {
       noindex: true,
     });
     expect(meta.robots).toMatchObject({ index: false, follow: true });
+    // También se comparten (un enlace a /cotizacion): llevan la imagen de la marca (BD-090).
+    expect(meta.openGraph).toMatchObject({ images: [DEFAULT_OG_IMAGE] });
+    expect(meta.twitter).toMatchObject({ images: [DEFAULT_OG_IMAGE] });
+  });
+
+  it("image: false deja la imagen al opengraph-image.tsx de la página (BD-090)", () => {
+    const meta = buildMetadata({ title: "x", description: "x", path: "/x", image: false });
     expect(meta.openGraph).not.toHaveProperty("images");
+    expect(meta.twitter).not.toHaveProperty("images");
   });
 
   it("título absoluto (la home): sin plantilla y el mismo en Open Graph", () => {

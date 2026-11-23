@@ -23,10 +23,16 @@ Voz (doc 02 §8): **tú**, cálido y directo, frases cortas, orgullo guatemaltec
 
 ## 2. Inicio
 
-### Hero (4 capítulos)
+### Hero principal (BD-056)
 
-`h1` fijo: **De la materia prima a tu primer trazo.**
+`h1`: **De la materia prima a tu primer trazo.**
 Chip: **60 años · Hecho en Guatemala**
+Texto: Útiles escolares y de oficina fabricados en Guatemala desde 1966. *(primera frase de la descripción de la home, §6)*
+Botones: Ver productos · Cotizar por mayor
+
+### Video por capítulos (sección 3)
+
+`h2`: **Así nace un Bolik**
 
 | Capítulo | Pestaña | Texto | CTA principal | CTA secundario |
 |---|---|---|---|---|
@@ -79,12 +85,18 @@ Chip: **60 años · Hecho en Guatemala**
 ### Dónde comprar
 - Título: **Bolik está cerca de ti**
 - Texto: Encuéntranos en librerías, supermercados y cadenas de todo el país, o compra en línea.
-- Selector: Elige tu departamento
+- Selector: Elige tu departamento · Botón: Ver tiendas
+- Subtítulo de los botones de tiendas: Compra en línea
 - Botones: Comprar en Walmart · Comprar en La Torre · Ver todas las tiendas
 
 ### Kits escolares 2027
 - Título: **Kits escolares 2027**
 - Texto: Todo lo de la lista, en un solo paquete, por grado.
+- Botón: Ver kits escolares
+
+### Preguntas frecuentes
+- Título: **Preguntas frecuentes**
+- Botón: Ver todas las preguntas
 
 ### Historia
 - Título: **60 años escribiendo con Guatemala**
@@ -107,6 +119,8 @@ Chip: **60 años · Hecho en Guatemala**
 | Tarjeta, colores | Color: {color} · Colores: {a}, {b} y {c} (en minúscula; +{n} si no caben los puntos) |
 | Tarjeta de categoría | 1 producto · {n} productos |
 | Sin resultados con filtros | No hay productos con esos filtros. · Quitar filtros |
+| Página de categoría, botones | Cotizar esta línea por mayor · Dónde comprar |
+| Página de categoría, secciones | Preguntas frecuentes · Otras categorías |
 
 Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa el admin):
 
@@ -142,6 +156,10 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Advertencia: Uso bajo supervisión de un adulto con niños menores de 3 años. Contiene partes pequeñas que pueden ser ingeridas o inhaladas. Evitar temperaturas superiores a 45 °C y la exposición directa al sol. Almacenar en un lugar seco y ventilado.
 - Actualizado: Actualizado el {fecha}
 - Relacionados: También te puede servir
+- Interfaz de la ficha (BD-062): Datos clave del {producto} · Beneficios · Usos · Pestañas: Especificaciones · Medidas y empaque · Para distribuidores · Seguridad · Presentaciones · Códigos por color (Color · Código · Código de barras; «Por confirmar» si falta) · Total: {n} unidades · Cantidades sugeridas: Elegir {n} · Barra móvil: Agregar a cotización · WhatsApp · Cierre: el «CTA final» de la home (§2)
+- Etiquetas de la ficha (BD-062): Migas de pan · Marca {marca} · Fotos del producto · Foto {n} de {total} · {Producto} {color}, sin foto todavía · Código de barras {código} (o «Código de barras por confirmar») · Medidas del {producto} en milímetros (Parte · Medida) · Medidas, peso y unidades de cada presentación (Presentación · Unidades · Contiene: {n} empaques · Medidas (largo × ancho × alto) · Peso) · Código SAP y código de barras de cada color del {producto} · Acciones del producto (barra móvil)
+- Medidas, relacionados y dónde comprar (BD-063): Diagrama de medidas del {producto} · Elige una parte para ver su medida · Todas · Dónde comprar este producto (con el texto de «Dónde comprar» de §2) · Cadenas · Compra en línea · Comprar en {tienda} · Ver todas las tiendas · También te puede servir
+- WhatsAppSheet: Escríbenos por WhatsApp · Vista previa del mensaje · Copiar · Abrir WhatsApp
 
 ## 4. Páginas por público
 
@@ -211,7 +229,7 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Botones: Escribir por WhatsApp con mi folio · Seguir viendo productos
 
 ### 404 y 500
-- 404: **Esta página se borró como lápiz.** Puede que la dirección haya cambiado. Busca un producto o vuelve al inicio. *(Hasta que el buscador llegue a la 404 con BD-066: «Revisa el catálogo o vuelve al inicio».)*
+- 404: **Esta página se borró como lápiz.** Puede que la dirección haya cambiado. Busca un producto o vuelve al inicio. *(Con el buscador en la página desde BD-066.)*
 - 500: **Algo salió mal de nuestro lado.** Ya lo estamos revisando. Intenta de nuevo o escríbenos por WhatsApp. *(Sin número de WhatsApp: «Inténtalo de nuevo en un momento o llámanos».)*
 
 <a id="microcopy"></a>
@@ -242,6 +260,13 @@ La fuente única de toasts y diálogos es `src/content/feedback.ts` (starter). E
 | Cerrar diálogo | Cerrar |
 | Admin, tabla vacía | Todavía no hay {elementos}. |
 | Admin, sin resultados | No encontramos {elementos} con esos filtros. |
+| Admin, login: título y h1 | Panel de Bolik |
+| Admin, login: campos y botón | Correo · Contraseña · Entrar |
+| Admin, login: datos incorrectos | El correo o la contraseña no coinciden |
+| Admin, login: sin base de datos | El panel no está disponible en este momento. Inténtalo más tarde. |
+| Admin, sin permiso | No tienes permiso para esa sección |
+| Admin, inicio provisional (BD-114) | Hola, {nombre} · Cerrar sesión |
+| Admin, al cerrar sesión | Cerraste sesión |
 
 ## 6. Metadatos
 
@@ -359,3 +384,14 @@ Texto:
 
 ### Estado / historias (texto corto)
 > Nuevo bolik66.com ✏️ Encuentra Bolik cerca de ti.
+
+## 10. Mensajes de WhatsApp (BD-067)
+
+Prellenados según dónde está el visitante (`content/whatsapp.ts`). Llevan lo que Ventas necesita para no volver a preguntar, sin datos personales.
+
+| Contexto | Mensaje |
+|---|---|
+| General (flotante, menú, cierre de la home) | Hola, Bolik. Quiero información sobre sus productos y precios por mayor. |
+| Ficha de producto | Hola, Bolik. Me interesa {producto} {color} ({SKU}), {presentación} × {cantidad}. ¿Me pueden dar precio y disponibilidad? {URL de la ficha} |
+| Cotización sin enviar | Hola, Bolik. Quiero cotizar: • {producto} ({SKU}), {presentación} × {cantidad} … (hasta 10; «y N productos más») ¿Me pueden dar precio y disponibilidad? |
+| Cotización enviada | Hola, Bolik. Envié la cotización {folio}. ¿Me pueden ayudar con el seguimiento? |

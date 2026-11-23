@@ -8,7 +8,12 @@
       "line": "En Villa Nueva fabricamos cada bolígrafo, crayón y marcador que llega a tus manos. Desde 1966.",
       "ctaLabel": "Ver productos",
       "ctaKind": "link",
-      "ctaHref": "/productos"
+      "ctaHref": "/productos",
+      "secondaryCtaLabel": "Nuestra historia",
+      "secondaryCtaHref": "/nuestra-historia",
+      "posterKey": "hero/planta-c6dcd764",
+      "videoDesktop": "/media/video/planta-demo.mp4",
+      "sampleMedia": true
     },
     {
       "key": "aula",
@@ -18,7 +23,12 @@
       "line": "Útiles que aguantan todo el ciclo escolar: desde el primer garabato hasta el último examen.",
       "ctaLabel": "Kits escolares",
       "ctaKind": "link",
-      "ctaHref": "/kits-escolares"
+      "ctaHref": "/kits-escolares",
+      "secondaryCtaLabel": "Bolik en tu escuela",
+      "secondaryCtaHref": "/escuelas",
+      "posterKey": "hero/aula-c2a1dd4c",
+      "videoDesktop": "/media/video/aula-demo.mp4",
+      "sampleMedia": true
     },
     {
       "key": "oficina",
@@ -28,7 +38,12 @@
       "line": "Bolígrafos que escriben parejo, firma tras firma, en la oficina y en el campo.",
       "ctaLabel": "Ver bolígrafos",
       "ctaKind": "link",
-      "ctaHref": "/productos/boligrafos"
+      "ctaHref": "/productos/boligrafos",
+      "secondaryCtaLabel": "Personalizados con tu logo",
+      "secondaryCtaHref": "/empresas",
+      "posterKey": "hero/oficina-67fd0e5f",
+      "videoDesktop": "/media/video/oficina-demo.mp4",
+      "sampleMedia": true
     },
     {
       "key": "libreria",
@@ -38,7 +53,12 @@
       "line": "¿Vendes útiles? Compra directo de fábrica, por cajilla o por fardo.",
       "ctaLabel": "Cotizar por mayor",
       "ctaKind": "quote",
-      "ctaQuoteType": "libreria"
+      "ctaQuoteType": "libreria",
+      "secondaryCtaLabel": "Ser distribuidor",
+      "secondaryCtaHref": "/mayoreo#distribuidor",
+      "posterKey": "hero/libreria-468f48e9",
+      "videoDesktop": "/media/video/libreria-demo.mp4",
+      "sampleMedia": true
     }
   ],
   "stats": [

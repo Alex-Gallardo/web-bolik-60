@@ -1,0 +1,52 @@
+import "server-only";
+import { createHmac } from "node:crypto";
+import { headers } from "next/headers";
+import { env } from "@/env";
+import { log } from "@/server/log";
+
+/**
+ * IP de quien hace la petición, para el límite de envíos de los formularios públicos (BD-073,
+ * docs/03 §8). En IIS con ARR, el proxy AGREGA la IP real al final de X-Forwarded-For: se toma la
+ * última. Las anteriores las pudo escribir el propio visitante (un bot que cambia la cabecera en
+ * cada envío se saltaría el límite si se usara la primera). Sin cabecera, "desconocida".
+ */
+export function clientIp(source: Pick<Headers, "get">): string {
+  const forwarded = source.get("x-forwarded-for")?.split(",").at(-1)?.trim();
+  const raw = forwarded || source.get("x-real-ip")?.trim();
+  if (!raw) {
+    // En producción, sin cabecera todos comparten un cupo: indica ARR mal configurado (docs/15).
+    log.warn("Petición sin X-Forwarded-For: el límite por IP la cuenta como una sola IP");
+    return "desconocida";
+  }
+  return normalizeIp(raw);
+}
+
+/**
+ * Sin puerto ni prefijo de IPv4 en IPv6: ARR puede agregar el puerto del cliente («Include TCP port
+ * from client IP»), distinto en cada conexión, y entonces cada envío tendría un hash nuevo y el
+ * límite no serviría. "190.56.1.2:51234" → "190.56.1.2"; "[2001:db8::1]:443" → "2001:db8::1";
+ * "::ffff:190.56.1.2" → "190.56.1.2".
+ */
+export function normalizeIp(raw: string): string {
+  let ip = raw.trim();
+  const bracketed = /^\[([^\]]+)\](?::\d+)?$/.exec(ip);
+  if (bracketed) ip = bracketed[1]!;
+  else if (/^[\d.]+:\d+$/.test(ip)) ip = ip.slice(0, ip.lastIndexOf(":"));
+  ip = ip.toLowerCase();
+  if (ip.startsWith("::ffff:") && /^[\d.]+$/.test(ip.slice(7))) ip = ip.slice(7);
+  return ip;
+}
+
+/**
+ * La IP nunca se guarda en claro (datos personales, docs/03 §8): HMAC-SHA256 con SESSION_SECRET
+ * (64 caracteres hexadecimales, la columna ipHash). Sin la clave no se puede volver a la IP ni
+ * comparar con una lista de IPs conocidas.
+ */
+export function hashIp(ip: string, secret: string = env.SESSION_SECRET): string {
+  return createHmac("sha256", secret).update(ip).digest("hex");
+}
+
+/** Hash de la IP de la petición en curso (Server Action o route handler). */
+export async function requestIpHash(): Promise<string> {
+  return hashIp(clientIp(await headers()));
+}

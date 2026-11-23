@@ -1,15 +1,26 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { parseSeedData } from "./data";
-import { dataForProfile, isSeedProfile, seedMode, seedTargetProblem } from "./profiles";
+import {
+  dataForProfile,
+  isSeedProfile,
+  seedMode,
+  seedTargetProblem,
+  settingsForProfile,
+} from "./profiles";
 import type { SeedData } from "./schema";
 
 const data = parseSeedData();
 
 describe("perfiles del seed (BD-031)", () => {
   it("dev y e2e cargan todo, incluidos los ejemplos, y sincronizan con el JSON", () => {
-    expect(dataForProfile(data, "dev")).toBe(data);
-    expect(dataForProfile(data, "e2e")).toBe(data);
+    for (const profile of ["dev", "e2e"] as const) {
+      const loaded = dataForProfile(data, profile);
+      expect({ ...loaded, settings: data.settings }).toEqual(data);
+      // El número de prueba de WhatsApp (BD-062) hace de número real.
+      expect(loaded.settings.whatsapp_number).toBe("55551234");
+      expect(loaded.settings).not.toHaveProperty("sample_whatsapp_number");
+    }
     expect(seedMode("dev")).toBe("sync");
     expect(seedMode("e2e")).toBe("sync");
   });
@@ -24,11 +35,51 @@ describe("perfiles del seed (BD-031)", () => {
     expect(prod.products.some((p) => p.sample)).toBe(false);
     expect(prod.kits.some((k) => k.sample)).toBe(false);
     expect(prod.content.activities.some((a) => a.sample)).toBe(false);
-    // Lo demás va completo.
-    expect(prod.categories).toEqual(data.categories);
+    // Lo demás va completo (las categorías, todas; sin publicar las vacías: prueba de abajo).
+    expect(prod.categories.map((c) => c.slug)).toEqual(data.categories.map((c) => c.slug));
     expect(prod.stores).toEqual(data.stores);
     expect(prod.content.milestones).toEqual(data.content.milestones);
-    expect(prod.settings).toEqual(data.settings);
+    // Ni el número de prueba de WhatsApp ni las fotos provisionales (BD-062).
+    expect(prod.settings).toEqual({ ...data.settings, sample_whatsapp_number: undefined });
+    expect(prod.settings).not.toHaveProperty("sample_whatsapp_number");
+    expect(prod.settings.whatsapp_number).toBeUndefined();
+    expect(prod.products.flatMap((p) => p.images)).toEqual([]);
+  });
+
+  it("settingsForProfile no pisa un número de WhatsApp real", () => {
+    const settings = { ...data.settings, whatsapp_number: "66282600" };
+    expect(settingsForProfile(settings, "dev").whatsapp_number).toBe("66282600");
+    expect(settingsForProfile(settings, "prod").whatsapp_number).toBe("66282600");
+  });
+
+  it("prod deja sin publicar las categorías sin productos reales publicados (BD-038)", () => {
+    const prod = dataForProfile(data, "prod");
+    const published = prod.categories.filter((c) => c.published).map((c) => c.slug);
+    const real = new Set(
+      data.products.filter((p) => !p.sample && p.published).map((p) => p.categorySlug),
+    );
+    expect(published).toContain("boligrafos"); // el Ultra es real
+    expect(prod.categories.find((c) => c.slug === "marcadores")?.published).toBe(false);
+    expect(published.every((slug) => real.has(slug))).toBe(true);
+    // dev y e2e no cambian las categorías (los ejemplos las llenan).
+    expect(dataForProfile(data, "dev").categories).toBe(data.categories);
+  });
+
+  it("prod quita los pósters y videos de la demo del hero (BD-050)", () => {
+    expect(data.content.heroChapters.every((h) => h.sampleMedia && h.posterKey)).toBe(true);
+    const prod = dataForProfile(data, "prod");
+    for (const h of prod.content.heroChapters) {
+      expect(h.posterKey).toBeUndefined();
+      expect(h.videoDesktop).toBeUndefined();
+      expect(h.videoMobile).toBeUndefined();
+      // El texto y los CTA siguen.
+      expect(h.secondaryCtaHref).toBeDefined();
+    }
+    expect(prod.media.some((m) => m.sample)).toBe(false);
+    // dev y e2e los conservan.
+    expect(dataForProfile(data, "dev").content.heroChapters[0]!.posterKey).toBe(
+      "hero/planta-c6dcd764",
+    );
   });
 
   it("prod quita las relaciones, FAQs y líneas de kit que apuntan a un ejemplo", () => {

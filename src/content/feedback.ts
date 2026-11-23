@@ -4,6 +4,8 @@
  * Tono: tú, cálido, directo. Qué pasó + qué sigue. Errores con salida (WhatsApp/teléfono).
  */
 
+import { systemFeedback } from "./feedback-system";
+
 export type ToastTone = "success" | "info" | "warning" | "error";
 
 export const feedback = {
@@ -38,6 +40,13 @@ export const feedback = {
       title: "Tu cotización está vacía",
       body: "Agrega productos desde el catálogo o elige un kit escolar.",
     },
+    /** Al enviar, algún producto ya no se puede cotizar (se despublicó o cambió su presentación). */
+    /** `names`: los productos ya unidos («Bolik Ultra (Azul · PT00058), …»). */
+    staleItems: (names: string) => ({
+      title: "Algunos productos ya no están disponibles",
+      body: `Quita de tu cotización: ${names}. Después vuelve a enviarla; si los necesitas, escríbenos por WhatsApp.`,
+      primary: "Entendido",
+    }),
     limit: {
       tone: "warning" as ToastTone,
       title: "Para pedidos de más de 50 productos, escríbenos por WhatsApp",
@@ -60,6 +69,8 @@ export const feedback = {
     rateLimited: {
       title: "Recibimos varias solicitudes seguidas",
       body: "Espera unos minutos e inténtalo de nuevo. Si es urgente, escríbenos por WhatsApp.",
+      /** Sin número de WhatsApp en los ajustes: sin prometerlo. */
+      bodyNoWhatsapp: "Espera unos minutos e inténtalo de nuevo. Si es urgente, llámanos.",
       primary: "Escribir por WhatsApp",
       secondary: "Entendido",
     },
@@ -99,6 +110,10 @@ export const feedback = {
     filtersEmpty: { title: "No hay productos con esos filtros", action: "Quitar filtros" },
     pdfReady: { tone: "success" as ToastTone, title: "Descargando la ficha técnica" },
   },
+  /** Buscador (BD-066): si no se pudo descargar el motor o el índice. */
+  search: {
+    loadFailed: "No pudimos cargar el buscador. Toca «Buscar» para ver los resultados.",
+  },
   stores: {
     locating: { tone: "info" as ToastTone, title: "Buscando tiendas cerca de ti…" },
     located: (n: number) => ({
@@ -115,26 +130,7 @@ export const feedback = {
       body: "Escríbenos y te decimos dónde conseguir Bolik, o conviértete en distribuidor.",
     }),
   },
-  system: {
-    offline: {
-      tone: "warning" as ToastTone,
-      title: "Sin conexión",
-      description: "Lo que agregues se guardará en tu cotización.",
-    },
-    online: { tone: "success" as ToastTone, title: "Conexión recuperada" },
-    genericError: {
-      title: "Algo salió mal de nuestro lado",
-      body: "Ya quedó registrado. Inténtalo de nuevo en un momento o escríbenos por WhatsApp.",
-      /** Mientras no haya número de WhatsApp (ajuste whatsapp_number), sin prometerlo. */
-      bodyNoWhatsapp: "Ya quedó registrado. Inténtalo de nuevo en un momento o llámanos.",
-      primary: "Intentar de nuevo",
-      /** Enlaces de contacto de la pantalla de error (BD-046); WhatsApp solo si hay número. */
-      whatsapp: "Escríbenos por WhatsApp",
-      call: (phone: string) => `Llámanos al ${phone}`,
-      /** Se muestra para que el visitante lo comparta con Ventas y se busque en el log. */
-      reference: (code: string) => `Código de referencia: ${code}`,
-    },
-  },
+  system: systemFeedback,
   admin: {
     saved: {
       tone: "success" as ToastTone,
@@ -179,6 +175,15 @@ export const feedback = {
       title: "SAP no respondió",
       description: "Lo intentaremos de nuevo automáticamente en 30 minutos.",
     },
+    /** Login (BD-114): el mismo mensaje para un correo que no existe y una contraseña errónea. */
+    loginInvalid: { title: "El correo o la contraseña no coinciden" },
+    /** Sin base de datos (DATA_SOURCE=fixtures) o la base no respondió. */
+    loginUnavailable: {
+      title: "El panel no está disponible en este momento",
+      body: "Inténtalo más tarde.",
+    },
+    forbidden: { tone: "warning" as ToastTone, title: "No tienes permiso para esa sección" },
+    loggedOut: { tone: "success" as ToastTone, title: "Cerraste sesión" },
     loginLocked: {
       title: "Cuenta bloqueada por 15 minutos",
       body: "Hubo 5 intentos fallidos. Si olvidaste tu contraseña, pide a un administrador que la restablezca.",

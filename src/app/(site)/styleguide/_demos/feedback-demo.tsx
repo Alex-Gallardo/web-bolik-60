@@ -263,7 +263,9 @@ export function FeedbackDemo({ productName, storeName }: FeedbackDemoProps) {
       later: "BD-025 (Sheet) y BD-067 (vista previa)",
       demo: (
         <div className="flex flex-col gap-3">
-          <p className="rounded-md bg-soft p-3 text-sm">{EXAMPLES.whatsappMessage(productName)}</p>
+          <p className="rounded-md bg-soft p-3 text-sm [overflow-wrap:anywhere]">
+            {EXAMPLES.whatsappMessage(productName)}
+          </p>
           <Button
             variant="whatsapp"
             className="self-start"

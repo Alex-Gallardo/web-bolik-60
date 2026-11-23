@@ -86,6 +86,10 @@ Set-WebConfigurationProperty -pspath $p -filter 'system.webServer/proxy' -name '
 Set-WebConfigurationProperty -pspath $p -filter 'system.webServer/proxy' -name 'reverseRewriteHostInResponseHeaders' -value 'False'
 # 0 = sin búfer: necesario para que el streaming de React (Suspense) llegue al navegador sin esperar
 Set-WebConfigurationProperty -pspath $p -filter 'system.webServer/proxy' -name 'responseBufferLimit' -value 0
+# IP real en X-Forwarded-For y sin el puerto del cliente (BD-073): el límite de envíos por IP toma
+# la ÚLTIMA IP de esa cabecera (la que agrega ARR); con puerto, cada conexión parecería otra IP.
+Set-WebConfigurationProperty -pspath $p -filter 'system.webServer/proxy' -name 'xForwardedForHeaderName' -value 'X-Forwarded-For'
+Set-WebConfigurationProperty -pspath $p -filter 'system.webServer/proxy' -name 'includePortInXForwardedFor' -value 'False'
 # Permitir que URL Rewrite fije estas cabeceras
 Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowedServerVariables' -name '.' -value @{name='HTTP_X_FORWARDED_PROTO'}
 Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowedServerVariables' -name '.' -value @{name='HTTP_X_FORWARDED_HOST'}
@@ -97,7 +101,7 @@ Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowe
 - Ruta física: `D:\bolik\iis` (solo contiene `web.config`).
 - Directorio virtual `/_next/static` → `D:\bolik\app\current\.next\static`.
 - Directorio virtual `/media` → `D:\bolik\media`. Tiene prioridad sobre la ruta `/media` de Node (BD-034), que existe para desarrollo y pruebas: si el directorio virtual faltara, Node también serviría los archivos, pero sin la caché estática de IIS.
-- **Compresión dinámica desactivada** en el sitio (Next ya comprime el HTML y comprimir de nuevo rompe el streaming). Compresión estática (Brotli + gzip) activada.
+- **Compresión dinámica desactivada** en el sitio (Next ya comprime el HTML y, desde 16.4.5, las respuestas de los route handlers, BD-018; comprimir de nuevo rompe el streaming). Compresión estática (Brotli + gzip) activada.
 
 `D:\bolik\iis\web.config`:
 
@@ -340,6 +344,14 @@ Ver la lista completa en doc 03 §9 y `starter/.env.example`. Diferencias:
 | `MAIL_SALES_TO` | correo del equipo de desarrollo | `ventas@bolik66.com` |
 | `INDEXNOW_KEY` | vacío (no se envía) | clave real |
 
+### Paso a producción: correo y SAP
+
+Hasta tener la cuenta de correo y el acceso a SMART-K66, todo corre en **modo prueba** (decisión del usuario, 18 nov 2026): `SMTP_MODE=file` (los correos quedan en `MAIL_DIR` y en `/styleguide/correos`) y `ERP_MODE=noop` (las cotizaciones quedan `omitida`, sin llamar a SAP). Cambiarlo es solo configuración, un paso antes de producción:
+
+1. **Correo:** `SMTP_MODE=smtp`, `SMTP_HOST` (`smtp.office365.com`), `SMTP_PORT` (587), `SMTP_USER` y `SMTP_PASSWORD` de `web@bolik66.com`, `MAIL_FROM` y `MAIL_SALES_TO` (o el ajuste `quote_email_to` del admin). Probar con una cotización real y revisar que llegue el interno y el acuse. El acuse ya está limitado (2 por dirección en 24 h, sin nombres con forma de enlace en el saludo) para que el formulario no sirva para mandar correos a terceros desde el dominio; con SMTP real, `emailSentAt` empieza a marcarse.
+2. **SAP:** `ERP_MODE=smartk66`, `ERP_BASE_URL` y `ERP_API_KEY` (BD-035), y el ajuste `erp_enabled` sin `"false"`. Probar contra el SAP de pruebas antes que el real.
+3. Con `APP_ENV=production`, la app no arranca con `SMTP_MODE=file` (env.schema).
+
 ## 12. Staging: primera instalación y despliegue manual (BD-016)
 
 Hasta que exista el pipeline (BD-141), staging se prepara y se despliega a mano con cuatro scripts de `scripts/deploy/`. Los cuatro **solo sirven para staging**: el `web.config` lleva `noindex`, no tiene la regla de `www` y el setup se niega a correr con el dominio de producción. Producción (BD-140) usa el `web.config` de §4.3 y `deploy.ps1`.
@@ -413,7 +425,7 @@ Se puede volver a correr, por ejemplo cuando llega o se renueva el certificado, 
 
 Después, TI completa `staging.env` con los valores de §11: `DATABASE_URL` con `bolik_app`, `DATA_SOURCE`, un `SESSION_SECRET` aleatorio, el correo… Con `APP_ENV=staging`, la app no arranca si queda el `SESSION_SECRET` de ejemplo o el usuario `sa`.
 
-`SMTP_MODE` pasa a `smtp` cuando exista la cuenta de correo (BD-074). En modo `file`, la app escribiría dentro del release, donde la cuenta no tiene permiso.
+Mientras no haya cuenta de correo, staging queda en **modo prueba** (BD-074): `SMTP_MODE=file` con `MAIL_DIR=D:\bolik-stg\logs\mails` (fuera del release, donde la cuenta sí escribe; sin `MAIL_DIR`, escribiría dentro del release y fallaría). Los correos no salen a internet: quedan como `.eml` y se ven en `/styleguide/correos` para presentarlo. `SMTP_MODE` pasa a `smtp` cuando exista la cuenta (ver «Paso a producción: correo y SAP»).
 
 `MIGRATE_DATABASE_URL` **no** va en ese archivo: el servicio no necesita el usuario de DDL. Ninguna de estas variables va al repo.
 
@@ -445,6 +457,16 @@ Con `DATA_SOURCE=fixtures`, el build no lee la base y se omiten la migración y 
 Aunque las páginas se generen en el build, el servicio necesita la base disponible. La consulta para lo que no se prerenderizó (un 404, una página con parámetros nuevos) y cuando se revalida un tag.
 
 **Datos de ejemplo (BD-016, hasta BD-038).** Con `-SampleData`, staging muestra el catálogo de ejemplo en lugar de solo el Bolik Ultra. La bandera `--allow-sample-data` solo funciona con el perfil `dev`, `APP_ENV=staging` y la base `BolikDigital_Stg`; nunca en producción ni en otra base del mismo SQL Server. Cuando llegue el catálogo real, el DBA recrea `BolikDigital_Stg` vacía y se construye sin `-SampleData`. El perfil `prod` no borra los ejemplos que ya estén.
+
+Los pósters y videos de ejemplo del hero (BD-050) y las fotos de producto provisionales (BD-062) tampoco van en el paquete. Con `-SampleData` (o `DATA_SOURCE=fixtures`), se ponen una vez en el `MEDIA_DIR` de staging desde la carpeta de la demo y la de fotos («recursos web bolik»):
+
+```powershell
+$env:MEDIA_DIR = "D:\bolik-stg\media"
+pnpm media:samples "<carpeta de la demo>\videos" "<carpeta recursos web bolik>"
+Remove-Item Env:MEDIA_DIR
+```
+
+Sin ellos, IIS responde 404 al póster, a los videos y a las fotos: el hero queda sin imagen y la ficha sin fotos. Una foto que no está en ninguna carpeta se avisa y se salta.
 
 El artefacto de la CI no sirve aquí: lleva `NEXT_PUBLIC_SITE_URL=http://localhost:3100` y no tiene `APP_ENV=staging`.
 
@@ -484,3 +506,13 @@ curl.exe -sI https://staging.bolik66.com/ | Select-String "HTTP/|X-Robots-Tag"
 ```
 
 Debe responder `200` con `X-Robots-Tag: noindex, nofollow`. En las páginas, la cabecera sale dos veces, una de Next y otra de IIS, y es normal. Desde una IP fuera de `-AllowedIps`, IIS responde `403`.
+
+### 5. Usuarios del admin (BD-114)
+
+El admin inicial lo crea el seed (`-SeedAdminEmail`, §2). Para los demás, en el servidor y con las variables de ese entorno (`DATABASE_URL`):
+
+```powershell
+pnpm admin:create --remoto
+```
+
+Pide correo, nombre, rol (`admin`, `editor` o `ventas`) y la contraseña sin mostrarla (12 caracteres o más). Si el correo ya existe, no lo cambia. Sin `--remoto` solo corre contra una base de desarrollo o de pruebas. El acceso necesita `DATA_SOURCE=db`: con `fixtures`, `/admin/login` responde que el panel no está disponible. `SESSION_SECRET` debe ser propio de cada entorno (`openssl rand -base64 32`); cambiarlo cierra todas las sesiones.

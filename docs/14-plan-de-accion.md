@@ -54,8 +54,8 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 |---|---|---|---|
 | **S0** | mié 28 oct – vie 6 nov 2026 | Fundaciones, CI y staging | 9.75 (4.25 / 5.5) |
 | **S1** | lun 9 nov – vie 20 nov | Sistema de diseño, datos, estructura global | 16.25 (9.25 / 7) |
-| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 21 (11.25 / 9.75) |
-| **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 20.5 (10 / 10.5) |
+| **S2** | lun 23 nov – vie 4 dic | Home, catálogo, ficha, cotización, SEO base | 23 (13 / 10) |
+| **S3** | lun 7 dic – vie 18 dic | Dónde comprar, páginas por público, admin, IA · **congelamiento de funcionalidades** | 22.5 (11 / 11.5) |
 | **S4** | lun 21 dic – vie 8 ene 2027 | Estabilización, pruebas, contenido, producción · feriados 24-25 dic y 31 dic-1 ene · **código congelado el 6 ene** | 19.25 (7.5 / 11.75) |
 | **S5** | lun 11 ene – vie 22 ene 2027 | **Lanzamiento** e hipercuidado | 3 (1 / 2) |
 
@@ -70,6 +70,8 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 | mié 6 ene | **Código congelado**, versión candidata en staging | Ensayo del corte (BD-151) + QA (BD-135) firmados |
 | lun 11 ene | **Lanzamiento** | Runbook del doc 16 |
 | vie 22 ene | Fin del hipercuidado | Reporte de cierre (BD-153) |
+
+**Estado (23 nov 2026, release v0.3.0):** los hitos del 20 nov y del 4 dic están cumplidos en `develop` y en `master` (v0.2.0 y v0.3.0), con Lighthouse móvil ≥ 90 en CI. Las verificaciones «en staging» siguen pendientes: staging (BD-016) espera a TI (servidor, DNS, certificado y base `BolikDigital_Stg`).
 
 ## 4. Mapa del plan
 
@@ -120,17 +122,17 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | Textos, fotos, videos del hero, tiendas verificadas, datos de kits | Otras áreas | BD-150 (mientras tanto: seed provisional) | 18 dic |
 | Acceso a Search Console, GA4, DNS de bolik66.com | TI / dueño de la cuenta | BD-096, BD-125, BD-152 | 18 dic |
 | Exportación de URLs con tráfico del sitio actual | Dueño de Search Console | BD-094 | 4 dic |
-| Exportación de artículos de SAP (código PT, descripción, código de barras) | Sistemas | BD-038 | 23 nov |
+| Exportación de artículos de SAP (código PT, descripción, código de barras), o `ERP_BASE_URL` y `ERP_API_KEY` para `pnpm erp:articles` | Sistemas | BD-039 | 7 dic |
 
 ## 5. Resumen por épica
 
 | Épica | Nombre | Tickets | Días |
 |---|---|---|---|
-| E0 | Fundaciones del repositorio | 17 | 9.25 |
+| E0 | Fundaciones del repositorio | 18 | 9.5 |
 | E1 | Sistema de diseño y /styleguide | 8 | 6 |
-| E2 | Datos, medios e integración base | 9 | 10 |
-| E3 | Estructura global, splash y movimiento | 7 | 3.75 |
-| E4 | Inicio | 6 | 4 |
+| E2 | Datos, medios e integración base | 10 | 11 |
+| E3 | Estructura global, splash y movimiento | 9 | 5 |
+| E4 | Inicio | 7 | 5.5 |
 | E5 | Catálogo, fichas y búsqueda | 8 | 7.5 |
 | E6 | Cotización y formularios | 8 | 7 |
 | E7 | Dónde comprar | 4 | 3 |
@@ -142,7 +144,7 @@ Si algo de esta cadena se atrasa más de 2 días, se avisa el mismo día y se re
 | E13 | Calidad y pruebas | 6 | 6.5 |
 | E14 | Despliegue y operación | 6 | 4 |
 | E15 | Lanzamiento e hipercuidado | 5 | 4.25 |
-| | **Total** | **120** | **89.75** |
+| | **Total** | **126** | **94** |
 
 ## 6. Tickets
 
@@ -429,7 +431,7 @@ El código está listo. Los criterios se cumplen al ejecutarlo en `K66-APPS`, qu
   - `staging-build.ps1`: migra, siembra, construye y empaca con el `staging.env` del servicio.
   - `staging-deploy.ps1`: release nuevo, prueba de humo en Node y en IIS, y vuelta atrás automática.
   El procedimiento está en doc 15 §12.
-- **Datos de ejemplo en staging hasta BD-038:** `pnpm db:seed --profile dev --allow-sample-data`. Solo corre con `APP_ENV=staging` y la base `BolikDigital_Stg` (no otra `…_Stg`, porque el SQL Server se comparte con SMART-K66); nunca en producción ni con los perfiles `e2e` o `prod`.
+- **Datos de ejemplo en staging hasta BD-039:** `pnpm db:seed --profile dev --allow-sample-data`. Solo corre con `APP_ENV=staging` y la base `BolikDigital_Stg` (no otra `…_Stg`, porque el SQL Server se comparte con SMART-K66); nunca en producción ni con los perfiles `e2e` o `prod`.
   - Este perfil sincroniza con los JSON y pisa lo editado en el admin de staging.
   - Al llegar el catálogo real, el DBA recrea `BolikDigital_Stg` y se siembra con `--profile prod`.
 - **Servidor compartido.** ARR se configura para todo el servidor (`responseBufferLimit=0`, `preserveHostHeader`). El preflight lista los sitios que ya hacen proxy, como la API de SMART-K66, para confirmarlo con TI antes del setup.
@@ -453,6 +455,28 @@ La conexión a la base real llega casi al final del proyecto y BD-010/BD-030 est
 - [ ] El script se puede correr de nuevo sin romper nada.
 - [ ] Ningún secreto en el repo.
 - [ ] Sin privilegios, `localhost:1433` responde y `bolik_app` se conecta a las tres bases.
+
+#### BD-018 · Actualizar Next.js por avisos de seguridad
+
+**Sprint** S2 · **Días** 0.25 · **Prioridad** Must · **Pista** B · **Depende de** — · **Docs** 03, 15 · *Ticket nuevo (19 nov 2026)*
+
+`next build` con 16.4.3 se detenía al primer intento con `SecurityFatalError` (versión con vulnerabilidades conocidas). `pnpm audit`: GHSA-vc7v-qv4w-wrv8 y GHSA-mfr8-8qww-v76h (moderadas, `'use cache'`), corregidas en 16.4.5 junto con otras de Cache Components y de apps autohospedadas.
+
+**Pasos**
+
+1. Subir `next`, `@next/env` y `eslint-config-next` al último parche de 16.x, sin cambiar de versión mayor.
+2. Revisar las notas de las versiones intermedias y probar lo que toquen.
+
+**Criterios de aceptación**
+
+- [x] `pnpm build` pasa al primer intento, sin aviso de seguridad.
+- [x] `pnpm audit --prod` sin avisos de `next`.
+
+**Implementado (BD-018)**
+
+- 16.4.3 → **16.4.6** (`next`, `@next/env`, `eslint-config-next`).
+- **Cambio de comportamiento (16.4.5/16.4.6):** las respuestas de los route handlers salen sin `Content-Length` (Next lo quita por GHSA-pc58-hwjq-p385) y las comprimibles van con gzip (`/api/search-index` ahora se comprime). `/media` (solo sin IIS: desarrollo, CI y `start:local`) responde los rangos de video como `206` con `Content-Range` y cuerpo `chunked`: el video carga en WebKit y Chromium (probado). En el servidor, IIS sirve `/media` y no pasa por Node.
+- **Medido con 16.4.6** (Lighthouse CI, JS transferido / peticiones): home 162.2 KB / 17, /productos 166.9 / 21, categoría 166.9 / 24, ficha 169.1 / 26, /cotizacion 182.5 / 21, /buscar 169.0 / 20; entre 0.1 y 0.2 KB menos que con 16.4.3.
 
 ### E1 · Sistema de diseño y /styleguide
 
@@ -592,6 +616,27 @@ Logo como componente SVG y las ilustraciones de los diálogos.
 
 - [ ] Cada ilustración y el wordmark pesan < 4 KB; el archivo del logo completo, ≤ 25 KB (7 KB gzip: el trazo de crayón oficial no baja más sin perder detalle).
 - [ ] El logo tiene `aria-label="Bolik"`.
+
+#### BD-028 · Favicon e íconos de Bolik
+
+**Sprint** S3 · **Días** 0.25 · **Prioridad** Must · **Pista** A · **Depende de** BD-027 · **Docs** 02 · *Ticket nuevo (12 nov 2026, de BD-055)*
+
+El sitio usa todavía el favicon por defecto de Next.js (la «N»).
+
+**Pasos**
+
+1. Pedir a Mercadeo la versión cuadrada para el ícono: el logo no tiene isotipo (BD-027), así que la define Mercadeo (por ejemplo, la «B» del wordmark).
+2. `src/app/favicon.ico` con cuadros PNG de 16, 32 y 48 px; `icon.svg` y `apple-icon.png` (180 px) en `src/app`.
+
+**Criterios de aceptación**
+
+- [x] Ningún ícono de Next.js en el sitio.
+- [x] `favicon.ico` ≤ 4 KB (se pide con prioridad alta en cada página; prueba en `src/app/favicon.test.ts`).
+
+**Implementado (con BD-090, 19 nov 2026)**
+
+- Mercadeo entregó el ícono cuadrado: el wordmark BOLIK® en blanco sobre negro (200 px). `src/app/favicon.ico` (1.3 KB) lleva cuadros PNG RGBA de 32 y 16 px (sin el de 48: BD-055 lo quitó por peso) y `src/app/apple-icon.png` es de 180 px. El styleguide los muestra en «Marca».
+- Pendiente: `icon.svg` espera la versión vectorial del ícono.
 
 ### E2 · Datos, medios e integración base
 
@@ -756,6 +801,8 @@ Códigos, nombres, códigos de barras y estado activo vienen de SAP.
 2. Registra `SyncRun` con conteos.
 3. Llama `revalidateTag(tag, 'max')` en lo que cambió.
 
+*Nota de BD-038:* la sincronización recorre todas las marcas del grupo (`BRAND_ERP_NAMES` en `lib/constants.ts`, `listArticles(since, brand)`), no solo `BOLIK`.
+
 **Criterios de aceptación**
 
 - [ ] Un artículo inactivo en SAP se marca `inactivo` y sale del sitio.
@@ -798,8 +845,41 @@ Los productos reales del catálogo impreso 2026-2027 reemplazan a los 24 product
 
 **Criterios de aceptación**
 
-- [ ] Cada producto del catálogo con su código SAP está en `products.json` sin `sample`.
+- [ ] ~~Cada producto del catálogo con su código SAP está en `products.json` sin `sample`~~: pasó a BD-039 (decisión del usuario, 13 nov 2026): `.env.local` no tiene `ERP_BASE_URL` ni `ERP_API_KEY` y sin código SAP no se carga nada como real.
 - [ ] Todos los códigos de barras pasan la validación y `pnpm db:seed` dos veces no duplica datos.
+
+**Implementado (BD-038)**
+
+Decisiones del usuario: códigos SAP desde la API de SMART-K66; marcas del grupo como campo con chip; sin códigos SAP disponibles, este PR cierra la estructura y la carga va en BD-039.
+
+- **Fuente:** Mercadeo pasó el catálogo transcrito en Excel (69 productos, 122 códigos de barras, todos válidos y sin repetir). Se cotejaron 9 códigos con el PDF (Ultra 0.7 y marcadores) y coinciden.
+- **SMART-K66:** `listArticles(since, brand)` pide cualquier marca (antes, solo `BOLIK`). `pnpm erp:articles <archivo.json>` baja los artículos de las 5 marcas a un archivo fuera del repo (se niega a escribir dentro) y nunca imprime la clave. No se pudo correr: faltan `ERP_BASE_URL` y `ERP_API_KEY` en `.env.local`.
+- **Marca:** migración `producto_marca` (`Product.brand`, `bolik` por defecto), `BRANDS` y `BRAND_LABELS` en `lib/constants.ts`, en el seed, las dos fuentes y `ProductCardView`. `ProductCard` muestra el chip de la marca cuando no es Bolik.
+- **Presentaciones:** `PACKAGING_CODES` suma las genéricas del catálogo (caja, caja máster, bandeja, six pack, estuche, tubo, bolsa, bote, blíster, unidad) con sus etiquetas; las del MVP siguen.
+- **Categorías:** «Tablas con clip y estuches» (`tablas-y-estuches`, sin publicar hasta tener productos). El mapeo de las 16 categorías del catálogo a las del sitio está en BD-039.
+- **Perfil `prod`:** una categoría sin productos reales publicados se crea sin publicar (prueba en `profiles.test.ts`). Hoy solo Bolígrafos tiene uno (el Ultra).
+
+#### BD-039 · Productos reales del catálogo con su código SAP
+
+**Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-038 · **Docs** 05 §6 y §8 · *Ticket nuevo (13 nov 2026, de BD-038)*
+
+Cargar como reales los productos del catálogo 2026-2027 cuando haya códigos SAP.
+
+**Pasos**
+
+1. Fuente: el Excel «Catalogo_BOLIK_editable» de Mercadeo (hojas «Productos» y «Códigos»: 69 productos y 122 códigos de barras, todos con dígito verificador válido; una muestra se cotejó con el PDF en BD-038). Ni el Excel, ni el PDF, ni sus imágenes van al repo. El .xlsx es un zip de XML: se puede leer sin dependencias nuevas (hojas en `xl/worksheets`, con el prefijo `x:`, y textos en `xl/sharedStrings.xml`).
+2. Códigos SAP: `pnpm erp:articles <archivo fuera del repo>` con `ERP_BASE_URL` y `ERP_API_KEY` en `.env.local` (o una exportación de artículos de SAP). Emparejar por código de barras; sin código SAP no se carga como real.
+3. `products.json`: los productos con su marca (`brand`), categoría, colores, códigos y presentaciones (`PACKAGING_CODES` genéricos con `unitsPerPack` y `name`; «Caja» de 12 = `cajilla12`). Textos solo del catálogo; lo que falte, anotado para Mercadeo (BD-150).
+4. Categorías del catálogo → del sitio: Bolígrafos → `boligrafos`; Lápices de grafito, Lápices de colores y Lápices → `lapices-y-lapices-de-colores`; Crayones de cera → `crayones-de-cera`; Marcadores, Resaltadores y Tintas → `marcadores`; Pegamentos → `pegamentos-y-silicon`; Borradores y Sacapuntas → `borradores-y-sacapuntas`; Geometría, Reglas y Tijeras → `tijeras-reglas-y-geometria`; Tablas con clip y Estuches → `tablas-y-estuches` (publicarla).
+5. Quitar los productos de ejemplo que el catálogo real cubre (el seed `dev` los despublica en las bases que ya los tienen) y ajustar las E2E que cuentan categorías o productos.
+6. Los 11 productos del Excel sin código de barras (casi todos de «Productos nuevos») y los nombres repetidos («Ultra», «Lápices BOLIK»): confirmar con Mercadeo antes de cargarlos.
+7. **Presentaciones:** `Packaging` tiene `@@unique([productId, code])` y los códigos genéricos no dicen la cantidad, así que un producto no puede tener «Estuche de 12» y «Estuche de 24». Decidir antes de cargar: códigos con la cantidad (`estuche12`) o unicidad por `code` + `unitsPerPack` (migración), y qué identificador va en `presentacion` a SMART-K66 (BD-128, doc 05 §8).
+8. El `shortText` de `tablas-y-estuches` no viene de doc 17: validarlo con Mercadeo (BD-150) antes de publicarla.
+
+**Criterios de aceptación**
+
+- [ ] Cada producto del catálogo con su código SAP está en `products.json` sin `sample` (criterio que venía de BD-038).
+- [ ] `pnpm db:seed` dos veces no duplica datos.
 
 ### E3 · Estructura global, splash y movimiento
 
@@ -925,6 +1005,43 @@ Errores amables que ayudan a seguir navegando.
 - 404 con enlaces a Inicio, Catálogo, Dónde comprar y las líneas de producto; el buscador queda para BD-066. Un solo `<meta name="robots">` (el de Next).
 - 500 con reintentar, WhatsApp (si hay número) y teléfono (`data-contact-*` del layout de `(site)`); sin número, el texto no promete WhatsApp. La 404 dice «Revisa el catálogo…» hasta que BD-066 traiga el buscador (doc 17).
 
+#### BD-047 · Aligerar el JS común del layout
+
+**Sprint** S3 · **Días** 1 · **Prioridad** Should · **Pista** A · **Depende de** BD-040, BD-041, BD-042 · **Docs** 12 §2 · *Ticket nuevo (14 nov 2026, de BD-060)*
+
+La parte común del sitio (Next, React y el layout) ocupa ~160 KB en cualquier página; el presupuesto del resto subió a 170 KB y este ticket busca bajarlo.
+
+**Pasos**
+
+1. `pnpm analyze` del layout: qué islas de cliente cargan en todas las páginas (header, contador de cotización, flotantes, avisos, revelado, entrada de página) y cuánto pesa cada una.
+2. Diferir lo que no hace falta en el primer pintado (`dynamic()` al interactuar o en ocioso), sin romper el funcionamiento sin JS ni los avisos de feedback.
+3. Medir de nuevo el 404 (sin código propio) y `/productos`; bajar `resource-summary:script:size` del resto en `lighthouse.config.cjs` y en docs/12 §2 y CLAUDE.md a lo que se logre.
+4. Devolver los topes que siguen subidos (ficha 26 → 25 peticiones, BD-071; `/cotizacion` 186 → 170 KB, BD-072). Los de JS de home y ficha ya volvieron a 165 y 170 KB con BD-073 (mensajes del sistema fuera del JS común). Parte del exceso es el mapa de `import()` que Turbopack separa en otro archivo al crecer el chunk común: con un layout más liviano vuelve a ir dentro (docs/12 §2).
+
+**Criterios de aceptación**
+
+- [ ] El 404 baja de ~151 KB de JS y el tope del resto baja de 170 KB.
+- [ ] Rendimiento ≥ 0.95 en las páginas que no son la home (hoy ≥ 0.90; `/productos` da 0.94).
+- [ ] Sin cambios visibles ni de accesibilidad; E2E en verde.
+
+*Nota de BD-114:* una isla cliente en el admin (la primera llega con BD-115) hace que Turbopack parta el chunk común de las páginas públicas en dos (+~1.5 KB transferidos y una petición más en cada página; medido con el login de BD-114, que por eso quedó sin isla). Este ticket debe dejar margen para ese costo antes de BD-115.
+
+#### BD-048 · Header sin desborde entre 1024 y 1280 px
+
+**Sprint** S2 · **Días** 0.25 · **Prioridad** Must · **Pista** A · **Depende de** BD-041 · **Docs** 06 §2 · *Ticket nuevo (14 nov 2026, de BD-061)*
+
+Con barra de desplazamiento, a 1024 px el header salía de la página: 11 px con una barra de 17 px (Windows), 9 px con una de 15 px.
+
+**Pasos**
+
+1. Medir: con 1007 px útiles (1024 − 17 de la barra), el contenido del header (logo 112 + menú 646 + acciones 220 + separaciones 16 = 994 px) más 48 px de márgenes no cabía.
+2. Compactar solo entre `lg` y `xl` (1024–1279 px): logo sin margen extra, separaciones de 4 px y «Cotizar» con 16 px de padding (alto de 50 px). Desde `xl` y en móvil, igual que antes.
+
+**Criterios de aceptación**
+
+- [x] A 1024 px con barra de desplazamiento, nada desborda: el contenido del header ocupa 954 px y cabe en 1024 − 17 − 48 = 959 (E2E en `header.spec.ts`).
+- [x] Sin cambios desde 1280 px ni en móvil; «Cotizar» sigue ≥ 44 px de alto.
+
 ### E4 · Inicio
 
 #### BD-050 · Hero con video por capítulos
@@ -946,10 +1063,29 @@ El hero de la demo, llevado a producción.
 
 **Criterios de aceptación**
 
-- [ ] LCP de la home ≤ 2.0 s en Lighthouse móvil: bajar `largest-contentful-paint` de la home de 2500 a 2000 en `lighthouse.config.cjs` (hasta BD-050 tolera 2.5 s; el marcador actual mide ~2.05 s).
+- [ ] ~~LCP de la home ≤ 2.0 s en Lighthouse móvil~~: **pasó a BD-055** (decisión del 10 nov 2026). Con el póster del hero como LCP, la CI midió 3.06 s (mejor de 3); el límite de la home queda en **3.2 s temporal** en `lighthouse.config.cjs`.
 - [ ] Lighthouse no simula `navigator.connection`: confirmar que el video no se pide durante la medición (contaría en `resource-summary:total:count ≤ 25` y en los bytes).
 - [ ] Capítulos navegables con flechas del teclado.
 - [ ] El video se pausa fuera de pantalla.
+
+**Cómo quedó (10 nov 2026)**
+
+- **Componentes.** `components/hero/video-hero.tsx` (servidor) arma el chip, el único h1 con el subrayado A-11 y los atributos de cada póster con `getImageProps`. El póster 1 lleva `<link rel="preload" fetchpriority="high">` (`preload` de react-dom) e `<img loading="eager" fetchpriority="high">`: el `preload` de `next/image` en Next 16 no pone prioridad y Chrome lo pedía como *Low*. `hero-player.tsx` (cliente) maneja capas, video, texto y pestañas. Detalle en doc 09 §5.
+- **Video.** Llega tras `load` y en tiempo ocioso; nunca con movimiento reducido, Save-Data ni 2g/3g (`video-policy.ts`). En móvil solo hay video si el capítulo trae el vertical; sin él, solo el póster. Hay un solo `<video>`, el del capítulo actual. Un video que falla deja el póster. Botón de pausa solo cuando el capítulo tiene video, absoluto (no mueve el diseño). Pausa fuera de pantalla. Si se activa el movimiento reducido con la página abierta, el video se va. El corte entre móvil y escritorio es `md` (48rem), el mismo del diseño.
+- **Pestañas.** Patrón ARIA con flechas, Inicio y Fin, contadas desde la pestaña que tiene el foco. Los cuatro paneles (texto y CTA) están en el HTML: sin JS se ven todos; con JS, solo el activo (`.js .hero-chapter`). Con el foco dentro del hero, el video no avanza solo, así el foco no se pierde (WCAG 2.4.3). Sin `aria-live`: con el avance automático anunciaría cada capítulo.
+- **CTA secundario.** Migración `hero_cta_secundario`: `secondaryCtaLabel` y `secondaryCtaHref`, siempre un enlace interno, en el seed, en las dos fuentes y en `HeroChapterView`. El CTA de cotización enlaza a `/cotizacion?tipo=…` hasta el drawer (BD-071). Los CTA llevan `data-event="hero_cta_click"` y las pestañas `hero_chapter_view`, para conectarlos con la analítica.
+- **Medios de ejemplo.** Las ilustraciones y videos de la demo no van al repo.
+  - `prisma/seed/media.json` guarda solo claves y medidas. El seed (`dev` y `e2e`) registra MediaAsset; `prod` quita póster y videos marcados `sampleMedia`.
+  - `pnpm media:samples <carpeta>` pone los archivos en `MEDIA_DIR`.
+  - `scripts/ci/sample-media.mjs` deja reemplazos con la misma clave en la CI (`serve-artifact.sh`) y en `start:local`.
+  - La ruta `/media` de Node sirve también `video/*.mp4` con `Range` (`lib/http-range.ts`); en el servidor los sirve IIS.
+- **JS de la home: 163.7 KB** (presupuesto de 165). Para caber, los pósters no usan el componente `Image` (que pesa en el navegador) y el hero usa `buttonVariants` sin `Button asChild`; las variantes pasaron a `ui/button-variants.ts`.
+- **LCP** (Lighthouse móvil, mejor de 3):
+  - CI: 3.06 s. En local: 3.1 s; la home de `develop` (marcador de texto), 2.33 s.
+  - Sin splash da lo mismo (3.16–3.21 s): el splash no es la causa.
+  - En un navegador real sin limitar la red, el póster se pinta a los 0.36–0.39 s.
+  - El resto es de la simulación (Lantern): la descarga compartida con 164 KB de JS y dos fuentes precargadas, y el JS que corre antes del primer pintado.
+  - Decisión: límite temporal de 3.2 s; el objetivo de 2.0 s pasa a BD-055, con el hero nuevo (BD-056).
 
 #### BD-051 · Soluciones por público y categorías
 
@@ -964,8 +1100,26 @@ Accesos rápidos a lo que busca cada visitante.
 
 **Criterios de aceptación**
 
-- [ ] Las tarjetas enlazan a rutas reales.
-- [ ] Revelado escalonado (A-30).
+- [ ] Las tarjetas enlazan a rutas reales. *(Los enlaces apuntan a las rutas definitivas, pero las páginas llegan con su ticket y hasta entonces dan 404: `/productos`, `/productos/[categoria]` y `?linea=` en BD-060 y BD-061, `/buscar` en BD-066 y `/escuelas`, `/empresas` y `/mayoreo` con las páginas por público de E10. Se marca cuando existan.)*
+- [ ] Revelado escalonado (A-21) y elevación al pasar el mouse (A-30). *(Decía «A-30»; en doc 09 el escalonado es A-21 y A-30 la elevación: doc 06 pide los dos.)*
+
+**Cómo quedó (11 nov 2026)**
+
+- `components/home/solutions-section.tsx`: «Un Bolik para cada etapa». Un h2 y las 5 `AudienceCard` (h3) con sus rutas de doc 17. En móvil es un carrusel con `scroll-snap` que no desborda la página; desde `lg`, 3 columnas, y desde `xl`, 5 (a 1024 px «Universidades» no cabía).
+- `components/home/catalog-section.tsx`: «Encuentra lo que necesitas».
+  - Buscador grande: `<form role="search" action="/buscar" method="get">` con `<label>` real, `name="q"` y el placeholder de doc 17. Funciona sin JS; `/buscar` llega con BD-066.
+  - Chips de las líneas que tienen categorías, enlazados a `/productos?linea=…` (filtro de BD-060).
+  - Las 8 `CategoryCard`: 2 columnas en móvil, 4 desde `lg`.
+  - «Ver todo el catálogo».
+- **«Más de 150 útiles»** solo aparece cuando Mercadeo publica la cifra `productos` (SiteStat). Mientras tanto: «Útiles para la escuela, la oficina y la casa.».
+- **Animación y eventos:**
+  - Revelado A-21 en cada `<li>` y elevación A-30 en las tarjetas.
+  - En el carrusel de móvil, el revelado no es escalonado: la tarjeta que entra al deslizar no espera su turno. Es escalonado desde `lg`.
+  - `data-event` (`solution_click`, `category_click`, `search_open`) queda listo para la analítica, con claves estables (`data-audience="colegios"`). `AudienceCard` y `CategoryCard` aceptan `data-*`.
+- **Validación del buscador:** la búsqueda vacía o corta la resuelve `/buscar` (BD-066) con su propio mensaje; el formulario no usa la validación nativa del navegador.
+- **Fondos editables desde el admin:** `home.solutions` (paper) y `home.catalog` (soft).
+- **Sin JS nuevo:** todo son Server Components y un formulario HTML.
+- **Orden provisional:** hero, soluciones y catálogo. Se ajusta en BD-056.
 
 #### BD-052 · Producto estrella y cifras
 
@@ -975,7 +1129,7 @@ Bolik Ultra destacado y cifras de la empresa.
 
 **Pasos**
 
-1. Bloque del Ultra con colores, empaques y CTA "Cotizar" / "Dónde comprar".
+1. Bloque del Ultra con colores, empaques y CTA «Ver ficha» / «Dónde comprar» (doc 17; decía «Cotizar»).
 2. Cifras desde `SiteStat` con `CountUp`.
 
 **Notas de BD-037**
@@ -985,9 +1139,25 @@ Bolik Ultra destacado y cifras de la empresa.
 **Criterios de aceptación**
 
 - [ ] El servidor renderiza los números finales (SEO).
-- [ ] Solo se muestran cifras con `isVerified = true`.
+- [ ] Solo se muestran cifras validadas: `SiteStat.published = true`. *(Decía `isVerified`, que `SiteStat` no tiene: su validación es `published`, y las «(validar)» de doc 17 están en `false`.)*
+
+**Cómo quedó (11 nov 2026)**
+
+- **`components/home/stats-band.tsx`: franja de cifras** sobre el azul de marca, justo después del hero (orden de doc 06).
+  - Muestra las cifras publicadas con `CountUp` (A-20); el número final va en el HTML.
+  - Con menos de 4 quedan centradas: hoy solo «60 años escribiendo con Guatemala». Sin ninguna, no hay franja.
+- **`components/home/product-spotlight.tsx`: el producto `featured` (Bolik Ultra)** después del catálogo destacado.
+  - Eyebrow «Nuestro bolígrafo estrella»: «El favorito de Guatemala» está por validar.
+  - Chips de color con su código («Azul · PT00058»), fijos: el cambio de color A-31 va en la ficha (BD-062), cuando haya fotos.
+  - Presentaciones y CTA «Ver ficha» y «Dónde comprar» (doc 17).
+  - Los beneficios son los 3 en que coinciden `products.json` y doc 17. El cuarto («Baja viscosidad» o «Cuerpo hexagonal que no rueda») espera a Mercadeo; se agrega en `spotlight.benefitKeys`.
+  - Sin foto, una ilustración SVG con los colores de las variantes. Cuando haya foto, `<img>` con `getImageProps`, sin JS de `Image`.
+- **JS de la home: 164.3 KB** (`CountUp` sumó 0.4 KB). Queda menos de 1 KB de margen para BD-053 y BD-054.
+- **Orden de la home:** hero, cifras, soluciones, catálogo y Ultra. Se ajusta en BD-056.
 
 #### BD-053 · Dónde comprar, escuelas e historia en la home
+
+> **Nota de BD-052:** la home está en 164.3 KB de JS (presupuesto de 165). Este ticket va con Server Components y sin JS nuevo; medir con `pnpm lhci` antes del PR.
 
 **Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-051 · **Docs** 06 §3.1
 
@@ -1003,7 +1173,34 @@ Resúmenes que llevan a las páginas internas.
 
 - [ ] Los enlaces externos llevan `rel="noopener"` y registran `retailer_click`.
 
+**Cómo quedó (12 nov 2026)**
+
+Las cuatro secciones son Server Components sin JS nuevo: la home sigue en 164.3 KB y el LCP local da 3.11 s.
+
+- **`components/home/schools-section.tsx` · «Bolik en tu escuela»** (sección 6).
+  - Fondo `sun`, texto y botón de doc 17, y botón a `/escuelas`.
+  - Actividades en tarjetas inclinadas ±1.5° que se enderezan al pasar el mouse (A-40, `.kids-tilt`; sin rotación con movimiento reducido), con texto AA por color.
+  - Un garabato que se dibuja al entrar en pantalla (A-41, `.scribble`). doc 09 pide 1.2 s; se usa `--dur-slower` (700 ms), el token más cercano.
+  - Sobre `sun` el anillo de foco es de tinta (`--focus` en `backgrounds.css`): el amarillo no se veía.
+  - Sin Baloo 2: la home ya usa dos familias (CLAUDE.md), así que Baloo queda para `/escuelas`.
+  - Sin las «3 cifras» de doc 06: no hay datos.
+  - Las actividades de la demo son `sample`: en producción el bloque queda con texto y botón.
+- **`components/home/wholesale-section.tsx` · «Mayoreo y empresas»** (sección 7, que no estaba en ningún ticket y se sumó aquí). Dos tarjetas con los textos de doc 17 y CTA a `/mayoreo` y `/empresas` (`solution_click` con `data-audience`, como las tarjetas de público).
+- **Pendiente aparte (resuelto en BD-054):** varias secciones de BD-051 a BD-053 fijaban colores de texto (`text-ink`, `text-blue`) que no se adaptaban si el admin elegía un fondo oscuro en `SectionAppearance`. BD-054 los cambió por tokens que siguen el tono.
+- **`components/home/where-to-buy-section.tsx` · «Bolik está cerca de ti»** (sección 8).
+  - Selector de departamento: formulario GET a `/donde-comprar?departamento=…` (sin JS).
+  - «Comprar en Walmart» y «Comprar en La Torre», con la URL de los datos de las tiendas (solo `https://`): `target="_blank"`, `rel="noopener noreferrer"`, aviso para lector de pantalla y `data-event="retailer_click"` con `data-retailer` (doc 12 §4). El clic se marca; registrarlo es trabajo del beacon de analítica (BD-083 y E12).
+  - «Ver todas las tiendas».
+  - Sin las «4 tiendas destacadas»: no hay campo para marcarlas. Va en un ticket de datos cuando Ventas las elija.
+- **`components/home/history-section.tsx` · «60 años escribiendo con Guatemala»** (sección 10).
+  - Solo los hitos verificados (hoy 1966 y 2026).
+  - Línea de tiempo vertical en móvil y horizontal desde `md` (como mucho 3 columnas en `md`), trazada al revelarse (A-50, `.timeline-line`; completa sin JS o con movimiento reducido).
+  - El año va dentro del h3 del hito.
+  - Botón «Conoce nuestra historia».
+
 #### BD-054 · FAQ, CTA final y apariencia por sección
+
+> **Nota de BD-052:** la home está en 164.3 KB de JS (presupuesto de 165). El acordeón de las FAQ es `<details>` nativo (sin JS); medir con `pnpm lhci` antes del PR.
 
 **Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-051, BD-020 · **Docs** 06 §3.1
 
@@ -1020,9 +1217,30 @@ Cierre de la home y fondos editables.
 
 - [ ] Cambiar el fondo en el admin se refleja en la home tras guardar.
 
+**Implementado (BD-054)**
+
+Las tres secciones nuevas son Server Components sin JS: la home sigue en 164.3 KB y el LCP local da entre 3.06 y 3.14 s (límite temporal 3.2 s).
+
+- **`components/home/kits-section.tsx` · «Kits escolares 2027»** (sección 9, entre dónde comprar e historia).
+  - Solo si `kits_enabled` está activo (el mismo ajuste que decide «Familias» en el pie) y hay kits publicados. Hoy `kits_enabled = false`: no sale.
+  - Tres tarjetas con nivel, descripción y contenido, sin precio (lo muestra `/kits-escolares` si Mercadeo lo aprueba). Carrusel en móvil y 3 columnas desde `md`. Botón «Ver kits escolares».
+- **`components/home/faq-section.tsx` · «Preguntas frecuentes»** (sección 11).
+  - Las 6 de scope `home` en el acordeón `<details>` (abre de a una), centrado a 860 px, y «Ver todas las preguntas».
+  - JSON-LD `FAQPage` con el mismo texto. `features/seo/jsonld.tsx` nace aquí con `JsonLd` (escapa `<`) y `faqPageJsonLd`; BD-091 lo amplía.
+- **`components/home/final-cta-section.tsx` · «¿Compras por mayor?»** (sección 12), sobre `brand`.
+  - «Armar mi cotización» a `/cotizacion` (`quote_open`; el parámetro `lines` de docs/12 lo pone BD-127 desde el store de la cotización) y «Escribir por WhatsApp» (`whatsapp_open`, `context=general`, mensaje general del sitio hasta BD-067).
+  - Sin número válido en los ajustes no hay botón de WhatsApp, como en el header.
+- **Fondos editables.** Las 11 secciones de la home después del hero tienen `appearanceKey` (nuevas: `home.kits`, `home.faq`, `home.final-cta`).
+  - Tokens por tono en `tokens.css`: `--heading` (títulos y etiquetas) y `--accent-text` (eyebrows, años, íconos). En `data-tone="dark"` pasan a blanco y amarillo.
+  - `data-tone="light"` dentro de una sección oscura restaura los valores claros (`--text-light`, `--muted-light`, `--line-light`): lo usan las tarjetas blancas (categoría, kit, tienda). Las reglas de títulos y enlaces del tono oscuro usan `var(--heading)`, así que la tarjeta clara también los recupera.
+  - Sobre `brand`, `--muted` es `--on-dark`: `--on-dark-muted` sobre azul da 3.97:1.
+  - Se quitaron los colores fijos de BD-051 a BD-053 (`text-ink`, `text-blue`). El botón `outline` y el `link` siguen el tono.
+  - E2E: con todas las secciones en navy y en brand, la home pasa axe y el título de una tarjeta blanca no toma el color de su fondo (axe deja un contraste de 1:1 como «incompleto», por eso se compara aparte).
+- **Criterio «cambiar el fondo en el admin»:** el editor llega con BD-121 (y el login con BD-115). Aquí se prueba la lectura: una prueba de integración guarda un `SectionAppearance` en la base de pruebas y la fuente lo devuelve; la sección lo pinta con su tono (unitaria). Se cierra en BD-121.
+
 #### BD-055 · Ajuste de rendimiento de la home
 
-**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-050, BD-054 · **Docs** 12
+**Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-050, BD-054, BD-056 · **Docs** 12
 
 La home cumple los presupuestos.
 
@@ -1035,6 +1253,68 @@ La home cumple los presupuestos.
 
 - [ ] JS inicial ≤ 165 KB transferidos (docs/12 §2; el runtime de Next 16 ya ocupa ~146 KB).
 - [ ] Rendimiento ≥ 90, SEO 100, CLS ≤ 0.05.
+- [ ] ~~LCP de la home ≤ 2.0 s en Lighthouse móvil (viene de BD-050): bajar `largest-contentful-paint` de la home de 3200 (temporal) a 2000 en `lighthouse.config.cjs`~~: pasó a medición de campo en BD-126 (decisión del usuario, 12 nov 2026); en Lighthouse la home tiene una guardia de 3.2 s (docs/12 §1).
+- [ ] LCP de la home ≤ 3.2 s en Lighthouse móvil como guardia de regresión.
+
+**Nota de BD-050:** tras el hero, la home queda en **163.7 KB** de JS: solo hay 1.3 KB de margen para BD-051 a 054. El LCP (el póster del capítulo 1) medido en local con Lantern sale de 2.9 s (2.3 s con el marcador de texto de `develop`). Ese tiempo no viene del póster, que se pide primero con prioridad alta y pesa ~13 KB en móvil:
+- la descarga compite con ~160 KB de JS y dos fuentes precargadas (~78 KB);
+- y el JS que corre antes del primer pintado alarga el render.
+Puntos a revisar: `preload` de las fuentes (¿solo la del h1?) y qué JS de la home puede cargarse después. El splash no influye: sin él el LCP medido es el mismo. La CI midió 3.06 s (mejor de 3) con el póster del hero de video como LCP; con el hero nuevo (BD-056), ese póster deja de ser el LCP.
+
+**Nota de BD-056:** el LCP ya es el texto del h1 del hero principal y no hay imagen precargada. Aun así, Lantern da unos 3.04 s, contra un LCP observado de 0.49 s (igual al FCP): el 84 % es «render delay» (2.57 s), porque todo lo que se pide antes del LCP observado (JS de la página y las dos fuentes precargadas, ~240 KB) comparte el ancho de banda simulado. Lo que mueve el número es pedir menos antes del primer pintado: precargar solo la fuente del h1 (o ninguna, el h1 pinta con la de reserva por `display: swap`) y diferir el JS que no hace falta arriba.
+
+**Implementado (BD-055)**
+
+Decisión del usuario: la home cierra con una guardia de 3.2 s en Lighthouse y la meta de 2.0 s se mide en campo (BD-126).
+
+- JS de la home: 164.4 KB (≤ 165). Rendimiento 0.91–0.92, SEO 100, CLS 0.
+- **LCP:** ningún ajuste lo bajó de ~2.9 s en Lighthouse móvil (tabla en docs/12 §1). El navegador pinta el h1 a los ~0.5 s; la simulación de Lantern le carga lo que se pide antes del primer pintado (~146 KB de Next/React, el JS de la página y las fuentes).
+  - Se queda: el favicon de 15 KB a 1.4 KB (los mismos píxeles de los cuadros de 16 y 32 px, en PNG; se quitó el de 48 px).
+  - Se descartaron:
+    - precargar solo la fuente de títulos: en la CI el texto cambió de fuente después del splash (CLS 0.002) y el LCP quedó dentro de la variación;
+    - ninguna fuente precargada (CLS 0.023);
+    - fuentes estáticas por peso, throttling aplicado (2.2–5.3 s) y diferir el JS propio (3.8 KB).
+  - Riesgo: la home queda a 0.6 KB del tope de 165 KB de JS. La analítica (BD-125 a 127) debe cargarse diferida.
+  - `lighthouse.config.cjs`: el LCP de la home queda en 3200 como guardia de regresión, ya no «temporal».
+- **Pendiente aparte:** el favicon es todavía el de Next.js (la «N»). Uno de Bolik necesita el archivo de marca: ticket BD-028 (hecho con BD-090).
+
+#### BD-056 · Hero principal nuevo
+
+**Sprint** S2 · **Días** 1.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-050 · **Docs** 06 §3.1, 09, 12 · *Ticket nuevo (10 nov 2026)*
+
+Un hero visualmente atractivo e impactante abre la home; el hero de video por capítulos (BD-050) pasa a ser una sección más abajo.
+
+**Pasos**
+
+1. Definir con el usuario el diseño del hero nuevo (lo detalla al empezar el ticket).
+2. El hero nuevo lleva el único h1 de la home y el elemento LCP.
+3. El hero de video pasa a ser la sección 3 o 4 (por definir):
+   - su título baja a h2;
+   - sus pósters dejan de precargarse y de pedirse con prioridad alta (`loading="lazy"`);
+   - el video sigue llegando después de `load` y solo cuando la sección está cerca de la pantalla.
+4. Actualizar doc 06 §3.1 (orden de las secciones) y doc 09 §5.
+
+**Criterios de aceptación**
+
+- [ ] Un solo h1 en la home, en el hero nuevo.
+- [ ] La sección de video no pide pósters ni video en la carga inicial.
+- [ ] ~~LCP de la home ≤ 2.0 s en Lighthouse móvil, junto con BD-055~~: pasó a medición de campo en BD-126 (decisión del usuario, 12 nov 2026); en Lighthouse la home tiene una guardia de 3.2 s (docs/12 §1).
+- [ ] Visible sin JavaScript y con movimiento reducido respetado.
+
+**Implementado (BD-056)**
+
+Diseño elegido con el usuario: tipográfico con ilustración, el video como sección 3 y el mismo h1.
+
+- **`components/home/main-hero.tsx` · hero principal** (sección 1). Server Component sin JS, sobre `brand` (`home.hero`) y a pantalla completa menos el header.
+  - Chip, el único h1 con el subrayado de tinta (A-11), el texto de marca (primera frase de la descripción de la home) y los CTA «Ver productos» y «Cotizar por mayor» (`hero_cta_click` con `data-cta`).
+  - El Bolik Ultra ilustrado (`UltraIllustration`, los colores de sus variantes), decorativo. Entra con fade-up solo con JS (`.js .hero-art`); con movimiento reducido, solo opacidad.
+  - El LCP es el texto del h1: no se precarga ninguna imagen.
+- **`components/hero/video-hero.tsx` · «Así nace un Bolik»** (sección 3, después de las cifras).
+  - El título es un h2; el chip y el subrayado pasaron al hero principal. Sin capítulos publicados, la sección no se dibuja.
+  - Pósters con `loading="lazy"`, sin `fetchpriority` ni `preload`.
+  - `hero-player.tsx` monta póster y video solo después de `load` y cuando la sección entra en pantalla (`IntersectionObserver` sin margen). Con 300 px de margen la sección ya estaba «cerca» al abrir, porque empieza justo debajo del pliegue. E2E: sin desplazarse no se pide nada de `/media/hero/` ni `/media/video/`; al llegar a la sección, sí.
+  - Sin JS, la sección queda sobre navy, sin póster, con los cuatro capítulos y sus CTA.
+- **LCP:** Lighthouse móvil da 3.04 a 3.34 s (representativo 3.04 s); en el navegador real es de 0.49 s, igual al FCP. Lantern lo estima alto por el «render delay» (2.57 s): el h1 comparte el ancho de banda con unos 164 KB de JS y las dos fuentes precargadas. El límite temporal de 3.2 s sigue; el criterio de 2.0 s se cierra en BD-055.
 
 ### E5 · Catálogo, fichas y búsqueda
 
@@ -1055,6 +1335,23 @@ Todos los productos con filtros por uso.
 - [ ] Filtrar no hace peticiones al servidor.
 - [ ] La URL con filtros se puede compartir.
 
+**Implementado (BD-060)**
+
+Decisiones del usuario (14 nov 2026): JS del resto de páginas a 170 KB con un ticket para aligerar el layout (BD-047); LCP con guardia de 3.2 s en Lighthouse en todas las páginas (la meta de 2.0 s es de campo, BD-126); y rendimiento ≥ 0.90 en todas las páginas, como la home (cae por el mismo LCP simulado). CLAUDE.md y docs/12 lo dicen.
+
+- `app/(site)/productos/page.tsx`: estática, con migas (Inicio › Catálogo Bolik), h1, intro y buscador de doc 17 (GET a `/buscar`), la grilla completa de `ProductCard` (h2) y, al final, las categorías publicadas. Canónica `/productos` aunque la URL lleve filtros. JSON-LD `CollectionPage` con su `ItemList` y `BreadcrumbList` (helpers nuevos en `features/seo/jsonld.tsx`).
+- **Filtros** (`components/catalog/catalog-filters.tsx`): línea, uso y color, una opción por grupo y combinados con «y» (`features/catalog/filters.ts`). Solo ocultan y muestran los `<li>` de la grilla (atributo `hidden`): no vuelven a pintar tarjetas ni piden nada al servidor (E2E). Viven en la URL (`?linea=…&uso=…&color=…`, `replaceState`, leída con `useSyncExternalStore`); un valor desconocido se ignora. Contador «N productos» con `aria-live`; estado vacío con «Quitar filtros» (`feedback.catalog.filtersEmpty`).
+- **Sin JS** la barra no se muestra (`.js-only`, regla nueva en `globals.css`) y se ven todos los productos.
+- **Móvil:** «Filtros» abre un Sheet que se descarga al primer toque (como el menú móvil) y cuenta en vivo («Ver N productos»). En escritorio, barra fija bajo el header.
+- **A-22:** las tarjetas que vuelven a aparecer entran con fade (CSS, `[data-filtered]`); la primera carga no se anima.
+- `ProductCardView.useSlugs` en las dos fuentes. `ProductCard` usa `getImageProps` en lugar del componente `Image`: −6.5 KB en `/productos` y −1.4 KB en la home.
+- **Router:** `replaceState(null, …)` para que Next sincronice su estado, y un `useSearchParams` en su propio `Suspense` avisa cuando un `<Link>` cambia la URL (estando filtrado, «Ver todo el catálogo» limpia la grilla; E2E). La página sigue estática.
+- **Sin CLS con un enlace filtrado** (`?linea=…` desde la home o compartido): un script en línea después de la grilla (`features/catalog/prepaint-script.ts`) oculta lo que no va antes del primer pintado, con los `data-*` de cada `<li>`; E2E de CLS a 360 px.
+- **Accesibilidad:** la barra es fija solo en móvil (una fila) para no tapar el foco, con `scroll-padding` que la suma; «Quitar filtros» (también en la barra de escritorio) deja el foco en el contador; el sheet anuncia el conteo en su propia región viva. La isla empareja por slug (`data-product`).
+- `CatalogSearchForm` compartido con la home. `ProductCard` sin placeholder blur (lo quitaba el JS de `Image`).
+- Medido: `/productos` 167.6 KB de JS, rendimiento 0.94, CLS 0, LCP ~3.05 s (observado ~0.4 s).
+- **Pendiente:** el «texto corto sobre la marca» del bloque SEO (docs/06 §3.2 punto 5) no tiene copy en doc 17: hoy el bloque solo enlaza las categorías. Pedirlo a Mercadeo (BD-150).
+
 #### BD-061 · Página de categoría
 
 **Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-060 · **Docs** 06 §3.3, 10
@@ -1068,8 +1365,17 @@ Página optimizada para búsquedas como "crayones de cera Guatemala".
 
 **Criterios de aceptación**
 
-- [ ] Título y descripción únicos.
-- [ ] BreadcrumbList válido.
+- [x] Título y descripción únicos.
+- [x] BreadcrumbList válido.
+
+**Implementado (BD-061)**
+
+- `app/(site)/productos/[categoria]/page.tsx`: estática con `generateStaticParams` (categorías publicadas). Migas (Inicio › Catálogo Bolik › categoría) con `BreadcrumbList`, h1 con el nombre, bajada (`shortText`), sus productos con `CollectionPage`/`ItemList`, la intro SEO, «Cotizar esta línea por mayor» (`/mayoreo`) y «Dónde comprar», sus preguntas (solo si hay, con `FAQPage`) y las otras categorías como enlaces internos.
+- **Title y description únicos:** `Category.seoTitle`/`seoDescription` ahora están en el seed, `CategoryView` y las dos fuentes (con los textos de docs/10 §1 y docs/17 §6 donde existen). Sin ellos, `features/catalog/category-meta.ts` arma la descripción con la plantilla de docs/10 §1: «{nombre} Bolik: {texto corto} Encuentra dónde comprar o cotiza por mayor con Bolik, hecho en Guatemala.» (sin el nombre si pasa de 160). Prueba: únicos en todo el seed, title ≤ 60 con « | Bolik» y descripción de 140–160; el seed limita `seoTitle` a 52 y `seoDescription` a 140–160.
+- **404 real (decisión del usuario):** con Cache Components, `notFound()` llega con el layout ya enviado y la respuesta sería 200 con `noindex` («soft 404»). `proxy.ts` consulta `server/seo/catalog-routes.ts` (slugs publicados en memoria, recarga cada 60 s, como las redirecciones; lee la fuente directa porque `'use cache'` no corre en el proxy) y reescribe un slug desconocido a la 404 de Next con estado 404. Como las redirecciones: lee con el cliente de Prisma del proxy (`server/data/catalog-routes.ts`, no `dataSource()`), espera la primera carga una sola vez (máximo 5 s; sin lista deja pasar todo), tiene `invalidate()` en `globalThis` para el admin de categorías, y una URL mal codificada es 404, no 500. E2E: `/productos/no-existe` y la categoría sin publicar dan 404.
+- Las tarjetas de categoría (home y `/productos`) ya precargan su página.
+- **Desviaciones de docs/06 §3.3:** el h1 es el nombre de la categoría (sin la palabra clave extra: el title de docs/10 §1 ya la lleva); los botones van después de las preguntas, como pide el doc. Una categoría publicada sin productos no muestra lista ni `ItemList`.
+- **Pendiente:** los «Datos clave» de la categoría (docs/06 §3.3, 3–5 viñetas) no tienen campo ni texto: van con el contenido de Mercadeo (BD-150) y un campo en `Category`. Hoy ninguna categoría tiene FAQs en el seed.
 
 #### BD-062 · Ficha de producto: información y variantes
 
@@ -1079,17 +1385,44 @@ La página más importante para SEO y cotización.
 
 **Pasos**
 
-1. Galería (A-40) con zoom en escritorio y deslizamiento en móvil.
+1. Galería (A-31 al cambiar de color) con zoom en escritorio y deslizamiento en móvil.
 2. Selector de color → cambia imagen, SKU, código de barras y URL (`?color=`).
-3. Selector de empaque (blister 1/3/5, cajilla 12, fardo).
+3. Selector de empaque (las presentaciones de cada producto: blíster, cajilla, estuche, fardo…).
 4. Datos clave, especificaciones, beneficios, usos.
 5. Botones: Agregar a cotización, WhatsApp, Dónde comprar.
 
+*Nota de BD-038:* `ProductCardView.brand` trae la marca del grupo (Bolik, Fabik, Coloreto, EcoBol, K-Pen): la ficha la muestra como chip cuando no es Bolik. Las presentaciones del catálogo usan códigos genéricos (`caja`, `estuche`…) con el texto completo en `Packaging.name`.
+
+*Nota de BD-061:* sumar los slugs de producto a `server/seo/catalog-routes.ts` (hoy solo valida categorías), para que una ficha inexistente responda 404 real y no 200 con `noindex`.
+
+*Nota de BD-067:* el botón de WhatsApp usa `whatsappMessage({ context: "product", item, url })` (nombre con color, SKU, presentación y cantidad elegidas, URL con `?color=`) y `whatsappEventData("product", sku)`. Aquí va también el `WhatsAppSheet` de docs/08 (vista previa del mensaje, «Copiar» con `feedback.whatsapp.copied`/`copyFailed`, «Abrir WhatsApp»).
+
 **Criterios de aceptación**
 
-- [ ] Todo el contenido está en el HTML del servidor.
-- [ ] Cambiar color no recarga la página.
-- [ ] JSON-LD `ProductGroup` con variantes válido.
+- [x] Todo el contenido está en el HTML del servidor.
+- [x] Cambiar color no recarga la página.
+- [x] JSON-LD `ProductGroup` con variantes válido.
+
+**Implementado (BD-062)**
+
+Decisiones del usuario (16 nov 2026): usar desde ya las fotos que hay (carpeta «recursos web bolik») mientras Mercadeo manda las demás; número de WhatsApp de prueba; «Ver cotización» y «Dónde comprar» con sus rutas finales. El paso 1 decía A-40 (tarjetas infantiles): la animación de la ficha es A-31.
+
+- `app/(site)/productos/[categoria]/[producto]/page.tsx`: estática con `generateStaticParams` (fichas publicadas). Migas (Inicio › Catálogo Bolik › categoría › producto) con `BreadcrumbList`; chip de línea y de marca si no es Bolik (BD-038); el único h1; tagline y descripción; color con su código y código de barras; compra; «Datos clave del {producto}» (`<section>` con h2 y `<ul>`, docs/11 §4); beneficios y usos; pestañas (Especificaciones · Medidas y empaque · Para distribuidores con «Cotizar por mayor» · Seguridad), solo las que tienen datos; presentaciones en tarjetas y la tabla de códigos por color; preguntas (con `FAQPage`) y el cierre «¿Compras por mayor?» de la home (docs/17 §2). Lee sus params fuera de un `Suspense`, a propósito, con `export const instant = false`: con un `Suspense` (lo que sugiere Next 16 para Partial Prefetching) el HTML prerenderizado trae un esqueleto y el contenido oculto hasta que un script lo cambia, y sin JS no se ve. La categoría (BD-061) lleva lo mismo: Next la marcaba en desarrollo al llegar desde las migas de la ficha. Una ficha sin colores publicados es 404 (página y proxy).
+- **Title y description:** `ProductView` suma `seoTitle`, `seoDescription` y `updatedAt` (las dos fuentes). `features/catalog/product-meta.ts` los arma si faltan: title con la plantilla de docs/10 §2 («{nombre}, {tagline o categoría}», hasta 52) y description con la de docs/10 §1 (`{nombre}: {tagline}. {dato clave}. {cierre}`, el primer dato clave que cabe en 160; si no, sin él, con la descripción corta o recortada en una palabra). El Bolik Ultra lleva el title de docs/10 §1 y la description de docs/17 §6 (137 caracteres: el esquema de producto admite desde 120). Prueba: únicos en todo el seed. Canónica sin `?color=`.
+- **Color sin JS y sin recargar:** radios nativos sin controlar (isla `components/product/product-purchase.tsx`); un `<style>` de la página (`features/catalog/variant-color.ts`) muestra con `:has()` el conjunto de fotos y la línea de código del color marcado (`[data-variant]`, motion.css). Sin JS también cambia. La isla escribe `?color=` (`replaceState(null, …)`) y lo anuncia en una región viva (`feedback.catalog.colorChanged`). Un script después de los radios marca el de `?color=` antes del primer pintado (QR de BD-065, enlaces compartidos): sin CLS (E2E a 360 px).
+- **Galería** (`product-gallery.tsx` + isla sin dibujo): un conjunto por color (sus fotos y las generales), tira con scroll-snap que se desliza en móvil, miniaturas que son enlaces a cada foto (sin JS) y que la isla convierte en desplazamiento suave con `aria-current`. Zoom con mouse hacia el puntero (solo `transform`), adaptado a la resolución de la foto (`lib/zoom.ts`: su ancho real entre el ancho en pantalla, hasta 2x; menos de 1.15x no amplía): ~1.3x con las fotos de 750 px del Bolik Ultra y 2x con las grandes; al ampliar se pide el archivo del `srcset` que haga falta. El código del zoom (`components/product/gallery-zoom.ts`) se descarga al primer movimiento del mouse sobre la galería: en móvil no se baja y la ficha sigue en su tope de JS (medido: 169.94 KB). Solo con mouse (un dedo en una pantalla táctil desliza, no amplía). Con movimiento reducido amplía desde el centro, sin seguir al puntero. El archivo más grande se pide solo con la foto ya cargada (no compite con la LCP). (Corrección del 17 nov 2026, decisión del usuario: antes solo ampliaba fotos de 1600 px o más y el Ultra no tenía zoom.) A-31: el conjunto nuevo entra con opacidad (`data-color-changed`, nunca en el primer pintado) y el anillo del color crece. La primera foto del color por defecto es la LCP (`fetchpriority="high"`); las primeras de los demás colores se piden después de hidratar (y con `?color=` el script previo al pintado le da prioridad a la del color elegido), para que el cambio no quede en blanco. Sin fotos, el cuadro muestra el color.
+- **Fotos provisionales:** las 9 del Bolik Ultra (principal, punta y cajilla por color; 750 px y en CMYK) y 8 del Ultra Fino (3125 px; falta la cajilla negra). `ProductImage` en el seed: `products.json` → `images` (clave de `media.json`, toma de `PRODUCT_IMAGE_KINDS` y color), validado contra el manifiesto y los colores. Van como `sample`: el perfil `prod` las quita, también al producto real. `pnpm media:samples` acepta varias carpetas (la de la demo y la de fotos), toma el nombre de la clave y salta (avisando) lo que no encuentra. La tarjeta del catálogo y el producto estrella de la home ya muestran la foto (fondo blanco en la tarjeta). Hot Colors (14 fotos) espera que el producto exista en el catálogo (BD-039). Lo que falta lo pide el documento «Fotos de producto para bolik66.com» (Mercadeo, BD-150).
+- **Presentación y cantidad:** `PackSelector` con `Packaging.name` y sus unidades; empieza en la primera presentación por mayor. «¿Cuántas cajillas de 12 necesitas?» (docs/17 §3; «Cuántos» con blísteres, fardos, estuches…), `QuantityStepper`, sugeridas 5, 10, 20 y 50 en las de mayoreo (docs/07 §3) y «Total: N unidades». Sin presentaciones, en unidades.
+- **Agregar a mi cotización:** zustand, el store y `feedback.ts` se descargan al primer clic (`components/product/add-to-quote.ts`). Toast `quote.added` con «Ver cotización» (lleva a `/cotizacion`, BD-072; BD-071 lo cambia por el drawer); con 50 líneas, `quote.limit`. El contador hace «pop» también cuando la línea ya estaba (`merged: true`): evento `QUOTE_POP_EVENT` en `storage-keys.ts`, que escucha `useQuoteCount` (el header no cambió).
+- **WhatsApp:** sin JS, el botón abre `wa.me` con el color por defecto. Con JS abre el `WhatsAppSheet` (`components/whatsapp/whatsapp-sheet.tsx`, se descarga al primer toque) con el mensaje `product` (nombre con color, SKU, presentación, cantidad y URL con `?color=`): «Copiar» (`whatsapp.copied`, o `copyFailed` con el texto ya seleccionado) y «Abrir WhatsApp» con `whatsapp_open` y `data-sku`. Textos del sheet en `content/whatsapp.ts`.
+- **Número de prueba:** `settings.json` → `sample_whatsapp_number` (55551234, el ejemplo de docs/17 §5). `settingsForProfile` lo usa como `whatsapp_number` en dev, e2e, la fuente fixtures y staging con `-SampleData`; `prod` nunca lo lleva y no pisa uno real. Con él se ven los botones de WhatsApp de todo el sitio (flotante, barra, menú, cierre, 500).
+- **Barra móvil:** con JS, «Agregar a cotización» + WhatsApp reemplazan a la del sitio (`.product-bar`, motion.css); sin JS queda la del sitio.
+- **404 real:** `server/seo/catalog-routes.ts` también valida `/productos/{categoría}/{ficha}` (publicada y en su categoría); lo más hondo (el PDF de BD-064) pasa. E2E: `/productos/boligrafos/no-existe` y `/productos/marcadores/bolik-ultra` dan 404.
+- **JSON-LD:** `productGroupJsonLd` (`features/seo/jsonld.tsx`): `ProductGroup` con `productGroupID`, marca, fabricante (razón social de SiteSetting con el `@id` de Organization de BD-091), `countryOfOrigin`, imágenes, `variesBy` si hay más de un color, `additionalProperty` desde las especificaciones y `hasVariant` con `sku`, `color`, imagen, URL con `?color=` y `gtin12` solo con 12 dígitos y verificador correcto. Sin `offers` ni reseñas.
+- **Precarga y presupuesto:** con la precarga, el JS de la ficha contaba en el de `/productos` y la categoría (174.5 KB, tope 170), así que las tarjetas siguen sin precargar; las migas de la ficha tampoco (el JS del catálogo contaba en la ficha). «Ver ficha» del producto estrella sí precarga (está bajo el pliegue de la home). La ficha entra en Lighthouse CI con el tope de 170 KB (medido: 169.9 KB, rendimiento 0.92, CLS 0). Su LCP es la foto y da 3.39 s simulado: guardia de **3.5 s** para las fichas (decisión del usuario del 16 nov 2026; docs/12 y CLAUDE.md). Las primeras fotos de los otros colores las pide la isla después de hidratar, para no competir con la LCP. En /styleguide, ColorSwatches, PackSelector y WhatsAppSheet enlazan a la ficha.
+- **Scripts previos al pintado (corrección del 17 nov 2026):** el de `?color=` (ficha) y el de los filtros (catálogo, BD-060) los dibuja su isla con `components/ui/prepaint-script.tsx`: solo en el HTML del servidor y al hidratar. En una navegación del sitio React no ejecuta un `<script>` que crea y en desarrollo avisaba en consola («Encountered a script tag…»); ahí la isla lee la URL al montar. Sin JS nuevo en la página. E2E: catálogo → ficha → catálogo por enlaces, sin errores.
+- **Pendiente:** los beneficios usan todos el mismo check; los íconos por `iconKey` («Beneficios con íconos», docs/06 §3.4) esperan el set de íconos (pendiente en /styleguide).
+- **Fuera de este ticket:** diagrama de medidas, relacionados y «Dónde comprar este producto» con las cadenas (BD-063); PDF (BD-064); «Actualizado el {fecha}» y anclas de las preguntas (BD-103); imágenes en el sitemap (BD-093, los datos ya están en `ProductView.images`); registrar los `data-event` (BD-127).
 
 #### BD-063 · Ficha: medidas, relacionados y dónde comprar
 
@@ -1105,7 +1438,20 @@ Información de apoyo para decidir.
 
 **Criterios de aceptación**
 
-- [ ] El diagrama es accesible (tabla alternativa).
+- [x] El diagrama es accesible (tabla alternativa).
+
+**Implementado (BD-063)**
+
+Decisión del usuario (16 nov 2026): el bloque «Dónde comprar este producto» muestra las cadenas por nombre, sin decir que cada una tiene este producto (no hay datos de surtido por tienda).
+
+- **Sin JS nuevo:** la ficha está en 169.9 KB de 170 (docs/12 §2), así que todo es de servidor y la interacción va con radios y CSS, como el color.
+- **Diagrama de medidas** (`components/product/dimension-diagram.tsx`, en la pestaña «Medidas y empaque»): el bolígrafo con el tapón separado, dibujado a escala desde `ProductDimension` (3.4 px por mm), con una cota por parte: cuerpo, tapa, largo y diámetro de la punta, y largo de la marca (`PEN_PARTS`). Solo sale si el producto tiene el largo del cuerpo; los demás muestran solo la tabla. La punta se dibuja con un mínimo (no a escala) para que se vea a 360 px; las etiquetas dicen la medida real y en móvil son más grandes. Una parte que falta (o vale 0) no se dibuja ni se ofrece. Las partes son radios nativos («Largo del cuerpo 145.83 mm»), más «Todas» (al inicio), que vuelve a mostrar todas las cotas: al elegir una, CSS (`:has`, motion.css) atenúa las demás, dibuja su línea en azul con `stroke-dashoffset` y su etiqueta entra con opacidad (A-33, token nuevo `--dur-cota`: 320 ms de docs/09). Sin JS funciona igual. Cada radio lleva `data-event="dimension_open"` y `data-part` (docs/12 §4). El SVG es `role="img"` con nombre y la tabla de medidas queda debajo como alternativa (criterio).
+- **«Dónde comprar este producto»** (`product-where-to-buy.tsx`): el texto de «Dónde comprar» de docs/17 §2, las cadenas con productos Bolik (`stores.json`, tipo `cadena`), «Compra en línea» (Walmart y La Torre, otra pestaña, solo `https`, con `retailer_click`, `data-retailer` y `data-sku` del color por defecto) y «Ver todas las tiendas» (/donde-comprar, BD-080). Una tienda en línea por URL: con la base, cada sucursal es un punto de venta.
+- **«También te puede servir»** (docs/17 §3, `product-related.tsx`): hasta 4 relacionados de `ProductRelation` (ya filtrados por la fuente) con `ProductCard`, sin precarga (el JS de otra ficha contaría en esta).
+- /styleguide muestra el `DimensionDiagram` con las medidas del Bolik Ultra leídas del seed (no de la base, docs/08 §6).
+- Medido: la ficha sigue en 169.9 KB de JS, rendimiento 0.93, LCP 3.23 s (guardia de 3.5 s).
+- Pruebas: unitarias de la geometría y del componente; E2E del diagrama con axe, la parte elegida resaltada, todas las cotas sin JS, los relacionados y los enlaces de las tiendas.
+- **Pendiente:** el surtido por tienda («este producto está en…») necesita datos de Ventas; los clics salientes se registran con BD-083.
 
 #### BD-064 · PDF de ficha técnica
 
@@ -1125,6 +1471,8 @@ Descarga de la ficha técnica generada desde la BD.
 
 #### BD-065 · Acceso por QR /p/[codigo]
 
+> **Nota de BD-062:** la ficha ya pinta el color de `?color=` antes del primer pintado (sin CLS); el 301 solo tiene que llevar a esa URL.
+
 **Sprint** S2 · **Días** 0.25 · **Prioridad** Must · **Pista** B · **Depende de** BD-062 · **Docs** 06 §3.5
 
 El QR del empaque abre la ficha correcta.
@@ -1135,8 +1483,18 @@ El QR del empaque abre la ficha correcta.
 
 **Criterios de aceptación**
 
-- [ ] `/p/PT00058` → ficha del Ultra azul.
-- [ ] Código inexistente → 404 amigable.
+- [x] `/p/PT00058` → ficha del Ultra azul.
+- [x] Código inexistente → 404 amigable.
+
+**Implementado (BD-065)**
+
+Decisión del usuario (16 nov 2026): un código que no existe va a la 404 amigable, como pide el ticket, y no a `/buscar` con 302 (docs/06 §3.5 decía eso; `/buscar` llega con BD-066 y la 404 ya tiene salidas).
+
+- **En el proxy, no en un route handler:** así hay 301 exacto y, si el código no existe, la 404 real de Next con estado 404 (un route handler no puede mostrar esa página). `proxy.ts` atiende `/p/{codigo}` después de las redirecciones de la tabla (una fila sobre `/p/…` gana) y antes de quitar la barra final (`/p/PT00058/` da un solo salto).
+- **La misma lista en memoria que las rutas del catálogo** (`server/seo/catalog-routes.ts`, BD-061): `listPublishedCatalogRoutes` también trae los SKU y códigos de barras de las variantes publicadas de las fichas visibles, con su ruta y su color. `resolveCode` normaliza lo que llega como la búsqueda por código (`normalizeCode`: sin espacios ni guiones, en mayúsculas; `PT-00058`, `pt00058`), descarta lo que no tiene forma de código o está mal codificado. Van primero todos los SKU y después los códigos de barras, y gana el primero: un SKU nunca queda tapado por un código de barras repetido de otra ficha. Misma recarga cada 60 s y misma espera única al arrancar. Sin lista (base caída) no se sabe si el código existe: un **302** temporal a `/productos`, nunca la 404.
+- **301** a `/productos/{categoria}/{producto}?color={color}&utm_source=qr&utm_medium=empaque` (docs/06 §3.5), con la URL pública del sitio y las demás `utm_*` que traiga el QR (`utm_campaign`). Lleva `Cache-Control: public, max-age=3600`: un 301 sin cabeceras queda en el navegador para siempre, y un código puede cambiar de ficha. La ficha pinta ese color antes del primer pintado (BD-062).
+- **Pendiente (decisión de negocio):** el QR de un color despublicado de una ficha visible da 404; podría llevar a la ficha sin color.
+- Pruebas: unitarias de la lista (SKU, código de barras, formas escritas a mano, repetidos, sin lista) y del proxy (301 con sus parámetros, 404, `/p` sin código); E2E: `/p/PT00058`, `/p/759364663108` y `/p/pt-00060` dan 301 a su color, la ficha abre en azul y un código inexistente da 404 con la página amigable.
 
 #### BD-066 · Buscador
 
@@ -1151,12 +1509,27 @@ Búsqueda instantánea por nombre, código o código de barras.
 3. Normalizar tildes; sinónimos (lapicero = bolígrafo).
 4. Página `/buscar?q=` (noindex) como respaldo sin JS.
 
+*Nota de BD-038:* el índice incluye la marca del grupo (`brand`, `BRAND_LABELS`): buscar «Fabik» encuentra sus productos.
+
 **Criterios de aceptación**
 
-- [ ] "ultra", "pt00058", "759364663092" y "crayon" encuentran resultados.
-- [ ] Sin resultados: sugerencias + WhatsApp.
+- [x] "ultra", "pt00058", "759364663092" y "crayon" encuentran resultados.
+- [x] Sin resultados: sugerencias + WhatsApp.
 
 **Nota de BD-046:** agregar el buscador a la página 404 (`app/not-found.tsx`), sin volverla dinámica.
+
+**Implementado (BD-066)**
+
+- **Índice** (`server/data/search.ts`, `/api/search-index`): un producto visible por entrada con nombre, categoría, **marca** (nota de BD-038), colores, SKU, códigos de barras y cada color con sus códigos (`variants`, para la coincidencia exacta). La ruta sale de `getSearchIndex` (`'use cache'` con los tags de productos y categorías), con `Cache-Control` de 5 min.
+- **Motor** (`lib/search.ts`, el mismo en el servidor y en el navegador): Fuse.js 7.5.0 (`ignoreDiacritics`) en nombre, marca, categoría, colores, códigos y descripción; sin tildes ni mayúsculas; sinónimos de `content/search.ts` (lapicero = bolígrafo, docs/02; se suman los que pidan las búsquedas sin resultado); un SKU o código de barras exacto da la tarjeta «¿Buscas el Bolik Ultra Azul (PT00058)?» que lleva a la ficha con su color, y un código que no existe no trae parecidos. Menos de 2 letras: «Escribe al menos 2 letras».
+- **/buscar sin JS:** con Cache Components, lo que lee `?q=` dentro de Suspense llega en un bloque oculto que solo el JS muestra. Por eso `proxy.ts` reescribe `/buscar?q=…` a `/buscar/-{q}` (la URL del visitante no cambia; el prefijo `-` evita que «.» o «..» se vuelvan segmentos de ruta; la consulta se corta en 100 caracteres sin partir emojis, `lib/search-query.ts`). Esa página se pinta completa en el servidor. Medido con el standalone: la primera vez se genera y la segunda sale de la caché en memoria de Next (`x-nextjs-cache: HIT`), que es LRU con tope (50 MB por defecto): no se escribe nada en disco y las consultas viejas salen solas. Next entrega el parámetro todavía codificado (se decodifica una vez). `/buscar` sin consulta es estática. Las dos, `noindex` con canónica `/buscar`.
+- **Panel** (`components/search/search-panel.tsx`): formulario GET que funciona sin JS (campos con `maxLength` 100); con JS, Fuse y el índice se descargan al enfocar o acercar el puntero y los resultados cambian mientras se escribe. Mientras carga dice «Cargando el buscador…» (nunca muestra los resultados de otra consulta; la última consulta se resuelve al terminar de cargar) y, si no carga, lo avisa (`feedback.search.loadFailed`) y el botón sigue llevando a /buscar. En la página, la URL sigue a lo que se escribe con `replaceState` a los 300 ms; en el diálogo, Enter lleva a /buscar?q=… y un resultado cierra el diálogo. Región `role="status"` que se actualiza a los 500 ms (no en cada tecla). Se cuentan como código solo un SKU (dos letras y 4–6 dígitos) o un código de barras de 8, 12, 13 o 14 dígitos: «1966» se busca como texto.
+- **Buscador instantáneo** (`components/layout/search-link.tsx` en el header): el ícono sigue siendo un enlace a /buscar (sin JS o con Ctrl+clic); con JS abre un diálogo con el panel (`search-dialog.tsx`, descargado al primer uso), también con «/» (fuera de un campo) y Ctrl+K / Cmd+K. Al cerrar, el foco vuelve a lo que lo abrió (el atajo con el diálogo abierto solo enfoca su campo; se ignoran teclas repetidas y la composición de un IME); un resultado cierra el diálogo al navegar. En /buscar, el atajo enfoca el campo de la página. `aria-keyshortcuts="/ Control+K Meta+K"`.
+- **Sin resultados:** sugerencias de doc 17 (con JS las escribe el panel; sin JS, enlaces a /buscar?q=…), WhatsApp si hay número y «Ver todo el catálogo».
+- **404** con el buscador (formulario GET, sin JS: sigue estática) y el texto de doc 17 («Busca un producto o vuelve al inicio»).
+- **Analítica:** `data-event` `search_open` (formularios e ícono), `search` (con `data-query` y `data-results`) y `search_no_results` (docs/12 §4), para BD-127. *Para BD-127:* `data-query` es texto libre del visitante (puede traer un nombre o un teléfono): tratarlo como posible dato personal antes de mandarlo a GA4.
+- `/api/search-index` se guarda 5 min en el navegador y puede usarse hasta un día viejo mientras se renueva (`stale-while-revalidate`): un cambio del admin puede tardar en verse en el buscador instantáneo; /buscar sin JS siempre usa el índice al día.
+- **Pruebas:** unitarias del motor contra el índice real (los cuatro del criterio, sinónimos, código exacto, tildes) e índice con marca y variantes; E2E (`tests/e2e/buscar.spec.ts`): los cuatro del criterio sin JS, resultados mientras se escribe, sin resultados con sugerencias y WhatsApp, menos de 2 letras, diálogo con «/», Ctrl+K y el ícono (foco de vuelta), «/» dentro de un campo, 404 con buscador y axe. Lighthouse CI mide `/buscar?q=ultra` (170 KB, sin la categoría SEO: es `noindex`).
 
 #### BD-067 · WhatsApp contextual
 
@@ -1170,8 +1543,15 @@ Mensajes prellenados según dónde esté el visitante.
 
 **Criterios de aceptación**
 
-- [ ] El mensaje incluye producto, SKU, empaque y URL.
-- [ ] Evento `whatsapp_open`.
+- [x] El mensaje incluye producto, SKU, empaque y URL.
+- [x] Evento `whatsapp_open`.
+
+**Implementado (BD-067)**
+
+- Textos en `content/whatsapp.ts` (docs/17 §10); `lib/whatsapp.ts` los arma con `whatsappMessage({ context })`: `general`; `product` (nombre con color, SKU, presentación, cantidad y URL absoluta de la ficha); `quote` (una línea por producto, hasta 10 y «y N productos más»); `sent` (folio). Sin presentación, la cantidad dice «20 unidades»; sin cantidad, no aparece. Una cotización sin productos da el mensaje general. Nunca datos personales.
+- `whatsappEventData(contexto, sku?)` (en `lib/whatsapp-event.ts`, sin textos: lo usan islas de cliente) da `data-event="whatsapp_open"`, `data-context` y, en la ficha, `data-sku` (docs/12 §4; los registra BD-127). Lo llevan el flotante, la barra móvil, el menú móvil, el cierre de la home y la pantalla de error, con la plantilla general.
+- `floatingText.whatsappMessage` salió de `content/footer.ts`: el mensaje general vive en `content/whatsapp.ts`.
+- El `WhatsAppSheet` de docs/08 (vista previa, copiar, abrir) va con la ficha (BD-062), donde se usa por primera vez.
 
 ### E6 · Cotización y formularios
 
@@ -1188,8 +1568,14 @@ Lista de productos a cotizar que se guarda en el navegador.
 
 **Criterios de aceptación**
 
-- [ ] Recargar la página conserva la lista.
-- [ ] Pruebas unitarias del doc 13 §3.
+- [x] Recargar la página conserva la lista.
+- [x] Pruebas unitarias del doc 13 §3.
+
+**Implementado (BD-070)**
+
+- `features/quote/store.ts` (zustand 5 con `persist`, del starter): líneas por tipo + referencia + presentación (`lineKey`); agregar suma la cantidad si se repite; quitar con «deshacer» (no duplica una línea que se volvió a agregar ni pasa de 50); cantidad entre 1 y 9 999; tope de 50 líneas (`{ ok: false, reason: "limit" }`); vaciar, también con «deshacer» (`undoClear`, para `feedback.quote.cleared`). No muestra mensajes: devuelve el resultado y quien lo usa elige el texto de `feedback.ts`.
+- Se guarda en `localStorage` (`bolik_quote`, versión 1, solo `lines`); lo guardado pasa por `sanitizeLines` (tipo y presentación válidos, ruta interna, clave recalculada y sin repetidas; una línea dañada se descarta sin vaciar la lista; recorta a 50). Con `localStorage` bloqueado o lleno, guarda en memoria; en el servidor no guarda nada (nada compartido entre visitantes). Otras pestañas: el evento `storage` vuelve a leer la lista.
+- **Contador del header sin el store (desviación del paso 2):** con el store en el header, zustand y `persist` sumaban ~3.3 KB al JS de todas las páginas (home 166.2 KB de 165; resto 170.9 de 170). Lo puro va en `features/quote/lines.ts` (forma de la línea, `lineKey`, `sanitizeLines`), sin zustand, y la clave, el evento y el conteo en `storage-keys.ts` (sin las listas de `constants.ts`); `useQuoteCount` solo importa este último: lee lo guardado y se entera de los cambios por `QUOTE_CHANGE_EVENT` (lo dispara el store al guardar, con el número de líneas) y por `storage` (otras pestañas). Zustand solo carga en las páginas que agregan o editan (ficha, drawer). Medido: home 163.0 KB y `/productos` 167.6 KB, igual que antes de BD-070. 0 en el servidor, sin error de hidratación; el header no cambió.
 
 #### BD-071 · Drawer de cotización
 
@@ -1203,10 +1589,21 @@ Ver y editar la cotización sin salir de la página.
 2. Editar cantidades, quitar con deshacer (toast), ir a enviar.
 3. Si el presupuesto de JS lo permite, «Cotizar» de la barra móvil (BD-042) pasa a «Mi cotización (n)» y abre el drawer.
 
+*Nota de BD-070:* el contador del header cuenta líneas: agregar algo que ya está suma la cantidad pero no sube el número ni hace «pop». Si docs/08 pide el pop en cada «Agregar», el drawer o la ficha lo disparan con el resultado de `add` (`merged: true`).
+
 **Criterios de aceptación**
 
-- [ ] Abrir el drawer no carga más de 30 KB adicionales.
-- [ ] Deshacer restaura la línea.
+- [x] Abrir el drawer no carga más de 30 KB adicionales.
+- [x] Deshacer restaura la línea.
+
+**Implementado (BD-071)**
+
+- `components/quote/quote-drawer.tsx`: `Sheet` con CSS (A-08), abajo en móvil y a la derecha desde md, con la lista, el estado vacío (`quote.empty`) y el pie «Enviar cotización» (a `/cotizacion`, BD-072) con la nota de doc 17 y «Seguir viendo productos». Cada línea (`quote-line-item.tsx`): foto (`getImageProps`), nombre enlazado a la ficha, detalle, presentación, `QuantityStepper` (inline, sin toast: docs/08 §4) y «Quitar». Textos en `content/quote.ts`, fuera del JS común.
+- **A-36 en CSS** (decisión del usuario, 17 nov 2026): la línea sale con `.quote-line-leave` (opacidad y `translateX`; con movimiento reducido, solo opacidad) y se quita del store en `animationend` (respaldo de 400 ms). Motion no entra en el drawer (docs/09 §7).
+- **«Deshacer» dentro del drawer:** con el Sheet abierto (modal), Radix deja el resto de la página inerte y el toast no se podía pulsar, alcanzar con teclado ni oír. El aviso usa el texto de `quote.removed`, dura 6 s y está en una región `role="status"`; si se cierra el drawer con el aviso a la vista, pasa a un toast. El foco va al «Quitar» que ocupó el lugar (o al catálogo si quedó vacía) y, al deshacer, a la línea restaurada.
+- **Abrir:** evento `QUOTE_OPEN_EVENT` (`openQuoteDrawer()` en `storage-keys.ts`). Lo disparan «Mi cotización» del header (sigue siendo un enlace a `/cotizacion`: sin JS o con Ctrl+clic navega) y el «Ver cotización» del toast de la ficha. `QuoteLinkWithDrawer` (header) lo escucha y descarga el drawer con `import()` la primera vez; al cerrar, el foco vuelve a lo que lo abrió.
+- **Medido:** abrir el drawer descarga 25.4 KB (su chunk con zustand, el store y los textos, 13.0 KB, y Radix Dialog, 12.7 KB); lo vigila `tests/e2e/cotizacion-drawer.spec.ts`, que lo abre con su evento para que la precarga de feedback (BD-024) no esconda Radix.
+- **Presupuesto (desviación del paso 3):** en develop la ficha estaba a 31 bytes de su tope. El anfitrión suma ~0.4 KB al JS común y Turbopack separa el mapa de `import()` en otro archivo (una petición más). Topes ajustados al mínimo: home 165.5 KB, ficha 172.5 KB y 26 peticiones (docs/12 §2); BD-047 los devuelve. Por lo mismo, «Mi cotización (n)» en la barra móvil no se hizo: sigue «Cotizar».
 
 #### BD-072 · Página /cotizacion y formulario
 
@@ -1226,8 +1623,20 @@ Formulario corto para pedir la cotización.
 
 **Criterios de aceptación**
 
-- [ ] Formulario completo en ≤ 6 campos obligatorios.
-- [ ] Teclado numérico en teléfono.
+- [x] Formulario completo en ≤ 6 campos obligatorios.
+- [x] Teclado numérico en teléfono.
+
+**Implementado (BD-072)**
+
+- `app/(site)/cotizacion/page.tsx`: estática, `noindex`, un `h1`; departamentos y WhatsApp del servidor. La isla (`components/quote/quote-page-island.tsx`) pinta «Cargando…» (solo con JS) hasta hidratar, porque la lista vive en el navegador (BD-070), y luego la lista (las líneas del drawer, con «Deshacer» en toast: aquí no hay modal) con el formulario, o el estado vacío (catálogo y, con los kits activos, kits). Alto reservado para no mover el pie (CLS). Sin JS, el aviso de doc 17 §5 con el WhatsApp.
+- **Formulario** (`quote-form.tsx`): 5 obligatorios (tipo, institución salvo «Otro», nombre, teléfono o correo, departamento); municipio y notas opcionales. Valida al salir de cada campo y al enviar; con errores, todos a la vez, foco en el primero y toast `forms.invalid`; «al menos un teléfono o un correo» solo después de enviar. Teléfono con `PhoneInput` (`type="tel"`, `inputMode="tel"`). Mientras se envía, los campos quedan bloqueados (`quote.sending`).
+- **Sin React Hook Form** (desviación de CLAUDE.md, Stack, por presupuesto; docs/12 §2): esquema `zod/mini` compartido cliente/servidor en `features/quote/schema.ts` (piezas en `lib/form-schemas-mini.ts`, mismas reglas y mensajes que `lib/form-schemas.ts`); lo que no necesita Zod, en `features/quote/form-fields.ts`. El esquema se descarga al primer uso del formulario. Medidas y tope propio de 186 KB en docs/12 §2 (decisión del usuario, 18 nov 2026).
+- **Borrador** en sessionStorage (`features/quote/draft.ts`): se restaura al volver; `?tipo=libreria|empresa` (CTA del hero) gana sobre el borrador; un departamento que ya no existe se descarta.
+- **Envío:** `features/quote/actions.ts` → `submitQuote(contacto, líneas)` valida en el servidor con el mismo esquema y devuelve los errores por campo. Guardar, folio, correos y SAP son BD-073: mientras tanto responde `unavailable` y la página muestra `quote.failed` con «Enviar por WhatsApp» (mensaje `quote` de `lib/whatsapp`).
+- En `/cotizacion`, «Mi cotización» del header navega en vez de abrir el drawer encima de la misma lista.
+- **Pendientes:** el buscador para agregar productos desde la página (docs/06 §3.16, punto 2) espera a BD-066; la ilustración del estado vacío y «Más pedidos por librerías» (punto 5) llegan con las páginas por público (E10). «Recordar mis datos» (docs/07 §2.3) no se hizo.
+
+*Nota para BD-073:* `submitQuote` ya existe con su firma y sus pruebas (`actions.test.ts`): falta honeypot, tiempo mínimo, límite por IP, comprobar que el departamento exista, la transacción con folio y `after()` para correo y ERP. El formulario ya maneja `{ ok: true, data: { folio } }` (diálogo `quote.sent`, vacía la cotización y el borrador). Tras el éxito, el foco vuelve a un botón que ya no existe: al cerrar el diálogo, llevarlo a un lugar estable.
 
 #### BD-073 · Enviar cotización (server action)
 
@@ -1249,13 +1658,34 @@ Guardar, notificar y enviar a SAP sin hacer esperar al visitante.
 
 **Criterios de aceptación**
 
-- [ ] Respuesta en < 800 ms con SMTP y ERP lentos.
+- [x] Respuesta en < 800 ms con SMTP y ERP lentos.
 
-- [ ] Pruebas de integración del doc 13 §4.
+- [x] Pruebas de integración del doc 13 §4.
 
 **Nota de BD-033:** el folio se pide dentro de la misma `db.$transaction` que crea la cotización y sus líneas (`nextFolio(tx, "COT")`, `src/server/folio.ts`); la validación de un folio que llega de la URL (`/cotizacion/enviada/[folio]`) pasa el texto a mayúsculas y usa `FOLIO_REGEX` de `src/lib/folio.ts`. El bloqueo del contador dura hasta el commit: pedir el folio justo antes del `create` (después de validar y leer), nada de correo ni ERP dentro de la transacción y `db.$transaction(fn, { maxWait: 5_000, timeout: 10_000 })`; no atrapar los errores de `nextFolio` dentro de la transacción.
 
 **Nota de BD-035:** después de guardar, `after(() => sendQuoteToErp(quote.id))` (`server/erp/send-quote.ts`), solo si el ajuste `erp_enabled` no es `"false"` (interruptor del admin; con él apagado, `erpStatus = omitida`). El gateway solo mira `ERP_MODE`. Una llamada puede tardar hasta ~36 s con SMART-K66 caído (4 intentos de 8 s más esperas): no bloquea al visitante porque va en `after()` y no retiene transacción ni conexión de Prisma.
+
+**Implementado (BD-073)**
+
+- `features/quote/actions.ts` → `submitQuote(contacto, líneas, { website, elapsedMs })`, en este orden:
+  1. **Campo trampa** (`website`, fuera de la vista, del tab y del lector): si llega lleno, no guarda y responde `unavailable`. No finge éxito: si fuera una persona (un autocompletado raro), no pierde su cotización creyendo que llegó.
+  2. **Tiempo mínimo** de 3 s medido en el navegador (`elapsedMs`; sin número finito, `tooFast`): toast `forms.tooFast`.
+  3. **Esquema** de BD-072 en el servidor.
+  4. **Límite** de 5 envíos en 10 min por hash de IP: un recuento previo para rechazar rápido y el que vale, dentro de la transacción después del MERGE del folio (ese bloqueo pone en fila a todas: dos envíos simultáneos no ven el mismo recuento; si salta, se revierte y el folio no se gasta). Diálogo `forms.rateLimited` (sin WhatsApp si no hay número: `bodyNoWhatsapp`).
+  5. **Departamento** que exista y **líneas** comprobadas contra el catálogo publicado (`server/data/quote-requests.ts`): SKU visible y presentación de ese producto; descripción («Bolik Ultra Azul PT00058 · Cajilla de 12») y unidad salen del catálogo, nunca del navegador. Las que ya no están vuelven como `staleItems` con sus referencias: diálogo `quote.staleItems` que nombra cuáles quitar. Solo líneas «variante»: kits y categorías, con sus tickets.
+  6. **Transacción**: `QuoteRequest` + `QuoteItem`, folio con `nextFolio` justo antes del create, `{ maxWait: 5_000, timeout: 10_000 }`. Con «Otro» sin institución, `organization` guarda el nombre (la columna no admite NULL).
+  7. **after()**: con el interruptor `erp_enabled` encendido, `sendQuoteToErp`; apagado, `erpStatus = omitida` (la tarea de reintento no la toma). Errores de esa tarea, a `logError`. Los correos llegan con BD-074.
+  8. Respuesta `{ ok: true, data: { folio } }`; si la base falla, `unavailable` con código de referencia (`feedback.system.genericError.reference`), sin datos personales en el log (los errores de Prisma se registran solo con tipo, código y `meta`).
+- **IP** (`server/request-ip.ts`): la ÚLTIMA de `X-Forwarded-For` (la que agrega ARR; las anteriores las puede escribir el visitante), sin puerto ni prefijo `::ffff:`, guardada como HMAC-SHA256 con `SESSION_SECRET` (sin variable nueva). ARR con `includePortInXForwardedFor=False` (docs/15 §4.2, `staging-setup.ps1`). Sin cabecera, «desconocida» y un aviso en el log.
+- **Sin base** (`DATA_SOURCE=fixtures`, desarrollo y CI): se guardan en memoria (tope de 500) con su consecutivo, con el mismo límite por IP; no se programa nada para SAP. Producción exige `db`.
+- **Migración** `indices_cotizacion`: índices de `QuoteItem.quoteId`, `QuoteNote.quoteId`, `QuoteRequest.assignedToId` y `QuoteRequest(ipHash, createdAt)` (solo índices).
+- **Éxito**: diálogo `quote.sent` con el folio; vacía la cotización y el borrador. Al cerrarlo, el foco va a `#contenido` (FriendlyDialog, si quien lo abrió ya no existe).
+- **Pruebas**: unitarias (`actions.test.ts`, `request-ip.test.ts`); integración (`tests/integration/quote.test.ts`: guarda con folio y líneas del catálogo, 20 simultáneos sin repetir folio, 10 simultáneos de una IP → 5, SMART-K66 caído → `pendiente`, < 800 ms con SMART-K66 tardando 5 s y la tarea de después llegando a `enviada`, `erp_enabled=false` → `omitida`, líneas viejas → `staleItems`); E2E (envío con folio y lista vacía, `tooFast`).
+- **JS común −3.9 KB:** la pantalla de error (`error-screen.tsx`, `global-error.tsx`), que Next carga en todas las páginas, importaba todo `content/feedback.ts` y cada mensaje nuevo (como `quote.staleItems`) pesaba en el sitio entero. Ahora usa `content/feedback-system.ts` (`feedback.system` sigue igual). Home 161.5 KB y ficha 168.4 KB: sus topes vuelven a 165 y 170 KB (docs/12 §2).
+- **Pendientes:** UTM y página de llegada se guardan vacíos (el sitio no los captura; BD-127).
+
+*Nota para BD-075:* el diálogo de éxito usa «Seguir viendo productos» como botón principal porque `/cotizacion/enviada/[folio]` no existe todavía: al crearla, volver a `feedback.quote.sent` completo («Ver resumen» → esa página).
 
 #### BD-074 · Correos de notificación
 
@@ -1270,8 +1700,21 @@ Ventas recibe la cotización y el cliente un acuse.
 
 **Criterios de aceptación**
 
-- [ ] El correo interno incluye folio, cliente, líneas y enlace al admin.
-- [ ] El acuse no contiene datos internos.
+- [x] El correo interno incluye folio, cliente, líneas y enlace al admin.
+- [x] El acuse no contiene datos internos.
+
+**Implementado (BD-074) · en modo prueba (decisión del usuario, 18 nov 2026)**
+
+Todavía no hay cuenta de correo ni conexión a SAP: todo queda en **modo prueba** y listo para presentar; pasar a real es solo configuración, un paso antes de producción (docs/15, «Paso a producción: correo y SAP»).
+
+- `server/mail/transport.ts` (nodemailer 10.3.1): `SMTP_MODE=file` no manda nada a internet; cada correo queda en `MAIL_DIR` (por defecto `tmp/mails`; en staging `D:\bolik-stg\logs\mails`, variable nueva) como `.eml` (se abre con Outlook) y `.json` (bandeja), con tope de 200. `SMTP_MODE=smtp` usa Office 365 (587, STARTTLS). Asunto y direcciones en una sola línea (sin inyección de cabeceras).
+- `server/mail/quote-emails.ts` + `content/mail.ts` (doc 17 §8): **interno a Ventas** (asunto `Nueva cotización {folio} · {tipo} · {departamento}`; datos del cliente, tabla producto/color/código/presentación/cantidad, notas, origen —vacío hasta BD-127— y botón «Abrir en el admin» a `/admin/cotizaciones/{id}`; responder le escribe al cliente) y **acuse** (solo si dejó correo; saludo, folio, plazo, líneas y WhatsApp con folio si hay número; nada interno). HTML para Outlook (tablas y estilos en línea, colores de tokens.css copiados con `check-colors-ignore`) y texto plano; todo lo del visitante, escapado.
+- `server/mail/send-quote-emails.ts`: lo llama `submitQuote` con `after()` (también sin base); destinatario del ajuste `quote_email_to` o `MAIL_SALES_TO` (sin ajustes, igual salen); marca `QuoteRequest.emailSentAt` solo cuando el interno salió de verdad (`SMTP_MODE=smtp`; en modo prueba queda vacío); nunca lanza (cada fallo a `logError`, aparte el de marcar). **Acuse contra abuso:** como mucho 2 por dirección en 24 h (Ventas recibe todas) y sin nombre en el saludo si parece un enlace.
+- **Bandeja de prueba `/styleguide/correos`** (como todo /styleguide: en producción solo con sesión de admin): el modo activo de correo y SAP (leído en cada visita: cambiar la configuración en staging y reiniciar basta), a quién llegan, los dos correos con datos de ejemplo y los últimos 20 que generó el sitio (iframe con `sandbox` vacío). Enlace en el índice del styleguide.
+- `nodemailer` en `serverExternalPackages`. Fuera de desarrollo, `SMTP_MODE=file` exige `MAIL_DIR` (env.schema): sin él, staging escribiría en el release y perdería los correos sin aviso.
+- HTML: botón «a prueba de Outlook» (color en la celda), `bgcolor` en los contenedores, `<title>`, y la tabla de líneas con `th scope="col"`.
+- **Pruebas:** unitarias de plantillas (criterios, escape, asunto) y del transporte (`.eml`/`.json`, inyección de cabeceras); integración (`tests/integration/quote.test.ts`: tras la tarea de después, interno y acuse con el folio y `emailSentAt`); E2E (enviar una cotización y verla en la bandeja).
+- **Pendientes:** sin reintento automático de correos (`emailSentAt` vacío los delata); la pantalla del admin a la que apunta el botón llega con su ticket.
 
 #### BD-075 · Confirmación de envío
 
@@ -1288,6 +1731,8 @@ Cierre claro con folio y siguientes pasos.
 
 - [ ] El carrito queda vacío.
 - [ ] Evento `quote_submit`.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página («Inicio › Mi cotización › Enviada»), con `structuredData={false}` porque es noindex.
 
 #### BD-076 · Formularios de escuelas, distribuidores y contacto
 
@@ -1321,9 +1766,13 @@ Proteger formularios sin captcha molesto.
 - [ ] El sexto envío en 10 min recibe un mensaje amable.
 - [ ] Un bot que llena el honeypot recibe éxito falso y no se guarda.
 
+*Nota de BD-114:* el login del admin tiene bloqueo por cuenta (5 intentos, 15 min), pero no límite por IP: al crear `server/rate-limit.ts`, aplicarlo también a la acción `login` (`features/admin/actions.ts`) contra quien prueba muchos correos desde la misma IP. Es prioritario: bcryptjs es JS puro y cada intento ocupa ~230 ms de CPU en el mismo proceso que sirve el sitio público, y sin límite por IP cualquiera puede bloquear las cuentas cuyos correos adivine (5 intentos cada 15 minutos).
+
 ### E7 · Dónde comprar
 
 #### BD-080 · Dónde comprar: lista y filtros
+
+> **Nota de BD-053:** el selector de la home es un formulario GET a `/donde-comprar?departamento=<slug>`, para que funcione sin JS. Esta página lleva ese parámetro a `/donde-comprar/<slug>` (BD-082) con un 308, o filtra la lista.
 
 **Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-037, BD-023 · **Docs** 06 §3.7
 
@@ -1338,6 +1787,12 @@ Encontrar una tienda cercana en segundos.
 
 - [ ] Funciona sin JS (lista completa).
 - [ ] Eventos `store_filter`, `maps_click`, `retailer_click`.
+
+*Nota de BD-091:* el JSON-LD de esta página y de los departamentos (BD-082) va con este ticket: `ItemList` de `Store` (dirección; coordenadas solo si están verificadas) y `BreadcrumbList`, con un helper nuevo en `features/seo/jsonld.tsx`. El `Organization` ya lo pone el layout. Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
+
+*Nota de BD-092:* `/donde-comprar` entra al sitemap en `STATIC_PAGES` (`src/features/seo/sitemap.ts`); su fecha sale de las tiendas: sumar una fuente `stores` (la más reciente de `entries.departments`) a `buildSitemap`.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: dónde comprar enlaza cada departamento.
 
 #### BD-081 · Mapa y "cerca de mí"
 
@@ -1370,6 +1825,10 @@ Una página por departamento con tiendas (SEO local).
 
 - [ ] Solo se generan departamentos con al menos 1 tienda.
 - [ ] Títulos tipo "Dónde comprar Bolik en Quetzaltenango".
+
+*Nota de BD-092:* `listSitemapEntries()` ya devuelve `departments` (solo los que tienen tiendas publicadas, con la fecha de su tienda más reciente), pero `buildSitemap` no los publica porque la página no existe. Este ticket los suma con su ruta y su prueba unitaria.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: cada departamento enlaza a sus departamentos vecinos.
 
 #### BD-083 · Registro de clics salientes
 
@@ -1406,8 +1865,17 @@ Título, descripción, canonical y Open Graph correctos.
 
 **Criterios de aceptación**
 
-- [ ] Títulos y descripciones únicos en todo el sitio (prueba `seo.spec.ts`).
-- [ ] Canonical absoluto con `www`.
+- [x] Títulos y descripciones únicos en todo el sitio (prueba `seo.spec.ts`).
+- [x] Canonical absoluto con `www`.
+
+**Implementado (BD-090)**
+
+- **Metadatos:** cada página pública ya usaba `buildMetadata` (title, description, canónica relativa a `metadataBase`, Open Graph, Twitter y robots); se revisaron contra docs/10 §1. La home conserva el título de docs/10 §1 (68 caracteres, sin plantilla) y `/productos` la descripción de doc 17 §6 (132): son los textos aprobados. `productMeta` prueba ahora la descripción corta sin el nombre antes de recortarla (el lápiz de grafito pasaba de 59 a 134 caracteres).
+- **Imágenes Open Graph** (`server/seo/og-image.tsx`, `next/og`, 1200 × 630): fondo navy, logo blanco, título, subtítulo, dominio y «Hecho en Guatemala desde 1966» (`content/og.ts`). La de la marca (`app/opengraph-image.tsx`, estática, se genera en el build) va en toda página sin una propia (`buildMetadata` la pone por defecto, también en las `noindex`); las categorías (nombre, texto corto y la foto de su primer producto con foto) y las fichas (categoría, nombre, tagline y la foto del color por defecto) tienen la suya, con su `og:image:alt` (con `generateImageMetadata`: la URL lleva el id `og`; sin él, `proxy.ts` tomaría `/productos/{categoría}/opengraph-image` por una ficha que no existe), y piden `image: false` (lo que exporta la página manda sobre el archivo del segmento). Las fotos son WebP y `next/og` no lee WebP: `sharp` convierte la de 960 px a PNG; sin foto (la CI no tiene MEDIA_DIR con fotos) sale solo el texto. Los bytes van en `'use cache'` con los tags de lo que muestran (los de `getProduct` o `getCategory`): cada imagen se dibuja la primera vez que se pide y queda en la caché en memoria (unos 115 KB con foto, 64 KB la de la marca); al editar el producto cambian sus textos o su foto y la próxima petición dibuja otra (la vieja sale al invalidarse sus tags o al llenarse la caché). Sin logo o sin foto (un archivo que falta, una unidad que no responde) se guarda solo unos minutos y lo registra en el log (salvo una foto que no existe). Sin la caché, la ruta sería dinámica. La URL de la imagen de la marca (`/opengraph-image`) no lleva versión: si cambia, las redes que ya la guardaron pueden tardar en verla. Fuente: la de `next/og`; las de la marca llegan en WOFF2 con `next/font` y `next/og` no lee WOFF2 (para usarlas habría que guardar sus TTF en el repo).
+- **www:** `env.schema.ts` no arranca en producción si `NEXT_PUBLIC_SITE_URL` no es `https://www.…` (canónicas, Open Graph y, luego, el sitemap salen de ahí; staging usa su subdominio).
+- **Favicon** (BD-028, con el archivo que entregó Mercadeo): ver ese ticket.
+- **Medido:** el JS y las peticiones de Lighthouse quedan iguales a develop (home 162.3 KB/17, ficha 169.3 KB/26, /cotizacion 182.7 KB/21). *Lección:* usar `next/image` en el styleguide hizo que Turbopack separara su `HeadManagerContext` en un chunk que **todas** las páginas precargaban (+1 petición, +1.5 KB): ahí los íconos van con `<img>`.
+- **Pruebas:** `tests/e2e/seo.spec.ts` recorre la home, `/productos`, cada categoría y cada ficha (las que enlaza el catálogo) y comprueba títulos y descripciones únicos, title ≤ 60 (salvo la home), descripción de 140 a 160 (por debajo, solo los textos de doc 17 que quedan cortos, `/productos` y Bolik Ultra, y las fichas de los productos de ejemplo; los de Mercadeo llegan por el admin), robots, canónica absoluta sin barra final y que cada `og:image` responda un PNG de 1200 × 630; `/cotizacion` y `/buscar` siguen `noindex` con la imagen de la marca; favicon e ícono de Apple. Unitarias: `buildMetadata` (imagen por defecto, `image: false`), `productMeta` y la regla de `www`.
 
 #### BD-091 · Datos estructurados JSON-LD
 
@@ -1420,10 +1888,26 @@ Datos que Google y las IA entienden.
 1. Copiar `features/seo/jsonld.tsx` y usarlo en cada plantilla.
 2. Validar con la Prueba de resultados enriquecidos y validator.schema.org.
 
+*Nota de BD-060:* `breadcrumbListJsonLd` y `collectionPageJsonLd` (con su `ItemList`) ya existen y los usa `/productos`.
+
 **Criterios de aceptación**
 
 - [ ] 0 errores en las plantillas: home, categoría, ficha, FAQ, dónde comprar.
 - [ ] Capturas de la validación adjuntas al ticket.
+
+*Nota de BD-054:* `features/seo/jsonld.tsx` ya existe con `JsonLd` (escapa `<`) y `faqPageJsonLd` (la home publica su `FAQPage`). Este ticket suma los demás tipos (Organization, WebSite, ProductGroup…) sobre esa base.
+
+*Nota de BD-038:* `brand` del `ProductGroup` sale de `Product.brand` (`BRAND_LABELS`), no fijo en Bolik.
+
+**Implementado (BD-091)**
+
+- **Organization** (`organizationJsonLd`) en el layout del sitio: una vez en cada página pública, en el HTML estático. `@id` estable `{sitio}/#organization` (`ORGANIZATION_ID`), `name` Bolik, `legalName`, dirección (`PostalAddress` con la dirección completa en `streetAddress` y país GT: partirla en municipio y departamento sería inventar), teléfono en formato internacional y `sameAs` con las redes que tenga `SiteSetting` (hoy Facebook), todos los datos del pie; `foundingDate` 1966-06 y el logo SVG de la marca.
+- **WebSite** (`webSiteJsonLd`) en la home, con `SearchAction` hacia `/buscar?q={search_term_string}` (el buscador responde en el servidor, también sin JS) y el `publisher` por `@id`. Google retiró el cuadro de búsqueda de sus resultados (nov 2024): no da fragmento enriquecido, pero es válido y describe el sitio para Bing y las IA.
+- **ProductGroup** revisado contra docs/10 §4: ya cumplía (variantes con `sku`, `color` y `gtin12` solo con verificador válido; marca del producto; GT; sin precios ni reseñas). El `manufacturer` ahora lleva el mismo `@id` y nombre que el `Organization` (Bolik) y la razón social en `legalName`: una sola entidad.
+- **Plantillas de otros tickets:** dónde comprar (`Store`), historia (`AboutPage`) y la página de preguntas frecuentes llevan su JSON-LD con BD-080/082, BD-109 y BD-110 (nota en cada uno); el criterio «0 errores» se revisa con lo que hoy existe: home, catálogo, categoría y ficha (FAQ y dónde comprar quedan con BD-110 y BD-080). `/productos` no muestra preguntas, así que no lleva `FAQPage` (no se inventan); las categorías lo publican cuando tienen.
+- **Capturas de la validación** (Prueba de resultados enriquecidos y validator.schema.org): **pendientes**. El JSON-LD de cada plantilla, con las URL de producción, se pega en esas herramientas (no hay staging público todavía) y las capturas se adjuntan al Issue #111 antes de cerrarlo.
+- **Logo:** el SVG apaisado de la marca. Google lo acepta; cuando Mercadeo entregue un PNG cuadrado (≥ 112 px, junto con `icon.svg` de BD-028), conviene usarlo.
+- **Pruebas:** unitarias de `organizationJsonLd` y `webSiteJsonLd` (campos, sin teléfono ni redes vacías, plantilla de búsqueda, sin precios) y del fabricante; E2E (`tests/e2e/seo.spec.ts`): en cada página indexable, cada bloque es JSON válido con `@context`, un solo `Organization` con el mismo `@id`, los tipos de su plantilla (home: WebSite y FAQPage; catálogo y categorías: CollectionPage y BreadcrumbList; fichas: ProductGroup y BreadcrumbList), el fabricante y el publicador apuntan a la organización y nada de precios, ofertas ni reseñas.
 
 #### BD-092 · sitemap.xml y robots.txt
 
@@ -1441,6 +1925,14 @@ Mapa del sitio con fechas reales y reglas para bots.
 - [ ] El sitemap solo incluye páginas publicadas e indexables.
 - [ ] En staging robots bloquea todo.
 
+**Implementado (BD-092)**
+
+- **`/sitemap.xml`** (`src/app/sitemap.ts`, lógica en `features/seo/sitemap.ts`): home, `/productos`, cada categoría publicada y cada ficha visible (publicada, en categoría publicada y con al menos un color publicado, como `catalog-routes.ts`: si no, respondería 404), con URL absoluta y sin barra final. Solo páginas que ya existen: las del pie que llegan en S3 (dónde comprar, escuelas, mayoreo…) entran con su ticket por `STATIC_PAGES` (nota en BD-080, BD-082 y BD-105 a BD-112); los departamentos, con BD-082; las imágenes, con BD-097. Nunca entran `/buscar`, `/cotizacion`, `/styleguide` ni `/admin`.
+- **`lastModified` real:** la de cada categoría y ficha (`listSitemapEntries`); `/productos`, la más reciente del catálogo; la home, la más reciente entre contenido y catálogo. Con la fuente de ejemplo no hay fechas y se omite (no se inventa «ahora»).
+- **Caché:** los tags de `SITEMAP_TAGS` lo regeneran al momento; `cacheLife("hours")` es el respaldo de docs/10 §5 (antes `max`).
+- **`/robots.txt`** (`src/app/robots.ts`, lógica en `features/seo/robots.ts`), según el `APP_ENV` del build. Producción: `Allow: /` con `Disallow` en `/admin`, `/api/` y `/styleguide`, un grupo explícito para los bots de IA de doc 11 §2 (repite los mismos `Disallow`: un bot con grupo propio ignora el de `*`) y `Sitemap:`. Staging: `Disallow: /` sin sitemap. Desarrollo sale igual que producción: es localhost y así Lighthouse CI y la E2E (con `APP_ENV=development`) revisan las reglas reales; con `Disallow: /` la auditoría «is-crawlable» daba 0 y el SEO caía a 0.69. `/buscar` y `/cotizacion` no se bloquean: llevan `noindex, follow` y Google tiene que poder leerlo (docs/10 §2).
+- **Pruebas:** unitarias de robots en los tres entornos (bots de IA y utilidades incluidas) y del armado del sitemap (rutas, fechas, sin fecha, dominio); E2E (`seo.spec.ts`): cada URL del sitemap responde 200, `index, follow` y canónica propia, sin repetidas ni utilidades; toda página indexable que enlaza el catálogo está en el sitemap; robots.txt trae las reglas de producción (Disallow, bots de IA y `Sitemap:`).
+
 #### BD-093 · Migas de pan y enlazado interno
 
 **Sprint** S2 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-061 · **Docs** 10 §7
@@ -1452,9 +1944,17 @@ Ayuda a usuarios y buscadores a entender la jerarquía.
 1. Componente `Breadcrumbs` visible + `BreadcrumbList`.
 2. Bloques de enlaces relacionados (categorías hermanas, productos relacionados, departamentos).
 
+*Nota de BD-060:* `components/layout/breadcrumbs.tsx` ya existe (migas visibles + `BreadcrumbList`); este ticket lo lleva a todas las páginas.
+
 **Criterios de aceptación**
 
 - [ ] Ninguna página pública queda a más de 3 clics de la home.
+
+**Implementado (BD-093)**
+
+- **Migas en todas las páginas salvo la home:** catálogo, categorías y fichas ya las tenían (BD-060 a BD-062); ahora también `/buscar` y `/cotizacion`, sin JSON-LD porque son noindex (`structuredData={false}`). Los tramos comunes («Inicio», «Catálogo Bolik») y el nombre del `<nav>` viven en `content/breadcrumbs.ts` (antes repetidos en `catalog.ts`, `category.ts` y `product.ts`; `catalog.ts`, que va al navegador con la isla de filtros, ya no los lleva). El styleguide muestra el componente en lugar del pendiente.
+- **Enlazado (docs/10 §7):** ya estaba: categoría → sus fichas y «Otras categorías»; ficha → su categoría (migas), relacionados, dónde comprar y «Cotizar por mayor»; el pie enlaza cada categoría. Lo que falta depende de páginas de S3 (departamentos, escuelas ↔ kits, mayoreo ↔ empresas): nota en BD-080, BD-082 y BD-105 a BD-112. Los enlaces del header, del pie y de la ficha a esas páginas responden 404 hasta que cada ticket las cree.
+- **Criterio (3 clics):** E2E en `seo.spec.ts` que recorre el sitio desde la home por niveles siguiendo sus enlaces internos y exige que cada URL del sitemap quede a 3 clics o menos (hoy: fichas a 2, home → categoría del pie → ficha). Otras E2E: migas de «Inicio» a la página actual (con `aria-current`) en cada página del sitemap, `/buscar` y `/cotizacion`, y la home sin migas; cada ficha enlaza su categoría desde las migas; cada categoría enlaza todas sus hermanas en «Otras categorías»; ningún enlace dice «clic aquí», «aquí», «ver más», «leer más» ni «más información».
 
 #### BD-094 · Redirecciones desde el sitio Joomla
 
@@ -1521,6 +2021,16 @@ Imágenes que también posicionan.
 **Criterios de aceptación**
 
 - [ ] Ninguna `<img>` sin `alt` (axe).
+
+*Nota de BD-092:* `SitemapEntriesView.products[].images` llega vacío en las dos fuentes (`server/data/db/source.ts` y `fixtures/source.ts`). Este ticket lo llena con las URL absolutas de las fotos publicadas y `buildSitemap` las pasa en `images` (sitemap de imágenes de Next).
+
+**Implementado (BD-097)**
+
+- **Imágenes en el sitemap:** cada ficha lleva en `<image:image>` sus fotos visibles, las mismas que la galería (generales o de un color publicado; una variante despublicada se lleva las suyas), con la URL absoluta del WebP de 1920 px, que `process-image` siempre genera. Las dos fuentes llenan `SitemapEntriesView.products[].images` y `buildSitemap` las vuelve absolutas sin repetir. Las categorías no tienen foto propia.
+- **`alt` obligatorio:** `imageAltSchema()` (`src/lib/image-names.ts`): 1–200 caracteres que describan la foto (ni nombre de archivo ni «foto 1»). Hoy lo usa el esquema del seed (`media.json`); el editor de productos y la biblioteca de medios lo usan con sus mensajes (notas en BD-116 y BD-122). Si en la base una foto queda con `alt` vacío, la capa de datos usa el `defaultAlt` del medio y, si tampoco hay, el texto de docs/17 §5 «{Producto} {color}, vista {n}» con datos reales del producto (`imageAlt`, `content/product.ts`).
+- **Nombres descriptivos:** `pnpm import:media` omite las fotos con nombre de cámara, captura o genérico (`isGenericImageName`) y pide la convención de docs/02 (`producto_color_vista.jpg`); `--permitir-nombres` las importa igual. El esquema del seed exige que la clave de cada foto de producto empiece con el slug de su producto (el más largo que encaja: `bolik-ultra-fino-…` no es del Bolik Ultra).
+- **Criterio de axe:** E2E (`seo.spec.ts`) que recorre cada página del sitemap con las reglas de imágenes de axe (`image-alt`, `role-img-alt`, `svg-img-alt`, `input-image-alt`, `area-alt`): 0 violaciones. Las miniaturas de la galería y el póster del hero siguen con `alt=""` a propósito (la miniatura está en un enlace con `aria-label`; el póster es decorativo).
+- **Pruebas:** unitarias (sitemap de imágenes, `imageAlt`, nombres genéricos y esquema del `alt`, guardias del seed), de integración (las fotos van al sitemap en el orden de la galería; las de un color despublicado no) y E2E (cada imagen del sitemap responde un WebP; axe en todas las páginas del sitemap).
 
 ### E9 · IA y automatización de indexación
 
@@ -1624,6 +2134,10 @@ Página con estilo infantil y formulario de visita.
 - [ ] Animaciones lúdicas (A-50…) solo con transform/opacity.
 - [ ] Lighthouse ≥ 95.
 
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: escuelas ↔ kits escolares (BD-108).
+
 #### BD-106 · Mayoreo y distribuidores
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-076 · **Docs** 06 §3.10
@@ -1638,6 +2152,10 @@ Información para librerías y solicitud de distribuidor.
 
 - [ ] CTA a cotización con tipo "librería" preseleccionado.
 
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: mayoreo ↔ empresas (BD-107).
+
 #### BD-107 · Empresas y universidades
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-072 · **Docs** 06 §3.11
@@ -1651,6 +2169,10 @@ Bolígrafos personalizados con logo.
 **Criterios de aceptación**
 
 - [ ] El pedido mínimo se edita desde el admin.
+
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: empresas ↔ mayoreo (BD-106).
 
 #### BD-108 · Kits escolares
 
@@ -1668,6 +2190,10 @@ Kits por grado que se agregan completos a la cotización.
 
 - [ ] Kits con `published = false` no aparecen ni en sitemap.
 
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: kits escolares ↔ escuelas (BD-105).
+
 #### BD-109 · Nuestra historia
 
 **Sprint** S4 · **Días** 0.5 · **Prioridad** Should · **Pista** A · **Depende de** BD-044 · **Docs** 06 §3.13
@@ -1681,6 +2207,12 @@ Línea de tiempo desde 1966.
 **Criterios de aceptación**
 
 - [ ] Revelado por hito sin CLS.
+
+*Nota de BD-091:* JSON-LD `AboutPage` cuyo `about` apunta al `@id` de la organización (`ORGANIZATION_ID` de `features/seo/jsonld.tsx`; el `Organization` con `foundingDate` 1966-06 ya va en el layout). Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
+
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home.
 
 #### BD-110 · Preguntas frecuentes
 
@@ -1696,6 +2228,12 @@ Todas las FAQs agrupadas.
 
 - [ ] El contenido de las respuestas está en el HTML aunque el acordeón esté cerrado.
 
+*Nota de BD-091:* un solo `FAQPage` con todas las preguntas que se ven (`faqPageJsonLd`). Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
+
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home.
+
 #### BD-111 · Contacto
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-076 · **Docs** 06 §3.15
@@ -1710,6 +2248,10 @@ Datos de contacto y formulario.
 
 - [ ] Sin librerías de mapa en esta página.
 
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home.
+
 #### BD-112 · Páginas legales
 
 **Sprint** S3 · **Días** 0.25 · **Prioridad** Must · **Pista** A · **Depende de** BD-040 · **Docs** 06 §3.18
@@ -1723,6 +2265,10 @@ Privacidad, términos y cookies.
 **Criterios de aceptación**
 
 - [ ] Enlazadas desde el footer y los formularios.
+
+*Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
+
+*Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home.
 
 ### E11 · Panel administrativo
 
@@ -1746,6 +2292,17 @@ Inicio de sesión seguro para el equipo interno.
 - [ ] Rol `ventas` no puede editar productos (prueba).
 - [ ] Cookie `httpOnly`, `secure`, `sameSite=lax`.
 
+**Implementado (BD-114)**
+
+- **Sesión:** `iron-session` 9.0.1 (`src/server/auth/session.ts`): `{ userId, role }` cifrado con `SESSION_SECRET` en la cookie `bolik_admin`, 8 h (la cookie vence un minuto antes que el sello). Atributos (`adminCookieOptions`, `src/lib/admin-access.ts`): `httpOnly`, `sameSite=lax`, `secure` en staging y producción (en desarrollo y en la E2E, sobre http, el navegador no la guardaría) y `path=/`, no `/admin`, para que `/styleguide` la lea en producción. Una cookie vencida, dañada o de otra clave se lee como sesión vacía.
+- **Guardias** (`src/server/auth/guards.ts`): `requireRole(...ADMIN_PERMISSIONS.x)` al inicio de cada página y acción; `checkRole` devuelve el resultado sin redirigir. Leen el usuario de la base en cada petición: desactivarlo, bloquearlo o cambiarle el rol se aplica al momento; manda el rol de la base, no el de la cookie. Sin sesión, al login con `?siguiente=`; vencida, con `&vencida=1`; sin permiso, a `/admin?sin-permiso=1`. No se usa `forbidden()` de Next: sigue experimental en Next 16. Los permisos por sección son la tabla de docs/06 §4 (`ADMIN_PERMISSIONS`).
+- **Login** (`/admin/login`, acción `login` en `features/admin/actions.ts`, lógica en `server/auth/login.ts`): Zod en el servidor; bcrypt corre siempre (con un hash de relleno si el correo no existe) y el error es el mismo, sin revelar qué correos existen; al quinto intento fallido, bloqueo de 15 minutos registrado en `AuditLog` (`lock`). La condición «no bloqueada» va en la misma escritura del intento y del acceso correcto (`updateMany`): una ráfaga de intentos a la vez no se salta el bloqueo, cuenta solo hasta el quinto y una contraseña correcta que llega mientras otro intento bloqueaba no entra ni lo levanta. Un correo que no existe también «se bloquea» al quinto intento (contador en memoria por hash del correo) y el login tarda al menos 600 ms: ni el mensaje ni el tiempo delatan qué correos están registrados. El contador de fallos no vence: 4 fallos viejos más uno nuevo bloquean (decisión; BD-124 puede reiniciarlo). Un acceso correcto reinicia el contador, guarda `lastLoginAt` y se registra (`login`, IP en hash). La ruta de vuelta solo acepta rutas del admin (`safeAdminNext`). Es un `<form action>` de servidor, **sin isla de cliente** (decisión del usuario, 21 nov 2026): con un componente cliente en el admin, Turbopack partía el JS común de las páginas públicas en dos archivos (+~1.5 KB transferidos y una petición más), y `/buscar` y la ficha pasaban de 170 KB y la ficha de 26 peticiones. El navegador pide los campos (`required`, `type="email"`) y la acción valida con Zod; un error vuelve al login con `?error=invalid|locked|unavailable` y la ruta de vuelta, nunca el correo (no queda escrito tras un error y no hay estado «Entrando…»). Con `DATA_SOURCE=fixtures` responde que el panel no está disponible. Sin JavaScript el login no se ve: el admin va dentro de un `<Suspense>` (lee la cookie) y el contenido llega oculto hasta que corre el JS. Textos aprobados en docs/17 §5 (`content/admin.ts` y `feedback.admin`).
+- **Proxy:** sin la cookie, `/admin/*` (menos el login) responde 307 al login con la ruta de vuelta y `X-Robots-Tag: noindex`; con cookie pasa la ruta en `x-bolik-path` (para que `requireRole` vuelva a ella). Una cookie inventada pasa el proxy y la rechaza la página: con Cache Components la respuesta ya empezó (200) y la redirección va en el HTML, sin el contenido.
+- **`/admin` provisional:** saludo y «Cerrar sesión» hasta el dashboard de BD-115 (nota en ese ticket).
+- **`pnpm admin:create`** (`scripts/admin-create.mts`): correo, nombre, rol y contraseña sin eco (12 caracteres a 72 bytes); no cambia un correo que ya existe; `--remoto` fuera de `_Dev`/`_Test` (docs/15 §12.5).
+- **Styleguide:** en producción, sin la cookie, `proxy.ts` responde la 404 real (el layout decide dentro de un `<Suspense>` y ahí la respuesta ya saldría con 200); con cookie, `canViewStyleguide()` valida la sesión. En desarrollo y staging se ve directo, también sin JS. `proxy.ts` quita la cabecera `x-bolik-path` si la manda el cliente fuera del admin.
+- **Pruebas:** unitarias (permisos: `ventas` no entra a `products`; ruta de vuelta segura, incluso con `..`; atributos de la cookie); integración contra SQL Server (`tests/integration/admin-auth.test.ts`: entrar, mismo error para correo inexistente y contraseña errónea, bloqueo al quinto intento aun con la contraseña correcta, inactivo, rol de la base, cookie dañada, cerrar sesión); E2E (`tests/e2e/admin.spec.ts`, sin base): redirección sin cookie con la ruta de vuelta, cookie inventada rechazada, login `noindex` con un h1 y axe, intento fallido que vuelve al login con el aviso y la ruta de vuelta, sin el correo en la URL; avisos de sesión vencida y cerrada. **Excepción a la definición de terminado §6:** entrar de punta a punta en la E2E (camino feliz) espera a que la CI tenga una base en ese job: `test.fixme` en `admin.spec.ts` que apunta a BD-131; mientras tanto lo cubre la integración con cookies y redirección simuladas.
+
 #### BD-115 · Layout del admin y dashboard
 
 **Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** A · **Depende de** BD-114 · **Docs** 06 §4, 12 §6
@@ -1760,6 +2317,8 @@ Panel con indicadores principales.
 **Criterios de aceptación**
 
 - [ ] Carga del dashboard < 1 s con datos de prueba.
+
+*Nota de BD-114:* la sesión y las guardias ya existen: cada página llama a `requireRole(...ADMIN_PERMISSIONS.x)` (`src/server/auth/guards.ts`, permisos de docs/06 §4 en `src/lib/admin-access.ts`) y devuelve el usuario (nombre y rol para el encabezado). `/admin` es un inicio provisional (saludo y «Cerrar sesión», acción `logout`); este ticket lo reemplaza por el dashboard. El layout del admin ya envuelve las páginas en `<Suspense>` (leer la cookie las hace dinámicas). **Presupuesto:** el primer componente cliente del admin (menú, avisos) parte el JS común de las páginas públicas (+~1.5 KB y una petición, medido en BD-114): BD-047 va antes para ganar ese margen; medir con `pnpm lhci` al agregarlo. Los avisos de sesión vencida, sesión cerrada y sin permiso se muestran hoy en la página (`role="status"`); con el `FeedbackHost` del admin pasan a toast (docs/08: `admin.sessionExpired`, `admin.forbidden`, `admin.loggedOut`).
 
 #### BD-116 · Editor de productos
 
@@ -1782,6 +2341,8 @@ Crear y editar fichas completas sin tocar código.
 **Nota de BD-031:** despublicar en lugar de borrar (productos, variantes, FAQs, tiendas, hitos y actividades): `pnpm db:seed --profile prod` vuelve a crear lo que falte por su clave natural.
 
 **Nota de BD-034:** subir imágenes con `processImage` (`server/media/process-image.ts`) y `saveMediaAsset` (`server/data/media.ts`); su `MediaError` (`too-large`, `unsupported`, `too-many-pixels`, `invalid-folder`) va a un mensaje de `feedback.ts` (HEIC de iPhone: «guárdala como JPEG»). Cualquier otro error es del disco o de la base. Al guardar `ProductImage`, las fuentes de datos dejan de devolver `image: null`: armar el `ImageView` (`src` = `/media/` + `key`, ancho, alto, `blurDataUrl`, `alt`) en `db/source.ts` y en los JSON de ejemplo.
+
+*Nota de BD-097:* el `alt` de cada foto se valida con `imageAltSchema()` (`src/lib/image-names.ts`): 1–200 caracteres y que describa la foto (ni nombre de archivo ni «foto 1»). Pásale los mensajes de `admin.altMissing` (docs/08, matriz de feedback): sin `alt` no deja publicar. El mensaje para un `alt` que no describe la foto (`generic`) no existe todavía: sale de docs/17 o se agrega a `feedback.ts` en este ticket, no se escribe en el componente. Al agregar, quitar u ordenar fotos, actualizar el `updatedAt` del producto: la fecha del sitemap (que ya lleva las fotos) sale de ahí. Mientras tanto, una foto con `alt` vacío en la base sale con el respaldo de docs/17 §5 («{Producto} {color}, vista {n}», `imageAlt` en `server/data/product-images.ts`).
 
 #### BD-117 · Categorías y FAQs
 
@@ -1858,6 +2419,8 @@ Hero, cifras, historia, actividades, fondos por sección y ajustes.
 
 *Nota de BD-031:* `HistoryMilestone.key` y `SchoolActivity.key` son obligatorias y únicas: el formulario las genera con `slugify` del título.
 
+*Nota de BD-054 y BD-056:* las claves de la home son `home.hero` (hero principal; solo fondos oscuros, `brand` o `navy`: el chip y el subrayado son amarillos y sobre un fondo claro o `sun` no se ven), `home.stats`, `home.solutions`, `home.catalog`, `home.spotlight`, `home.schools`, `home.wholesale`, `home.where`, `home.kits`, `home.history`, `home.faq` y `home.final-cta` (la sección de video por capítulos no tiene fondo editable: su fondo es el póster o navy). Guardar la apariencia llama a `updateTag(TAGS.appearance)`; así se cumple el criterio pendiente de BD-054 («cambiar el fondo en el admin se refleja en la home tras guardar»). El tono se deduce del fondo: el formulario no necesita pedirlo.
+
 **Criterios de aceptación**
 
 - [ ] Apagar el splash desde ajustes lo desactiva en la siguiente visita.
@@ -1876,7 +2439,13 @@ Subir y reutilizar imágenes y videos.
 
 - [ ] Archivo inválido → mensaje amable; nunca se guarda.
 
-**Nota de BD-034:** la subida reutiliza `processImage` y `saveMediaAsset`; la misma foto con el mismo nombre da la misma clave (no se duplica ni se reescribe). El procesamiento usa todos los núcleos unos segundos: si compite con el sitio, limitar con `sharp.concurrency()`. Videos y PDF no pasan por sharp: necesitan su propio camino (y la ruta `/media` de Node hoy solo sirve imágenes).
+**Nota de BD-034:** la subida reutiliza `processImage` y `saveMediaAsset`; la misma foto con el mismo nombre da la misma clave (no se duplica ni se reescribe). El procesamiento usa todos los núcleos unos segundos: si compite con el sitio, limitar con `sharp.concurrency()`. Videos y PDF no pasan por sharp: necesitan su propio camino. Desde BD-050 la ruta `/media` de Node sirve también `video/*.mp4` (con `Range`), pero con caché de un día porque sus nombres no llevan hash.
+
+**Nota de BD-050:**
+- Al subir un video, ponerle un hash en el nombre, como a las imágenes. Así los videos pueden ir con caché de un año, que es lo que ya hace IIS con todo `/media`; sin hash, un video reemplazado seguiría viéndose viejo.
+- Cambiar un `MediaAsset` (alt, medidas, archivo) debe invalidar `TAGS.content`: el póster del hero se resuelve desde ahí.
+
+*Nota de BD-097:* al subir, el nombre del archivo da el de la imagen publicada: rechazar los de cámara o genéricos con `isGenericImageName()` (`src/lib/image-names.ts`, el mismo que usa `pnpm import:media`) y pedir la convención de docs/02 (`producto_color_vista.jpg`). El `defaultAlt` del medio se valida con `imageAltSchema()`.
 
 #### BD-123 · Redirecciones y 404
 
@@ -1914,6 +2483,8 @@ Administración del propio panel.
 
 - [ ] Solo el rol admin ve estas vistas.
 
+*Nota de BD-114:* desbloquear es poner `failedLogins = 0` y `lockedUntil = null` en `AdminUser` (los escribe `server/data/admin-users.ts`); el bloqueo se registra en `AuditLog` con `action = "lock"`. Crear usuarios ya se puede con `pnpm admin:create`. Desactivar (`active = false`) o cambiar el rol se aplica en la siguiente petición: `requireRole` lee el usuario de la base. Pendiente: cerrar sesión o cambiar la contraseña no revoca una cookie robada (iron-session no guarda estado; vale hasta 8 h). Agregar `sessionVersion` en `AdminUser`, guardarla en la sesión y compararla en `getActiveAdmin`, con un botón «Cerrar todas las sesiones». Valorar también que `failedLogins` venza tras 15 minutos sin fallos.
+
 ### E12 · Analítica e integración SAP
 
 #### BD-125 · GA4, Clarity y función track()
@@ -1946,6 +2517,8 @@ Saber cómo carga el sitio en teléfonos reales.
 
 - [ ] LCP, INP, CLS y TTFB llegan a GA4 con la ruta.
 
+*Nota de BD-055:* la meta de LCP ≤ 2.0 s de la home (BD-055 y BD-056) se comprueba aquí, con el p75 móvil de usuarios reales: en Lighthouse la home tiene una guardia de 3.2 s (docs/12 §1).
+
 #### BD-127 · Eventos de analítica en toda la interfaz
 
 **Sprint** S4 · **Días** 0.5 · **Prioridad** Must · **Pista** B · **Depende de** BD-125 · **Docs** 12 §4
@@ -1956,6 +2529,8 @@ Completar la tabla de eventos.
 
 1. Agregar `track()` en cada punto del doc 12 §4.
 2. Prueba E2E que intercepta `track` y valida nombres.
+
+*Nota de BD-054:* el CTA final de la home marca `data-event="quote_open"` sin `lines`: el parámetro se toma del store de la cotización al registrar el evento.
 
 **Criterios de aceptación**
 
@@ -1971,6 +2546,8 @@ Cuando TI publique la API, activar el modo real.
 
 1. Probar contrato con TI en staging.
 2. `ERP_MODE=smartk66`; `scripts/retry-erp.ts` para pendientes.
+
+*Nota de BD-038:* confirmar con SMART-K66 el nombre de cada marca en SAP (`BRAND_ERP_NAMES`) y los valores de `presentacion` (doc 05 §8, `PACKAGING_CODES` ampliados).
 
 **Criterios de aceptación**
 
@@ -2192,6 +2769,8 @@ Cargar textos, fotos y tiendas entregados por las otras áreas.
 **Criterios de aceptación**
 
 - [ ] 0 textos de ejemplo en producción (búsqueda de "lorem", "ejemplo", "XXXX").
+
+*Nota de BD-097:* `pnpm import:media` omite las fotos con nombre de cámara o genérico (`IMG_4521.jpg`, «WhatsApp Image…», `foto1.jpg`) y pide la convención de docs/02: `producto_color_vista.jpg` (por ejemplo `bolik-ultra_azul_punta.jpg`). Pedírsela a Mercadeo con la entrega; `--permitir-nombres` las importa igual.
 
 #### BD-151 · Ensayo general del corte
 

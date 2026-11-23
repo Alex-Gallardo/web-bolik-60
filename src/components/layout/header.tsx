@@ -6,7 +6,8 @@ import { ui } from "@/content/ui";
 import { HeaderScroll } from "./header-scroll";
 import { MobileMenu } from "./mobile-menu";
 import { ProductsMenu, type NavGroup } from "./products-menu";
-import { QuoteLink } from "./quote-link";
+import { QuoteLinkWithDrawer } from "./quote-link";
+import { SearchLink } from "./search-link";
 
 type HeaderProps = {
   /** Categorías por línea, para el menú de Productos (las da el layout desde server/data). */
@@ -16,6 +17,9 @@ type HeaderProps = {
 };
 
 // Sin salto de línea; padding corto hasta xl: a 1024 px el menú entero cabe en una línea.
+// Entre lg y xl (1024–1279 px) el header va compacto (BD-048): con barra de desplazamiento quedan
+// ~1007 px útiles y el contenido pedía 994 + 48 de margen. Logo sin margen extra, separaciones de
+// 4 px y «Cotizar» con 16 px de padding: 40 px menos. Desde xl, como antes.
 const navLink =
   "flex min-h-11 items-center rounded-md px-2 font-bold whitespace-nowrap text-ink no-underline hover:bg-soft xl:px-3";
 
@@ -30,11 +34,11 @@ export function Header({ groups, whatsappUrl }: HeaderProps) {
   return (
     <header className="site-header">
       <HeaderScroll />
-      <div className="site-header__bar container-site flex h-full items-center gap-2">
+      <div className="site-header__bar container-site flex h-full items-center gap-2 lg:gap-1 xl:gap-2">
         <Link
           href="/"
           aria-label={ui.header.home}
-          className="me-2 flex min-h-11 shrink-0 items-center text-ink"
+          className="me-2 flex min-h-11 shrink-0 items-center text-ink lg:me-0 xl:me-2"
         >
           <Logo variant="wordmark" width={104} />
         </Link>
@@ -53,31 +57,14 @@ export function Header({ groups, whatsappUrl }: HeaderProps) {
           </ul>
         </nav>
         <div className="ms-auto flex items-center gap-1">
-          <Link
-            href={ui.header.search.href as Route}
-            prefetch={false}
-            aria-label={ui.header.search.label}
-            className="grid size-11 place-items-center rounded-md text-ink hover:bg-soft"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              focusable="false"
-              className="size-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <circle cx="11" cy="11" r="6.5" />
-              <path d="m16 16 4.5 4.5" />
-            </svg>
-          </Link>
-          <QuoteLink />
+          <SearchLink whatsappUrl={whatsappUrl} />
+          <QuoteLinkWithDrawer />
           {/* El contenedor se oculta en móvil: en el botón, hidden chocaría con su inline-flex. */}
           <div className="ms-2 hidden lg:block">
             {/* md: 44 px o más, también en tablets táctiles (1024–1366 px). */}
-            <Button asChild>
+            {/* lg:px-4!: el botón no se sobrescribe sin «!» (button.tsx); el alto sigue en 50 px.
+                xl:px-7! repite el px-7 del tamaño md de button-variants.ts: si cambia, cambiarlo aquí. */}
+            <Button asChild className="lg:px-4! xl:px-7!">
               <Link href={ui.header.cta.href as Route} prefetch={false}>
                 {ui.header.cta.label}
               </Link>

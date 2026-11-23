@@ -109,6 +109,9 @@ describe("FloatingActions (BD-042)", () => {
       expect(link.getAttribute("href")).toBe(WA);
       expect(link.getAttribute("target")).toBe("_blank");
       expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+      // BD-067: analítica con el contexto (docs/12 §4).
+      expect(link.dataset.event).toBe("whatsapp_open");
+      expect(link.dataset.context).toBe("general");
     }
     expect(
       screen.getByRole("link", { name: `${floatingText.whatsapp} ${ui.header.newTab}` }),

@@ -38,9 +38,9 @@ Slugs de categorías: `boligrafos`, `lapices-y-lapices-de-colores`, `crayones-de
 | Minúsculas, guiones, sin acentos | Función `slugify()` en `lib/slug.ts`; validación en el admin |
 | Canónica en cada página | `alternates.canonical` vía `buildMetadata()` |
 | Parámetros | `?color=`, `?linea=`, `utm_*` → canónica sin parámetros |
-| Utilidades sin indexar | `noindex, follow` en `/buscar`, `/cotizacion`, `/cotizacion/enviada/*`, `/styleguide`; `/admin` y `/api` además en `Disallow` |
+| Utilidades sin indexar | `noindex, follow` en `/buscar`, `/cotizacion`, `/cotizacion/enviada/*`, sin `Disallow` (el bot tiene que leer el noindex); `/styleguide` (`noindex, nofollow`, 404 en producción), `/admin` y `/api/` en `Disallow` (BD-092) |
 | Staging | `robots.txt` con `Disallow: /` + cabecera `X-Robots-Tag: noindex` en IIS + contraseña básica |
-| 404 reales | `notFound()` devuelve 404 (no "soft 404"); páginas de departamento sin tiendas → 404 o `noindex` |
+| 404 reales | Con Cache Components, `notFound()` en una ruta dinámica llega con el layout ya enviado (200 + `noindex`): por eso `proxy.ts` valida los slugs del catálogo en memoria (`server/seo/catalog-routes.ts`, BD-061) y responde 404 real. Páginas de departamento sin tiendas → 404 o `noindex` |
 | Paginación | No se necesita en el MVP (catálogo pequeño) |
 
 ## 3. Metadata por página
@@ -62,7 +62,8 @@ export async function generateMetadata({ params }: PageProps<"/productos/[catego
     title: p.seoTitle ?? `${p.name}, ${p.tagline ?? p.category.name}`,
     description: p.seoDescription ?? defaultProductDescription(p),
     path: `/productos/${categoria}/${producto}`,
-    image: `/productos/${categoria}/${producto}/opengraph-image`,
+    // Su opengraph-image.tsx pone la imagen: si la página exportara una, mandaría sobre ese archivo.
+    image: false,
   });
 }
 ```
@@ -72,7 +73,7 @@ export async function generateMetadata({ params }: PageProps<"/productos/[catego
 Checklist por página pública:
 - [ ] `title` único (≤ 60 caracteres) y `description` única (140–160).
 - [ ] Canónica absoluta correcta.
-- [ ] Imagen Open Graph 1200 × 630 (`opengraph-image.tsx` generado con `next/og` para productos y categorías; imagen por defecto en `public/og/default.png`).
+- [ ] Imagen Open Graph 1200 × 630 (`opengraph-image.tsx` generado con `next/og` para productos y categorías; la de la marca, para el resto, en `src/app/opengraph-image.tsx`).
 - [ ] Un solo `h1` que contiene la palabra clave principal.
 - [ ] `h2` por sección, sin saltar niveles.
 - [ ] JSON-LD válido (ver §4).
@@ -124,7 +125,8 @@ Ejemplo de salida (Bolik Ultra, abreviado):
 
 - `src/app/sitemap.ts`: una sola URL `/sitemap.xml` con páginas estáticas, categorías, productos publicados (con sus imágenes) y departamentos con tiendas. `lastModified` = `updatedAt` real.
 - Se regenera con los mismos tags de caché que los datos; tiene respaldo de revalidación cada hora.
-- `src/app/robots.ts`: producción permite todo excepto utilidades; staging bloquea todo. Bots de IA permitidos explícitamente (doc 11).
+- `src/app/robots.ts`: producción permite todo excepto `/admin`, `/api/` y `/styleguide`; staging bloquea todo y desarrollo (localhost) sale igual que producción para que Lighthouse CI evalúe las reglas reales. Bots de IA permitidos explícitamente (doc 11), con los mismos `Disallow` (un bot con grupo propio ignora el de `*`). `/buscar` y `/cotizacion` no van en `Disallow`: llevan `noindex, follow` y el bot tiene que poder entrar a leerlo.
+- Solo entran al sitemap las páginas que ya existen e indexan: cada página pública nueva se suma a `STATIC_PAGES` (`src/features/seo/sitemap.ts`) y la E2E `seo.spec.ts` comprueba que cada URL responda 200 con `index` y canónica propia (BD-092).
 - Al publicar: enviar el sitemap en Google Search Console y Bing Webmaster Tools (ticket BD-096); IndexNow notifica cambios a Bing y otros (doc 11).
 
 ## 6. Redirecciones desde el sitio Joomla
@@ -167,12 +169,13 @@ Mapa inicial (completar con el rastreo):
 - Dónde comprar → cada departamento; cada departamento → departamentos vecinos.
 - Escuelas ↔ kits escolares; mayoreo ↔ empresas.
 - Textos de enlace descriptivos ("Ver marcadores de pizarra"), nunca "clic aquí".
+- Ninguna página pública a más de 3 clics de la home. Lo vigila `tests/e2e/seo.spec.ts` (BD-093): recorre el sitio desde la home y exige que cada URL del sitemap quede a 3 clics o menos, migas en todas las páginas salvo la home y ningún enlace genérico («clic aquí», «ver más»). Las páginas noindex (`/buscar`, `/cotizacion`) llevan migas visibles sin `BreadcrumbList`.
 
 ## 8. Imágenes
 
-- `next/image` con `alt` real (obligatorio en el admin), `width`/`height` (sin CLS), `sizes` acorde al diseño.
-- Nombres de archivo descriptivos generados desde el slug: `bolik-ultra-azul-punta-a1b2c3-960.webp`.
-- Imágenes de producto incluidas en el sitemap.
+- `next/image` con `alt` real (obligatorio en el admin), `width`/`height` (sin CLS), `sizes` acorde al diseño. El `alt` se valida con `imageAltSchema()` (`src/lib/image-names.ts`): describe la foto, no es un nombre de archivo ni «foto 1». Si en la base queda vacío, sale el `defaultAlt` del medio o el respaldo de docs/17 §5 («{Producto} {color}, vista {n}»): ninguna foto sin `alt` (BD-097).
+- Nombres de archivo descriptivos generados desde el slug: `bolik-ultra-azul-punta-a1b2c3-960.webp`. `pnpm import:media` omite las fotos con nombre de cámara o genérico (`IMG_4521.jpg`, «WhatsApp Image…») y pide la convención de docs/02 (`producto_color_vista.jpg`).
+- Imágenes de producto incluidas en el sitemap: en la `<url>` de cada ficha, sus fotos visibles (las de la galería) con la URL absoluta del WebP de 1920 px.
 - Formato WebP (y AVIF opcional); el LCP de cada página con `priority`.
 
 ## 9. SEO local

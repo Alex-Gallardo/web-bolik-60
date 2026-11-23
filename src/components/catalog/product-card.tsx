@@ -1,8 +1,10 @@
 import type { Route } from "next";
-import Image from "next/image";
+import { cx } from "class-variance-authority";
+import { getImageProps } from "next/image";
 import Link from "next/link";
 import { Chip } from "@/components/ui/chip";
 import { ui } from "@/content/ui";
+import { BRAND_LABELS } from "@/lib/constants";
 import type { ProductCardView } from "@/server/data/types";
 
 /**
@@ -28,8 +30,8 @@ type ProductCardProps = {
 };
 
 /**
- * Tarjeta de producto (docs/06 §3.2, BD-023): imagen 1:1, chip de línea, nombre, colores y
- * «Ver producto». Toda la tarjeta es un solo enlace. Sin foto (hasta BD-034), el cuadro 1:1
+ * Tarjeta de producto (docs/06 §3.2, BD-023): imagen 1:1, chip de línea (y de marca si no es Bolik,
+ * BD-038), nombre, colores y «Ver producto». Toda la tarjeta es un solo enlace. Sin foto (hasta BD-034), el cuadro 1:1
  * muestra los colores reales del producto: el espacio está reservado y no hay saltos (CLS 0).
  *
  * Sin overflow-hidden en el enlace: recortaría la sombra de .lift. Solo el cuadro de la imagen
@@ -54,17 +56,26 @@ export function ProductCard({
       prefetch={prefetch}
       className="lift group flex h-full flex-col rounded-lg border-2 border-line bg-paper text-ink no-underline"
     >
-      <div className="relative aspect-square overflow-hidden rounded-t-[calc(var(--radius-lg)-2px)] bg-soft">
+      {/* Con foto, fondo blanco como el de las fotos de producto; sin ella, el gris de los colores. */}
+      <div
+        className={cx(
+          "relative aspect-square overflow-hidden rounded-t-[calc(var(--radius-lg)-2px)]",
+          product.image ? "bg-paper" : "bg-soft",
+        )}
+      >
         {product.image ? (
-          <Image
-            src={product.image.src}
-            alt={product.image.alt}
-            fill
-            sizes={sizes}
-            className="object-contain p-4"
-            {...(product.image.blurDataUrl
-              ? { placeholder: "blur" as const, blurDataURL: product.image.blurDataUrl }
-              : {})}
+          // Atributos de next/image (getImageProps): mismo loader, srcset y sizes, sin el JS del
+          // componente Image en el navegador (BD-060). Sin placeholder blur: lo quitaba ese JS al
+          // cargar; el fondo bg-soft del cuadro hace de placeholder.
+          // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+          <img
+            {...getImageProps({
+              src: product.image.src,
+              alt: product.image.alt,
+              fill: true,
+              sizes,
+            }).props}
+            className="absolute inset-0 size-full object-contain p-4"
           />
         ) : (
           // flex-wrap: a 360 px (≈ 120 px útiles) 4 círculos pasan a 2 filas en vez de salirse.
@@ -87,9 +98,18 @@ export function ProductCard({
             se ve arriba con order-first. Alturas fijas (título 2 líneas, colores 1 línea) para que
             el skeleton mida lo mismo a 360 px, donde el texto se parte (CLS 0). */}
         <Heading className="line-clamp-2 min-h-[2lh] text-lg leading-tight">{product.name}</Heading>
-        <Chip line={product.category.lineGroup} className="order-first self-start">
-          {product.category.name}
-        </Chip>
+        {/* Una sola fila (sin wrap): el chip recorta su texto y la altura no cambia (CLS 0). */}
+        <div className="order-first flex min-w-0 gap-1.5">
+          <Chip line={product.category.lineGroup} className="min-w-0">
+            {product.category.name}
+          </Chip>
+          {product.brand !== "bolik" ? (
+            <Chip className="shrink-0">
+              <span className="sr-only">{`${ui.cards.brand} `}</span>
+              {BRAND_LABELS[product.brand]}
+            </Chip>
+          ) : null}
+        </div>
         <p className="flex min-h-5 items-center gap-1.5 text-sm text-muted">
           {colors.length > 0 ? (
             <>

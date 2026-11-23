@@ -16,7 +16,10 @@ export const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
 });
 
-/** Texto corrido. */
+/**
+ * Texto corrido. Con precarga: sin ella (BD-055) el texto cambia de fuente después del splash y
+ * mueve la página (CLS 0.002 en la E2E del splash), a cambio de un LCP simulado igual al de siempre.
+ */
 export const dmSans = DM_Sans({
   subsets: ["latin"],
   display: "swap",

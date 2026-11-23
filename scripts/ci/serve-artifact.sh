@@ -10,6 +10,9 @@ log="${RUNNER_TEMP:-/tmp}/server.log"
 
 rm -rf "${dir}" && mkdir -p "${dir}"
 tar -xzf "${pkg}" -C "${dir}"
+# Pósters y videos de ejemplo del hero (BD-050): no van al repo; reemplazos con la misma clave en el
+# MEDIA_DIR del artefacto (./.media relativo a la carpeta donde corre server.js).
+node scripts/ci/sample-media.mjs "${dir}/.media"
 cd "${dir}"
 PORT=3100 HOSTNAME=127.0.0.1 nohup node server.js >"${log}" 2>&1 &
 pid=$!

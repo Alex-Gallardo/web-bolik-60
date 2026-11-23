@@ -58,25 +58,50 @@ export function seedTargetProblem(
   return null;
 }
 
-/** Los datos que carga un perfil: en prod, sin ejemplos ni relaciones, FAQs o líneas de kit hacia ellos. */
+/**
+ * Los datos que carga un perfil: en prod, sin ejemplos ni relaciones, FAQs o líneas de kit hacia
+ * ellos, y sin los pósters y videos de la demo en el hero (BD-050). Una categoría sin productos
+ * reales publicados se crea sin publicar (BD-038): no queda una página vacía en el sitemap.
+ */
 export function dataForProfile(data: SeedData, profile: SeedProfile): SeedData {
-  if (profile !== "prod") return data;
+  if (profile !== "prod") return { ...data, settings: settingsForProfile(data.settings, profile) };
 
   const products = data.products.filter((p) => !p.sample);
   const productSlugs = new Set(products.map((p) => p.slug));
   const skus = new Set(products.flatMap((p) => p.variants.map((v) => v.sku)));
 
+  const withProducts = new Set(products.filter((p) => p.published).map((p) => p.categorySlug));
+  // Las fotos provisionales (BD-062) son de ejemplo: el producto real va sin ellas.
+  const sampleMedia = new Set(data.media.filter((m) => m.sample).map((m) => m.key));
+
   return {
     ...data,
+    categories: data.categories.map((c) =>
+      c.published && !withProducts.has(c.slug) ? { ...c, published: false } : c,
+    ),
     products: products.map((p) => ({
       ...p,
       related: p.related.filter((slug) => productSlugs.has(slug)),
+      images: p.images.filter((image) => !sampleMedia.has(image.mediaKey)),
     })),
+    settings: settingsForProfile(data.settings, profile),
     faqs: data.faqs.filter((f) => !f.productSlug || productSlugs.has(f.productSlug)),
     content: {
       ...data.content,
       activities: data.content.activities.filter((a) => !a.sample),
+      heroChapters: data.content.heroChapters.map((h) =>
+        h.sampleMedia
+          ? {
+              ...h,
+              posterKey: undefined,
+              videoDesktop: undefined,
+              videoMobile: undefined,
+              sampleMedia: false,
+            }
+          : h,
+      ),
     },
+    media: data.media.filter((m) => !m.sample),
     kits: data.kits
       .filter((k) => !k.sample)
       .map((k) => ({
@@ -85,4 +110,18 @@ export function dataForProfile(data: SeedData, profile: SeedProfile): SeedData {
       }))
       .filter((k) => k.items.length > 0),
   };
+}
+
+/**
+ * Los ajustes que van a SiteSetting. `sample_whatsapp_number` es el número de prueba de WhatsApp
+ * (BD-062, el ejemplo de docs/17 §5): en dev, e2e y la fuente fixtures hace de `whatsapp_number`
+ * mientras no haya uno real, para ver y probar los botones; prod nunca lo lleva.
+ */
+export function settingsForProfile(
+  settings: SeedData["settings"],
+  profile: SeedProfile,
+): SeedData["settings"] {
+  const { sample_whatsapp_number: sampleNumber, ...real } = settings;
+  if (profile === "prod" || !sampleNumber || real.whatsapp_number) return real;
+  return { ...real, whatsapp_number: sampleNumber };
 }

@@ -30,16 +30,17 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 | A-11 | Subrayado de tinta | `h1` del hero, títulos destacados | `stroke-dashoffset` de SVG | 700 ms out, 400 ms de retraso | Subrayado fijo |
 | A-12 | Texto del capítulo | Hero | `fade-up` del bloque de texto (se fuerza con `key`) | 240 ms out | Solo opacidad |
 | A-13 | Progreso del capítulo | Pestañas del hero | `transform: scaleX(progreso)` | lineal, por `timeupdate` | Barra oculta |
+| A-14 | Entrada de la ilustración del hero principal (BD-056) | Bolik Ultra del hero | `fade-up` con `--dur-slower` y `--dur-base` de retraso, solo con JS (`.js .hero-art`) | 700 ms out | Solo opacidad, sin retraso |
 | A-20 | Conteo de cifras | Franja de cifras, escuelas | Número de 0 al valor con `requestAnimationFrame` (ease-out cúbica) | 1100 ms | Número final directo |
 | A-21 | Reveal escalonado | Tarjetas de secciones | `fade-up` con retraso `--i × 60 ms` al entrar en pantalla | 420 ms out | Visible directo |
 | A-22 | Reordenar grilla | Filtros del catálogo | Motion `layout` en las tarjetas (FLIP) | 320 ms out | Sin layout animation |
 | A-30 | Elevar tarjeta | Hover en tarjetas (solo `hover: hover`) | `translateY(-4px)` + sombra vía `opacity` de pseudo-elemento | 160 ms out | Sin elevar |
 | A-31 | Cambio de color | Ficha y spotlight | Crossfade de imagen (`opacity`) + anillo del swatch con `scale` | 240 ms in-out | Solo opacidad |
 | A-32 | Sheet de filtros | Catálogo móvil | = A-08 | 420 ms | Opacidad |
-| A-33 | Cota interactiva | Diagrama de medidas | Línea de cota con `stroke-dashoffset` y etiqueta `fade-in` | 320 ms out | Estático |
+| A-33 | Cota interactiva | Diagrama de medidas | Línea de cota con `stroke-dashoffset` y etiqueta `fade-in` (CSS con radios, sin JS; token `--dur-cota`, BD-063) | 320 ms out | Estático |
 | A-34 | Pines del mapa | Dónde comprar | Pines caen con `translateY(-8px) → 0` escalonado; pin activo con `scale(1.15)` | 240 ms spring | Estático |
 | A-35 | Acordeón | FAQs | `<details>` + `::details-content` (`block-size`)* y rotación del ícono + | 240 ms in-out | Instantáneo |
-| A-36 | Quitar línea | Cotización | Motion `AnimatePresence`: `opacity` y `x` hacia la derecha; al terminar, las de abajo suben (sin animar la altura; `layout` necesitaría `domMax`) | 240 ms (`--dur-base`) | Solo opacidad |
+| A-36 | Quitar línea | Cotización | CSS (`.quote-line-leave`, BD-071): `opacity` y `translateX` hacia la derecha; al terminar (`animationend`) se quita del store y las de abajo suben (sin animar la altura). La demo de `/styleguide` sigue con Motion `AnimatePresence` | 240 ms (`--dur-base`) | Solo opacidad |
 | A-40 | Tarjetas infantiles | Escuelas | Rotación ±1.5° en reposo; hover `rotate(0) scale(1.03)` | 240 ms spring | Sin rotación |
 | A-41 | Garabatos | Fondo de escuelas | SVG que se dibuja una vez al entrar + `float` lento de figuras | 1.2 s una vez; float 5 s loop | Estático |
 | A-50 | Línea de tiempo | Historia | Línea con `scaleX`/`scaleY` desde el origen + hitos con A-21 | 700 ms out | Estático |
@@ -94,6 +95,10 @@ Decisiones:
 
 ## 5. Hero con video (A-10 a A-13)
 
+> **Desde BD-056** el video por capítulos es la sección 3 de la home («Así nace un Bolik», con `h2`) y el hero principal (`MainHero`, tipográfico, con el `h1`) abre la página. El póster ya no es el LCP: ningún póster se precarga ni se pide con prioridad alta, y póster y video se montan después de `load` y solo cuando la sección entra en pantalla (`IntersectionObserver` sin margen: la sección empieza justo debajo del pliegue y con margen se pediría al abrir). Sin JS, la sección queda sobre navy, sin póster. El diagrama y la lista de abajo describen BD-050; lo del LCP del póster ya no aplica.
+>
+> En la primera visita a `/` el splash tapa la página unos 2 s: el subrayado (A-11) y la entrada de la ilustración (A-14) terminan debajo de él. Se acepta: en las visitas siguientes no hay splash y se ven.
+
 Código de referencia: `starter/src/components/hero/video-hero.tsx`.
 
 ```mermaid
@@ -114,6 +119,17 @@ Reglas del video:
 - El texto nunca va "quemado" en el video.
 - Capa oscura (`hero__shade`) que garantiza contraste AA del texto sobre cualquier cuadro.
 - Botón de pausa visible (requisito de accesibilidad para contenido en movimiento de más de 5 s).
+
+Cómo quedó (BD-050): `src/components/hero/video-hero.tsx` (servidor: chip, h1 con el subrayado A-11 y los atributos del póster con `getImageProps`) y `hero-player.tsx` (cliente: capas, video, texto y pestañas). Lo que cambió respecto del código de referencia:
+
+- **El póster 1 es el LCP:** `<link rel="preload">` con `fetchpriority="high"` en el `<head>` y `<img>` con `loading="eager"`. El `preload` de `next/image` en Next 16 no pone prioridad y Chrome lo pedía como *Low*. Los pósters salen como `<img>` con los atributos de `getImageProps` (mismo loader y srcset): el componente `Image` no viaja al navegador.
+- **Solo un `<video>`:** el del capítulo actual. Los pósters de los demás capítulos se montan al visitarlos, y el del siguiente mientras corre un video. Nada se pide en la carga inicial.
+- **Móvil sin video vertical = solo póster.** El 16:9 recortado gasta datos para verse mal. Lighthouse móvil no pide video.
+- **Un video que falla** (`error`) deja el póster. Si el navegador bloquea la reproducción automática, el hero queda en pausa y el botón lo dice.
+- **Los cuatro paneles van en el HTML:** sin JS se ven todos y con JS solo el activo (`.js .hero-chapter`). A-12 se dispara al volver a mostrarse. Con el foco dentro del hero, el video no avanza solo.
+- **Sin `aria-live` en el texto del capítulo:** con el avance automático anunciaría cada 10 s. Las pestañas siguen el patrón ARIA (`tablist`, `tabpanel`, flechas, Inicio y Fin).
+- **La barra (A-13)** se mueve escribiendo el `transform` directo: `timeupdate` no vuelve a renderizar el hero.
+- **Medios de ejemplo:** las ilustraciones y videos de la demo y las fotos de producto provisionales (BD-062) no van al repo. `pnpm media:samples <carpeta> [<carpeta>…]` los pone en `MEDIA_DIR`. Sin ellos, `scripts/ci/sample-media.mjs` (que corren `start:local` y la CI) deja reemplazos con la misma clave: un póster de peso parecido y un «video» que no se reproduce, así que queda el póster.
 
 ## 6. Reveals al hacer scroll (A-21)
 
@@ -159,7 +175,7 @@ import { lineExit } from "@/lib/motion";
 
 - Se usa `m.div` (no `motion.div`) dentro del provider. ESLint lo exige: fuera de `src/components/motion` no se importa `motion/react` (se usa `components/motion/m.ts`) y dentro no se importa el componente `motion` completo; con `strict`, Motion además lanza un error si aparece (solo en desarrollo). Tampoco se permite `import()` de Motion fuera de esa carpeta.
 - El provider envuelve **solo** el drawer de cotización, los diálogos que lo necesiten y la grilla filtrable; no todo el sitio. `layout` carga `domMax` (animaciones de layout, A-22), que pesa más; el resto usa `domAnimation`.
-- Lo que usa Motion se carga al interactuar (`dynamic()` o `import()`), como la demo A-36 de `/styleguide`: así ni el núcleo de Motion entra en el JS inicial. Lo vigila `tests/e2e/motion-lazy.spec.ts` (la home no descarga ningún script con Motion). Peso al primer uso (Motion 14.6.0, gzip, medido con la demo A-36): ≈ 50 KB (núcleo de `m.*` ≈ 30.5 KB, funciones `domAnimation` ≈ 14.8 KB, provider y `AnimatePresence` ≈ 5 KB); `domMax` pesa más. **Choca con BD-071** («abrir el drawer no carga más de 30 KB»): el drawer puede usar el `Sheet` con CSS (A-08, ya existe) y Motion solo para quitar líneas (A-36), o revisar ese criterio.
+- Lo que usa Motion se carga al interactuar (`dynamic()` o `import()`), como la demo A-36 de `/styleguide`: así ni el núcleo de Motion entra en el JS inicial. Lo vigila `tests/e2e/motion-lazy.spec.ts` (la home no descarga ningún script con Motion). Peso al primer uso (Motion 14.6.0, gzip, medido con la demo A-36): ≈ 50 KB (núcleo de `m.*` ≈ 30.5 KB, funciones `domAnimation` ≈ 14.8 KB, provider y `AnimatePresence` ≈ 5 KB); `domMax` pesa más. **Decisión de BD-071** (17 nov 2026): el criterio «abrir el drawer no carga más de 30 KB» se mantiene; el drawer usa el `Sheet` con CSS (A-08) y A-36 también va en CSS, así que el drawer no usa Motion.
 - `layout` es fijo por instancia del provider (LazyMotion carga sus funciones una vez).
 - Presets en `src/lib/motion.ts` (`spring`, `drawer`, `sheet`, `fadeScale`, `lineExit`): duraciones y curvas son los tokens de `motion.css` en segundos (`DUR`, `EASE`; una prueba exige que coincidan; el resorte de drawer y sheet no tiene duración) y solo animan transform y opacidad. Todos cambian la opacidad: con movimiento reducido es lo único que queda.
 - Movimiento reducido: `MotionConfig reducedMotion="user"` deja solo la opacidad cuando el sistema lo pide; el interruptor de `/styleguide` lo fuerza con `"always"`.

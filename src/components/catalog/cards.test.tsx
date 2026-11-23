@@ -15,6 +15,7 @@ import { ProductCardSkeleton } from "./product-card-skeleton";
 const product: ProductCardView = {
   slug: "bolik-ultra",
   name: "Bolik Ultra",
+  brand: "bolik",
   href: "/productos/boligrafos/bolik-ultra",
   category: { slug: "boligrafos", name: "Bolígrafos", lineGroup: "escritura" },
   shortDescription: "Bolígrafo hexagonal",
@@ -23,6 +24,7 @@ const product: ProductCardView = {
     { key: "negro", name: "Negro", hex: "#111318" }, // check-colors-ignore: dato de prueba
   ],
   skus: ["PT00058", "PT00059"],
+  useSlugs: ["escolar", "oficina"],
   featured: true,
   sample: false,
   image: null,
@@ -79,6 +81,16 @@ describe("ProductCard", () => {
     expect(screen.queryByText(/^Colores?:/)).toBeNull();
   });
 
+  it("muestra la marca del grupo solo cuando no es Bolik (BD-038)", () => {
+    const { unmount } = render(<ProductCard product={product} />);
+    expect(screen.queryByText("Fabik")).toBeNull();
+    unmount();
+    render(<ProductCard product={{ ...product, brand: "fabik" }} />);
+    const link = screen.getByRole("link");
+    expect(within(link).getByText("Fabik")).toBeTruthy();
+    expect(within(link).getByText("Bolígrafos")).toBeTruthy();
+  });
+
   it("con foto usa su alt y los sizes de la grilla", () => {
     render(
       <ProductCard
@@ -122,6 +134,8 @@ describe("CategoryCard y AudienceCard", () => {
       lineGroup: "oficina",
       shortText: "Pizarra y permanentes.",
       intro: null,
+      seoTitle: null,
+      seoDescription: null,
       href: "/productos/marcadores",
       productCount: 1,
     };
