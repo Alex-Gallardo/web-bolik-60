@@ -184,9 +184,13 @@ export const feedback = {
     },
     forbidden: { tone: "warning" as ToastTone, title: "No tienes permiso para esa sección" },
     loggedOut: { tone: "success" as ToastTone, title: "Cerraste sesión" },
+    /**
+     * Cuenta bloqueada (5 intentos) o 10 intentos fallidos desde la misma IP (BD-077): el mismo
+     * aviso para los dos, sin decir cuál fue. 15 minutos es la espera máxima en ambos.
+     */
     loginLocked: {
-      title: "Cuenta bloqueada por 15 minutos",
-      body: "Hubo 5 intentos fallidos. Si olvidaste tu contraseña, pide a un administrador que la restablezca.",
+      title: "Demasiados intentos fallidos",
+      body: "Por seguridad, espera 15 minutos antes de volver a intentarlo. Si olvidaste tu contraseña, pide a un administrador que la restablezca.",
     },
     sessionExpired: {
       tone: "warning" as ToastTone,

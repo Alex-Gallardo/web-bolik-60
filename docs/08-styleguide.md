@@ -162,7 +162,7 @@ En la página: `const look = await getSectionAppearance("home.solutions")` → `
 | Admin: falta alt | Advertencia junto a la imagen; no deja publicar | Inline | `admin.altMissing` |
 | Admin: sesión vencida | Toast + redirección al login conservando el formulario | Toast | `admin.sessionExpired` |
 | Admin: login con datos incorrectos | Aviso arriba del formulario (vuelve al login); el mismo para un correo que no existe | Inline | `admin.loginInvalid` |
-| Admin: cuenta bloqueada (5 intentos) o 10 intentos fallidos desde la misma IP (BD-077) | Aviso arriba del formulario | Inline | `admin.loginLocked` |
+| Admin: demasiados intentos (cuenta bloqueada tras 5, o 10 fallidos desde la misma IP; BD-077) | Aviso arriba del formulario, el mismo para los dos | Inline | `admin.loginLocked` |
 | Admin: panel no disponible (sin base) | Aviso arriba del formulario | Inline | `admin.loginUnavailable` |
 | Admin: sección sin permiso | Redirección al inicio del admin con aviso (toast con BD-115) | Inline | `admin.forbidden` |
 | Admin: cerrar sesión | Vuelve al login con aviso | Inline | `admin.loggedOut` |
