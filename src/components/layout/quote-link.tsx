@@ -1,14 +1,17 @@
 "use client";
 
-import { cx } from "class-variance-authority";
 import type { Route } from "next";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ComponentType, type MouseEvent } from "react";
 import { OnRouteChange } from "@/components/motion/on-route-change";
 import type { QuoteDrawerProps } from "@/components/quote/quote-drawer";
-import { ui } from "@/content/ui";
+import { headerText } from "@/content/header";
 import { useQuoteCount } from "@/features/quote/quote-count";
 import { QUOTE_OPEN_EVENT, openQuoteDrawer } from "@/features/quote/storage-keys";
+
+/** Globo del contador (solo visual: el número va en el nombre accesible del enlace). */
+const BADGE =
+  "absolute -top-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-yellow px-1 text-xs font-bold text-ink tnum";
 
 /**
  * Clic normal abre el drawer; con Ctrl, Cmd, Shift o la rueda, el enlace hace lo suyo. En
@@ -17,7 +20,7 @@ import { QUOTE_OPEN_EVENT, openQuoteDrawer } from "@/features/quote/storage-keys
 function openDrawer(event: MouseEvent<HTMLAnchorElement>) {
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
     return;
-  if (window.location.pathname === ui.header.quote.href) return;
+  if (window.location.pathname === headerText.quote.href) return;
   event.preventDefault();
   openQuoteDrawer();
 }
@@ -31,12 +34,12 @@ export function QuoteLink() {
   const { count, popKey } = useQuoteCount();
   return (
     <Link
-      href={ui.header.quote.href as Route}
+      href={headerText.quote.href as Route}
       prefetch={false}
       data-quote-link
       aria-haspopup="dialog"
       onClick={openDrawer}
-      aria-label={ui.header.quoteCount(count)}
+      aria-label={headerText.quoteCount(count)}
       className="relative grid size-11 place-items-center rounded-md text-ink hover:bg-soft"
     >
       <svg
@@ -59,12 +62,9 @@ export function QuoteLink() {
           key={popKey}
           aria-hidden="true"
           data-quote-count
-          // cx y no un template: el orden de clases de Prettier recortaba el espacio y pegaba
-          // «badge-pop» con la clase siguiente.
-          className={cx(
-            popKey > 0 && "badge-pop",
-            "absolute -top-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-yellow px-1 text-xs font-bold text-ink tnum",
-          )}
+          // Constante aparte y no un template: el orden de clases de Prettier recortaba el espacio y
+          // pegaba «badge-pop» con la clase siguiente. Sin cx: clsx no entra en el JS común (BD-047).
+          className={popKey > 0 ? `badge-pop ${BADGE}` : BADGE}
         >
           {count}
         </span>

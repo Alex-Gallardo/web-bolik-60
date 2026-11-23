@@ -256,6 +256,9 @@ $httpsRule
         <clientCache cacheControlMode="UseMaxAge" cacheControlMaxAge="365.00:00:00" cacheControlCustom="public, immutable" />
         <remove fileExtension=".woff2" /><mimeMap fileExtension=".woff2" mimeType="font/woff2" />
       </staticContent>
+      <httpProtocol>
+        <customHeaders><add name="X-Content-Type-Options" value="nosniff" /></customHeaders>
+      </httpProtocol>
     </system.webServer>
   </location>
   <location path="media">
@@ -266,6 +269,9 @@ $httpsRule
         <remove fileExtension=".avif" /><mimeMap fileExtension=".avif" mimeType="image/avif" />
         <remove fileExtension=".mp4" /><mimeMap fileExtension=".mp4" mimeType="video/mp4" />
       </staticContent>
+      <httpProtocol>
+        <customHeaders><add name="X-Content-Type-Options" value="nosniff" /></customHeaders>
+      </httpProtocol>
     </system.webServer>
   </location>
 </configuration>

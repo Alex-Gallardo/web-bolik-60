@@ -4,7 +4,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { OnRouteChange } from "@/components/motion/on-route-change";
-import { ui } from "@/content/ui";
+import { headerText, lineNames } from "@/content/header";
 import type { LineGroup } from "@/server/data/types";
 
 /** Categorías de una línea de producto para el menú (docs/06 §2: «mega-menú de líneas»). */
@@ -48,7 +48,7 @@ export function ProductsMenu({ groups }: { groups: NavGroup[] }) {
     };
   }, []);
 
-  const productos = ui.header.products;
+  const productos = headerText.products;
   return (
     <details ref={details} className="group relative">
       <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 rounded-md px-2 font-bold whitespace-nowrap text-ink hover:bg-soft xl:px-3 [&::-webkit-details-marker]:hidden">
@@ -71,7 +71,7 @@ export function ProductsMenu({ groups }: { groups: NavGroup[] }) {
         <div className="grid grid-cols-2 gap-6">
           {groups.map((group) => (
             <div key={group.line} className="flex flex-col gap-2">
-              <p className="eyebrow text-blue">{ui.lines[group.line]}</p>
+              <p className="eyebrow text-blue">{lineNames[group.line]}</p>
               <ul className="flex flex-col">
                 {group.categories.map((category) => (
                   <li key={category.href}>
@@ -93,7 +93,7 @@ export function ProductsMenu({ groups }: { groups: NavGroup[] }) {
           prefetch={false}
           className="mt-4 flex min-h-11 items-center border-t-2 border-line pt-4 font-bold text-blue"
         >
-          {ui.header.allProducts}
+          {headerText.allProducts}
         </Link>
       </div>
       {/* Al navegar (atrás, adelante o un enlace) se cierra. */}

@@ -1026,6 +1026,15 @@ La parte común del sitio (Next, React y el layout) ocupa ~160 KB en cualquier p
 
 *Nota de BD-114:* una isla cliente en el admin (la primera llega con BD-115) hace que Turbopack parta el chunk común de las páginas públicas en dos (+~1.5 KB transferidos y una petición más en cada página; medido con el login de BD-114, que por eso quedó sin isla). Este ticket debe dejar margen para ese costo antes de BD-115.
 
+**Implementado (BD-047)**
+
+- **Medición:** en `/productos`, Next y React son ~134 KB comprimidos en 6 archivos y el layout entero, un archivo de 9.5 KB (3.5 de ellos son `next/link`, que cualquier página con enlaces necesita). Lo que más sumaba eran las cabeceras: ~1.7 KB por archivo, porque Next mandaba la CSP y las demás cabeceras de documento también en cada `.js`.
+- **Cabeceras solo en documentos** (`next.config.ts`): la CSP, `Permissions-Policy`, `X-Frame-Options` y COOP ya no van en `/_next/static/*` ni `/media/*`; `nosniff` y `Referrer-Policy`, en todo. En producción IIS sirve esas rutas sin pasar por Next (docs/15 §4), así que la CI mide ahora lo mismo que recibe el visitante. `humo.spec.ts` comprueba las cabeceras de páginas, 404, un `.js` y una foto.
+- **Islas del header:** importan sus textos de `content/header.ts` (`ui.header` y `ui.lines` siguen existiendo para el servidor) y el contador no usa `cx`: −1 KB en el archivo del layout.
+- **Resultado (Lighthouse, transferido):** home 162.2 → 153.9 KB; `/productos` y categoría 166.9 → 158.3; ficha 169.1 → 161.0 (26 peticiones); `/buscar` 169.1 → 160.6; `/cotizacion` 182.6 → 173.6; 404 ~140 KB. **Topes nuevos:** home 160 KB, resto y ficha 165 KB, `/cotizacion` 178 KB (docs/12 §2, CLAUDE.md, `lighthouse.config.cjs`).
+- **Desvíos de los criterios (aceptados por el usuario, 23 nov 2026):** `/cotizacion` no llega a 170 KB (queda en 178 con margen); la ficha sigue en 26 peticiones (el mapa de `import()` del layout no volvió al chunk común); rendimiento ≥ 0.95 en `/productos` (0.98), categoría y `/buscar` (0.95), pero no en `/cotizacion` (0.94) ni la ficha (0.93): el tope sigue en 0.90.
+- **Margen para BD-115** (medido con una isla temporal, no subida): una isla del admin sin Server Actions no cambia el JS público. Una que llama a una Server Action desde el cliente (`useActionState`) saca el cliente de Flight de React (~7.6 KB del framework) a un archivo compartido: +0.3 KB y una petición más en cada página pública. Los topes de KB lo absorben; el de peticiones de la ficha (26) no.
+
 #### BD-048 · Header sin desborde entre 1024 y 1280 px
 
 **Sprint** S2 · **Días** 0.25 · **Prioridad** Must · **Pista** A · **Depende de** BD-041 · **Docs** 06 §2 · *Ticket nuevo (14 nov 2026, de BD-061)*
@@ -2318,7 +2327,7 @@ Panel con indicadores principales.
 
 - [ ] Carga del dashboard < 1 s con datos de prueba.
 
-*Nota de BD-114:* la sesión y las guardias ya existen: cada página llama a `requireRole(...ADMIN_PERMISSIONS.x)` (`src/server/auth/guards.ts`, permisos de docs/06 §4 en `src/lib/admin-access.ts`) y devuelve el usuario (nombre y rol para el encabezado). `/admin` es un inicio provisional (saludo y «Cerrar sesión», acción `logout`); este ticket lo reemplaza por el dashboard. El layout del admin ya envuelve las páginas en `<Suspense>` (leer la cookie las hace dinámicas). **Presupuesto:** el primer componente cliente del admin (menú, avisos) parte el JS común de las páginas públicas (+~1.5 KB y una petición, medido en BD-114): BD-047 va antes para ganar ese margen; medir con `pnpm lhci` al agregarlo. Los avisos de sesión vencida, sesión cerrada y sin permiso se muestran hoy en la página (`role="status"`); con el `FeedbackHost` del admin pasan a toast (docs/08: `admin.sessionExpired`, `admin.forbidden`, `admin.loggedOut`).
+*Nota de BD-114:* la sesión y las guardias ya existen: cada página llama a `requireRole(...ADMIN_PERMISSIONS.x)` (`src/server/auth/guards.ts`, permisos de docs/06 §4 en `src/lib/admin-access.ts`) y devuelve el usuario (nombre y rol para el encabezado). `/admin` es un inicio provisional (saludo y «Cerrar sesión», acción `logout`); este ticket lo reemplaza por el dashboard. El layout del admin ya envuelve las páginas en `<Suspense>` (leer la cookie las hace dinámicas). **Presupuesto:** medido en BD-047, una isla del admin sin Server Actions (menú, avisos, botones) no cambia el JS público; una que llama a una Server Action desde el cliente (`useActionState`) suma una petición en cada página pública (+0.3 KB). Los topes de KB ya tienen margen; la ficha está en su tope de 26 peticiones: enviar los formularios con `<form action={…}>` desde el servidor (como el login) o decidir subir ese tope. Medir con `pnpm lhci` al agregarla. Los avisos de sesión vencida, sesión cerrada y sin permiso se muestran hoy en la página (`role="status"`); con el `FeedbackHost` del admin pasan a toast (docs/08: `admin.sessionExpired`, `admin.forbidden`, `admin.loggedOut`).
 
 #### BD-116 · Editor de productos
 

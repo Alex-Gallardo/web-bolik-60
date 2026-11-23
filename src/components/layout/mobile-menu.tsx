@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import { retryableImport } from "@/components/feedback/feedback-store";
 import { OnRouteChange } from "@/components/motion/on-route-change";
-import { ui } from "@/content/ui";
+import { headerText } from "@/content/header";
 import type { MobileMenuSheetProps } from "./mobile-menu-sheet";
 import type { NavGroup } from "./products-menu";
 
@@ -56,7 +56,7 @@ export function MobileMenu({ groups, whatsappUrl }: MobileMenuProps) {
       <button
         ref={button}
         type="button"
-        aria-label={ui.header.openMenu}
+        aria-label={headerText.openMenu}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => void openMenu()}
