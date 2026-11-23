@@ -253,7 +253,7 @@ Privacidad y términos en Markdown (`src/content/legal`). Indexables, enlazadas 
 
 | Vista | Ruta | Roles | Contenido |
 |---|---|---|---|
-| Login | `/admin/login` | — | Correo, contraseña, mensaje de bloqueo tras 5 intentos |
+| Login | `/admin/login` | — | Correo, contraseña, mensaje de demasiados intentos (5 por cuenta o 10 por IP, BD-077) |
 | Dashboard | `/admin` | todos | Cotizaciones nuevas, pendientes de ERP, solicitudes de escuelas y distribuidores, clics a tiendas y WhatsApp (7/30 días), última sincronización, accesos rápidos |
 | Productos | `/admin/productos` | admin, editor | Tabla con estado (publicado, borrador, inactivo en SAP), filtros por categoría |
 | Editar producto | `/admin/productos/[id]` | admin, editor | Tabs: General · Variantes (SKU y código de barras de SAP en solo lectura) · Especificaciones · Medidas · Empaques · Imágenes (subir, ordenar con arrastre, alt obligatorio) · Beneficios y usos · Relacionados · Preguntas · SEO (vista previa de Google) · Publicar |

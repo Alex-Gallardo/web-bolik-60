@@ -263,6 +263,7 @@ La fuente única de toasts y diálogos es `src/content/feedback.ts` (starter). E
 | Admin, login: título y h1 | Panel de Bolik |
 | Admin, login: campos y botón | Correo · Contraseña · Entrar |
 | Admin, login: datos incorrectos | El correo o la contraseña no coinciden |
+| Admin, login: demasiados intentos (cuenta bloqueada o límite por IP, BD-077) | Demasiados intentos fallidos · Por seguridad, espera 15 minutos antes de volver a intentarlo. Si olvidaste tu contraseña, pide a un administrador que la restablezca. |
 | Admin, login: sin base de datos | El panel no está disponible en este momento. Inténtalo más tarde. |
 | Admin, sin permiso | No tienes permiso para esa sección |
 | Admin, inicio provisional (BD-114) | Hola, {nombre} · Cerrar sesión |

@@ -10,7 +10,7 @@ import type { Role } from "./constants";
 export const ADMIN_COOKIE = "bolik_admin";
 /** 8 horas (docs/03 §8). */
 export const ADMIN_SESSION_SECONDS = 8 * 60 * 60;
-/** Bloqueo tras 5 intentos fallidos, por 15 minutos (feedback.admin.loginLocked). */
+/** Bloqueo de la cuenta: 5 intentos fallidos, 15 minutos (aviso: feedback.admin.loginLocked). */
 export const LOGIN_MAX_ATTEMPTS = 5;
 export const LOGIN_LOCK_MINUTES = 15;
 /**
