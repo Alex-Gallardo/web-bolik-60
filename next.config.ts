@@ -29,18 +29,32 @@ const csp = [
   ...(cspEnforced ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
-const securityHeaders = [
+/** En toda respuesta: nosniff importa en scripts y estilos; el referrer de una hoja de estilos
+ * rige lo que ella pide (fuentes). */
+const baseHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+];
+
+/**
+ * Solo en documentos (BD-047): el navegador no aplica CSP, Permissions-Policy, X-Frame-Options ni
+ * COOP a un .js, una fuente o una imagen, y ~0.8 KB por archivo pesaban en el JS que mide
+ * Lighthouse. En producción IIS sirve /_next/static y /media sin pasar por Next (docs/15 §4), así
+ * que tampoco las llevan: la CI mide lo mismo que recibe el visitante.
+ */
+const documentHeaders = [
   // Report-Only hasta validar en staging (BD-142); CSP_ENFORCE=true la vuelve obligatoria.
   {
     key: cspEnforced ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only",
     value: csp,
   },
-  { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), payment=(), geolocation=(self)" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
+
+/** Todo salvo los archivos estáticos (los que en producción sirve IIS). */
+const DOCUMENTS = "/((?!_next/static/|media/).*)";
 
 const noindex = (value: string) => [{ key: "X-Robots-Tag", value }];
 
@@ -81,7 +95,8 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: "/:path*", headers: securityHeaders },
+      { source: "/:path*", headers: baseHeaders },
+      { source: DOCUMENTS, headers: documentHeaders },
       { source: "/admin/:path*", headers: noindex("noindex, nofollow") },
       { source: "/styleguide/:path*", headers: noindex("noindex, nofollow") },
       { source: "/cotizacion/:path*", headers: noindex("noindex") },

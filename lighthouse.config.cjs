@@ -9,8 +9,9 @@
  * la corrida mediana.
  *
  * Cada ticket que publica una página agrega aquí su URL; los presupuestos de "el resto" ya aplican.
- * La ficha de producto entra en «el resto» (170 KB de JS desde BD-060).
- * Los KB de JS son transferidos (gzip + cabeceras): Next 16 + React 19 ya ocupan ~146 KB (docs/12 §2).
+ * La ficha de producto entra en «el resto» (165 KB de JS desde BD-047; 170 desde BD-060).
+ * Los KB de JS son transferidos (gzip + cabeceras): Next 16 + React 19 ocupan ~134 KB comprimidos más
+ * ~1 KB de cabeceras por archivo (docs/12 §2).
  */
 const PORT = "3100";
 const externalUrl = process.env.LHCI_BASE_URL;
@@ -66,9 +67,9 @@ module.exports = {
     assert: {
       assertMatrix: [
         {
-          // Home: ≥ 90 en rendimiento y JS ≤ 165 KB. LCP: guardia de regresión en 3.2 s (BD-055).
+          // Home: ≥ 90 en rendimiento y JS ≤ 160 KB. LCP: guardia de regresión en 3.2 s (BD-055).
           // El LCP es el texto del h1 y el navegador lo pinta a los ~0.5 s, pero la simulación de
-          // Lantern le carga todo lo pedido antes del primer pintado (~146 KB de Next/React, el JS
+          // Lantern le carga todo lo pedido antes del primer pintado (~140 KB de Next/React, el JS
           // de la página y las fuentes): da 2.9–3.2 s y ningún ajuste lo bajó de ahí (docs/12 §1).
           // La meta de 2.0 s es de campo (p75 móvil) y se mide con usuarios reales en BD-126.
           matchingUrlPattern: "^https?://[^/]+/$",
@@ -77,18 +78,18 @@ module.exports = {
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 200 }],
-            // BD-071 lo había subido a 165.5 KB; BD-073 sacó los mensajes del sistema de la pantalla de
-            // error (−3.9 KB en todas las páginas) y vuelve a 165 KB (docs/12 §2).
-            "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
+            // BD-047: 153.9 KB medidos (las cabeceras de documento ya no van en los .js); 160 KB deja
+            // margen para el archivo que suma la primera isla del admin (BD-115, docs/12 §2).
+            "resource-summary:script:size": ["error", { maxNumericValue: 160 * KB }],
           },
         },
         {
           // El resto (BD-060, decisiones del usuario): ≥ 90 en rendimiento, como la home (el puntaje
           // cae por el mismo LCP simulado); LCP con la misma guardia
           // de regresión de 3.2 s que la home (la meta de 2.0 s es de campo, BD-126: Lantern da
-          // ~3.0 s por el JS y las fuentes aunque se pinte a los ~0.4 s); JS ≤ 170 KB, porque la
-          // parte común (Next, React y el layout) ya ocupa ~160 KB en cualquier página. BD-047
-          // aligera el layout para volver a bajar el tope. Sin las fichas (abajo).
+          // ~3.0 s por el JS y las fuentes aunque se pinte a los ~0.4 s); JS ≤ 165 KB: la parte común
+          // (Next, React y el layout) ocupa ~150 KB en cualquier página y /productos mide 158.3 KB
+          // (BD-047; antes 170). Sin las fichas (abajo).
           matchingUrlPattern:
             "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion$)(?!buscar(?:$|\\?)).+",
           assertions: {
@@ -96,7 +97,7 @@ module.exports = {
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
-            "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
           },
         },
         {
@@ -110,14 +111,14 @@ module.exports = {
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
-            "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
           },
         },
         {
           // /cotizacion (BD-072): noindex a propósito (página de utilidad, docs/10 §3): la auditoría
-          // «se puede indexar» y el puntaje de SEO no aplican. JS ≤ 186 KB (decisión del usuario,
-          // 18 nov 2026): la parte común ya ocupa ~166 KB y la lista con su formulario suma ~18 KB
-          // aun con `zod/mini` descargado al interactuar. BD-047 lo devuelve a 170 KB.
+          // «se puede indexar» y el puntaje de SEO no aplican. JS ≤ 178 KB (BD-072 lo subió a 186; BD-047
+          // midió 173.6): la lista con su formulario suma ~15 KB a la parte común aun con `zod/mini`
+          // descargado al interactuar.
           matchingUrlPattern: "^https?://[^/]+/cotizacion$",
           assertions: {
             ...common,
@@ -126,7 +127,7 @@ module.exports = {
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
-            "resource-summary:script:size": ["error", { maxNumericValue: 186 * KB }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 178 * KB }],
           },
         },
         {
@@ -140,10 +141,10 @@ module.exports = {
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3500 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
-            // JS ≤ 170 KB otra vez desde BD-073 (BD-071 lo había subido a 172.5). Las 26 peticiones
-            // siguen (desde BD-071): Turbopack separa el mapa de import() del layout en otro archivo;
-            // BD-047 lo devuelve a 25 (docs/12 §2).
-            "resource-summary:script:size": ["error", { maxNumericValue: 170 * KB }],
+            // JS ≤ 165 KB como el resto (161.0 medidos en BD-047). Las 26 peticiones siguen (desde
+            // BD-071): Turbopack separa el mapa de import() del layout en otro archivo y aligerar el
+            // layout no lo devolvió al chunk común (BD-047, docs/12 §2).
+            "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
             "resource-summary:total:count": ["error", { maxNumericValue: 26 }],
           },
         },

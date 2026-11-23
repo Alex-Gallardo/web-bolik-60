@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type ComponentType, type MouseEvent } from "react";
 import { OnRouteChange } from "@/components/motion/on-route-change";
 import type { SearchDialogProps } from "@/components/search/search-dialog";
-import { ui } from "@/content/ui";
+import { headerText } from "@/content/header";
 
 /** ¿Escribiendo en un campo? Ahí «/» es una barra, no el atajo. */
 const typingIn = (target: EventTarget | null) =>
@@ -40,7 +40,7 @@ export function SearchLink({ whatsappUrl }: { whatsappUrl: string | null }) {
         ?.focus();
       return;
     }
-    if (window.location.pathname === ui.header.search.href) {
+    if (window.location.pathname === headerText.search.href) {
       document.querySelector<HTMLInputElement>('main input[type="search"]')?.focus();
       return;
     }
@@ -52,7 +52,7 @@ export function SearchLink({ whatsappUrl }: { whatsappUrl: string | null }) {
       setOpenState(true);
     } catch {
       // Sin red o archivos de otro despliegue: /buscar funciona sin JS.
-      window.location.assign(ui.header.search.href);
+      window.location.assign(headerText.search.href);
     }
   };
 
@@ -80,7 +80,7 @@ export function SearchLink({ whatsappUrl }: { whatsappUrl: string | null }) {
   const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
-    if (window.location.pathname === ui.header.search.href) return;
+    if (window.location.pathname === headerText.search.href) return;
     event.preventDefault();
     void openSearch();
   };
@@ -94,9 +94,9 @@ export function SearchLink({ whatsappUrl }: { whatsappUrl: string | null }) {
     <>
       <Link
         ref={link}
-        href={ui.header.search.href as Route}
+        href={headerText.search.href as Route}
         prefetch={false}
-        aria-label={ui.header.search.label}
+        aria-label={headerText.search.label}
         aria-haspopup="dialog"
         aria-keyshortcuts="/ Control+K Meta+K"
         data-event="search_open"

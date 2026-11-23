@@ -159,6 +159,9 @@ Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowe
         <clientCache cacheControlMode="UseMaxAge" cacheControlMaxAge="365.00:00:00" cacheControlCustom="public, immutable" />
         <remove fileExtension=".woff2" /><mimeMap fileExtension=".woff2" mimeType="font/woff2" />
       </staticContent>
+      <httpProtocol>
+        <customHeaders><add name="X-Content-Type-Options" value="nosniff" /></customHeaders>
+      </httpProtocol>
     </system.webServer>
   </location>
   <location path="media">
@@ -169,6 +172,9 @@ Add-WebConfigurationProperty -pspath $p -filter 'system.webServer/rewrite/allowe
         <remove fileExtension=".avif" /><mimeMap fileExtension=".avif" mimeType="image/avif" />
         <remove fileExtension=".mp4" /><mimeMap fileExtension=".mp4" mimeType="video/mp4" />
       </staticContent>
+      <httpProtocol>
+        <customHeaders><add name="X-Content-Type-Options" value="nosniff" /></customHeaders>
+      </httpProtocol>
     </system.webServer>
   </location>
 </configuration>
@@ -250,6 +256,8 @@ Se definen en `next.config.ts` (`headers()`), salvo HSTS que pone IIS:
 | `Permissions-Policy` | `camera=(), microphone=(), payment=(), geolocation=(self)` |
 | `X-Frame-Options` | `DENY` (además de `frame-ancestors 'none'`) |
 | `Cross-Origin-Opener-Policy` | `same-origin` |
+
+`X-Content-Type-Options` y `Referrer-Policy` las pone Next en toda respuesta. La CSP, `Permissions-Policy`, `X-Frame-Options` y COOP, solo en documentos: fuera de `/_next/static/*` y `/media/*` (BD-047). El navegador no las aplica a un script, una fuente o una imagen, y en cada `.js` sumaban ~0.8 KB. En producción esas dos rutas las sirve IIS sin pasar por Next (§4): el `web.config` les agrega `nosniff` (su `<location>`); `Referrer-Policy` no hace falta ahí, porque su valor es el que el navegador ya usa por defecto. `humo.spec.ts` comprueba las cabeceras en la CI. Next compara esas rutas sin distinguir mayúsculas: sin IIS, `/MEDIA/x` responde su 404 sin CSP (página estática, sin riesgo); en producción IIS atrapa esas rutas antes.
 
 CSP:
 
