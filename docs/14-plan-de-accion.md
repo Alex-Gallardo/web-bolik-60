@@ -71,6 +71,8 @@ Si solo hay una persona, la decisión (de Gerencia, no del desarrollador) es: su
 | lun 11 ene | **Lanzamiento** | Runbook del doc 16 |
 | vie 22 ene | Fin del hipercuidado | Reporte de cierre (BD-153) |
 
+**Estado (23 nov 2026, release v0.3.0):** los hitos del 20 nov y del 4 dic están cumplidos en `develop` y en `master` (v0.2.0 y v0.3.0), con Lighthouse móvil ≥ 90 en CI. Las verificaciones «en staging» siguen pendientes: staging (BD-016) espera a TI (servidor, DNS, certificado y base `BolikDigital_Stg`).
+
 ## 4. Mapa del plan
 
 ```mermaid
