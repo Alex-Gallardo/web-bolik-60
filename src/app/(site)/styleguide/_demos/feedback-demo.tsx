@@ -257,6 +257,35 @@ export function FeedbackDemo({ productName, storeName }: FeedbackDemoProps) {
       ),
     },
     {
+      action: "Mensaje de contacto",
+      type: "Dialog",
+      textKey: "forms.contactSent",
+      demo: (
+        <Button
+          variant="outline"
+          onClick={() => dialog(feedback.forms.contactSent, { kind: "success" })}
+        >
+          Ver diálogo de contacto
+        </Button>
+      ),
+    },
+    {
+      action: "Error al enviar una solicitud o un mensaje",
+      type: "Dialog",
+      textKey: "forms.failed",
+      demo: (
+        <Button
+          variant="outline"
+          onClick={() => {
+            const { title, body, primary, secondary } = feedback.forms.failed;
+            dialog({ title, body, primary, secondary }, { kind: "error" });
+          }}
+        >
+          Ver error de solicitud
+        </Button>
+      ),
+    },
+    {
       action: "Abrir WhatsApp",
       type: "Sheet",
       textKey: "whatsapp.opened",

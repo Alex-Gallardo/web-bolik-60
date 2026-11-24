@@ -69,3 +69,68 @@ export const quoteMail = {
   /** Celda sin dato. */
   empty: "—",
 } as const;
+
+/**
+ * Correos de las solicitudes de escuelas, distribuidores y contacto (BD-076, doc 17 §8: «mismo
+ * patrón» que la cotización, con los plazos de feedback.ts). Solo servidor:
+ * server/mail/request-emails.ts. Contacto no lleva acuse (sin folio; nadie lo usa para mandar
+ * correos a terceros).
+ */
+export const requestMail = {
+  received: quoteMail.sales.received,
+  fieldsTitle: "Datos de la solicitud",
+  adminButton: quoteMail.sales.adminButton,
+  /** El pie de la cotización en dos partes: la segunda, solo si el visitante dejó correo. */
+  footer: "Correo automático de bolik66.com.",
+  footerReply: "Responder este correo le escribe al cliente.",
+  empty: quoteMail.empty,
+  greeting: quoteMail.ack.greeting,
+  greetingNoName: quoteMail.ack.greetingNoName,
+  whatsapp: quoteMail.ack.whatsapp,
+  closing: quoteMail.ack.closing,
+  school: {
+    subject: (folio: string, school: string, department: string) =>
+      `Nueva solicitud de visita ${folio} · ${school} · ${department}`,
+    heading: (folio: string) => `Nueva solicitud de visita ${folio}`,
+    fields: {
+      schoolName: "Colegio",
+      level: "Nivel",
+      students: "Alumnos aproximados",
+      department: "Departamento",
+      municipality: "Municipio",
+      name: "Nombre",
+      phone: "Teléfono",
+      email: "Correo",
+      preferredMonth: "Mes preferido",
+    },
+    ackSubject: (folio: string) => `Recibimos tu solicitud de visita ${folio}`,
+    ackReceived: (folio: string, school: string) =>
+      `Recibimos tu solicitud de visita ${folio} para ${school}. Te llamaremos en los próximos 3 días hábiles para agendar la visita.`,
+    /** Si el nombre del colegio parece un enlace (abuso del acuse), en su lugar. */
+    ackSchoolFallback: "tu escuela",
+  },
+  distributor: {
+    subject: (folio: string, type: string, department: string) =>
+      `Nueva solicitud de distribuidor ${folio} · ${type} · ${department}`,
+    heading: (folio: string) => `Nueva solicitud de distribuidor ${folio}`,
+    fields: {
+      businessName: "Negocio",
+      businessType: "Tipo",
+      nit: "NIT",
+      department: "Departamento",
+      municipality: "Municipio",
+      name: "Nombre",
+      phone: "Teléfono",
+      email: "Correo",
+    },
+    ackSubject: (folio: string) => `Recibimos tu solicitud de distribuidor ${folio}`,
+    ackReceived: (folio: string) =>
+      `Recibimos tu solicitud de distribuidor ${folio}. Está en revisión: te responderemos en un máximo de 5 días hábiles.`,
+  },
+  contact: {
+    subject: (subject: string) => `Nuevo mensaje de contacto · ${subject}`,
+    heading: "Nuevo mensaje de contacto",
+    fields: { subject: "Asunto", name: "Nombre", phone: "Teléfono", email: "Correo" },
+    messageTitle: "Mensaje",
+  },
+} as const;

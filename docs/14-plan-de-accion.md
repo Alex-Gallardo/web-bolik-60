@@ -1033,7 +1033,7 @@ La parte común del sitio (Next, React y el layout) ocupa ~160 KB en cualquier p
 - **Islas del header:** importan sus textos de `content/header.ts` (`ui.header` y `ui.lines` siguen existiendo para el servidor) y el contador no usa `cx`: −1 KB en el archivo del layout.
 - **Resultado (Lighthouse, transferido):** home 162.2 → 153.9 KB; `/productos` y categoría 166.9 → 158.3; ficha 169.1 → 161.0 (26 peticiones); `/buscar` 169.1 → 160.6; `/cotizacion` 182.6 → 173.6; 404 ~140 KB. **Topes nuevos:** home 160 KB, resto y ficha 165 KB, `/cotizacion` 178 KB (docs/12 §2, CLAUDE.md, `lighthouse.config.cjs`).
 - **Desvíos de los criterios (aceptados por el usuario, 23 nov 2026):** `/cotizacion` no llega a 170 KB (queda en 178 con margen); la ficha sigue en 26 peticiones (el mapa de `import()` del layout no volvió al chunk común); rendimiento ≥ 0.95 en `/productos` (0.98), categoría y `/buscar` (0.95), pero no en `/cotizacion` (0.94) ni la ficha (0.93): el tope sigue en 0.90.
-- **Margen para BD-115** (medido con una isla temporal, no subida): una isla del admin sin Server Actions no cambia el JS público. Una que llama a una Server Action desde el cliente (`useActionState`) saca el cliente de Flight de React (~7.6 KB del framework) a un archivo compartido: +0.3 KB y una petición más en cada página pública. Los topes de KB lo absorben; el de peticiones de la ficha (26) no.
+- **Margen para BD-115** (medido con una isla temporal, no subida): una isla del admin sin Server Actions no cambia el JS público. Una que llama a una Server Action desde el cliente (`useActionState`) saca el cliente de Flight de React (~7.6 KB del framework) a un archivo compartido: +0.3 KB y una petición más en cada página pública. Los topes de KB lo absorben; el de peticiones de la ficha (26) no. *Actualizado en BD-076:* los formularios públicos ya provocaron esa separación y la ficha admite 27 peticiones (decisión del usuario); para BD-115 no suma nada más.
 
 #### BD-048 · Header sin desborde entre 1024 y 1280 px
 
@@ -1766,11 +1766,25 @@ Mismo patrón, distinto destino.
 
 **Criterios de aceptación**
 
-- [ ] Cada formulario muestra su diálogo de éxito.
-- [ ] Registros visibles en el admin.
-- [ ] Un bot que llena el campo trampa recibe éxito falso y no se guarda (de BD-077).
+- [x] Cada formulario muestra su diálogo de éxito.
+- [ ] ~~Registros visibles en el admin.~~ Pasa a BD-120 (decisión del usuario, 24 nov 2026): las bandejas llegan con ese ticket; aquí cada solicitud queda en su tabla (prueba de integración).
+- [x] Un bot que llena el campo trampa recibe éxito falso y no se guarda (de BD-077).
 
 *Nota de BD-077:* el antiabuso ya es compartido. En cada acción: `checkFormMeta(meta)` (`lib/form-guard.ts`: `bot` o `tooFast`), `formRateLimiter("school" | "distributor" | "contact").take(ipHash)` (`server/rate-limit.ts`) antes de tocar la base y `release()` si el envío no se guarda, y la cuenta por IP de su tabla (`ipHash`, 5 en 10 min, `FORM_GUARD`) repetida al guardar. Campo trampa lleno: **éxito falso sin guardar** (criterio de BD-077). En contacto no hay folio; escuelas y distribuidores sí lo tienen (ESC, DIS): decidir en este ticket si el éxito falso muestra un folio inventado o se responde «no se pudo», como la cotización (BD-077 explica por qué ahí se eligió lo segundo).
+
+**Implementado (BD-076)**
+
+- **Decisiones del usuario (24 nov 2026):**
+  - Campo trampa lleno: éxito falso en los tres, sin guardar ni correos y con un aviso en el log. En escuelas y distribuidores el diálogo muestra un folio inventado con formato válido (`fakeFolio`, sin gastar el consecutivo).
+  - Distribuidor según doc 17: NIT opcional (`DistributorApplication.nit`, sin guion), tipos Librería, Tienda, Distribuidor y Otro; `branches` y `monthlyVolume` pasan a opcionales (migración `formularios_solicitudes`, con índices `[ipHash, createdAt]` en las tres tablas).
+  - Asuntos de contacto de doc 17 (`CONTACT_SUBJECTS`). Teléfono y correo, al menos uno, en los tres.
+  - «Registros visibles en el admin» pasa a BD-120. Textos nuevos aprobados en docs/17 §4, §5 y §8.
+- **Servidor:** `submitSchoolVisit`, `submitDistributor` y `submitContact` (`features/<dominio>/actions.ts`) usan `submitGuardedForm` (`server/form-submit.ts`): campo trampa, tiempo mínimo, el esquema de `zod/mini` del formulario, `formRateLimiter` antes de la base (devuelve el cupo si no se guarda) y la cuenta por IP de la base. `server/data/form-requests.ts` guarda en SQL Server (folio ESC o DIS en la misma transacción, y la cuenta de 5 en 10 min dentro de ella) o en memoria con `fixtures`. Contacto no tiene folio que ponga en fila a los envíos: su cuenta toma un bloqueo de rango sobre las filas de la IP (`UPDLOCK, HOLDLOCK`) hasta el commit. Con `rateLimited` de la base (tras un reinicio) el cupo en memoria no se devuelve: la memoria se pone al día y los siguientes intentos no consultan la base.
+- **Correos** (`server/mail/request-emails.ts` y `send-request-emails.ts`, con after()): escuelas a `MAIL_SCHOOLS_TO`, distribuidores a `MAIL_DISTRIBUTORS_TO` (sin ellas, `MAIL_SALES_TO`), contacto a `MAIL_SALES_TO`. Acuse en escuelas y distribuidores con el tope de la cotización (2 por dirección en 24 h); contacto sin acuse. El marco HTML pasó a `server/mail/layout.ts`, compartido con la cotización (sus correos no cambian). El botón «Abrir en el admin» lleva a `/admin/escuelas|distribuidores|mensajes/{id}` (BD-120).
+- **Formularios:** `components/forms/use-request-form.ts` es el comportamiento común (el de la cotización, sin borrador): valida al salir de cada campo y al enviar, foco en el primer error, campo trampa y tiempo de llenado, y los avisos `tooFast`, `rateLimited` y `failed`/`contactFailed` con reintento y WhatsApp. El esquema llega al primer uso. Con el campo trampa lleno (un bot con navegador) el éxito falso no manda el evento de conversión. El pie de los correos internos promete «Responder este correo le escribe al cliente» solo si el visitante dejó correo. `school-visit-form.tsx` (diálogo festivo con confeti), `distributor-form.tsx` y `contact-form.tsx` solo pintan sus campos; al enviar, `school_request_submit`, `distributor_submit` y `contact_submit` (docs/12 §4). Se ven en `/styleguide/formularios` hasta que las páginas los monten.
+- **Presupuesto (decisión del usuario, 24 nov 2026):** llamar a las Server Actions desde el navegador separa el cliente de Flight de React del chunk común (lo anticipaba BD-047): una petición más en cada página pública con el JS casi igual. La ficha admite 27 peticiones (`lighthouse.config.cjs`, docs/12 §2). Cargar la acción con `import()` al enviar no lo evitaba; los route handlers se descartaron.
+- **Fuera de alcance (revisor):** la cotización tiene dos detalles que aquí se corrigieron y allá no: su pie promete responder al cliente aunque no haya dejado correo, y devuelve el cupo en memoria cuando la base dice `rateLimited`. Las bandejas de BD-120 pueden pasar `departmentId` a `form-requests.ts` (hoy el departamento se busca dos veces, como en la cotización).
+- **Pruebas:** unitarias de las piezas de `form-schemas-mini.ts`, los tres esquemas, `submitGuardedForm` (trampa, tiempo, límite, cupo), las acciones, los correos y su envío, y la memoria; integración contra SQL Server (`tests/integration/forms.test.ts`: folios consecutivos, NIT, contacto, trampa, el sexto envío tras reiniciar la memoria y ráfagas de 10 escuelas y de 10 mensajes que guardan 5); E2E (`tests/e2e/formularios.spec.ts`: axe, errores, los tres caminos felices con su diálogo y evento, confeti en escuelas, trampa y correos en la bandeja de prueba).
 
 #### BD-077 · Anti-spam compartido
 
@@ -2162,6 +2176,8 @@ Página con estilo infantil y formulario de visita.
 2. Actividades desde `SchoolActivity`.
 3. Formulario de visita (BD-076).
 
+*Nota de BD-076:* montar `<SchoolVisitForm departments whatsappUrl />` (`components/schools/school-visit-form.tsx`) con `listDepartments()` y el enlace general de WhatsApp, como `/styleguide/formularios`; el aviso sin JavaScript de doc 17 §5 va en la página. Al crearla, quitarlo de la vitrina o dejarlo como ejemplo.
+
 **Criterios de aceptación**
 
 - [ ] Animaciones lúdicas (A-50…) solo con transform/opacity.
@@ -2180,6 +2196,8 @@ Información para librerías y solicitud de distribuidor.
 **Pasos**
 
 1. Empaques y ventajas, pasos para ser distribuidor, formulario.
+
+*Nota de BD-076:* el formulario es `<DistributorForm departments whatsappUrl />` (`components/forms/distributor-form.tsx`), dentro de `#distribuidor` con el título y el texto de `distributorForm` (`content/forms.ts`); el aviso sin JavaScript va en la página.
 
 **Criterios de aceptación**
 
@@ -2276,6 +2294,8 @@ Datos de contacto y formulario.
 **Pasos**
 
 1. Mapa estático (imagen), horarios, teléfono, WhatsApp, formulario.
+
+*Nota de BD-076:* el formulario es `<ContactForm whatsappUrl />` (`components/forms/contact-form.tsx`); el aviso sin JavaScript va en la página.
 
 **Criterios de aceptación**
 
@@ -2437,6 +2457,9 @@ Mismo patrón que cotizaciones.
 **Criterios de aceptación**
 
 - [ ] Estados y exportación funcionan en las 3 bandejas.
+- [ ] Los registros de los formularios (escuelas, distribuidores, contacto) se ven en su bandeja (de BD-076).
+
+*Nota de BD-076:* las tablas son `SchoolVisitRequest`, `DistributorApplication` (con `nit`; `branches` y `monthlyVolume` quedan vacíos desde la web) y `ContactMessage`. Los correos internos ya enlazan a `/admin/escuelas/{id}`, `/admin/distribuidores/{id}` y `/admin/mensajes/{id}` (`adminRequestUrl`).
 
 #### BD-121 · Contenido, apariencia y ajustes
 

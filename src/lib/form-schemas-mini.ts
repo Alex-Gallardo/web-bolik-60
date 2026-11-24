@@ -8,6 +8,8 @@ import {
   pipe,
   refine,
   email,
+  enum as zEnum,
+  regex,
   safeParse,
   type core,
 } from "zod/mini";
@@ -65,6 +67,87 @@ export const optionalEmail = optional(
     emptyToUndefined,
   ),
 );
+
+/**
+ * NIT opcional (BD-076): vacío es undefined; si se escribe, "CF" o dígitos con su verificador (0-9 o
+ * K), con o sin guion, como `nit` de lib/form-schemas.ts. Se guarda sin espacios ni guion: "1234567K".
+ */
+export const optionalNit = optional(
+  pipe(
+    pipe(
+      text().check(trim()),
+      transform((value: string) => value.toUpperCase().replace(/[\s-]/g, "")),
+    ),
+    pipe(
+      string().check(
+        refine((value) => value === "" || value === "CF" || /^\d{1,12}[\dK]$/.test(value), {
+          error: errors.nit,
+        }),
+      ),
+      emptyToUndefined,
+    ),
+  ),
+);
+
+/**
+ * Número entero opcional de 1 a `max` (BD-076, «Alumnos aproximados»): llega como texto del
+ * formulario; vacío es undefined. Solo dígitos (con separador de miles), nada de "1e3" ni "-5".
+ */
+export const optionalCount = (max: number) =>
+  optional(
+    pipe(
+      text().check(
+        trim(),
+        refine((value) => {
+          if (value === "") return true;
+          const digits = value.replace(/[,\s]/g, "");
+          return /^\d+$/.test(digits) && Number(digits) >= 1 && Number(digits) <= max;
+        }, errors.count(max)),
+      ),
+      transform((value) => (value === "" ? undefined : Number(value.replace(/[,\s]/g, "")))),
+    ),
+  );
+
+/** Una opción de la lista: lo que no sea una de ellas pide el dato. */
+export const requiredChoice = <const T extends readonly [string, ...string[]]>(values: T) =>
+  zEnum(values, { error: errors.required });
+
+/** Una opción opcional: "" (sin elegir) es undefined. */
+export const optionalChoice = <const T extends readonly [string, ...string[]]>(values: T) =>
+  optional(
+    pipe(
+      text().check(
+        refine(
+          (value) => value === "" || (values as readonly string[]).includes(value),
+          errors.required,
+        ),
+      ),
+      transform((value) => (value === "" ? undefined : (value as T[number]))),
+    ),
+  );
+
+/** Slug de un departamento; que exista lo comprueba la Server Action. */
+export const departmentSlug = requiredText(40).check(
+  regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, errors.required),
+);
+
+/**
+ * Errores por campo (el primero de cada uno), para pintarlos junto a su control. Lo usan el
+ * formulario (al salir de cada campo y al enviar) y la Server Action (para devolverlos).
+ */
+export function fieldErrors<F extends string>(
+  schema: core.$ZodType,
+  values: unknown,
+): Partial<Record<F, string>> {
+  const result = safeParse(schema, values);
+  if (result.success) return {};
+  const byField: Partial<Record<F, string>> = {};
+  for (const issue of result.error.issues) {
+    const field = issue.path[0] as F | undefined;
+    if (typeof field === "string" && !byField[field]) byField[field] = issue.message;
+  }
+  return byField;
+}
 
 /** Al menos un teléfono o un correo: el aviso va en los dos campos. */
 export function requirePhoneOrEmail(

@@ -1,5 +1,6 @@
 import "server-only";
 import { env } from "@/env";
+import { ACK_GUARD } from "@/lib/form-guard";
 import { publicEnv } from "@/env.public";
 import { getSiteSettings } from "@/server/data/content";
 import { countRecentQuotesByEmail, markQuoteEmailSent } from "@/server/data/quote-requests";
@@ -11,11 +12,8 @@ import { sendMail } from "./transport";
 export const adminQuoteUrl = (quoteId: number) =>
   `${publicEnv.siteUrl.replace(/\/$/, "")}/admin/cotizaciones/${quoteId}`;
 
-/**
- * Acuses por dirección en 24 h (contando esta cotización): quien quiera usar el formulario para
- * mandar correos a terceros desde web@bolik66.com no pasa de aquí. Ventas recibe todas igual.
- */
-export const ACK_GUARD = { maxPerEmail: 2, windowMs: 24 * 60 * 60_000 } as const;
+/** Tope de acuses por dirección (vive en lib/form-guard.ts desde BD-076). */
+export { ACK_GUARD };
 
 /**
  * Manda los correos de una cotización ya guardada (BD-074): el interno a Ventas (ajuste

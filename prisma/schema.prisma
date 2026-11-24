@@ -435,7 +435,7 @@ model SchoolVisitRequest {
   folio          String      @unique @db.VarChar(20) // ESC-2027-000045
   status         String      @default("nueva") @db.VarChar(20) // nueva | agendada | realizada | descartada | spam
   schoolName     String      @db.NVarChar(160)
-  level          String      @db.VarChar(30)
+  level          String      @db.VarChar(30) // preprimaria | primaria | basicos | diversificado
   studentsApprox Int?
   departmentId   Int?
   department     Department? @relation(fields: [departmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -443,7 +443,7 @@ model SchoolVisitRequest {
   contactName    String      @db.NVarChar(120)
   phone          String?     @db.VarChar(30)
   email          String?     @db.NVarChar(160)
-  preferredMonth String?     @db.VarChar(20)
+  preferredMonth String?     @db.VarChar(20) // enero … diciembre
   notes          String?     @db.NVarChar(2000)
   utmSource      String?     @db.VarChar(80)
   ipHash         String?     @db.VarChar(64)
@@ -451,6 +451,8 @@ model SchoolVisitRequest {
   updatedAt      DateTime    @updatedAt
 
   @@index([status, createdAt])
+  // BD-076: el límite de envíos por IP cuenta las solicitudes recientes de un mismo hash.
+  @@index([ipHash, createdAt])
 }
 
 model DistributorApplication {
@@ -458,9 +460,11 @@ model DistributorApplication {
   folio         String      @unique @db.VarChar(20) // DIS-2027-000012
   status        String      @default("nueva") @db.VarChar(20) // nueva | en_revision | aprobada | rechazada | spam
   businessName  String      @db.NVarChar(160)
-  businessType  String      @db.VarChar(30) // libreria | distribuidora | supermercado | otro
-  branches      String      @db.VarChar(20) // "1" | "2-5" | "6-20" | "20+"
-  monthlyVolume String      @db.VarChar(40)
+  businessType  String      @db.VarChar(30) // libreria | tienda | distribuidor | otro
+  // BD-076: el formulario de doc 17 pide NIT (opcional) y no pregunta sucursales ni volumen.
+  nit           String?     @db.VarChar(20) // "CF" o los dígitos con su verificador, sin guion
+  branches      String?     @db.VarChar(20) // "1" | "2-5" | "6-20" | "20+"
+  monthlyVolume String?     @db.VarChar(40)
   currentBrands String?     @db.NVarChar(300)
   departmentId  Int?
   department    Department? @relation(fields: [departmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -474,6 +478,7 @@ model DistributorApplication {
   updatedAt     DateTime    @updatedAt
 
   @@index([status, createdAt])
+  @@index([ipHash, createdAt]) // BD-076
 }
 
 model ContactMessage {
@@ -482,12 +487,13 @@ model ContactMessage {
   name      String   @db.NVarChar(120)
   email     String?  @db.NVarChar(160)
   phone     String?  @db.VarChar(30)
-  subject   String   @db.VarChar(30) // productos | mayoreo | escuelas | empresas | otro
+  subject   String   @db.VarChar(30) // productos | cotizacion | escuelas | distribucion | otro
   message   String   @db.NVarChar(3000)
   ipHash    String?  @db.VarChar(64)
   createdAt DateTime @default(now())
 
   @@index([status, createdAt])
+  @@index([ipHash, createdAt]) // BD-076
 }
 
 model FolioSequence {

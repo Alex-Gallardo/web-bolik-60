@@ -13,6 +13,7 @@ Piezas de interfaz. Un componente por archivo (`kebab-case.tsx`, exporta `Pascal
 | `quote/`    | Drawer, botón y formulario de cotización                                       |
 | `stores/`   | Lista y mapa (diferido) de tiendas                                             |
 | `schools/`  | Actividades, formulario y decoración de escuelas                               |
+| `forms/`    | Hook común y formularios de distribuidor y contacto (BD-076)                   |
 | `whatsapp/` | Botón flotante y hoja de WhatsApp                                              |
 | `icons/`    | Logo e íconos SVG                                                              |
 | `admin/`    | Tablas, campos y cargador de imágenes del panel                                |

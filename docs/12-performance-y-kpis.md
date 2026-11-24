@@ -33,7 +33,7 @@ El JS propio de la home pesa poco (reproductor de video y contador: 3.8 KB; layo
 |---|---|---|---|---|---|
 | Inicio | ≤ 160 KB | ≤ 25 KB | Póster ≤ 120 KB | 2 familias, ≤ 4 archivos woff2 | ≤ 25 |
 | Catálogo / categoría | ≤ 165 KB | ≤ 25 KB | ≤ 6 tarjetas × 25 KB | 2 familias | ≤ 25 |
-| Ficha | ≤ 165 KB | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 26 (BD-071) |
+| Ficha | ≤ 165 KB | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 27 (BD-071, BD-076) |
 | Mi cotización (`/cotizacion`) | ≤ 178 KB (BD-072, BD-047) | ≤ 25 KB | — | 2 familias | ≤ 25 |
 | Dónde comprar | ≤ 165 KB (+ mapa diferido ≤ 60 KB) | ≤ 25 KB (+ CSS de Leaflet diferido) | — | 2 familias | ≤ 25 |
 | Escuelas | ≤ 165 KB | ≤ 25 KB | ≤ 150 KB | 3 familias (incluye Baloo 2) | ≤ 28 |
@@ -49,6 +49,8 @@ El JS propio de la home pesa poco (reproductor de video y contador: 3.8 KB; layo
 | `/cotizacion` | 182.6 KB | 173.6 KB | 178 KB (antes 186) |
 
 El 404 (sin código propio, fuera de Lighthouse CI) queda en ~140 KB. Rendimiento (mejor de 3 corridas locales): `/productos` 0.98, categoría y `/buscar` 0.95, `/cotizacion` 0.94, ficha 0.93: el tope sigue en 0.90 porque la ficha y `/cotizacion` no llegan a 0.95 en todas las corridas. Las 26 peticiones de la ficha siguen: el mapa de `import()` del layout no volvió al chunk común.
+
+**Formularios públicos con Server Actions (BD-076, 24 nov 2026).** Pasó lo que anticipaba la nota siguiente: los formularios de escuelas, distribuidores y contacto llaman a su Server Action desde el navegador, y Turbopack sacó el cliente de Flight de React del chunk común a su propio archivo (en develop iba dentro de un chunk de 166 KB; ahora son 138 + 28.5 KB sin comprimir). Comparado con un build de develop: una petición más en cada página pública, con el JS casi igual (ficha 161.8 KB, `/cotizacion` 174.7 KB, confirmación 154.6 KB, home 154.6 KB). Cargar la acción con `import()` al enviar no lo evita. Decisión del usuario: la ficha admite 27 peticiones (categoría, 25; el resto, menos). La alternativa descartada era enviar por `fetch` a route handlers en vez de Server Actions (fuera de la convención de CLAUDE.md). Para BD-115 ya no cuesta nada más: el archivo ya está separado.
 
 **Primera isla cliente del admin (medido en BD-047 para BD-115).** Una isla del admin sin Server Actions (botón, avisos, `next/link`) no cambia el JS público. Una que llama a una Server Action desde el cliente (`useActionState`, como el primer login de BD-114) hace que Turbopack saque el cliente de Flight de React (~7.6 KB, código del framework) a su propio archivo compartido: **+0.3 KB y una petición más en cada página pública** (~1.5 KB en Lighthouse). Los topes de KB ya tienen margen para eso; el de peticiones no (la ficha pasaría a 27, el resto a ≤ 25 sigue cabiendo): BD-115 decide entre formularios del admin que envían sin isla (`<form action={…}>` desde el servidor, como el login actual) o subir ese tope.
 
@@ -103,7 +105,7 @@ Verificación: `pnpm analyze` (bundle analyzer) y `pnpm lhci` con las aserciones
 
 ## 4. Analítica: eventos (GA4)
 
-Nombres en `snake_case`. Implementación en `src/features/analytics/track.ts` con una función `track(event, params)` que envía a GA4 y, para clics salientes, también a `/api/beacon` (tabla `OutboundClick`) con `navigator.sendBeacon`. Desde BD-075 existe en su versión mínima: deja el evento en `window.dataLayer` (sin scripts ni red); BD-125 conecta GA4 a esa cola. Ya se manda `quote_submit`.
+Nombres en `snake_case`. Implementación en `src/features/analytics/track.ts` con una función `track(event, params)` que envía a GA4 y, para clics salientes, también a `/api/beacon` (tabla `OutboundClick`) con `navigator.sendBeacon`. Desde BD-075 existe en su versión mínima: deja el evento en `window.dataLayer` (sin scripts ni red); BD-125 conecta GA4 a esa cola. Ya se manda `quote_submit`, y desde BD-076 `school_request_submit`, `distributor_submit` y `contact_submit`.
 
 | Evento | Cuándo | Parámetros |
 |---|---|---|

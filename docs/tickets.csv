@@ -267,7 +267,7 @@ BD-075,E6,Cotización y formularios,Confirmación de envío,S3,0.5,Must,A,BD-073
 - Evento `quote_submit`.",Sí
 BD-076,E6,Cotización y formularios,"Formularios de escuelas, distribuidores y contacto",S3,1,Must,B,BD-073,06,"Mismo patrón, distinto destino.","1. Server actions `submitSchoolVisit`, `submitDistributor`, `submitContact` reutilizando validación y anti-spam.
 2. Folios ESC y DIS; correo a la bandeja correspondiente.","- Cada formulario muestra su diálogo de éxito.
-- Registros visibles en el admin.
+- ~~Registros visibles en el admin.~~ Pasa a BD-120 (decisión del usuario, 24 nov 2026): cada solicitud queda en su tabla.
 - Un bot que llena el campo trampa recibe éxito falso y no se guarda (de BD-077).",Sí
 BD-077,E6,Cotización y formularios,Anti-spam compartido,S3,0.5,Must,B,BD-073,03 §8,Proteger formularios sin captcha molesto.,"1. `server/rate-limit.ts`: 5 envíos/10 min por hash de IP (memoria + respaldo en BD).
 2. Honeypot y tiempo mínimo de 3 s.","- El sexto envío en 10 min recibe un mensaje amable.
@@ -357,7 +357,8 @@ BD-118,E11,Panel administrativo,Tiendas,S4,1,Must,B,BD-115,06 §4,Mantener el lo
 BD-119,E11,Panel administrativo,Bandeja de cotizaciones,S3,1.5,Must,B,BD-115 BD-073,"06 §4, 07 §2.9",Ventas atiende cotizaciones desde un solo lugar.,"1. Tabla por estado con filtros; detalle con líneas; asignar, cambiar estado, notas.
 2. Reintentar envío a SAP; exportar CSV.","- Cambiar estado registra `AuditLog`.
 - Exportación con tildes correctas en Excel (UTF-8 con BOM).",Sí
-BD-120,E11,Panel administrativo,"Bandejas de escuelas, distribuidores y mensajes",S4,0.5,Must,B,BD-119,06 §4,Mismo patrón que cotizaciones.,1. Reutilizar la tabla y el detalle genéricos.,- Estados y exportación funcionan en las 3 bandejas.,No
+BD-120,E11,Panel administrativo,"Bandejas de escuelas, distribuidores y mensajes",S4,0.5,Must,B,BD-119,06 §4,Mismo patrón que cotizaciones.,1. Reutilizar la tabla y el detalle genéricos.,"- Estados y exportación funcionan en las 3 bandejas.
+- Los registros de los formularios (escuelas, distribuidores, contacto) se ven en su bandeja (de BD-076).",No
 BD-121,E11,Panel administrativo,"Contenido, apariencia y ajustes",S4,1.5,Must,B,BD-115 BD-050,06 §4,"Hero, cifras, historia, actividades, fondos por sección y ajustes.","1. Formularios de contenido con ""Ver en el sitio"".
 2. Apariencia: fondo por sección con vista previa.
 3. Ajustes: WhatsApp, teléfonos, redes, correos, splash on/off, pedido mínimo.",- Apagar el splash desde ajustes lo desactiva en la siguiente visita.,No
