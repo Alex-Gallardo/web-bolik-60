@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   sendToErp: vi.fn(),
   saveErpOutcome: vi.fn(),
   settings: vi.fn(),
+  remember: vi.fn(),
 }));
 
 vi.mock("next/server", () => ({ after: mocks.after }));
@@ -30,6 +31,7 @@ vi.mock("@/server/data/quote-requests", () => ({
 vi.mock("@/server/data/content", () => ({ getSiteSettings: mocks.settings }));
 vi.mock("@/server/erp/send-quote", () => ({ sendQuoteToErp: mocks.sendToErp }));
 vi.mock("@/server/mail/send-quote-emails", () => ({ sendQuoteEmails: mocks.sendEmails }));
+vi.mock("@/server/quote-receipts", () => ({ rememberQuoteReceipt: mocks.remember }));
 vi.mock("@/server/log", () => ({
   log: { warn: vi.fn(), info: vi.fn() },
   logError: () => "ABCD1234",
@@ -94,6 +96,25 @@ describe("submitQuote (BD-073)", () => {
     expect(mocks.sendToErp).not.toHaveBeenCalled();
     await runAfter();
     expect(mocks.sendToErp).toHaveBeenCalledWith(7);
+  });
+
+  it("deja el folio en la cookie de este navegador (BD-075)", async () => {
+    expect(await submitQuote(contact, lines, meta)).toMatchObject({ ok: true });
+    expect(mocks.remember).toHaveBeenCalledWith("COT-2026-000007");
+  });
+
+  it("si la cookie no se puede escribir, el visitante igual recibe su folio", async () => {
+    mocks.remember.mockRejectedValueOnce(new Error("fuera de una petición"));
+    expect(await submitQuote(contact, lines, meta)).toEqual({
+      ok: true,
+      data: { folio: "COT-2026-000007" },
+    });
+  });
+
+  it("un envío que no se guarda no toca la cookie", async () => {
+    mocks.departmentName.mockResolvedValueOnce(null);
+    expect((await submitQuote(contact, lines, meta)).ok).toBe(false);
+    expect(mocks.remember).not.toHaveBeenCalled();
   });
 
   it("con el ERP apagado en los ajustes, no lo manda y queda omitida (la tarea no la reintenta)", async () => {

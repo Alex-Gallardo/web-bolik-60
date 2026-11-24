@@ -57,6 +57,8 @@ module.exports = {
         `${base}/cotizacion`,
         // Buscador (BD-066): la página de una búsqueda, con resultados (proxy.ts → /buscar/[q]).
         `${base}/buscar?q=ultra`,
+        // Confirmación (BD-075): sin la cookie de quien la envió, el mensaje sin datos.
+        `${base}/cotizacion/enviada/COT-2026-000001`,
       ],
       numberOfRuns: 3,
       settings: {
@@ -91,7 +93,7 @@ module.exports = {
           // (Next, React y el layout) ocupa ~150 KB en cualquier página y /productos mide 158.3 KB
           // (BD-047; antes 170). Sin las fichas (abajo).
           matchingUrlPattern:
-            "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion$)(?!buscar(?:$|\\?)).+",
+            "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion(?:$|/))(?!buscar(?:$|\\?)).+",
           assertions: {
             ...common,
             "categories:performance": ["error", { minScore: 0.9 }],
@@ -101,9 +103,9 @@ module.exports = {
           },
         },
         {
-          // /buscar (BD-066): como el resto, pero noindex a propósito (página de utilidad, docs/10 §3):
-          // la auditoría «se puede indexar» y el puntaje de SEO no aplican.
-          matchingUrlPattern: "^https?://[^/]+/buscar(?:$|\\?)",
+          // /buscar (BD-066) y la confirmación de la cotización (BD-075): como el resto, pero noindex
+          // a propósito (páginas de utilidad, docs/10 §3): «se puede indexar» y SEO no aplican.
+          matchingUrlPattern: "^https?://[^/]+/(?:buscar(?:$|\\?)|cotizacion/enviada/)",
           assertions: {
             ...common,
             "categories:seo": "off",

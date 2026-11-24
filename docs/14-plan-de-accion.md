@@ -1738,10 +1738,20 @@ Cierre claro con folio y siguientes pasos.
 
 **Criterios de aceptación**
 
-- [ ] El carrito queda vacío.
-- [ ] Evento `quote_submit`.
+- [x] El carrito queda vacío.
+- [x] Evento `quote_submit`.
 
 *Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página («Inicio › Mi cotización › Enviada»), con `structuredData={false}` porque es noindex.
+
+**Implementado (BD-075)**
+
+- **Cookie de folios** (`server/quote-receipts.ts`): al guardar, `submitQuote` deja el folio en `bolik_cotizacion`, cifrada con iron-session y `SESSION_SECRET` (`httpOnly`, `sameSite=lax`, `path=/cotizacion`, `secure` fuera de desarrollo, 7 días, los últimos 5). Si no se pudiera escribir, la cotización ya está guardada y el visitante igual recibe su folio (se registra).
+- **`/cotizacion/enviada/[folio]`** (noindex, dinámica): migas «Inicio › Mi cotización › Enviada» sin JSON-LD, h1 y texto de doc 17 con el folio y el departamento, las líneas tal como se guardaron (`getQuoteSummary`, sin datos de contacto ni caché) y los botones «Escribir por WhatsApp con mi folio» (mensaje `sent`) y «Seguir viendo productos». Sin islas propias. La ruta espera a la petición (`export const instant = false`, sin `<Suspense>`, opción «[block]» de Cache Components): se pinta completa en el servidor cada vez (ƒ en el build), se ve sin JavaScript y no guarda una versión por cada folio que alguien escriba en la URL; `connection()` porque descifrar la cookie usa la hora. El `<title>` repite el h1 de cada caso. Con un folio que no está en la cookie (otro navegador, otro equipo o inventado): «Consulta tu cotización», sin datos, con el WhatsApp general (texto aprobado por el usuario, doc 17). Textos en `content/quote-sent.ts`, aparte de `quote.ts` (que importa la isla de /cotizacion).
+- **Diálogo de éxito:** «Ver resumen» lleva a la confirmación y «Seguir viendo productos» al catálogo, con confeti ligero (decisión del usuario; docs/09 A-60 lo reservaba a escuelas).
+- **`quote_submit`** con `lines`, `customer_type` y `department` (slug), sin datos personales. `features/analytics/track.ts` existe en versión mínima (decisión del usuario): deja el evento en `window.dataLayer`, sin scripts ni red; BD-125 conecta GA4.
+- **El carrito queda vacío** (ya lo hacía BD-073; la E2E lo comprueba en la confirmación).
+- **Cookie:** el sello lleva su tipo (`quote-receipts`): con la misma clave se sella la sesión del admin y un sello no sirve para el otro. Cada envío renueva los 7 días. En una computadora compartida, la siguiente persona podría ver productos y departamento de un envío reciente (nunca datos de contacto). Escribir una cookie en la Server Action hace que Next vuelva a pintar /cotizacion en la misma respuesta (un payload RSC de más por envío; no cambia la isla).
+- **Pruebas:** unitarias (la cookie: cifrada, los últimos 5, dañada = vacía, atributos; `track`; `submitQuote` anota el folio y sigue si la cookie falla), integración (la cookie y el resumen contra SQL Server, sin datos de contacto) y E2E (enviar → «Ver resumen» con folio, departamento, líneas, migas, noindex, axe, confeti y el evento; otro folio y otro navegador ven el mensaje sin datos; sin JavaScript, con la cookie, la confirmación se ve completa). Lighthouse CI mide la confirmación sin cookie, con el presupuesto del resto y sin la categoría SEO (noindex).
 
 #### BD-076 · Formularios de escuelas, distribuidores y contacto
 
@@ -2527,6 +2537,8 @@ Medición sin afectar la velocidad.
 
 - [ ] Ningún script de analítica en el JS inicial bloqueante.
 - [ ] Eventos visibles en DebugView.
+
+*Nota de BD-075:* `track(event, params)` ya existe en versión mínima: deja el evento en `window.dataLayer` (sin scripts ni red) y omite los parámetros sin valor. Aquí se conecta GA4 a esa cola y se suma `/api/beacon` para los clics salientes. Ya lo usa `quote_submit` (`components/quote/quote-form.tsx`).
 
 #### BD-126 · Web Vitals de usuarios reales
 

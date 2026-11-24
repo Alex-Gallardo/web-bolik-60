@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
@@ -17,6 +18,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { feedback } from "@/content/feedback";
 import { quotePage } from "@/content/quote";
+import { track } from "@/features/analytics/track";
 import { submitQuote } from "@/features/quote/actions";
 import { clearDraft, readDraft, saveDraft, type QuoteDraft } from "@/features/quote/draft";
 import type { QuoteLine } from "@/features/quote/lines";
@@ -210,15 +212,23 @@ export function QuoteForm({ departments, lines, whatsappUrl }: QuoteFormProps) {
       setSending(false);
     }
     if (result?.ok) {
+      const { folio } = result.data;
+      // Conversión (docs/12 §4): sin datos personales, solo cuántas líneas, tipo y departamento.
+      track("quote_submit", {
+        lines: lines.length,
+        customer_type: values.customerType,
+        department: values.department,
+      });
       clearDraft();
       useQuote.getState().clear();
-      // «Ver resumen» (/cotizacion/enviada/[folio]) llega con BD-075: hasta entonces, el botón
-      // principal es «Seguir viendo productos».
-      const { title, body, secondary } = feedback.quote.sent(result.data.folio);
-      openDialog(
-        { title, body, primary: secondary },
-        { kind: "success", onPrimary: () => router.push("/productos") },
-      );
+      // Éxito con confeti ligero (BD-075, decisión del usuario): «Ver resumen» lleva a la
+      // confirmación con el folio; la cookie que dejó la acción la habilita en este navegador.
+      openDialog(feedback.quote.sent(folio), {
+        kind: "success",
+        celebrate: true,
+        onPrimary: () => router.push(`/cotizacion/enviada/${encodeURIComponent(folio)}` as Route),
+        onSecondary: () => router.push("/productos"),
+      });
       return;
     }
     if (result?.error === "tooFast") {

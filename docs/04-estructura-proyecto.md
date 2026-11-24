@@ -118,6 +118,7 @@ bolik-digital/
 │  │  ├─ auth/                  # session.ts (iron-session), password.ts, guards.ts (requireRole)
 │  │  ├─ media/                 # process-image.ts (sharp, BD-034); el registro en data/media.ts
 │  │  ├─ folio.ts · rate-limit.ts · audit.ts
+│  │  ├─ quote-receipts.ts      # cookie cifrada con los folios que envió el navegador (BD-075)
 │  ├─ lib/                      # utilidades puras
 │  │  ├─ constants.ts           # estados, tipos, presets (reemplazan enums)
 │  │  ├─ cache-tags.ts · slug.ts · format.ts · cn.ts · image-loader.ts · contrast.ts
@@ -129,7 +130,7 @@ bolik-digital/
 │  │  ├─ feedback.ts            # todos los mensajes de toasts y diálogos
 │  │  ├─ ui.ts                  # textos de interfaz que no son feedback (Enviando…, Guardando…)
 │  │  ├─ header.ts              # textos del header: los importan sus islas sin traer todo ui.ts (BD-047)
-│  │  ├─ footer.ts · not-found.ts   # textos que solo leen Server Components (no viajan en el JS)
+│  │  ├─ footer.ts · not-found.ts · quote-sent.ts   # textos que solo leen Server Components (no viajan en el JS)
 │  │  ├─ navigation.ts          # menú y pie
 │  │  └─ legal/*.md
 │  ├─ styles/

@@ -19,6 +19,8 @@ const server = setupServer();
 const state = vi.hoisted(() => ({
   ip: "10.0.0.1",
   afterTasks: [] as (() => Promise<unknown>)[],
+  /** Cookies de la respuesta (la de los folios enviados, BD-075). */
+  jar: new Map<string, string>(),
 }));
 
 // Escrituras con SQL Server; la caché de Next no existe fuera del servidor de Next.
@@ -29,6 +31,11 @@ vi.mock("@/env", async (importOriginal) => {
 vi.mock("next/cache", () => ({ cacheLife: () => {}, cacheTag: () => {} }));
 vi.mock("next/headers", () => ({
   headers: async () => new Headers({ "x-forwarded-for": state.ip }),
+  cookies: async () => ({
+    get: (name: string) =>
+      state.jar.has(name) ? { name, value: state.jar.get(name)! } : undefined,
+    set: (name: string, value: string) => void state.jar.set(name, value),
+  }),
 }));
 vi.mock("next/server", () => ({
   after: (task: () => Promise<unknown>) => state.afterTasks.push(task),
@@ -50,6 +57,8 @@ vi.mock("@/server/mail/transport", async (importOriginal) => {
 });
 
 const { submitQuote } = await import("@/features/quote/actions");
+const { getQuoteSummary } = await import("@/server/data/quote-requests");
+const { readQuoteReceipts } = await import("@/server/quote-receipts");
 const { formRateLimiter } = await import("@/server/rate-limit");
 const { listStoredMails } = await import("@/server/mail/transport");
 
@@ -271,6 +280,22 @@ describe("submitQuote contra SQL Server (BD-073)", () => {
       }),
     ).toBe(5);
   }, 60_000);
+
+  it("deja el folio en la cookie de este navegador y su resumen sale de la base (BD-075)", async () => {
+    state.jar.clear();
+    const result = await submitQuote(contact, lines, meta);
+    expect(result).toMatchObject({ ok: true });
+    if (!result.ok) return;
+    expect(await readQuoteReceipts()).toEqual([result.data.folio]);
+    const summary = await getQuoteSummary(result.data.folio);
+    expect(summary).toMatchObject({ folio: result.data.folio, departmentName: "Quetzaltenango" });
+    expect(summary?.items).toHaveLength(lines.length);
+    expect(summary?.items[0]).toMatchObject({ quantity: lines[0]!.quantity });
+    expect(summary?.items[0]?.description).toContain(lines[0]!.ref);
+    // Sin datos de contacto en el resumen.
+    expect(JSON.stringify(summary)).not.toContain(contact.name);
+    expect(await getQuoteSummary("COT-1999-000001")).toBeNull();
+  });
 
   it("con erp_enabled = false queda omitida y no llama a SMART-K66", async () => {
     let calls = 0;

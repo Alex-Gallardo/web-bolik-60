@@ -225,8 +225,11 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 
 ### `/cotizacion/enviada/[folio]`
 - `h1`: **¡Recibimos tu cotización!**
-- Texto: Tu número de seguimiento es **{folio}**. Un ejecutivo de {departamento} te contactará en un día hábil.
+- Texto: Tu número de seguimiento es **{folio}**. Un ejecutivo de {departamento} te contactará en un día hábil. *(Si el departamento ya no existe: «Un ejecutivo de ventas…», como el diálogo.)*
+- Descripción (meta): Recibimos tu solicitud de cotización. Un ejecutivo de ventas te contactará en un día hábil con precios y disponibilidad. *(Del acuse, sin el folio.)* El título repite el h1.
 - Botones: Escribir por WhatsApp con mi folio · Seguir viendo productos
+- Migas: Inicio › Mi cotización › Enviada · Título de la lista: Productos de tu cotización
+- Folio de otro navegador o inventado (BD-075, aprobado por el usuario): `h1` **Consulta tu cotización** · Texto: Por seguridad, el resumen solo se ve en el navegador desde donde la enviaste. Si necesitas ayuda con tu folio, escríbenos por WhatsApp. *(Sin número de WhatsApp, sin la segunda frase.)* Mismos botones, con el mensaje general de WhatsApp.
 
 ### 404 y 500
 - 404: **Esta página se borró como lápiz.** Puede que la dirección haya cambiado. Busca un producto o vuelve al inicio. *(Con el buscador en la página desde BD-066.)*
