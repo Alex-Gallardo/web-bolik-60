@@ -16,6 +16,7 @@ import { sendQuoteToErp } from "@/server/erp/send-quote";
 import { sendQuoteEmails } from "@/server/mail/send-quote-emails";
 import { log, logError } from "@/server/log";
 import { formRateLimiter } from "@/server/rate-limit";
+import { rememberQuoteReceipt } from "@/server/quote-receipts";
 import { requestIpHash } from "@/server/request-ip";
 import { FORM_GUARD, checkFormMeta, type FormMeta } from "@/lib/form-guard";
 import type { QuoteContactField } from "./form-fields";
@@ -153,6 +154,14 @@ async function saveQuote(
           logError(error, { action: "submitQuote.after", folio: saved.folio });
         }
       });
+
+    // El folio queda en la cookie de este navegador: solo aquí se ve el resumen (BD-075). Si no se
+    // pudiera escribir, la cotización ya está guardada: el visitante igual recibe su folio.
+    try {
+      await rememberQuoteReceipt(saved.folio);
+    } catch (error) {
+      logError(error, { action: "submitQuote.receipt", folio: saved.folio });
+    }
 
     return { ok: true, data: { folio: saved.folio } };
   } catch (error) {

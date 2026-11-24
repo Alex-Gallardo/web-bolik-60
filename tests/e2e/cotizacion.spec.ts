@@ -153,6 +153,109 @@ test.describe("página /cotizacion (BD-072)", () => {
     expect(errors, "errores en la consola").toEqual([]);
   });
 
+  test("enviar → «Ver resumen»: folio, departamento y líneas; evento quote_submit (BD-075) @critico", async ({
+    page,
+  }) => {
+    const errors = collectConsoleErrors(page);
+    await ownIp(page);
+    await seedQuote(page);
+    await page.goto("/cotizacion");
+    await fillValid(page);
+    await page.waitForTimeout(3_100);
+    await page.getByRole("button", { name: "Enviar cotización" }).click();
+    const dialog = page.getByRole("alertdialog").or(page.getByRole("dialog"));
+    await expect(dialog).toContainText("¡Listo! Recibimos tu cotización");
+    const folio = (await dialog.textContent())!.match(/COT-\d{4}-\d{6}/)![0];
+    // Confeti ligero (decisión del usuario) y la conversión, sin datos personales.
+    await expect(dialog.locator(".confetti")).toHaveCount(1);
+    const events = await page.evaluate(() =>
+      ((window as unknown as { dataLayer?: Record<string, unknown>[] }).dataLayer ?? []).filter(
+        (e) => e.event === "quote_submit",
+      ),
+    );
+    expect(events).toEqual([
+      { event: "quote_submit", lines: 2, customer_type: "libreria", department: "quetzaltenango" },
+    ]);
+
+    await dialog.getByRole("button", { name: "Ver resumen" }).click();
+    await expect(page).toHaveURL(new RegExp(`/cotizacion/enviada/${folio}$`));
+    await expect(
+      page.getByRole("heading", { level: 1, name: "¡Recibimos tu cotización!" }),
+    ).toBeVisible();
+    await expect(page.locator("main")).toContainText(`Tu número de seguimiento es ${folio}.`);
+    await expect(page.locator("main")).toContainText(
+      "Un ejecutivo de Quetzaltenango te contactará en un día hábil.",
+    );
+    const summary = page.getByRole("region", { name: "Productos de tu cotización" });
+    await expect(summary.getByRole("listitem")).toHaveCount(2);
+    await expect(summary).toContainText("PT00058");
+    await expect(page.getByRole("navigation", { name: "Migas de pan" })).toContainText("Enviada");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    await expect(page.getByRole("link", { name: "Seguir viendo productos" })).toHaveAttribute(
+      "href",
+      "/productos",
+    );
+    // La cotización quedó vacía.
+    await expect(page.locator("[data-quote-link]")).toHaveAttribute("aria-label", "Mi cotización");
+    await expectNoA11yViolations(page);
+
+    // Otro folio en el mismo navegador: sin datos.
+    await page.goto("/cotizacion/enviada/COT-2026-999999");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Consulta tu cotización" }),
+    ).toBeVisible();
+    await expect(page.getByRole("region", { name: "Productos de tu cotización" })).toHaveCount(0);
+    expect(errors, "errores en la consola").toEqual([]);
+  });
+
+  test("el resumen no se ve desde otro navegador y se ve sin JavaScript (BD-075)", async ({
+    page,
+    browser,
+  }) => {
+    await ownIp(page);
+    await seedQuote(page);
+    await page.goto("/cotizacion");
+    await fillValid(page);
+    await page.waitForTimeout(3_100);
+    await page.getByRole("button", { name: "Enviar cotización" }).click();
+    const dialog = page.getByRole("alertdialog").or(page.getByRole("dialog"));
+    await expect(dialog).toContainText(/COT-\d{4}-\d{6}/);
+    const folio = (await dialog.textContent())!.match(/COT-\d{4}-\d{6}/)![0];
+
+    // Otro contexto = otro navegador (con el mismo dispositivo del proyecto), sin la cookie.
+    const { baseURL, viewport, userAgent, deviceScaleFactor, isMobile, hasTouch } =
+      test.info().project.use;
+    const device = { baseURL, viewport, userAgent, deviceScaleFactor, isMobile, hasTouch };
+    const context = await browser.newContext(device);
+    const other = await context.newPage();
+    const errors = collectConsoleErrors(other);
+    // Y el mismo navegador sin JavaScript (con su cookie): la confirmación se ve completa.
+    const noJs = await browser.newContext({ ...device, javaScriptEnabled: false });
+    await noJs.addCookies(await page.context().cookies());
+    try {
+      const plain = await noJs.newPage();
+      await plain.goto(`/cotizacion/enviada/${folio}`);
+      await expect(
+        plain.getByRole("heading", { level: 1, name: "¡Recibimos tu cotización!" }),
+      ).toBeVisible();
+      await expect(
+        plain.getByRole("region", { name: "Productos de tu cotización" }).getByRole("listitem"),
+      ).toHaveCount(2);
+
+      await other.goto(`/cotizacion/enviada/${folio}`);
+      await expect(
+        other.getByRole("heading", { level: 1, name: "Consulta tu cotización" }),
+      ).toBeVisible();
+      await expect(other.locator("main")).not.toContainText(folio);
+      await expect(other.locator("main")).not.toContainText("Quetzaltenango");
+      await expectNoA11yViolations(other);
+      expect(errors, "errores en la consola").toEqual([]);
+    } finally {
+      await context.close();
+      await noJs.close();
+    }
+  });
+
   test("los correos de la cotización se ven en la bandeja de prueba (BD-074)", async ({ page }) => {
     await ownIp(page);
     await seedQuote(page);

@@ -239,3 +239,46 @@ export async function countRecentQuotesByEmail(email: string, since: Date): Prom
     ).length;
   return db.quoteRequest.count({ where: { email: wanted, createdAt: { gte: since } } });
 }
+
+/** Lo que muestra /cotizacion/enviada/[folio] (BD-075): sin datos de contacto. */
+export type QuoteSummary = {
+  folio: string;
+  /** Nombre del departamento del formulario; null si ya no existe. */
+  departmentName: string | null;
+  items: { description: string; quantity: number; unitLabel: string }[];
+};
+
+/**
+ * Resumen de una cotización por su folio (BD-075), o null si no existe. Sin caché: son datos de
+ * una persona y la página solo lo pide si el folio está en la cookie de quien la envió.
+ */
+export async function getQuoteSummary(folio: string): Promise<QuoteSummary | null> {
+  const db = await getDb();
+  if (!db) {
+    const quote = memoryQuotes().find((q) => q.folio === folio);
+    if (!quote) return null;
+    const { contact, items } = quote.request;
+    return {
+      folio,
+      departmentName: await departmentName(contact.department),
+      items: items.map(({ description, quantity, unitLabel }) => ({
+        description,
+        quantity,
+        unitLabel,
+      })),
+    };
+  }
+  const quote = await db.quoteRequest.findUnique({
+    where: { folio },
+    select: {
+      folio: true,
+      department: { select: { name: true } },
+      items: {
+        orderBy: { sortOrder: "asc" },
+        select: { description: true, quantity: true, unitLabel: true },
+      },
+    },
+  });
+  if (!quote) return null;
+  return { folio: quote.folio, departmentName: quote.department?.name ?? null, items: quote.items };
+}

@@ -235,7 +235,7 @@ Datos NAP, horario, mapa estático de la planta (imagen, no iframe), formulario 
 5. Estado vacío: ilustración, "Tu cotización está vacía" y accesos a Catálogo, Más pedidos por librerías, Kits.
 
 ### 3.17 `/cotizacion/enviada/[folio]`
-**noindex, dinámica.** Confirmación con folio, resumen, qué sigue ("Un ejecutivo de {departamento} te contactará en un día hábil"), botón "Escribir por WhatsApp con mi folio", "Seguir viendo productos". Solo muestra datos si el folio coincide con la cookie de la sesión que lo creó; si no, mensaje genérico (no expone datos de otros).
+**noindex, dinámica.** Confirmación con folio, resumen, qué sigue ("Un ejecutivo de {departamento} te contactará en un día hábil"), botón "Escribir por WhatsApp con mi folio", "Seguir viendo productos". Solo muestra datos si el folio coincide con la cookie de la sesión que lo creó; si no, mensaje genérico (no expone datos de otros). **Implementado (BD-075):** `submitQuote` deja el folio en `bolik_cotizacion` (cifrada con iron-session y `SESSION_SECRET`, `httpOnly`, `path=/cotizacion`, 7 días, los últimos 5; `server/quote-receipts.ts`). El resumen son las líneas tal como se guardaron (descripción, cantidad y unidad), sin datos de contacto. La ruta espera a la petición (`export const instant = false`, sin `<Suspense>`): se pinta completa en el servidor cada vez, se ve sin JavaScript y no guarda una versión por folio. Con otro folio: «Consulta tu cotización» sin datos y el WhatsApp general; el `<title>` repite el h1 de cada caso.
 
 ### 3.18 `/legal/[slug]`
 Privacidad y términos en Markdown (`src/content/legal`). Indexables, enlazadas en el pie y en formularios.

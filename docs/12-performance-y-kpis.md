@@ -103,7 +103,7 @@ Verificación: `pnpm analyze` (bundle analyzer) y `pnpm lhci` con las aserciones
 
 ## 4. Analítica: eventos (GA4)
 
-Nombres en `snake_case`. Implementación en `src/features/analytics/track.ts` con una función `track(event, params)` que envía a GA4 y, para clics salientes, también a `/api/beacon` (tabla `OutboundClick`) con `navigator.sendBeacon`.
+Nombres en `snake_case`. Implementación en `src/features/analytics/track.ts` con una función `track(event, params)` que envía a GA4 y, para clics salientes, también a `/api/beacon` (tabla `OutboundClick`) con `navigator.sendBeacon`. Desde BD-075 existe en su versión mínima: deja el evento en `window.dataLayer` (sin scripts ni red); BD-125 conecta GA4 a esa cola. Ya se manda `quote_submit`.
 
 | Evento | Cuándo | Parámetros |
 |---|---|---|
