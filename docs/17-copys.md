@@ -170,6 +170,7 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Formulario, título: **Lleva Bolik a tu escuela**
 - Campos: Nombre del colegio · Nivel (Preprimaria, Primaria, Básicos, Diversificado) · Alumnos aproximados · Departamento · Municipio · Tu nombre · Teléfono o correo · Mes preferido
 - Botón: Enviar solicitud
+- En el formulario (BD-076, aprobado el 24 nov 2026): «Teléfono o correo» son dos campos, Teléfono y Correo, con la ayuda «Déjanos al menos uno de los dos.» · Alumnos aproximados y Mes preferido llevan «(opcional)» · Mes preferido: los 12 meses, con «Elige un mes» · Botón cargando: Enviando tu solicitud…
 
 ### `/mayoreo`
 - `h1`: **Compra Bolik por mayor, directo de fábrica**
@@ -180,6 +181,7 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Distribuidor, texto: ¿Tienes una librería, tienda o ruta de distribución? Cuéntanos de tu negocio.
 - Campos: Nombre del negocio · Tipo (Librería, Tienda, Distribuidor, Otro) · NIT (opcional) · Departamento · Municipio · Tu nombre · Teléfono · Correo
 - Botón: Enviar solicitud
+- En el formulario (BD-076): teléfono y correo, al menos uno (la misma ayuda que en escuelas) · Botón cargando: Enviando tu solicitud…
 
 ### `/empresas`
 - `h1`: **Bolígrafos personalizados con el logo de tu empresa**
@@ -215,6 +217,7 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - `h1`: **Hablemos**
 - Accesos: ¿Quieres cotizar? → Armar cotización · ¿Eres un colegio? → Bolik en tu escuela
 - Asuntos: Información de productos · Cotización · Escuelas · Distribución · Otro
+- Formulario (BD-076, aprobado el 24 nov 2026): Asunto («Elige un asunto») · Tu nombre · Teléfono · Correo (al menos uno) · Mensaje · Botón: **Enviar mensaje** (cargando: Enviando tu mensaje…)
 
 ### `/cotizacion`
 - `h1`: **Mi cotización**
@@ -250,6 +253,9 @@ La fuente única de toasts y diálogos es `src/content/feedback.ts` (starter). E
 | Cantidad mínima | La cantidad mínima es 1 |
 | Cantidad máxima | Para más de 9,999, escríbenos por WhatsApp |
 | NIT | Escribe tu NIT o "CF" |
+| Número entero (alumnos aproximados, BD-076) | Escribe un número entre 1 y {max} |
+| Solicitud que no se pudo enviar (BD-076) | No pudimos enviar tu solicitud · Revisa tu conexión e inténtalo de nuevo, o escríbenos por WhatsApp. (sin número: «Revisa tu conexión e inténtalo de nuevo.») · Intentar de nuevo · Escribir por WhatsApp |
+| Mensaje de contacto que no se pudo enviar (BD-076) | No pudimos enviar tu mensaje · el mismo texto y los mismos botones |
 | Texto muy largo | Usa como máximo {max} caracteres |
 | Cantidad, botones (lector de pantalla) | Quitar uno · Agregar uno |
 | Teléfono, prefijo (lector de pantalla) | Código de país +502, Guatemala |
@@ -335,7 +341,23 @@ Primera oración = respuesta directa (doc 11 §5). Las marcadas **(validar)** no
   >
   > Gracias por preferir Bolik, hecho en Guatemala desde 1966.
 
-Escuelas y distribuidores siguen el mismo patrón con sus folios (`ESC`, `DIS`) y los plazos de `feedback.ts`.
+Escuelas y distribuidores siguen el mismo patrón con sus folios (`ESC`, `DIS`) y los plazos de `feedback.ts`. Textos aprobados el 24 nov 2026 (BD-076, `src/content/mail.ts`):
+
+### Solicitudes (escuelas, distribuidores y contacto)
+- Interno, escuelas (a `MAIL_SCHOOLS_TO` o, sin ella, `MAIL_SALES_TO`): asunto `Nueva solicitud de visita {folio} · {colegio} · {departamento}`.
+- Interno, distribuidores (a `MAIL_DISTRIBUTORS_TO` o `MAIL_SALES_TO`): asunto `Nueva solicitud de distribuidor {folio} · {tipo} · {departamento}`.
+- Interno, contacto (a `MAIL_SALES_TO`): asunto `Nuevo mensaje de contacto · {asunto}`.
+- Cuerpo de los internos: «Recibida el {fecha} desde bolik66.com.», **Datos de la solicitud** (cada campo con su etiqueta), el mensaje en contacto, **Abrir en el admin** y el pie «Correo automático de bolik66.com.», con «Responder este correo le escribe al cliente.» solo si el visitante dejó correo.
+- Acuse, escuelas: asunto `Recibimos tu solicitud de visita {folio}`.
+  > Hola, {nombre}:
+  >
+  > Recibimos tu solicitud de visita **{folio}** para {colegio}. Te llamaremos en los próximos 3 días hábiles para agendar la visita.
+  >
+  > ¿Necesitas algo antes? Escríbenos por WhatsApp al {numero} y menciona tu folio.
+  >
+  > Gracias por preferir Bolik, hecho en Guatemala desde 1966.
+- Acuse, distribuidores: asunto `Recibimos tu solicitud de distribuidor {folio}`, con «Recibimos tu solicitud de distribuidor **{folio}**. Está en revisión: te responderemos en un máximo de 5 días hábiles.» y el mismo saludo, WhatsApp y cierre.
+- Contacto no lleva acuse (sin folio; así nadie usa el formulario para mandar correos a terceros). Un nombre o un colegio con forma de enlace no se repite en el acuse («Hola:», «para tu escuela»).
 
 ## 9. Publicaciones de lanzamiento
 

@@ -147,6 +147,8 @@ En la página: `const look = await getSectionAppearance("home.solutions")` → `
 | Límite de envíos | Diálogo con alternativa WhatsApp | Dialog | `forms.rateLimited` |
 | Solicitud de visita escolar | Diálogo festivo con confeti ligero | Dialog | `forms.schoolSent` |
 | Solicitud de distribuidor | Diálogo de éxito | Dialog | `forms.distributorSent` |
+| Mensaje de contacto | Diálogo de éxito | Dialog | `forms.contactSent` |
+| Error al enviar una solicitud o un mensaje | Diálogo con "Intentar de nuevo" y "Escribir por WhatsApp" (lo escrito sigue en el formulario) | Dialog | `forms.failed`, `forms.contactFailed` |
 | Abrir WhatsApp | Sheet con vista previa del mensaje | Sheet | — |
 | Copiar mensaje | Toast "Mensaje copiado" (o "Selecciona y copia" si el portapapeles falla) | Toast | `whatsapp.copied` |
 | Cambiar color en ficha | Imagen con crossfade, SKU actualizado (anunciado con `aria-live`) | Inline | — |

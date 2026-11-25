@@ -79,7 +79,36 @@ export const CLICK_KINDS = ["whatsapp", "retailer", "maps", "phone", "pdf"] as c
  */
 export const PRODUCT_IMAGE_KINDS = ["main", "detail", "stroke", "pack", "lifestyle"] as const;
 
+/** Formularios de BD-076 (doc 17 §4): nivel del colegio, tipo de negocio y asunto de contacto. */
+export const SCHOOL_LEVELS = ["preprimaria", "primaria", "basicos", "diversificado"] as const;
+export const MONTHS = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+] as const;
+export const DISTRIBUTOR_BUSINESS_TYPES = ["libreria", "tienda", "distribuidor", "otro"] as const;
+export const CONTACT_SUBJECTS = [
+  "productos",
+  "cotizacion",
+  "escuelas",
+  "distribucion",
+  "otro",
+] as const;
+
 export type Role = (typeof ROLES)[number];
+export type SchoolLevel = (typeof SCHOOL_LEVELS)[number];
+export type Month = (typeof MONTHS)[number];
+export type DistributorBusinessType = (typeof DISTRIBUTOR_BUSINESS_TYPES)[number];
+export type ContactSubject = (typeof CONTACT_SUBJECTS)[number];
 export type CustomerType = (typeof CUSTOMER_TYPES)[number];
 export type QuoteStatus = (typeof QUOTE_STATUS)[number];
 export type ErpStatus = (typeof ERP_STATUS)[number];

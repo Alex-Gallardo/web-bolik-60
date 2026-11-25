@@ -67,7 +67,7 @@ bolik-digital/
 │  │  │  │  ├─ page.tsx
 │  │  │  │  └─ enviada/[folio]/page.tsx
 │  │  │  ├─ legal/[slug]/page.tsx
-│  │  │  └─ styleguide/        # page.tsx (13 secciones) · _sections/ · _demos/ · _components/ · datos/
+│  │  │  └─ styleguide/        # page.tsx (13 secciones) · _sections/ · _demos/ · _components/ · datos/ · correos/ · formularios/ (BD-076)
 │  │  ├─ (admin)/admin/
 │  │  │  ├─ layout.tsx          # verifica sesión, menú lateral
 │  │  │  ├─ login/page.tsx
@@ -92,7 +92,8 @@ bolik-digital/
 │  │  ├─ home/                  # audience-card (tarjetas por público de la home)
 │  │  ├─ quote/                 # quote-drawer, quote-button, quote-line, quote-form
 │  │  ├─ stores/                # store-list, store-map (lazy), department-picker
-│  │  ├─ schools/               # activity-card, school-form, kids-decor
+│  │  ├─ schools/               # activity-card, school-visit-form (BD-076), kids-decor
+│  │  ├─ forms/                 # use-request-form, honeypot-field, distributor-form, contact-form (BD-076)
 │  │  ├─ whatsapp/              # whatsapp-fab, whatsapp-sheet
 │  │  ├─ icons/                 # logo, íconos de beneficios
 │  │  └─ admin/                 # data-table, form-field, image-uploader, status-badge
@@ -100,8 +101,7 @@ bolik-digital/
 │  │  ├─ catalog/  (queries.ts, schemas.ts, search.ts, format.ts)
 │  │  ├─ quote/    (store.ts, lines.ts, storage-keys.ts, schemas.ts, actions.ts)
 │  │  ├─ stores/   (queries.ts)
-│  │  ├─ schools/  (actions.ts, schemas.ts)
-│  │  ├─ distributors/ · contact/
+│  │  ├─ schools/ · distributors/ · contact/   (form-fields.ts, schema.ts, actions.ts; BD-076)
 │  │  ├─ content/  (queries.ts para hero, cifras, hitos, faqs, apariencia)
 │  │  ├─ admin/    (actions por entidad)
 │  │  ├─ analytics/(events.ts, track.ts)
@@ -111,26 +111,31 @@ bolik-digital/
 │  │  ├─ data/                  # funciones con caché + tags, tipos de vista y fuente (fixtures | db: BD-037, BD-032)
 │  │  │  ├─ fixtures/ · db/      # las dos fuentes; settings-view.ts comparte el mapeo de ajustes
 │  │  │  ├─ sitemap.ts · llms.ts · search.ts   # datos del sitemap, /llms.txt y el buscador
+│  │  │  ├─ form-requests.ts     # solicitudes de escuelas, distribuidores y contacto (BD-076)
 │  │  │  └─ redirects.ts · proxy-db.ts · seo-logs.ts   # tabla Redirect para proxy.ts (cliente propio) y escrituras de NotFoundLog/hits (BD-046)
 │  │  ├─ seo/                   # redirects.ts (mapa en memoria), hit-log.ts (conteo en lote), not-found-log.ts (BD-046)
 │  │  ├─ erp/                   # types.ts, gateway.ts, smartk66.ts, noop.ts, send-quote.ts (BD-035; datos en data/quote-erp.ts)
-│  │  ├─ mail/                  # transport.ts, templates/
+│  │  ├─ mail/                  # transport.ts, layout.ts (marco común), quote-emails.ts, request-emails.ts y sus send-*.ts (BD-074, BD-076)
 │  │  ├─ auth/                  # session.ts (iron-session), password.ts, guards.ts (requireRole)
 │  │  ├─ media/                 # process-image.ts (sharp, BD-034); el registro en data/media.ts
 │  │  ├─ folio.ts · rate-limit.ts · audit.ts
 │  │  ├─ quote-receipts.ts      # cookie cifrada con los folios que envió el navegador (BD-075)
+│  │  ├─ form-submit.ts         # camino común de los formularios de BD-076: trampa, tiempo, Zod, límite por IP, éxito falso
 │  ├─ lib/                      # utilidades puras
 │  │  ├─ constants.ts           # estados, tipos, presets (reemplazan enums)
 │  │  ├─ cache-tags.ts · slug.ts · format.ts · cn.ts · image-loader.ts · contrast.ts
 │  │  ├─ redirect-path.ts       # rutas normalizadas y mapa de redirecciones (BD-046)
 │  │  ├─ folio.ts               # formato, regex y año (hora de Guatemala) de los folios (BD-033)
 │  │  ├─ form-schemas.ts        # piezas de Zod compartidas (teléfono GT, correo, NIT, cantidad)
+│  │  ├─ form-schemas-mini.ts   # las mismas en zod/mini para los formularios públicos, más NIT, cantidad, opciones y fieldErrors (BD-072, BD-076)
 │  │  ├─ form-guard.ts          # antiabuso de formularios: campo trampa, tiempo mínimo y las cifras de FORM_GUARD (BD-077)
 │  ├─ content/                  # textos de interfaz
 │  │  ├─ feedback.ts            # todos los mensajes de toasts y diálogos
 │  │  ├─ ui.ts                  # textos de interfaz que no son feedback (Enviando…, Guardando…)
 │  │  ├─ header.ts              # textos del header: los importan sus islas sin traer todo ui.ts (BD-047)
 │  │  ├─ footer.ts · not-found.ts · quote-sent.ts   # textos que solo leen Server Components (no viajan en el JS)
+│  │  ├─ forms.ts               # campos y opciones de los formularios de escuelas, distribuidores y contacto (BD-076)
+│  │  ├─ mail.ts                # textos de los correos (cotización y solicitudes)
 │  │  ├─ navigation.ts          # menú y pie
 │  │  └─ legal/*.md
 │  ├─ styles/

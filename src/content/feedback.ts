@@ -63,6 +63,7 @@ export const feedback = {
       qtyMin: "La cantidad mínima es 1",
       qtyMax: "Para más de 9,999, escríbenos por WhatsApp",
       nit: 'Escribe tu NIT o "CF"',
+      count: (max: number) => `Escribe un número entre 1 y ${max.toLocaleString("es-GT")}`,
       tooLong: (max: number) => `Usa como máximo ${max.toLocaleString("es-GT")} caracteres`,
     },
     tooFast: { tone: "warning" as ToastTone, title: "Dale un momento más antes de enviar" },
@@ -88,6 +89,23 @@ export const feedback = {
       title: "Mensaje enviado",
       body: "Te responderemos en horario de oficina, de lunes a viernes.",
       primary: "Listo",
+    },
+    /** Solicitud de escuela o distribuidor que no se pudo enviar (BD-076, doc 17 §5). */
+    failed: {
+      title: "No pudimos enviar tu solicitud",
+      body: "Revisa tu conexión e inténtalo de nuevo, o escríbenos por WhatsApp.",
+      /** Sin número de WhatsApp en los ajustes: sin prometerlo. */
+      bodyNoWhatsapp: "Revisa tu conexión e inténtalo de nuevo.",
+      primary: "Intentar de nuevo",
+      secondary: "Escribir por WhatsApp",
+    },
+    /** El mensaje de contacto que no se pudo enviar (BD-076). */
+    contactFailed: {
+      title: "No pudimos enviar tu mensaje",
+      body: "Revisa tu conexión e inténtalo de nuevo, o escríbenos por WhatsApp.",
+      bodyNoWhatsapp: "Revisa tu conexión e inténtalo de nuevo.",
+      primary: "Intentar de nuevo",
+      secondary: "Escribir por WhatsApp",
     },
   },
   whatsapp: {

@@ -3,13 +3,16 @@ import { customerTypeLabels, quoteMail } from "@/content/mail";
 import type { CustomerType } from "@/lib/constants";
 import { formatPhone } from "@/lib/format";
 import type { QuoteItemDraft } from "@/server/data/quote-requests";
+import { C, FONT, dateGt, escapeHtml, frame, h2, html, looksLikeLink, p } from "./layout";
 import type { MailMessage } from "./transport";
+
+// Antes vivían aquí (BD-074); siguen exportados para quien ya los importaba.
+export { escapeHtml, looksLikeLink } from "./layout";
 
 /**
  * Los dos correos de una cotización (BD-074, doc 17 §8): el interno a Ventas y el acuse al cliente.
- * Funciones puras: reciben los datos y devuelven asunto, HTML y texto. HTML sencillo para Outlook
- * (tablas y estilos en línea, sin imágenes externas ni CSS en <head>). Todo lo que escribió el
- * visitante se escapa: nunca se interpreta como HTML.
+ * Funciones puras: reciben los datos y devuelven asunto, HTML y texto, con las piezas de
+ * layout.ts (HTML para Outlook; lo del visitante, escapado).
  */
 
 export type QuoteMailData = {
@@ -30,46 +33,6 @@ export type QuoteMailData = {
   >[];
   createdAt: Date;
 };
-
-/**
- * Colores de tokens.css (docs/02): los clientes de correo no entienden variables de CSS, así que van
- * los valores. Si cambia la paleta, cambiarlos aquí también.
- */
-const C = {
-  blue: "#1d3fce", // check-colors-ignore
-  ink: "#111318", // check-colors-ignore
-  muted: "#4b5368", // check-colors-ignore
-  line: "#e3e7f0", // check-colors-ignore
-  soft: "#f4f6fb", // check-colors-ignore
-  paper: "#ffffff", // check-colors-ignore
-} as const;
-
-const FONT = "font-family:Segoe UI,Arial,sans-serif;";
-
-/** «visita x.com», «http://…», «www.…»: no va en el saludo del acuse. */
-export const looksLikeLink = (value: string) =>
-  /https?:|www\.|[a-z0-9-]+\.(com|net|org|info|xyz|ru|io|me|gt|co|biz|online|site|link|top)\b/i.test(
-    value,
-  );
-
-export function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-/** Texto del visitante en HTML: escapado y con sus saltos de línea. */
-const html = (value: string) => escapeHtml(value).replace(/\r?\n/g, "<br>");
-
-const dateGt = (date: Date) =>
-  new Intl.DateTimeFormat("es-GT", {
-    dateStyle: "long",
-    timeStyle: "short",
-    timeZone: "America/Guatemala",
-  }).format(date);
 
 const t = quoteMail;
 
@@ -93,15 +56,6 @@ function linesText(items: QuoteMailData["items"]): string {
     )
     .join("\n");
 }
-
-/** Marco común: una columna de 600 px centrada, fondo suave y franja azul de marca. */
-function frame(content: string, title: string): string {
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${escapeHtml(title)}</title></head><body style="margin:0;padding:0;background:${C.soft}" bgcolor="${C.soft}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="${C.soft}" style="background:${C.soft}"><tr><td align="center" style="padding:24px 12px"><table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="${C.paper}" style="max-width:600px;width:100%;background:${C.paper};border:1px solid ${C.line}"><tr><td bgcolor="${C.blue}" style="background:${C.blue};padding:16px 24px;${FONT}font-size:20px;font-weight:bold;color:${C.paper}">BOLIK</td></tr><tr><td style="padding:24px;${FONT}font-size:15px;line-height:1.5;color:${C.ink}">${content}</td></tr></table></td></tr></table></body></html>`;
-}
-
-const p = (content: string, style = "") => `<p style="margin:0 0 16px;${style}">${content}</p>`;
-const h2 = (content: string) =>
-  `<h2 style="${FONT}font-size:17px;margin:24px 0 8px;color:${C.ink}">${content}</h2>`;
 
 /** Correo interno a Ventas: datos del cliente, líneas, notas, origen y botón al admin. */
 export function salesQuoteEmail(

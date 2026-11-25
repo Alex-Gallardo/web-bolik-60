@@ -102,8 +102,9 @@ async function Inbox() {
   if (mails.length === 0)
     return (
       <p className="text-muted">
-        Todavía no hay correos. Envía una cotización desde <a href="/cotizacion">/cotizacion</a> y
-        vuelve a esta página.
+        Todavía no hay correos. Envía una cotización desde <a href="/cotizacion">/cotizacion</a> o
+        una solicitud desde <a href="/styleguide/formularios">los formularios</a> y vuelve a esta
+        página.
       </p>
     );
   return (

@@ -191,7 +191,7 @@ Toda la página usa la sub-paleta kids y Baloo 2 en títulos.
 3. Actividades (tarjetas de color inclinadas, A-40).
 4. Galería de fotos (con permisos), `loading="lazy"`.
 5. Cómo funciona una visita (4 pasos numerados reales: solicitas, coordinamos fecha, visitamos, entregamos material).
-6. **Formulario "Lleva Bolik a tu escuela"**: colegio, nivel, número aproximado de alumnos, departamento, municipio, nombre, teléfono o correo, mes preferido. Éxito con diálogo festivo (A-60 confeti ligero).
+6. **Formulario "Lleva Bolik a tu escuela"**: colegio, nivel, número aproximado de alumnos, departamento, municipio, nombre, teléfono o correo, mes preferido. Éxito con diálogo festivo (A-60 confeti ligero). **Implementado (BD-076):** `components/schools/school-visit-form.tsx` con `submitSchoolVisit` (folio `ESC`); teléfono y correo son dos campos, al menos uno; alumnos y mes, opcionales. La página lo monta con BD-105; mientras tanto se ve en `/styleguide/formularios`.
 7. Kits escolares (enlace) y FAQ de escuelas.
 
 ### 3.10 `/mayoreo` Librerías y distribuidores
@@ -201,7 +201,7 @@ Toda la página usa la sub-paleta kids y Baloo 2 en títulos.
 3. Cómo cotizar en 3 pasos (agrega productos → envía datos → recibe precio).
 4. Presentaciones explicadas (blister, cajilla 12, fardo 100 cajillas).
 5. Productos más pedidos por librerías (6 tarjetas con "Agregar a mi cotización").
-6. `#distribuidor` **Formulario "Quiero ser distribuidor"**.
+6. `#distribuidor` **Formulario "Quiero ser distribuidor"**. **Implementado (BD-076):** `components/forms/distributor-form.tsx` con `submitDistributor` (folio `DIS`): negocio, tipo (Librería, Tienda, Distribuidor, Otro), NIT opcional, departamento, municipio, nombre y teléfono o correo (doc 17 §4). Lo monta BD-106.
 7. FAQ de mayoreo.
 
 ### 3.11 `/empresas` Empresas y universidades
@@ -224,7 +224,7 @@ Kits por nivel (Preprimaria, Primaria, Básicos y diversificado) con contenido, 
 Todas las FAQs agrupadas por tema (Productos, Dónde comprar, Mayoreo, Escuelas, Empresas) con buscador interno y anclas por pregunta. **JSON-LD:** `FAQPage`.
 
 ### 3.15 `/contacto`
-Datos NAP, horario, mapa estático de la planta (imagen, no iframe), formulario de contacto (asunto, nombre, correo o teléfono, mensaje), accesos rápidos: "¿Quieres cotizar?" → cotización, "¿Eres un colegio?" → escuelas.
+Datos NAP, horario, mapa estático de la planta (imagen, no iframe), formulario de contacto (asunto, nombre, correo o teléfono, mensaje), accesos rápidos: "¿Quieres cotizar?" → cotización, "¿Eres un colegio?" → escuelas. **Formulario implementado (BD-076):** `components/forms/contact-form.tsx` con `submitContact` (sin folio ni acuse; el correo va a `MAIL_SALES_TO`). Lo monta BD-111.
 
 ### 3.16 `/cotizacion` Mi cotización
 **noindex.** Página completa equivalente al drawer:

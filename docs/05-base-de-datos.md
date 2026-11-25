@@ -142,7 +142,7 @@ Tablas independientes (sin relaciones): `SiteStat`, `SiteSetting`, `SectionAppea
 | `QuoteItem` | Línea de cotización | `itemType`, `description` (copia), `quantity`, `unitLabel` | La copia de texto conserva lo pedido aunque cambie el catálogo |
 | `QuoteNote` | Notas internas de Ventas | `authorId`, `text` | — |
 | `SchoolVisitRequest` | Solicitud de visita escolar | `folio` UK, `schoolName`, `level`, `municipality` | — |
-| `DistributorApplication` | Solicitud de distribuidor | `folio` UK, `businessType`, `branches`, `monthlyVolume` | — |
+| `DistributorApplication` | Solicitud de distribuidor | `folio` UK, `businessType`, `nit` (opcional, BD-076), `branches` y `monthlyVolume` (opcionales desde BD-076: el formulario de doc 17 no los pregunta) | — |
 | `ContactMessage` | Mensaje de contacto | `subject`, `message` | — |
 | `FolioSequence` | Correlativos por prefijo y año | PK (`prefix`, `year`), `lastValue` | Ver §4 |
 | `HeroChapter` | Capítulos del hero | `key`, textos, CTA, videos, póster | 4 registros |

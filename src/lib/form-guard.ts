@@ -11,6 +11,13 @@ export const FORM_GUARD = {
   windowMs: 10 * 60_000,
 } as const;
 
+/**
+ * Acuses por dirección en 24 h (contando el envío actual), por formulario (BD-074, BD-076): quien
+ * quiera usar un formulario para mandar correos a terceros desde web@bolik66.com no pasa de aquí.
+ * La bandeja interna recibe todos igual.
+ */
+export const ACK_GUARD = { maxPerEmail: 2, windowMs: 24 * 60 * 60_000 } as const;
+
 /** Lo que manda cada formulario además de sus datos. */
 export type FormMeta = {
   /** Campo trampa (`website`), oculto para las personas: si llega con algo, lo llenó un bot. */

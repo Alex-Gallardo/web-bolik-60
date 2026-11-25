@@ -143,11 +143,12 @@ module.exports = {
             "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3500 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
-            // JS ≤ 165 KB como el resto (161.0 medidos en BD-047). Las 26 peticiones siguen (desde
-            // BD-071): Turbopack separa el mapa de import() del layout en otro archivo y aligerar el
-            // layout no lo devolvió al chunk común (BD-047, docs/12 §2).
+            // JS ≤ 165 KB como el resto (161.8 medidos en BD-076). 27 peticiones: desde BD-071,
+            // Turbopack separa el mapa de import() del layout en otro archivo; desde BD-076 (decisión
+            // del usuario, 24 nov 2026), también el cliente de Flight de React, porque los formularios
+            // públicos llaman a Server Actions desde el navegador (docs/12 §2).
             "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
-            "resource-summary:total:count": ["error", { maxNumericValue: 26 }],
+            "resource-summary:total:count": ["error", { maxNumericValue: 27 }],
           },
         },
       ],
