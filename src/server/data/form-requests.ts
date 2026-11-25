@@ -189,9 +189,10 @@ export async function saveDistributorApplication(
 
 /**
  * Guarda el mensaje de contacto (sin folio). Sin el contador de folios que ponga en fila a los
- * envíos, la cuenta toma un bloqueo de rango sobre las filas de esa IP (UPDLOCK, HOLDLOCK, en el
- * índice [ipHash, createdAt]) hasta el commit: dos envíos simultáneos de la misma IP no ven el mismo
- * recuento, aun tras un reinicio o con más de un proceso.
+ * envíos, la transacción toma un bloqueo de aplicación por hash de IP (sp_getapplock, liberado en el
+ * commit) antes de contar: dos envíos simultáneos de la misma IP no ven el mismo recuento, aun tras
+ * un reinicio o con más de un proceso. Un bloqueo de rango (UPDLOCK, HOLDLOCK) con inserciones
+ * simultáneas acababa en interbloqueos (RangeS-U contra RangeI-N).
  */
 export async function saveContactMessage(
   input: NewRequest<"contact">,
@@ -204,8 +205,14 @@ export async function saveContactMessage(
   const since = new Date(now.getTime() - limit.windowMs);
   return db.$transaction(
     async (tx) => {
+      const [lock] = await tx.$queryRaw<{ result: number }[]>`
+        DECLARE @result INT;
+        EXEC @result = sp_getapplock @Resource = ${`BolikContact:${input.ipHash}`},
+          @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 5000;
+        SELECT @result AS result;`;
+      if ((lock?.result ?? -1) < 0) throw new Error("sp_getapplock no obtuvo el bloqueo");
       const [row] = await tx.$queryRaw<{ recent: number }[]>`
-        SELECT COUNT(*) AS recent FROM ContactMessage WITH (UPDLOCK, HOLDLOCK)
+        SELECT COUNT(*) AS recent FROM ContactMessage
         WHERE ipHash = ${input.ipHash} AND createdAt >= ${since};`;
       if ((row?.recent ?? 0) >= limit.max) throw new RequestRateLimitError();
       const created = await tx.contactMessage.create({
