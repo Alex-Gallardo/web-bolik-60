@@ -163,13 +163,14 @@ test.describe("dónde comprar sin JavaScript (BD-080)", () => {
     await expect(form).toHaveAttribute("action", PATH);
     await expect(form).toHaveAttribute("method", "get");
     await expect(departmentSelect(page)).toHaveAttribute("name", "departamento");
-    // El 307 sale con la URL pública del sitio (NEXT_PUBLIC_SITE_URL), que en las E2E es otro
-    // servidor: se revisa su destino sin seguirlo y se abre aquí, como en qr.spec.ts.
+    // El 307 sale con la URL pública del sitio (NEXT_PUBLIC_SITE_URL): en local puede ser otro
+    // servidor y en la CI es este mismo origen, que Next deja relativo. Se revisa su destino sin
+    // seguirlo (resuelto contra la respuesta) y se abre aquí, como en qr.spec.ts.
     const response = await request.get(`${PATH}?departamento=quetzaltenango`, {
       maxRedirects: 0,
     });
     expect(response.status()).toBe(307);
-    const location = new URL(response.headers().location!);
+    const location = new URL(response.headers().location!, response.url());
     expect(`${location.pathname}${location.hash}`).toBe(`${PATH}#quetzaltenango`);
 
     await page.goto(`${PATH}#quetzaltenango`);

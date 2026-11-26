@@ -203,10 +203,11 @@ test.describe("home: escuelas, mayoreo, dónde comprar e historia (BD-053)", () 
       .getByRole("combobox", { name: "Elige tu departamento" })
       .selectOption("quetzaltenango");
     // El proxy da un 307 al grupo del departamento (BD-080) con la URL pública del sitio
-    // (NEXT_PUBLIC_SITE_URL), que en las E2E es otro servidor: se deja pasar al de la prueba.
+    // (NEXT_PUBLIC_SITE_URL): en local puede ser otro servidor y en la CI este mismo origen, que
+    // Next deja relativo. Se lleva siempre al servidor de la prueba.
     await page.route("**/donde-comprar?departamento=*", async (route) => {
       const response = await route.fetch({ maxRedirects: 0 });
-      const location = new URL(response.headers().location!);
+      const location = new URL(response.headers().location!, response.url());
       expect(response.status()).toBe(307);
       await route.fulfill({
         status: 307,
