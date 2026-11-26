@@ -154,6 +154,8 @@ En la página: `const look = await getSectionAppearance("home.solutions")` → `
 | Cambiar color en ficha | Imagen con crossfade, SKU actualizado (anunciado con `aria-live`) | Inline | — |
 | Buscar sin resultados | Estado vacío con sugerencias | Inline | `catalog.noResults` |
 | Filtros sin resultados | Estado vacío + "Quitar filtros" | Inline | `catalog.filtersEmpty` |
+| Dónde comprar: buscar una tienda sin resultados (BD-080) | Estado vacío + "Quitar filtros" (quita la búsqueda y el departamento; el foco pasa al conteo) | Inline | `stores.filtersEmpty` |
+| Dónde comprar: departamento sin tiendas (BD-080, desde el selector de la home) | Aviso sobre la lista completa | Inline | `stores.noneInDepartment` |
 | Descargar PDF | Toast "Descargando la ficha técnica" | Toast | `catalog.pdfReady` |
 | Usar mi ubicación | Toast "Buscando…" → "Encontramos N tiendas" o "No pasa nada, elige tu departamento" | Toast | `stores.*` |
 | Sin conexión / reconexión | Aviso persistente arriba (lo dibuja `FeedbackHost`: funciona sin red) / toast de éxito | Toast | `system.offline/online` |

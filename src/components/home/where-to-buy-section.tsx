@@ -15,7 +15,7 @@ type WhereToBuySectionProps = {
 
 /**
  * «Bolik está cerca de ti» (docs/06 §3.1 sección 9, BD-053). Sin JS: el selector de departamento
- * es un formulario GET a /donde-comprar (BD-080 lo lleva a /donde-comprar/[departamento]) y la
+ * es un formulario GET a /donde-comprar (el proxy lo lleva al grupo del departamento, BD-080) y la
  * compra en línea son enlaces externos en otra pestaña, con rel="noopener noreferrer" y
  * data-event="retailer_click" (criterio del ticket). Las «4 tiendas destacadas» de docs/06 esperan
  * a que Ventas las elija (no hay datos para marcarlas).

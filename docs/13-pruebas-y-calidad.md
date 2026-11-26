@@ -143,7 +143,7 @@ Etiqueta `@critico` = corre también en iPhone y bloquea el release.
 | `cotizacion.spec.ts` @critico | Agregar 2 productos → `/cotizacion` → enviar | validaciones amigables; diálogo de éxito con folio; `/cotizacion/enviada`; carrito vacío; correo en `tmp/mails` |
 | `cotizacion-error.spec.ts` | Servidor responde 500 (route intercept) | diálogo de error amigable; datos del formulario se conservan; botón reintentar |
 | `buscador.spec.ts` | Abrir con `/` o ícono; buscar "ultra", "pt00058", "759364663092", "crayon" (sin tilde) | resultados correctos; vacío muestra sugerencias |
-| `donde-comprar.spec.ts` @critico | Elegir departamento; "usar mi ubicación" (geolocalización simulada) | lista filtrada; enlace "Cómo llegar" con coordenadas; mapa carga solo al verse |
+| `donde-comprar.spec.ts` @critico | Elegir departamento; buscar por nombre; enlaces por departamento; sin JavaScript (BD-080). "Usar mi ubicación" (geolocalización simulada) llega con BD-081 | lista filtrada con `store_filter`; 307 de `?departamento=` al grupo; `maps_click` y `retailer_click` marcados; lista completa sin JS; mapa carga solo al verse (BD-081) |
 | `qr.spec.ts` | `/p/PT00058` | 301 a la ficha con `?color=azul` |
 | `redirecciones.spec.ts` | Todas las URL de Joomla del mapa | 301 y destino 200 |
 | `escuelas.spec.ts`, `mayoreo.spec.ts`, `contacto.spec.ts` | Envío de formularios | diálogo de éxito y registro en BD |

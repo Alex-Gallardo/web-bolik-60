@@ -26,10 +26,11 @@ const entries = (overrides: Partial<SitemapEntriesView> = {}): SitemapEntriesVie
 const urls = (sitemap: ReturnType<typeof buildSitemap>) => sitemap.map((e) => e.url);
 
 describe("sitemap.xml (BD-092, docs/10 §5)", () => {
-  it("lista la home, /productos, las categorías y las fichas con URL absoluta", () => {
+  it("lista la home, /productos, /donde-comprar, las categorías y las fichas con URL absoluta", () => {
     expect(urls(buildSitemap(entries(), SITE_URL))).toEqual([
       "https://www.bolik66.com/",
       "https://www.bolik66.com/productos",
+      "https://www.bolik66.com/donde-comprar",
       "https://www.bolik66.com/productos/boligrafos",
       "https://www.bolik66.com/productos/marcadores",
       "https://www.bolik66.com/productos/boligrafos/bolik-ultra",
@@ -37,14 +38,29 @@ describe("sitemap.xml (BD-092, docs/10 §5)", () => {
     ]);
   });
 
-  it("sin utilidades, sin admin, sin barra final y sin departamentos (sus páginas llegan con BD-082)", () => {
+  it("sin utilidades, sin admin, sin barra final y sin páginas de departamento (llegan con BD-082)", () => {
     const list = urls(buildSitemap(entries(), SITE_URL));
     for (const url of list) {
       const { pathname } = new URL(url);
-      expect(pathname).not.toMatch(/^\/(buscar|cotizacion|styleguide|admin|api|donde-comprar)/);
+      expect(pathname).not.toMatch(/^\/(buscar|cotizacion|styleguide|admin|api|donde-comprar\/)/);
       if (pathname !== "/") expect(url.endsWith("/")).toBe(false);
     }
-    expect(STATIC_PAGES.map((p) => p.path)).toEqual(["/", "/productos"]);
+    expect(STATIC_PAGES.map((p) => p.path)).toEqual(["/", "/productos", "/donde-comprar"]);
+  });
+
+  it("/donde-comprar toma la fecha del departamento con la tienda más reciente (BD-080)", () => {
+    const sitemap = buildSitemap(
+      entries({
+        departments: [
+          { slug: "guatemala", updatedAt: "2026-11-18T00:00:00.000Z" },
+          { slug: "quetzaltenango", updatedAt: "2026-11-20T00:00:00.000Z" },
+          { slug: "solola", updatedAt: null },
+        ],
+      }),
+      SITE_URL,
+    );
+    const stores = sitemap.find((e) => e.url.endsWith("/donde-comprar"))!;
+    expect(stores.lastModified).toBe("2026-11-20T00:00:00.000Z");
   });
 
   it("lastModified es la fecha real: la home toma la más reciente entre contenido y catálogo", () => {
@@ -73,6 +89,7 @@ describe("sitemap.xml (BD-092, docs/10 §5)", () => {
         products: [
           { slug: "bolik-ultra", categorySlug: "boligrafos", updatedAt: null, images: [] },
         ],
+        departments: [{ slug: "guatemala", updatedAt: null }],
         contentUpdatedAt: null,
       }),
       SITE_URL,

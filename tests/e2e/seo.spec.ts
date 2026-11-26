@@ -31,6 +31,8 @@ const SAMPLE_PRODUCTS = new Set(
 );
 const shortDescriptionAllowed = (path: string) =>
   path === "/productos" ||
+  // Descripción aprobada de doc 17 §6 (125 caracteres), BD-080.
+  path === "/donde-comprar" ||
   path === "/productos/boligrafos/bolik-ultra" ||
   SAMPLE_PRODUCTS.has(path.split("/")[3] ?? "");
 
@@ -73,7 +75,7 @@ async function readMeta(request: APIRequestContext, path: string): Promise<PageM
   };
 }
 
-/** Las rutas indexables del catálogo: lo que enlazan /productos y cada categoría. */
+/** Las rutas indexables: las fijas (BD-080 suma /donde-comprar) y lo que enlazan /productos y cada categoría. */
 async function indexablePaths(request: APIRequestContext): Promise<string[]> {
   const links = (html: string, pattern: RegExp) => [...html.matchAll(pattern)].map((m) => m[1]!);
   const catalog = await (await request.get("/productos")).text();
@@ -84,7 +86,7 @@ async function indexablePaths(request: APIRequestContext): Promise<string[]> {
     for (const href of links(html, /href="(\/productos\/[a-z0-9-]+\/[a-z0-9-]+)"/g))
       products.add(href);
   }
-  return ["/", "/productos", ...categories, ...products];
+  return ["/", "/productos", "/donde-comprar", ...categories, ...products];
 }
 
 /** Ancho y alto de un PNG (cabecera IHDR). */
@@ -451,6 +453,7 @@ function jsonLdBlocks(html: string, path: string): JsonLdBlock[] {
 function expectedTypes(path: string): string[] {
   if (path === "/") return ["WebSite", "FAQPage"];
   if (path === "/productos") return ["CollectionPage", "BreadcrumbList"];
+  if (path === "/donde-comprar") return ["ItemList", "BreadcrumbList"];
   if (path.split("/").length === 3) return ["CollectionPage", "BreadcrumbList"];
   return ["ProductGroup", "BreadcrumbList"];
 }

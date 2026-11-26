@@ -53,6 +53,8 @@ module.exports = {
         `${base}/productos/boligrafos`,
         // La ficha (BD-062): la página más importante para SEO y cotización.
         `${base}/productos/boligrafos/bolik-ultra`,
+        // Dónde comprar (BD-080): la lista completa de tiendas con su isla de filtros.
+        `${base}/donde-comprar`,
         // Mi cotización (BD-072): el formulario más pesado del sitio (noindex).
         `${base}/cotizacion`,
         // Buscador (BD-066): la página de una búsqueda, con resultados (proxy.ts → /buscar/[q]).

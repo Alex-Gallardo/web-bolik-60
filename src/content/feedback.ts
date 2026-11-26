@@ -143,6 +143,12 @@ export const feedback = {
       title: "No pasa nada",
       description: "Elige tu departamento en la lista para ver las tiendas.",
     },
+    /** /donde-comprar (BD-080): búsqueda por nombre o departamento sin tiendas (doc 17 §4). */
+    filtersEmpty: {
+      title:
+        "No encontramos tiendas con ese nombre. Prueba con otro o elige «Todos los departamentos».",
+      action: "Quitar filtros",
+    },
     noneInDepartment: (dep: string) => ({
       title: `Aún no tenemos tiendas registradas en ${dep}`,
       body: "Escríbenos y te decimos dónde conseguir Bolik, o conviértete en distribuidor.",

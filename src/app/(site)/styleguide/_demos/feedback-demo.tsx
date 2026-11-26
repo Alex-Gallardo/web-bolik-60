@@ -369,6 +369,34 @@ export function FeedbackDemo({ productName, storeName }: FeedbackDemoProps) {
       ),
     },
     {
+      action: "Dónde comprar: buscar una tienda sin resultados",
+      type: "Inline",
+      textKey: "stores.filtersEmpty",
+      demo: (
+        <EmptyState
+          illustration="empty"
+          headingLevel={4}
+          title={feedback.stores.filtersEmpty.title}
+        >
+          <Button variant="outline" size="sm">
+            {feedback.stores.filtersEmpty.action}
+          </Button>
+        </EmptyState>
+      ),
+    },
+    {
+      action: "Dónde comprar: departamento sin tiendas",
+      type: "Inline",
+      textKey: "stores.noneInDepartment",
+      demo: (
+        <EmptyState
+          illustration="empty"
+          headingLevel={4}
+          {...feedback.stores.noneInDepartment("Izabal")}
+        />
+      ),
+    },
+    {
       action: "Descargar PDF",
       type: "Toast",
       textKey: "catalog.pdfReady",

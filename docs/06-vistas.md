@@ -168,7 +168,7 @@ En `proxy.ts` (BD-065): busca la variante por `sku` o `barcode` (normalizados: s
 
 ### 3.7 `/donde-comprar`
 **Busca posicionar:** "dónde comprar lapiceros Bolik", "librerías Guatemala útiles escolares".
-**Render:** estático · **JSON-LD:** `ItemList` de `Store` (tipo `Store` con `address` y `geo` solo si `isVerified`).
+**Render:** estático · **JSON-LD:** `ItemList` de `Store` (BD-080: municipio, departamento y país de todas; la calle y `geo` solo si `isVerified`; teléfono solo de Guatemala).
 
 1. `h1` "Encuentra Bolik cerca de ti" + bajada.
 2. Franja **Compra en línea**: Walmart Guatemala ↗, La Torre ↗ (`ev:retailer_click`).
@@ -177,6 +177,16 @@ En `proxy.ts` (BD-065): busca la variante por `sku` o `barcode` (normalizados: s
 5. Cada tienda: nombre, tipo, municipio, dirección (si verificada), botones "Cómo llegar" (Google Maps) y "Comprar en línea" si aplica.
 6. Enlaces a cada departamento (SEO local).
 7. CTA: "¿Tienes una librería? Vende Bolik" → `/mayoreo#distribuidor`.
+
+**Implementado (BD-080, 26 nov 2026).**
+- **Título:** el `h1` es el de doc 17, «Dónde comprar Bolik».
+- **Lista:** llega completa en el HTML, agrupada por departamento: un `h2` por departamento, en el orden de la base. Dentro de cada uno van primero las cadenas, luego las librerías y los distribuidores, y después por nombre.
+- **Filtros:** una isla que solo oculta y muestra.
+  - Departamento: su estado es el hash `#slug` y registra `store_filter`. Solo un hash que es un departamento (o ninguno) lo cambia: «Volver arriba» (`#top`) no quita el filtro. Un departamento sin tiendas deja la lista completa con el aviso `stores.noneInDepartment`.
+  - Búsqueda por nombre, sin tildes.
+- **Sin JavaScript:** se ve todo y el selector es un formulario GET. `/donde-comprar?departamento={slug}` (también el de la home, BD-053) da un **307** a `/donde-comprar#{slug}`, porque la página es estática y no lee la query.
+- **Enlaces por departamento:** son anclas a su grupo.
+- **Pendiente:** BD-082 cambia el 307 por un 308 a `/donde-comprar/{slug}` y las anclas por sus páginas. El mapa y «Usar mi ubicación» llegan con BD-081.
 
 ### 3.8 `/donde-comprar/[departamento]`
 **Busca posicionar:** "útiles escolares en Quetzaltenango", "lapiceros Bolik Huehuetenango".

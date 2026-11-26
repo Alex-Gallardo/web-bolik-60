@@ -251,3 +251,38 @@ describe("proxy: /styleguide en producción (BD-026, BD-114)", () => {
     }
   });
 });
+
+describe("proxy: /donde-comprar?departamento= del formulario de la home (BD-080)", () => {
+  it("307 al grupo del departamento (#slug) en la página estática", async () => {
+    const response = await proxy(
+      new NextRequest("http://127.0.0.1:3000/donde-comprar?departamento=quetzaltenango"),
+    );
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "https://www.bolik66.com/donde-comprar#quetzaltenango",
+    );
+  });
+
+  it("conserva las utm_*; un valor inválido o vacío va a la lista completa", async () => {
+    const withUtm = await proxy(
+      new NextRequest("http://127.0.0.1:3000/donde-comprar?utm_source=x&departamento=solola"),
+    );
+    expect(withUtm.headers.get("location")).toBe(
+      "https://www.bolik66.com/donde-comprar?utm_source=x#solola",
+    );
+    for (const value of ["", "<script>", "../admin", "//evil.com", "a\r\nSet-Cookie: x=1"]) {
+      const response = await proxy(
+        new NextRequest(
+          `http://127.0.0.1:3000/donde-comprar?departamento=${encodeURIComponent(value)}`,
+        ),
+      );
+      expect(response.headers.get("location")).toBe("https://www.bolik66.com/donde-comprar");
+    }
+  });
+
+  it("sin el parámetro, la página sigue (estática)", async () => {
+    const response = await proxy(new NextRequest("http://127.0.0.1:3000/donde-comprar"));
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+});
