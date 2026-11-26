@@ -12,6 +12,11 @@
 html:not(.js) .js-only {
   display: none;
 }
+/* Lo contrario: el botón «Ver tiendas» del formulario GET de /donde-comprar (BD-080) solo hace
+   falta sin JS; con JS el selector filtra al cambiar. */
+html.js .no-js-only {
+  display: none;
+}
 /* En /productos, la barra de filtros (fija en móvil) se suma al header: el foco no queda debajo. */
 @media (max-width: 63.99rem) {
   html:has(#catalogo-filtros) {

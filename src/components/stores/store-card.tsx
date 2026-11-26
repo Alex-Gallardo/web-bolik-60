@@ -37,6 +37,8 @@ type StoreCardProps = { store: StoreView; headingLevel?: 2 | 3 | 4 };
  * verificada) y teléfono, con las acciones «Cómo llegar», «Llamar» y «Comprar en línea» (doc 17
  * §4). No es un solo enlace: tiene varias acciones; las que no tienen dato no se muestran. Cada
  * acción dice a qué tienda va para el lector de pantalla, y las externas avisan la pestaña nueva.
+ * «Cómo llegar» y «Comprar en línea» llevan su data-event (maps_click, retailer_click; docs/12 §4,
+ * BD-080): el clic se marca y lo registra el beacon de analítica (BD-083, BD-125).
  */
 export function StoreCard({ store, headingLevel = 3 }: StoreCardProps) {
   const Heading = `h${headingLevel}` as const;
@@ -68,7 +70,14 @@ export function StoreCard({ store, headingLevel = 3 }: StoreCardProps) {
       {store.isVerified ? null : <p className="text-xs text-muted">{ui.cards.unverified}</p>}
       <div className="mt-auto flex flex-wrap gap-x-5 pt-1">
         <Button asChild variant="link" size="sm">
-          <a href={directionsUrl(store)} target="_blank" rel="noopener noreferrer">
+          <a
+            href={directionsUrl(store)}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-event="maps_click"
+            data-store={store.slug}
+            data-department={store.department.slug}
+          >
             {ui.cards.directions}{" "}
             <span className="sr-only">{`${ui.cards.toStore(store.name)} ${ui.cards.newTab}`}</span>
           </a>
@@ -82,7 +91,13 @@ export function StoreCard({ store, headingLevel = 3 }: StoreCardProps) {
         ) : null}
         {shop ? (
           <Button asChild variant="link" size="sm">
-            <a href={shop} target="_blank" rel="noopener noreferrer">
+            <a
+              href={shop}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-event="retailer_click"
+              data-retailer={store.slug}
+            >
               {ui.cards.buyOnline}{" "}
               <span className="sr-only">{`${ui.cards.inStore(store.name)} ${ui.cards.newTab}`}</span>
             </a>

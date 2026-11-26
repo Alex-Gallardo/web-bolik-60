@@ -1832,8 +1832,30 @@ Encontrar una tienda cercana en segundos.
 
 **Criterios de aceptación**
 
-- [ ] Funciona sin JS (lista completa).
-- [ ] Eventos `store_filter`, `maps_click`, `retailer_click`.
+- [x] Funciona sin JS (lista completa).
+- [x] Eventos `store_filter`, `maps_click`, `retailer_click`.
+
+**Implementado (BD-080)**
+
+- **Página** (`app/(site)/donde-comprar/page.tsx`, estática): migas, `h1` de doc 17, franja «Compra en línea» (las tiendas con URL https), la lista y los enlaces por departamento con el aviso a distribuidores (`/mayoreo#distribuidor`). Textos en `content/stores.ts` (doc 17 §4).
+- **Lista:** completa en el HTML, un grupo por departamento con tiendas, en el orden de la base. Dentro: cadenas, librerías y distribuidores, y por nombre (`features/stores/directory.ts`).
+- **Filtros** (`components/stores/store-filters.tsx`): una isla que solo oculta y muestra, como el catálogo.
+  - El departamento vive en el hash (`#quetzaltenango`). Un script previo al pintado oculta los demás grupos antes de hidratar (sin CLS).
+  - La búsqueda por nombre ignora tildes y solo aparece con JavaScript.
+  - Un aviso `role="status"` dice cuántas tiendas quedan; sin resultados, un estado vacío con «Quitar filtros» (`feedback.stores.filtersEmpty`).
+  - Solo un hash que es un departamento (o ninguno) cambia el filtro: «Volver arriba» (`#top`) y «Saltar al contenido» no lo quitan. Un departamento sin tiendas (la home ofrece los 23) deja la lista completa con `feedback.stores.noneInDepartment`.
+  - Un enlace por departamento baja a su grupo y le pasa el foco a su título.
+- **Sin JavaScript** (decisión del usuario, 26 nov 2026): el selector es un formulario GET. `proxy.ts` responde **307** a `/donde-comprar?departamento={slug}` (también el formulario de la home) con `/donde-comprar#{slug}`, conservando los demás parámetros (las `utm_*`); un valor inválido va a la lista completa. Es temporal para que el navegador no guarde un destino que va a cambiar.
+- **Eventos:** `store_filter {department}` con `track()` al cambiar el selector (`todos` al quitarlo; los enlaces por departamento no cuentan). «Cómo llegar» lleva `data-event="maps_click"` con `data-store` y `data-department`; «Comprar en línea» y la franja, `retailer_click` con `data-retailer`. Como en la home (BD-053), el clic se marca; registrarlo es trabajo de BD-083 y BD-125.
+- **SEO:** `storeListJsonLd` (`ItemList` de `Store`: nombre, municipio, departamento, país, teléfono y tienda en línea; la calle y `geo` solo verificadas), `BreadcrumbList` de las migas y `/donde-comprar` en el sitemap con la fecha del departamento con la tienda más reciente. `seo.spec.ts` revisa la página; su descripción es la aprobada de doc 17 §6 (125 caracteres, como `/productos`).
+- **Pruebas:** unitarias de `directory.ts`, el script previo, la isla, el JSON-LD, el sitemap, el 307 y los `data-event` de la tarjeta; E2E `donde-comprar.spec.ts` (con y sin JavaScript) y la de la home. En las E2E el 307 sale con `NEXT_PUBLIC_SITE_URL`, otro servidor: se revisa su `Location` sin seguirlo, como en `qr.spec.ts`.
+- **Presupuesto** (Lighthouse local, en `lighthouse.config.cjs` desde este ticket): 160.8 KB de JS y 20 peticiones, accesibilidad, SEO y buenas prácticas en 1, CLS 0. La isla no importa zod ni Motion.
+- **Anotado de la revisión, fuera de alcance:**
+  - Las tiendas de El Salvador: `toInternationalPhone` antepone 502 y `directionsUrl` termina en «Guatemala» (ya existía, BD-023). En el JSON-LD el teléfono solo sale si el país es GT.
+  - Antes de hidratar, con `#departamento`, el script previo oculta los grupos pero el conteo y el selector dicen «todos» hasta hidratar (sin CLS).
+  - Con el teclado, algunos navegadores disparan `change` en cada flecha del selector: un `store_filter` por paso.
+  - La fecha del sitemap sale de las tiendas publicadas: despublicar la más reciente no la cambia (igual que las FAQ).
+  - La comprobación https de la tienda en línea se repite en la tarjeta, la home, la ficha y esta página.
 
 *Nota de BD-091:* el JSON-LD de esta página y de los departamentos (BD-082) va con este ticket: `ItemList` de `Store` (dirección; coordenadas solo si están verificadas) y `BreadcrumbList`, con un helper nuevo en `features/seo/jsonld.tsx`. El `Organization` ya lo pone el layout. Agregar la ruta a `expectedTypes` de `tests/e2e/seo.spec.ts`.
 
@@ -1842,6 +1864,8 @@ Encontrar una tienda cercana en segundos.
 *Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: dónde comprar enlaza cada departamento.
 
 #### BD-081 · Mapa y "cerca de mí"
+
+*Nota de BD-080:* la isla `components/stores/store-filters.tsx` ya filtra por departamento (hash) y por nombre. El orden por distancia puede reordenar los `<li data-store-item>` de cada grupo o pintar una lista aparte; si la ubicación se niega, el selector de departamento ya está.
 
 **Sprint** S3 · **Días** 1 · **Prioridad** Should · **Pista** A · **Depende de** BD-080 · **Docs** 06 §3.7
 
@@ -1858,6 +1882,8 @@ Mapa interactivo que no pesa en la carga inicial.
 - [ ] Permiso denegado muestra el selector de departamento.
 
 #### BD-082 · Páginas por departamento
+
+*Nota de BD-080:* `proxy.ts` responde hoy **307** a `/donde-comprar?departamento={slug}` con `/donde-comprar#{slug}` (`storesDepartmentRedirect` en `features/stores/directory.ts`). Este ticket lo cambia por un **308** a `/donde-comprar/{slug}`, y los enlaces «Busca por departamento» de `/donde-comprar` pasan de anclas a sus páginas (`DepartmentView.href`). Actualizar las E2E de la home y de `donde-comprar.spec.ts`.
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-080 · **Docs** 06 §3.8, 10
 
@@ -1878,6 +1904,8 @@ Una página por departamento con tiendas (SEO local).
 *Nota de BD-093:* lleva `<Breadcrumbs>` (`components/layout/breadcrumbs.tsx`) con `breadcrumbsText.home` (`content/breadcrumbs.ts`) y el título de la página. La E2E de `seo.spec.ts` exige migas en cada página del sitemap y que quede a 3 clics o menos de la home. Docs/10 §7: cada departamento enlaza a sus departamentos vecinos.
 
 #### BD-083 · Registro de clics salientes
+
+*Nota de BD-080:* en `/donde-comprar` los enlaces salientes ya llevan `data-event`: «Cómo llegar» `maps_click` (`data-store`, `data-department`) y la compra en línea `retailer_click` (`data-retailer`), como la home y la ficha.
 
 **Sprint** S3 · **Días** 0.5 · **Prioridad** Must · **Pista** A · **Depende de** BD-030 · **Docs** 12 §4
 

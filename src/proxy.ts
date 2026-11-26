@@ -8,6 +8,7 @@ import {
   ADMIN_PATH_HEADER,
   loginUrl,
 } from "@/lib/admin-access";
+import { STORES_PATH, storesDepartmentRedirect } from "@/features/stores/directory";
 import { clampQuery, searchRewritePath } from "@/lib/search-query";
 import { catalogRouteStore } from "@/server/seo/catalog-routes";
 import { redirectHits, redirectStore } from "@/server/seo/redirects";
@@ -35,6 +36,10 @@ import { redirectHits, redirectStore } from "@/server/seo/redirects";
  *    para que requireRole vuelva a ella si la sesión ya venció.
  * 7. /styleguide en producción sin la cookie (BD-026): 404 real aquí, porque el layout decide
  *    dentro de un <Suspense> y ahí la respuesta ya salió con 200. Con cookie, decide el layout.
+ * 8. Dónde comprar (BD-080): /donde-comprar?departamento={slug}, el formulario GET de la home, da un
+ *    307 a /donde-comprar#{slug}: la página es estática y no lee la query; sin JS el navegador baja
+ *    al grupo del departamento y con JS la isla filtra la lista. Temporal: BD-082 lo lleva con 308 a
+ *    /donde-comprar/{slug}.
  * `x-bolik-path` solo la pone este proxy: si la manda el cliente fuera del admin, se quita.
  * BD-094 agrega aquí el mapa estático de Joomla.
  */
@@ -108,6 +113,11 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/buscar") {
     const q = clampQuery(request.nextUrl.searchParams.get("q") ?? "");
     if (q) return NextResponse.rewrite(new URL(searchRewritePath(q), request.url));
+  }
+
+  if (pathname === STORES_PATH) {
+    const target = storesDepartmentRedirect(request.nextUrl.searchParams);
+    if (target) return NextResponse.redirect(new URL(target, SITE.url), 307);
   }
 
   if (pathname === ADMIN_HOME_PATH || pathname.startsWith(`${ADMIN_HOME_PATH}/`)) {

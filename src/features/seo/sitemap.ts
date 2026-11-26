@@ -4,8 +4,8 @@ import type { SitemapEntriesView, UpdatedAt } from "@/server/data/types";
 
 const LARGEST_WIDTH = MEDIA_WIDTHS[MEDIA_WIDTHS.length - 1]!;
 
-/** De qué datos sale la fecha de una página fija: su contenido, el catálogo o ambos. */
-type PageSource = "content" | "catalog";
+/** De qué datos sale la fecha de una página fija: su contenido, el catálogo o las tiendas. */
+type PageSource = "content" | "catalog" | "stores";
 
 type StaticPage = { path: string; changesWith: readonly PageSource[] };
 
@@ -19,6 +19,8 @@ export const STATIC_PAGES: readonly StaticPage[] = [
   // La home muestra categorías y el producto estrella: cambia con el contenido y con el catálogo.
   { path: "/", changesWith: ["content", "catalog"] },
   { path: "/productos", changesWith: ["catalog"] },
+  // La lista de tiendas (BD-080): su fecha es la del departamento con la tienda más reciente.
+  { path: "/donde-comprar", changesWith: ["stores"] },
 ];
 
 /** La fecha más reciente; null si ninguna tiene fecha (la fuente de ejemplo no las tiene). */
@@ -47,6 +49,7 @@ export function buildSitemap(entries: SitemapEntriesView, siteUrl: string): Meta
   const sourceDate: Record<PageSource, UpdatedAt> = {
     content: entries.contentUpdatedAt,
     catalog: catalogUpdatedAt,
+    stores: latest(entries.departments.map((d) => d.updatedAt)),
   };
   const entry = (path: string, updatedAt: UpdatedAt): MetadataRoute.Sitemap[number] =>
     updatedAt ? { url: absolute(path), lastModified: updatedAt } : { url: absolute(path) };

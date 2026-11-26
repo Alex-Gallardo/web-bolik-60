@@ -172,6 +172,12 @@ describe("StoreCard", () => {
       "https://www.google.com/maps/dir/?api=1&destination=Tul%C3%A1n%2C%20Quetzaltenango%2C%20Quetzaltenango%2C%20Guatemala",
     );
     expect(directions.getAttribute("target")).toBe("_blank");
+    // maps_click (docs/12 §4, BD-080): tienda y departamento, sin datos personales.
+    expect(directions.dataset).toMatchObject({
+      event: "maps_click",
+      store: store.slug,
+      department: store.department.slug,
+    });
   });
 
   it("verificada: muestra la dirección y el mapa la usa", () => {
@@ -195,9 +201,8 @@ describe("StoreCard", () => {
     expect(screen.queryByRole("link", { name: /^Comprar en línea/ })).toBeNull();
     unmount();
     render(<StoreCard store={{ ...store, onlineShopUrl: "https://tienda.example" }} />);
-    expect(
-      screen.getByRole("link", { name: `Comprar en línea en Tulán ${ui.cards.newTab}` }),
-    ).toBeTruthy();
+    const shop = screen.getByRole("link", { name: `Comprar en línea en Tulán ${ui.cards.newTab}` });
+    expect(shop.dataset).toMatchObject({ event: "retailer_click", retailer: store.slug });
   });
 
   it("con coordenadas verificadas, el mapa usa lat y lng", () => {

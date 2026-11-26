@@ -9,6 +9,7 @@ import {
   organizationJsonLd,
   productGroupJsonLd,
   serializeJsonLd,
+  storeListJsonLd,
   webSiteJsonLd,
 } from "./jsonld";
 
@@ -204,5 +205,101 @@ describe("Organization y WebSite (BD-091)", () => {
   it("ninguno publica precios, ofertas ni reseñas", () => {
     const text = JSON.stringify([organizationJsonLd(org), webSiteJsonLd()]);
     expect(text).not.toMatch(/price|offers|review|rating/i);
+  });
+});
+
+describe("ItemList de Store de /donde-comprar (BD-080)", () => {
+  const base = {
+    name: "Librería Tulán",
+    address: null,
+    municipality: "Quetzaltenango",
+    department: "Quetzaltenango",
+    country: "GT",
+    phone: "77612345",
+    geo: null,
+    url: null,
+  };
+
+  it("cada tienda en el orden de la página, con lugar y teléfono; sin calle ni geo si no está verificada", () => {
+    const data = storeListJsonLd({
+      name: "Dónde comprar Bolik",
+      path: "/donde-comprar",
+      stores: [base],
+    });
+    expect(data["@type"]).toBe("ItemList");
+    expect(data.url).toMatch(/\/donde-comprar$/);
+    expect(data.numberOfItems).toBe(1);
+    const [first] = data.itemListElement as { position: number; item: Record<string, unknown> }[];
+    expect(first!.position).toBe(1);
+    expect(first!.item).toEqual({
+      "@type": "Store",
+      name: "Librería Tulán",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Quetzaltenango",
+        addressRegion: "Quetzaltenango",
+        addressCountry: "GT",
+      },
+      telephone: "+50277612345",
+    });
+    expect(JSON.stringify(data)).not.toMatch(/price|offers|review|streetAddress|geo/i);
+  });
+
+  it("verificada: calle, coordenadas y la tienda en línea", () => {
+    const data = storeListJsonLd({
+      name: "Dónde comprar Bolik",
+      path: "/donde-comprar",
+      stores: [
+        {
+          ...base,
+          address: "4a. calle 12-34, zona 1",
+          geo: { lat: 14.83, lng: -91.52 },
+          url: "https://tienda.example",
+          phone: null,
+        },
+      ],
+    });
+    const [first] = data.itemListElement as { item: Record<string, unknown> }[];
+    expect(first!.item).toMatchObject({
+      address: { streetAddress: "4a. calle 12-34, zona 1" },
+      geo: { "@type": "GeoCoordinates", latitude: 14.83, longitude: -91.52 },
+      url: "https://tienda.example",
+    });
+    expect(first!.item).not.toHaveProperty("telephone");
+  });
+});
+
+describe("ItemList de Store: datos que no se suponen (BD-080)", () => {
+  it("El Salvador no publica teléfono (saldría con +502) y sin país no se inventa uno", () => {
+    const data = storeListJsonLd({
+      name: "Dónde comprar Bolik",
+      path: "/donde-comprar",
+      stores: [
+        {
+          name: "Cervantes",
+          address: null,
+          municipality: "San Salvador",
+          department: "El Salvador",
+          country: "SV",
+          phone: "22223333",
+          geo: null,
+          url: null,
+        },
+        {
+          name: "Sin país",
+          address: null,
+          municipality: null,
+          department: "Otro",
+          country: null,
+          phone: null,
+          geo: null,
+          url: null,
+        },
+      ],
+    });
+    const [sv, unknown] = data.itemListElement as { item: Record<string, unknown> }[];
+    expect(sv!.item).not.toHaveProperty("telephone");
+    expect(sv!.item.address).toMatchObject({ addressCountry: "SV" });
+    expect(unknown!.item.address).not.toHaveProperty("addressCountry");
   });
 });

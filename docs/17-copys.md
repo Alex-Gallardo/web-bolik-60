@@ -211,6 +211,13 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Tienda sin verificar por Ventas: Datos por confirmar (sin dirección; «Cómo llegar» busca por nombre y municipio)
 - Lector de pantalla: «Cómo llegar a {tienda} (se abre en otra pestaña)», «Llamar a {tienda}», «Comprar en línea en {tienda}»
 - En línea: Compra en línea en Walmart Guatemala y La Torre.
+- Filtros (BD-080, aprobado el 26 nov 2026): Departamento · Todos los departamentos · Ver tiendas (solo sin JavaScript) · Buscar tienda por nombre
+- Conteo: {n} tiendas en {departamento} (1 tienda en {departamento}); con todos los departamentos, {n} tiendas
+- Sin resultados: No encontramos tiendas con ese nombre. Prueba con otro o elige «Todos los departamentos». · Quitar filtros
+- Departamento sin tiendas (de §5): Aún no tenemos tiendas registradas en {departamento} · Escríbenos y te decimos dónde conseguir Bolik, o conviértete en distribuidor.
+- Compra en línea, botones: Comprar en {tienda} (como en la ficha y la home)
+- Enlaces por departamento: Busca por departamento
+- Distribuidores (docs/06 §3.7): ¿Tienes una librería? Vende Bolik → `/mayoreo#distribuidor`
 - `/donde-comprar/[dep]` `h1`: Dónde comprar Bolik en {departamento}
 
 ### `/contacto`

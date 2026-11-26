@@ -178,6 +178,74 @@ export function collectionPageJsonLd({
   };
 }
 
+export type StoreInput = {
+  name: string;
+  /** Calle y número: solo si Ventas verificó la tienda (la página tampoco la muestra si no). */
+  address: string | null;
+  municipality: string | null;
+  department: string;
+  /** País del departamento (GT o SV); null si no se sabe (no se supone). */
+  country: string | null;
+  phone: string | null;
+  /** Coordenadas: solo verificadas. */
+  geo: { lat: number; lng: number } | null;
+  /** Tienda en línea (https), la del botón «Comprar en línea». */
+  url: string | null;
+};
+
+/**
+ * ItemList de Store (BD-080, docs/10 §4): las tiendas de /donde-comprar en el orden de la página,
+ * con lo que muestra cada tarjeta. La calle y las coordenadas solo van con datos verificados.
+ */
+export function storeListJsonLd({
+  name,
+  path,
+  stores,
+}: {
+  name: string;
+  path: string;
+  stores: readonly StoreInput[];
+}): JsonLdObject {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    url: absolute(path),
+    numberOfItems: stores.length,
+    itemListElement: stores.map((store, index) => {
+      // toInternationalPhone antepone 502: un teléfono de El Salvador saldría falso. Solo GT.
+      const phone =
+        store.phone && store.country === "GT" ? toInternationalPhone(store.phone) : null;
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Store",
+          name: store.name,
+          address: {
+            "@type": "PostalAddress",
+            ...(store.address ? { streetAddress: store.address } : {}),
+            ...(store.municipality ? { addressLocality: store.municipality } : {}),
+            addressRegion: store.department,
+            ...(store.country ? { addressCountry: store.country } : {}),
+          },
+          ...(phone ? { telephone: `+${phone}` } : {}),
+          ...(store.geo
+            ? {
+                geo: {
+                  "@type": "GeoCoordinates",
+                  latitude: store.geo.lat,
+                  longitude: store.geo.lng,
+                },
+              }
+            : {}),
+          ...(store.url ? { url: store.url } : {}),
+        },
+      };
+    }),
+  };
+}
+
 export type ProductGroupInput = {
   name: string;
   /** Slug del producto: productGroupID. */

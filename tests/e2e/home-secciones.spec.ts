@@ -196,15 +196,31 @@ test.describe("home: escuelas, mayoreo, dónde comprar e historia (BD-053)", () 
     expect(errors, "errores en la consola").toEqual([]);
   });
 
-  test("el selector de departamento manda a /donde-comprar con el departamento", async ({
-    page,
-  }) => {
+  test("el selector de departamento lleva a sus tiendas en /donde-comprar", async ({ page }) => {
     await page.goto("/");
     const where = page.getByRole("region", { name: "Bolik está cerca de ti" });
-    await where.getByRole("combobox", { name: "Elige tu departamento" }).selectOption("guatemala");
+    await where
+      .getByRole("combobox", { name: "Elige tu departamento" })
+      .selectOption("quetzaltenango");
+    // El proxy da un 307 al grupo del departamento (BD-080) con la URL pública del sitio
+    // (NEXT_PUBLIC_SITE_URL): en local puede ser otro servidor y en la CI este mismo origen, que
+    // Next deja relativo. Se lleva siempre al servidor de la prueba.
+    await page.route("**/donde-comprar?departamento=*", async (route) => {
+      const response = await route.fetch({ maxRedirects: 0 });
+      const location = new URL(response.headers().location!, response.url());
+      expect(response.status()).toBe(307);
+      await route.fulfill({
+        status: 307,
+        headers: { location: `${location.pathname}${location.search}${location.hash}` },
+      });
+    });
     await where.getByRole("button", { name: "Ver tiendas" }).click();
-    // /donde-comprar llega con BD-080: hoy se comprueba solo la URL que arma el formulario.
-    await expect(page).toHaveURL(/\/donde-comprar\?departamento=guatemala$/);
+    // La isla filtra la lista.
+    await expect(page).toHaveURL(/\/donde-comprar#quetzaltenango$/);
+    await expect(page.getByRole("combobox", { name: "Departamento" })).toHaveValue(
+      "quetzaltenango",
+    );
+    await expect(page.getByText("5 tiendas en Quetzaltenango")).toBeVisible();
   });
 
   test("el foco se ve sobre el fondo sun de escuelas", async ({ page }) => {
