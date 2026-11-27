@@ -267,7 +267,7 @@ CSP:
 default-src 'self';
 script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms;
 style-src 'self' 'unsafe-inline';
-img-src 'self' data: blob: https://*.tile.openstreetmap.org https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com;
+img-src 'self' data: blob: https://tile.openstreetmap.org https://www.googletagmanager.com https://*.clarity.ms https://c.bing.com;
 font-src 'self';
 connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.clarity.ms;
 media-src 'self';

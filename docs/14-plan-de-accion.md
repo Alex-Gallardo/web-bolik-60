@@ -1878,8 +1878,31 @@ Mapa interactivo que no pesa en la carga inicial.
 
 **Criterios de aceptación**
 
-- [ ] El JS del mapa no está en la carga inicial.
-- [ ] Permiso denegado muestra el selector de departamento.
+- [x] El JS del mapa no está en la carga inicial.
+- [x] Permiso denegado muestra el selector de departamento.
+
+**Implementado (BD-081)**
+
+Decisiones del usuario (27 nov 2026): un pin por departamento (ninguna tienda tiene coordenadas verificadas); «Usar mi ubicación» elige el departamento con tiendas más cercano y ordena por distancia las verificadas; más de 150 km es «lejos»; mapas de OpenStreetMap; los textos nuevos de doc 17 §4.
+
+- **Mapa** (`components/stores/store-map.tsx`): React-Leaflet con pines propios (`divIcon`, A-34 en `motion.css`), Enter y Espacio en los pines, zoom en español, sin zoom con la rueda y sin animaciones con movimiento reducido. El pin activo se marca con su clase y `aria-pressed` sin cambiar el ícono: Leaflet reemplazaría el elemento y el foco se perdería. Ajustes a `leaflet.css` en `globals.css` fuera de las capas (botones de 44 px, fuente, foco).
+- **Carga diferida:** `store-map-slot.tsx` aparta el alto en escritorio y lo pide con `import()` cuando ya cargó la página y su lugar entra en pantalla; en móvil, `store-map-sheet.tsx` (Radix Dialog) se descarga al tocar «Ver mapa». La cercanía (`features/stores/nearby.ts`, `lib/geo.ts`) se descarga al tocar «Usar mi ubicación». `import()` directo y no `next/dynamic`: su código sumaba a la carga inicial. Si el mapa no llega, `feedback.stores.mapFailed`.
+- **«Usar mi ubicación»** en la isla de filtros: toasts con un mismo id (Buscando… → resultado), foco al selector si no hay resultado, `store_locate {result, department}` sin la posición. Sus tiendas verificadas se ordenan moviendo los `<li>` de su grupo (orden del DOM = orden visual).
+- **CSP:** `img-src` pasa de `*.tile.openstreetmap.org` (subdominios viejos) a `tile.openstreetmap.org`, la dirección que pide hoy OpenStreetMap (doc 15).
+- **Pruebas:** unitarias de `geo.ts`, `nearby.ts` y la isla (ubicación con permiso, denegada, error, inválida, lejos y sin soporte; orden por distancia; la hoja y su foco). E2E en `donde-comprar.spec.ts`: Leaflet fuera del HTML y pedido después de `load`, su CSS, un pin que filtra, teclado y axe con el mapa, la hoja en móvil a 360 px, la ubicación con permiso (Xela) y denegada. La matriz de feedback pasa a 29 filas.
+- **Presupuesto** (Lighthouse local): 163.0 KB de JS (de 165) y 20 peticiones; el mapa no se pide (móvil, sin «Ver mapa»). El archivo del mapa: 44.8 KB comprimidos (de 60) y 2.7 KB de CSS.
+- **Revisor:** sin pendientes bloqueantes. Corregí:
+  - al tocar un pin en la hoja de móvil, el zoom animado terminaba sobre el mapa ya cerrado (error en consola): el departamento se elige cuando la hoja ya se fue;
+  - el mapa recibía arreglos nuevos en cada render (cada letra de la búsqueda): volvía a encuadrar y perdía la marca del pin elegido;
+  - «Usar mi ubicación» podía quedar ocupado para siempre (Firefox no responde si se cierra el aviso del permiso): vigilante de 20 s;
+  - el orden por distancia no volvía al cambiar de departamento;
+  - coordenadas de tienda sin validar, un centro inválido con tiendas verificadas, una transición de color, tres columnas sin JS, el nombre y el foco del contenedor del mapa, el hover de los botones de zoom y el `store_filter` repetido al tocar el pin ya elegido.
+- **Riesgos anotados:**
+  - La política de uso de los mapas de OpenStreetMap desanima el tráfico alto. Si el sitio crece, se cambia de proveedor en `store-map.tsx` (`TILES`) y en la CSP.
+  - El orden por distancia mueve los `<li>` que pintó el servidor (y los devuelve al cambiar de filtro). Si React volviera a reconciliar la lista (`router.refresh`), partiría de otro orden: hoy no pasa, porque la página es estática y ninguna tienda tiene coordenadas.
+  - El escalonado de los pines va en un `style` en línea dentro del ícono: depende de `style-src 'unsafe-inline'` (docs/15 §6), como el resto del sitio.
+
+*Nota para BD-120 (tiendas en el admin):* al marcar una tienda verificada con coordenadas, tendrá su pin y se ordenará por distancia sin cambios en el sitio.
 
 #### BD-082 · Páginas por departamento
 

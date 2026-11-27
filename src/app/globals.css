@@ -17,6 +17,41 @@ html:not(.js) .js-only {
 html.js .no-js-only {
   display: none;
 }
+/* Mapa de tiendas (BD-081): leaflet.css llega sin capa y les ganaría a las utilidades; estos
+   ajustes también van fuera de las capas, con más especificidad. Fuente del sitio, botones de zoom
+   de 44 px (objetivo táctil) y atribución legible. */
+.store-map.leaflet-container {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  background: var(--soft);
+}
+.store-map .leaflet-bar a,
+.store-map.leaflet-touch .leaflet-bar a {
+  width: 2.75rem;
+  height: 2.75rem;
+  line-height: 2.75rem;
+  background-color: var(--paper);
+  color: var(--ink);
+}
+.store-map .leaflet-control-attribution {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.store-map .leaflet-control-attribution a {
+  color: var(--blue);
+}
+.store-map .leaflet-bar a:hover,
+.store-map .leaflet-bar a:focus-visible,
+.store-map.leaflet-touch .leaflet-bar a:hover,
+.store-map.leaflet-touch .leaflet-bar a:focus-visible {
+  background-color: var(--soft);
+}
+.store-map.leaflet-container:focus-visible,
+.store-map .leaflet-marker-icon:focus-visible,
+.store-map .leaflet-bar a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
 /* En /productos, la barra de filtros (fija en móvil) se suma al header: el foco no queda debajo. */
 @media (max-width: 63.99rem) {
   html:has(#catalogo-filtros) {

@@ -26,5 +26,21 @@ export const storesPage = {
     return department ? `${stores} en ${department}` : stores;
   },
   departmentsTitle: "Busca por departamento",
+  /** Mapa y «Usar mi ubicación» (BD-081, aprobado el 27 nov 2026; docs/17 §4). Avisos: feedback. */
+  locate: "Usar mi ubicación",
+  map: {
+    /** Título del mapa: oculto en escritorio, visible en la hoja de móvil. */
+    title: "Mapa de tiendas",
+    open: "Ver mapa",
+    loading: "Cargando mapa…",
+    /** Pin de un departamento (lector de pantalla). */
+    pin: (department: string, n: number) =>
+      `${department}: ${n.toLocaleString("es-GT")} ${n === 1 ? "tienda" : "tiendas"}`,
+    zoomIn: "Acercar",
+    zoomOut: "Alejar",
+    /** Atribución obligatoria de OpenStreetMap (licencia ODbL). */
+    attribution:
+      '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>',
+  },
   distributorCta: { label: "¿Tienes una librería? Vende Bolik", href: "/mayoreo#distribuidor" },
 } as const;

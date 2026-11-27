@@ -63,12 +63,15 @@ export function FeedbackDemo({ productName, storeName }: FeedbackDemoProps) {
       },
     });
 
-  const locate = async (ok: boolean) => {
+  const locate = async (result: "ok" | "denied" | "far") => {
     toast(feedback.stores.locating, { id: "stores-locate" });
     await wait(1200);
-    toast(ok ? feedback.stores.located(EXAMPLES.storesFound) : feedback.stores.locationDenied, {
-      id: "stores-locate",
-    });
+    const message = {
+      ok: feedback.stores.located(EXAMPLES.storesFound),
+      denied: feedback.stores.locationDenied,
+      far: feedback.stores.noneNearby,
+    }[result];
+    toast(message, { id: "stores-locate" });
   };
 
   const upload = async () => {
@@ -412,11 +415,29 @@ export function FeedbackDemo({ productName, storeName }: FeedbackDemoProps) {
       textKey: "stores.*",
       demo: (
         <div className="flex flex-wrap gap-3">
-          <Button variant="outline" onClick={() => void locate(true)}>
+          <Button variant="outline" onClick={() => void locate("ok")}>
             Con permiso
           </Button>
-          <Button variant="outline" onClick={() => void locate(false)}>
+          <Button variant="outline" onClick={() => void locate("denied")}>
             Sin permiso
+          </Button>
+          <Button variant="outline" onClick={() => void locate("far")}>
+            Lejos de las tiendas
+          </Button>
+        </div>
+      ),
+    },
+    {
+      action: "Dónde comprar: el mapa no cargó",
+      type: "Inline + Toast",
+      textKey: "stores.mapFailed",
+      demo: (
+        <div className="flex flex-col items-start gap-3">
+          <p className="grid h-32 w-full place-items-center rounded-xl bg-soft px-6 text-center text-muted">
+            {feedback.stores.mapFailed.title}
+          </p>
+          <Button variant="outline" onClick={() => toast(feedback.stores.mapFailed)}>
+            Ver mapa (móvil)
           </Button>
         </div>
       ),

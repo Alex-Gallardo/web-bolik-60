@@ -157,7 +157,8 @@ En la página: `const look = await getSectionAppearance("home.solutions")` → `
 | Dónde comprar: buscar una tienda sin resultados (BD-080) | Estado vacío + "Quitar filtros" (quita la búsqueda y el departamento; el foco pasa al conteo) | Inline | `stores.filtersEmpty` |
 | Dónde comprar: departamento sin tiendas (BD-080, desde el selector de la home) | Aviso sobre la lista completa | Inline | `stores.noneInDepartment` |
 | Descargar PDF | Toast "Descargando la ficha técnica" | Toast | `catalog.pdfReady` |
-| Usar mi ubicación | Toast "Buscando…" → "Encontramos N tiendas" o "No pasa nada, elige tu departamento" | Toast | `stores.*` |
+| Usar mi ubicación | Toast "Buscando…" → "Encontramos N tiendas cerca", "No pasa nada, elige tu departamento" (permiso denegado o error) o "No encontramos tiendas cerca de ti" (a más de 150 km, BD-081); sin resultado, el foco pasa al selector de departamento | Toast | `stores.*` |
+| Dónde comprar: el mapa no cargó (BD-081) | Aviso en el lugar del mapa (en escritorio y dentro de la hoja de móvil); toast si no llega la hoja al tocar «Ver mapa»; la lista sigue | Inline + Toast | `stores.mapFailed` |
 | Sin conexión / reconexión | Aviso persistente arriba (lo dibuja `FeedbackHost`: funciona sin red) / toast de éxito | Toast | `system.offline/online` |
 | Error inesperado | Página de error amable con reintento | Página | `system.genericError` |
 | Admin: guardar | Toast "Cambios guardados y publicados · Ver en el sitio" | Toast | `admin.saved` |
