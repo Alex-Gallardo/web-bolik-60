@@ -1,11 +1,12 @@
 import type { Page } from "@playwright/test";
 import { collectConsoleErrors, expect, expectNoA11yViolations, test } from "./helpers";
+import { MAP_PINS, watchMap } from "./stores-helpers";
 
-// Dónde comprar (BD-080, docs/06 §3.7). Con DATA_SOURCE=fixtures: 25 tiendas publicadas, 5 en
-// Quetzaltenango; Walmart y La Torre con tienda en línea.
+// Dónde comprar (BD-080, docs/06 §3.7). Con DATA_SOURCE=fixtures: 31 tiendas publicadas (6 de
+// ejemplo con ubicación, BD-082), 6 en Quetzaltenango; Walmart y La Torre con tienda en línea.
 
 const PATH = "/donde-comprar";
-const TOTAL = 25;
+const TOTAL = 31;
 
 const visibleStores = (page: Page) => page.locator("[data-store-item]:visible");
 const departmentSelect = (page: Page) => page.getByRole("combobox", { name: "Departamento" });
@@ -44,8 +45,8 @@ test.describe("dónde comprar (BD-080)", () => {
   test("el departamento filtra, deja el hash y registra store_filter", async ({ page }) => {
     await page.goto(PATH);
     await departmentSelect(page).selectOption("quetzaltenango");
-    await expect(visibleStores(page)).toHaveCount(5);
-    await expect(page.getByText("5 tiendas en Quetzaltenango")).toBeVisible();
+    await expect(visibleStores(page)).toHaveCount(6);
+    await expect(page.getByText("6 tiendas en Quetzaltenango")).toBeVisible();
     await expect(page).toHaveURL(/#quetzaltenango$/);
     expect(await storeFilterEvents(page)).toEqual([
       { event: "store_filter", department: "quetzaltenango" },
@@ -59,7 +60,7 @@ test.describe("dónde comprar (BD-080)", () => {
     await page.evaluate(() => {
       window.location.hash = "top";
     });
-    await expect(visibleStores(page)).toHaveCount(5);
+    await expect(visibleStores(page)).toHaveCount(6);
 
     await departmentSelect(page).selectOption("");
     await expect(visibleStores(page)).toHaveCount(TOTAL);
@@ -74,14 +75,26 @@ test.describe("dónde comprar (BD-080)", () => {
     await expect(departmentSelect(page)).toHaveValue("");
   });
 
-  test("los enlaces por departamento filtran y bajan a su grupo", async ({ page }) => {
-    await page.goto(`${PATH}#quetzaltenango`);
-    await expect(visibleStores(page)).toHaveCount(5);
+  test("los enlaces por departamento llevan a su página (BD-082)", async ({ page }) => {
+    await page.goto(PATH);
     await page
       .getByRole("region", { name: "Busca por departamento" })
       .getByRole("link", { name: "Sololá" })
       .click();
-    await expect(page).toHaveURL(/#solola$/);
+    await expect(page).toHaveURL(/\/donde-comprar\/solola$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Dónde comprar Bolik en Sololá",
+    );
+  });
+
+  test("un enlace a #departamento (de antes de BD-082) sigue filtrando y baja a su grupo", async ({
+    page,
+  }) => {
+    await page.goto(`${PATH}#quetzaltenango`);
+    await expect(visibleStores(page)).toHaveCount(6);
+    await page.evaluate(() => {
+      window.location.hash = "solola";
+    });
     await expect(departmentSelect(page)).toHaveValue("solola");
     await expect(page.locator('[data-store-group="solola"]')).toBeInViewport();
     await expect(page.locator('[data-store-group="quetzaltenango"]')).toBeHidden();
@@ -154,7 +167,7 @@ test.describe("dónde comprar sin JavaScript (BD-080)", () => {
     await expect(page.getByRole("button", { name: "Ver tiendas" })).toBeVisible();
   });
 
-  test("el formulario lleva al grupo del departamento con la lista completa", async ({
+  test("el formulario lleva a la página del departamento (308, BD-082)", async ({
     page,
     request,
   }) => {
@@ -163,46 +176,28 @@ test.describe("dónde comprar sin JavaScript (BD-080)", () => {
     await expect(form).toHaveAttribute("action", PATH);
     await expect(form).toHaveAttribute("method", "get");
     await expect(departmentSelect(page)).toHaveAttribute("name", "departamento");
-    // El 307 sale con la URL pública del sitio (NEXT_PUBLIC_SITE_URL): en local puede ser otro
+    // El 308 sale con la URL pública del sitio (NEXT_PUBLIC_SITE_URL): en local puede ser otro
     // servidor y en la CI es este mismo origen, que Next deja relativo. Se revisa su destino sin
     // seguirlo (resuelto contra la respuesta) y se abre aquí, como en qr.spec.ts.
-    const response = await request.get(`${PATH}?departamento=quetzaltenango`, {
-      maxRedirects: 0,
-    });
-    expect(response.status()).toBe(307);
-    const location = new URL(response.headers().location!, response.url());
-    expect(`${location.pathname}${location.hash}`).toBe(`${PATH}#quetzaltenango`);
+    const target = async (slug: string, status: number) => {
+      const response = await request.get(`${PATH}?departamento=${slug}`, { maxRedirects: 0 });
+      expect(response.status()).toBe(status);
+      const location = new URL(response.headers().location!, response.url());
+      return `${location.pathname}${location.hash}`;
+    };
+    expect(await target("quetzaltenango", 308)).toBe(`${PATH}/quetzaltenango`);
+    // Sin tiendas no hay página: un 307 (no se guarda) a la lista con su aviso (BD-080).
+    expect(await target("izabal", 307)).toBe(`${PATH}#izabal`);
 
-    await page.goto(`${PATH}#quetzaltenango`);
-    await expect(visibleStores(page)).toHaveCount(TOTAL);
-    await expect(page.locator("#quetzaltenango")).toBeInViewport();
+    await page.goto(`${PATH}/quetzaltenango`);
+    await expect(page.getByRole("article")).toHaveCount(6);
   });
 });
 
-// ── Mapa y «Usar mi ubicación» (BD-081) ──
-// Los mapas base de OpenStreetMap no se piden en las pruebas (sin red externa en la CI): un PNG de
-// 1×1. Con DATA_SOURCE=fixtures hay tiendas en 7 departamentos: 7 pines.
+// ── Mapa y «Usar mi ubicación» (BD-081) ── (mapas base y pines: stores-helpers.ts)
 
-const PIXEL = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=",
-  "base64",
-);
-const PINS = 7;
+const PINS = MAP_PINS;
 const XELA = { latitude: 14.8344, longitude: -91.5186 };
-
-/** Responde los mapas base y anota qué archivos JS traen Leaflet y cuándo llegaron. */
-async function watchMap(page: Page) {
-  await page.route("https://tile.openstreetmap.org/**", (route) =>
-    route.fulfill({ status: 200, contentType: "image/png", body: PIXEL }),
-  );
-  const leaflet: string[] = [];
-  page.on("response", async (response) => {
-    if (response.request().resourceType() !== "script") return;
-    const body = await response.text().catch(() => "");
-    if (body.includes("_leaflet_id")) leaflet.push(response.url());
-  });
-  return leaflet;
-}
 
 const pins = (page: Page) => page.locator(".store-pin");
 const locateButton = (page: Page) => page.getByRole("button", { name: "Usar mi ubicación" });
@@ -235,7 +230,7 @@ test.describe("mapa de tiendas en escritorio (BD-081)", () => {
   test("escribir en la búsqueda no quita la marca del pin elegido", async ({ page }) => {
     await watchMap(page);
     await page.goto(`${PATH}#quetzaltenango`);
-    const xela = page.getByRole("button", { name: "Quetzaltenango: 5 tiendas" });
+    const xela = page.getByRole("button", { name: "Quetzaltenango: 6 tiendas" });
     await expect(xela).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("searchbox", { name: "Buscar tienda por nombre" }).fill("tulan");
     await expect(visibleStores(page)).toHaveCount(1);
@@ -246,9 +241,9 @@ test.describe("mapa de tiendas en escritorio (BD-081)", () => {
   test("tocar un pin filtra la lista y lo marca; el selector mueve el mapa", async ({ page }) => {
     await watchMap(page);
     await page.goto(PATH);
-    const xela = page.getByRole("button", { name: "Quetzaltenango: 5 tiendas" });
+    const xela = page.getByRole("button", { name: "Quetzaltenango: 6 tiendas" });
     await xela.click();
-    await expect(visibleStores(page)).toHaveCount(5);
+    await expect(visibleStores(page)).toHaveCount(6);
     await expect(page).toHaveURL(/#quetzaltenango$/);
     await expect(departmentSelect(page)).toHaveValue("quetzaltenango");
     await expect(xela).toHaveAttribute("aria-pressed", "true");
@@ -300,13 +295,13 @@ test.describe("mapa de tiendas en móvil (BD-081)", () => {
     await expect.poll(() => leaflet.length).toBe(1);
     await expectNoA11yViolations(page);
 
-    await sheet.getByRole("button", { name: "Quetzaltenango: 5 tiendas" }).click();
+    await sheet.getByRole("button", { name: "Quetzaltenango: 6 tiendas" }).click();
     await expect(sheet).toBeHidden();
-    await expect(visibleStores(page)).toHaveCount(5);
+    await expect(visibleStores(page)).toHaveCount(6);
     await expect(page.getByRole("button", { name: "Ver mapa" })).toBeFocused();
     // Abrir otra vez: el mapa ya llegó (no se pide de nuevo) y queda en el departamento.
     await page.getByRole("button", { name: "Ver mapa" }).click();
-    await expect(page.getByRole("button", { name: "Quetzaltenango: 5 tiendas" })).toHaveAttribute(
+    await expect(page.getByRole("button", { name: "Quetzaltenango: 6 tiendas" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
@@ -330,8 +325,8 @@ test.describe("usar mi ubicación con permiso (BD-081)", () => {
     await watchMap(page);
     await page.goto(PATH);
     await locateButton(page).click();
-    await expect(page.getByText("Encontramos 5 tiendas cerca").first()).toBeVisible();
-    await expect(visibleStores(page)).toHaveCount(5);
+    await expect(page.getByText("Encontramos 6 tiendas cerca").first()).toBeVisible();
+    await expect(visibleStores(page)).toHaveCount(6);
     await expect(departmentSelect(page)).toHaveValue("quetzaltenango");
     await expect(page).toHaveURL(/#quetzaltenango$/);
     const events = await page.evaluate(() =>

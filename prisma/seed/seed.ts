@@ -50,7 +50,13 @@ export async function seedDatabase(
   const warnings: string[] = [];
   const departmentIds = new Map<string, number>();
   for (const d of data.departments) {
-    const row = { name: d.name, country: d.country, lat: d.lat, lng: d.lng };
+    const row = {
+      name: d.name,
+      country: d.country,
+      lat: d.lat,
+      lng: d.lng,
+      intro: d.intro ?? null,
+    };
     const { id } = await db.department.upsert({
       where: { slug: d.slug },
       create: { slug: d.slug, ...row },

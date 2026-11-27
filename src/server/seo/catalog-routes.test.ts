@@ -12,7 +12,12 @@ const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 describe("rutas del catálogo para el proxy (BD-061)", () => {
   it("solo los slugs publicados existen; las demás rutas pasan", async () => {
     const store = createCatalogRouteStore({
-      load: async () => ({ categories: ["marcadores", "boligrafos"], products: [], codes: [] }),
+      load: async () => ({
+        categories: ["marcadores", "boligrafos"],
+        products: [],
+        codes: [],
+        departments: [],
+      }),
     });
     expect(await store.exists("/productos/marcadores")).toBe(true);
     expect(await store.exists("/productos/no-existe")).toBe(false);
@@ -27,6 +32,7 @@ describe("rutas del catálogo para el proxy (BD-061)", () => {
       load: async () => ({
         categories: ["boligrafos", "marcadores"],
         products: ["boligrafos/bolik-ultra"],
+        departments: [],
         codes: [],
       }),
     });
@@ -41,7 +47,7 @@ describe("rutas del catálogo para el proxy (BD-061)", () => {
 
   it("una URL mal codificada es 404, no un error", async () => {
     const store = createCatalogRouteStore({
-      load: async () => ({ categories: ["marcadores"], products: [], codes: [] }),
+      load: async () => ({ categories: ["marcadores"], products: [], codes: [], departments: [] }),
     });
     expect(await store.exists("/productos/%")).toBe(false);
     expect(await store.exists("/productos/%E0%A4%A")).toBe(false);
@@ -72,7 +78,7 @@ describe("rutas del catálogo para el proxy (BD-061)", () => {
     const store = createCatalogRouteStore({
       load: async () => {
         if (fail) throw new Error("sin base");
-        return { categories: slugs, products: [], codes: [] };
+        return { categories: slugs, products: [], codes: [], departments: [] };
       },
       now: () => clock,
       ttlMs: 10,
@@ -91,6 +97,29 @@ describe("rutas del catálogo para el proxy (BD-061)", () => {
     await tick();
     expect(await store.exists("/productos/boligrafos")).toBe(true);
   });
+  it("un departamento existe solo con tiendas publicadas (BD-082)", async () => {
+    const store = createCatalogRouteStore({
+      load: async () => ({
+        categories: [],
+        products: [],
+        codes: [],
+        departments: ["quetzaltenango"],
+      }),
+    });
+    expect(await store.exists("/donde-comprar/quetzaltenango")).toBe(true);
+    expect(await store.exists("/donde-comprar/izabal")).toBe(false);
+    expect(await store.exists("/donde-comprar/%E0%A4%A")).toBe(false);
+    expect(await store.exists("/donde-comprar")).toBe(true);
+    expect([...(await store.departmentPages())!]).toEqual(["quetzaltenango"]);
+  });
+
+  it("sin la lista (la base no respondió), los departamentos se dejan pasar", async () => {
+    const store = createCatalogRouteStore({
+      load: () => Promise.reject(new Error("sin base")),
+    });
+    expect(await store.exists("/donde-comprar/izabal")).toBe(true);
+    expect(await store.departmentPages()).toBeNull();
+  });
 
   it("resuelve el código de /p/{codigo} por SKU o código de barras (BD-065)", async () => {
     const azul = { path: "/productos/boligrafos/bolik-ultra", color: "azul" };
@@ -99,6 +128,7 @@ describe("rutas del catálogo para el proxy (BD-061)", () => {
       load: async () => ({
         categories: ["boligrafos"],
         products: ["boligrafos/bolik-ultra"],
+        departments: [],
         codes: [
           ["PT00058", azul],
           ["759364663092", azul],

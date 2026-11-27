@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentType,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { showToast, type ToastMessage } from "@/components/feedback/feedback-store";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
@@ -26,8 +17,7 @@ import {
 } from "@/features/stores/directory";
 import type { MapDepartment, MapStore } from "@/features/stores/nearby";
 import type { LatLng } from "@/lib/geo";
-import type { StoreMapSheetProps } from "./store-map-sheet";
-import { StoreMapSlot } from "./store-map-slot";
+import { StoreMapLayout, useStoreMapSheet } from "./store-map-layout";
 
 /**
  * Lo que solo hace falta al usarlo (docs/12: la página está a ~1 KB de su tope): la cercanía
@@ -35,7 +25,6 @@ import { StoreMapSlot } from "./store-map-slot";
  * al tocar «Ver mapa». import() directo y no next/dynamic: su código pesaría en la carga inicial.
  */
 const loadNearby = () => import("@/features/stores/nearby");
-const loadSheet = () => import("./store-map-sheet").then((m) => m.default);
 
 /**
  * Sin respuesta en este tiempo (Firefox no responde si se cierra el aviso del permiso sin elegir;
@@ -85,7 +74,7 @@ type StoreFiltersProps = {
 /**
  * Filtros de /donde-comprar (BD-080, docs/06 §3.7). La lista llega completa del servidor; filtrar
  * solo oculta y muestra grupos y tiendas (atributo hidden), como el catálogo. Sin JS, el selector
- * es un formulario GET que el proxy lleva al grupo del departamento (#slug) y la búsqueda por
+ * es un formulario GET que el proxy lleva a la página del departamento (BD-082) y la búsqueda por
  * nombre no aparece (.js-only).
  *
  * El departamento se guarda en el hash (#quetzaltenango): lo cambian el selector, los enlaces por
@@ -109,11 +98,7 @@ export function StoreFilters({
   const root = useRef<HTMLDivElement>(null);
   const counter = useRef<HTMLParagraphElement>(null);
   const select = useRef<HTMLSelectElement>(null);
-  const mapButton = useRef<HTMLButtonElement>(null);
   const selectId = useId();
-  const [mapOpen, setMapOpen] = useState(false);
-  const [Sheet, setSheet] = useState<ComponentType<StoreMapSheetProps> | null>(null);
-  const [sheetLoading, setSheetLoading] = useState(false);
   const [locating, setLocating] = useState(false);
   // Intento en curso: una respuesta de un intento viejo (tarde, tras el vigilante) se ignora.
   const attempt = useRef(0);
@@ -316,35 +301,20 @@ export function StoreFilters({
     );
   };
 
-  // La primera vez se descarga la hoja (el botón queda ocupado); si falla, el aviso del mapa.
-  const openMap = async () => {
-    if (Sheet) {
-      setMapOpen(true);
-      return;
-    }
-    if (sheetLoading) return;
-    setSheetLoading(true);
-    try {
-      const component = await loadSheet();
-      setSheet(() => component);
-      setMapOpen(true);
-    } catch {
-      void showToast(feedback.stores.mapFailed);
-    } finally {
-      setSheetLoading(false);
-    }
-  };
-
   // Arreglos estables: con unos nuevos en cada render (cada letra de la búsqueda), el mapa volvería a
   // encuadrar y a rehacer sus pines.
   const mapDepartments = useMemo(() => departments.filter(hasPoint), [departments]);
   const mapStores = useMemo(() => stores.filter((store) => store.point), [stores]);
-  const mapProps = {
-    departments: mapDepartments,
-    stores: mapStores,
-    selected: department,
-    onSelect: chooseFromMap,
-  };
+  const mapProps = useMemo(
+    () => ({
+      departments: mapDepartments,
+      stores: mapStores,
+      selected: department,
+      onSelect: chooseFromMap,
+    }),
+    [mapDepartments, mapStores, department, chooseFromMap],
+  );
+  const mapSheet = useStoreMapSheet(mapProps, "lg:hidden");
 
   const empty = feedback.stores.filtersEmpty;
   const none = withoutStores ? feedback.stores.noneInDepartment(withoutStores.name) : null;
@@ -407,15 +377,7 @@ export function StoreFilters({
         >
           {storesPage.locate}
         </button>
-        <button
-          ref={mapButton}
-          type="button"
-          onClick={() => void openMap()}
-          aria-busy={sheetLoading || undefined}
-          className={buttonVariants({ variant: "outline", className: "lg:hidden" })}
-        >
-          {storesPage.map.open}
-        </button>
+        {mapSheet.button}
       </div>
 
       {/* Un solo aviso para el lector de pantalla: el conteo, el vacío o el departamento sin tiendas. */}
@@ -443,26 +405,9 @@ export function StoreFilters({
         ) : null}
       </div>
 
-      {/* Con JS y desde lg, dos columnas: la lista y el mapa (fijo al bajar). Sin JS, solo la lista. */}
-      <div className="flex flex-col gap-8 lg:[html.js_&]:grid lg:[html.js_&]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        {children}
-        <section
-          aria-labelledby={`${selectId}-mapa`}
-          className="js-only hidden self-start lg:sticky lg:top-[calc(var(--header-h)+1rem)] lg:block"
-        >
-          <h2 id={`${selectId}-mapa`} className="sr-only">
-            {storesPage.map.title}
-          </h2>
-          <StoreMapSlot
-            {...mapProps}
-            className="h-[min(36rem,calc(100dvh-var(--header-h)-2rem))] overflow-hidden rounded-xl bg-soft"
-          />
-        </section>
-      </div>
+      <StoreMapLayout map={mapProps}>{children}</StoreMapLayout>
       <PrepaintScript code={prepaintScript} />
-      {Sheet ? (
-        <Sheet {...mapProps} open={mapOpen} onOpenChange={setMapOpen} returnFocus={mapButton} />
-      ) : null}
+      {mapSheet.sheet}
     </div>
   );
 }

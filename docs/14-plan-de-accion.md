@@ -1919,8 +1919,28 @@ Una página por departamento con tiendas (SEO local).
 
 **Criterios de aceptación**
 
-- [ ] Solo se generan departamentos con al menos 1 tienda.
-- [ ] Títulos tipo "Dónde comprar Bolik en Quetzaltenango".
+- [x] Solo se generan departamentos con al menos 1 tienda.
+- [x] Títulos tipo "Dónde comprar Bolik en Quetzaltenango".
+
+**Implementado (BD-082)**
+
+Decisiones del usuario (27 nov 2026): un departamento sin tiendas no tiene página indexable; los «vecinos» son los 3 con tiendas más cercanos; el mapa de BD-081 en cada página; los textos nuevos de doc 17 §4; y tiendas de ejemplo con ubicación para la demo.
+
+**Pendiente de confirmar con el usuario:** sin texto local (`Department.intro`), la página lleva `noindex` y queda fuera del sitemap, como pide docs/10 §9 (mínimo 120 palabras propias). Hoy ninguna tiene texto: todas quedan así hasta que Mercadeo lo escriba. Se cambia en `generateMetadata` (`noindex`) y en `SitemapEntriesView.departments[].indexable`.
+
+- **Página** (`app/(site)/donde-comprar/[departamento]/page.tsx`): estática con `generateStaticParams` (los departamentos con tiendas: 9 con los datos de ejemplo). Migas, `h1`, texto local (`Department.intro`, nuevo en `DepartmentView` y en el seed; vacío hasta BD-120), conteo, sus tiendas con `StoreCard`, el mapa (`components/stores/department-stores.tsx`, zoom 9), los cercanos (`nearestDepartments` en `features/stores/nearby.ts`), «Ver todas las tiendas» y el aviso a distribuidores. JSON-LD con los helpers compartidos de `features/stores/directory.ts` (`toStoreJsonLd`, `toMapStore`, `storePoint`).
+- **Sin tiendas o inexistente:** Cache Components no tiene `dynamicParams`, así que la página con `noindex` del plan no era posible sin generarla. `server/seo/catalog-routes.ts` suma los departamentos con tiendas: `proxy.ts` da 404 real a `/donde-comprar/{otro}`, y el 308 de `?departamento=` lleva uno sin tiendas (Izabal desde la home) a `/donde-comprar#{slug}`, la lista con su aviso (BD-080).
+- **308:** `/donde-comprar?departamento={slug}` → `/donde-comprar/{slug}` (con las `utm_*`), con `Cache-Control: public, max-age=3600` (el destino depende de los datos; un 308 sin caché quedaría guardado para siempre). Sin página o sin la lista en memoria, 307. «Busca por departamento» enlaza las páginas. El mapa y su hoja de móvil pasaron a `store-map-layout.tsx`, que comparten las dos páginas.
+- **Título del departamento de Guatemala:** «Dónde comprar Bolik en el departamento de Guatemala»: con la plantilla repetía el de `/donde-comprar` (doc 10 §1) y `seo.spec.ts` exige títulos únicos.
+- **Pines:** los de departamento van encima de los de tienda (`zIndexOffset`): una tienda en la cabecera cae en el centro del departamento. El del departamento elegido va debajo, así sus tiendas se pueden tocar. El de una tienda es más chico y claro (mismo objetivo de 44 px).
+- **Revisor:** sin bloqueantes. Corregí: el 308 sin caché, el pin elegido que tapaba sus tiendas, `noindex` sin texto local (docs/10 §9), el título de Guatemala por slug, comentarios viejos, pruebas de los helpers compartidos, esperas de las E2E, `prefetch={false}` en los enlaces a departamentos y en las migas (la página se pasaba del tope por precargar `/donde-comprar`), el texto local en párrafos y el slug `ejemplo-…` obligatorio para las tiendas de ejemplo. Fuera de alcance: «Cómo llegar» de las tiendas de El Salvador termina en «Guatemala» (ya anotado en BD-080); al navegar con Enter desde un pin, el foco queda en el documento y Next anuncia la ruta.
+- **Tiendas de ejemplo** (pedido del usuario): 6 en `stores.json` con `sample: true` y slug `ejemplo-…` (el esquema lo exige: así se reconocen en la base, que no tiene columna `sample`), «(ejemplo)» en el nombre, verificadas, «Dirección de ejemplo (demo)» y la ubicación del parque central de su municipio. Prueban la dirección, «Cómo llegar» con coordenadas, el `geo` del JSON-LD, los pines de tienda y el orden por distancia. Suman Sacatepéquez y Escuintla. El perfil `prod` no las carga (`dataForProfile`).
+- **Sitemap:** cada departamento con su fecha (la de su tienda más reciente).
+- **Pruebas:** unitarias del 308 (también sin página), la lista en memoria, `nearestDepartments`, el sitemap y el perfil `prod`; E2E `donde-comprar-departamento.spec.ts`, `seo.spec.ts` (metadatos, JSON-LD, migas y profundidad de las 9 páginas) y las de la home y `donde-comprar.spec.ts` con el 308 y los conteos nuevos.
+- **Presupuesto** (Lighthouse local, en `lighthouse.config.cjs` con `/donde-comprar/quetzaltenango`): 161.0 KB de JS y 21 peticiones, accesibilidad 1 y CLS 0; `/donde-comprar`, 163.4 KB. Mientras lleve `noindex`, la página va en el bloque de Lighthouse sin SEO ni «se puede indexar» (como `/buscar`); con su texto vuelve al del resto.
+- **Riesgo anotado:** varias páginas tienen 1 o 2 tiendas «Datos por confirmar», sin dirección ni texto local: contenido escaso para Google hasta que Ventas verifique y Mercadeo escriba `intro` (BD-120).
+
+*Nota para BD-120 (tiendas en el admin):* al publicar la primera tienda de un departamento, su página no existe hasta el siguiente build (como una categoría nueva) y `catalogRouteStore.invalidate()` debe llamarse para que el proxy la deje pasar. Validar coordenadas con `isValidLatLng`.
 
 *Nota de BD-092:* `listSitemapEntries()` ya devuelve `departments` (solo los que tienen tiendas publicadas, con la fecha de su tienda más reciente), pero `buildSitemap` no los publica porque la página no existe. Este ticket los suma con su ruta y su prueba unitaria.
 

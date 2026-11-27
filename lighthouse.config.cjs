@@ -55,6 +55,8 @@ module.exports = {
         `${base}/productos/boligrafos/bolik-ultra`,
         // Dónde comprar (BD-080): la lista completa de tiendas con su isla de filtros.
         `${base}/donde-comprar`,
+        // Un departamento (BD-082): sus tiendas con el mapa diferido.
+        `${base}/donde-comprar/quetzaltenango`,
         // Mi cotización (BD-072): el formulario más pesado del sitio (noindex).
         `${base}/cotizacion`,
         // Buscador (BD-066): la página de una búsqueda, con resultados (proxy.ts → /buscar/[q]).
@@ -95,7 +97,7 @@ module.exports = {
           // (Next, React y el layout) ocupa ~150 KB en cualquier página y /productos mide 158.3 KB
           // (BD-047; antes 170). Sin las fichas (abajo).
           matchingUrlPattern:
-            "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion(?:$|/))(?!buscar(?:$|\\?)).+",
+            "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion(?:$|/))(?!buscar(?:$|\\?))(?!donde-comprar/[^/]+$).+",
           assertions: {
             ...common,
             "categories:performance": ["error", { minScore: 0.9 }],
@@ -106,8 +108,11 @@ module.exports = {
         },
         {
           // /buscar (BD-066) y la confirmación de la cotización (BD-075): como el resto, pero noindex
-          // a propósito (páginas de utilidad, docs/10 §3): «se puede indexar» y SEO no aplican.
-          matchingUrlPattern: "^https?://[^/]+/(?:buscar(?:$|\\?)|cotizacion/enviada/)",
+          // a propósito (páginas de utilidad, docs/10 §3): «se puede indexar» y SEO no aplican. Las
+          // páginas de departamento (BD-082) también, mientras no tengan su texto local (docs/10 §9):
+          // cuando Mercadeo lo escriba, van con el resto.
+          matchingUrlPattern:
+            "^https?://[^/]+/(?:buscar(?:$|\\?)|cotizacion/enviada/|donde-comprar/[^/]+$)",
           assertions: {
             ...common,
             "categories:seo": "off",

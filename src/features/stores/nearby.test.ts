@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { NEARBY_MAX_KM, nearestDepartment, sortByDistance, type MapDepartment } from "./nearby";
+import {
+  NEARBY_MAX_KM,
+  nearestDepartment,
+  nearestDepartments,
+  sortByDistance,
+  type MapDepartment,
+} from "./nearby";
 
 const departments: MapDepartment[] = [
   { slug: "guatemala", name: "Guatemala", lat: 14.6349, lng: -90.5069, storeCount: 10 },
@@ -77,5 +83,25 @@ describe("sortByDistance", () => {
 
   it("sin coordenadas, el orden no cambia", () => {
     expect(sortByDistance(xela, [unknownB, unknownA]).map((s) => s.slug)).toEqual(["b", "a"]);
+  });
+});
+
+describe("nearestDepartments", () => {
+  const xela = departments[1]!;
+
+  it("los más cercanos con tiendas, sin él mismo", () => {
+    expect(nearestDepartments(xela, departments, 2).map((d) => d.slug)).toEqual([
+      "solola",
+      "guatemala",
+    ]);
+  });
+
+  it("salta los que no tienen tiendas o coordenadas", () => {
+    const list = [...departments, { ...departments[0]!, slug: "roto", lat: Number.NaN }];
+    expect(nearestDepartments(xela, list, 10).map((d) => d.slug)).toEqual(["solola", "guatemala"]);
+  });
+
+  it("desde un centro inválido, ninguno", () => {
+    expect(nearestDepartments({ ...xela, lat: Number.NaN }, departments, 3)).toEqual([]);
   });
 });

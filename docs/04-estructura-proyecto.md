@@ -91,7 +91,7 @@ bolik-digital/
 │  │  ├─ catalog/               # product-card (+ skeleton), category-card, filters, color-swatches, pack-selector, specs, dimensions
 │  │  ├─ home/                  # audience-card (tarjetas por público de la home)
 │  │  ├─ quote/                 # quote-drawer, quote-button, quote-line, quote-form
-│  │  ├─ stores/                # store-card, store-filters (BD-080); store-map (Leaflet, diferido), store-map-slot y store-map-sheet (BD-081)
+│  │  ├─ stores/                # store-card, store-filters (BD-080); store-map (Leaflet, diferido), store-map-slot y store-map-sheet (BD-081); store-map-layout (columna del mapa y «Ver mapa»), department-stores (BD-082)
 │  │  ├─ schools/               # activity-card, school-visit-form (BD-076), kids-decor
 │  │  ├─ forms/                 # use-request-form, honeypot-field, distributor-form, contact-form (BD-076)
 │  │  ├─ whatsapp/              # whatsapp-fab, whatsapp-sheet
@@ -100,7 +100,7 @@ bolik-digital/
 │  ├─ features/                 # lógica por dominio (sin JSX de presentación pesada)
 │  │  ├─ catalog/  (queries.ts, schemas.ts, search.ts, format.ts)
 │  │  ├─ quote/    (store.ts, lines.ts, storage-keys.ts, schemas.ts, actions.ts)
-│  │  ├─ stores/   (directory.ts, prepaint-script.ts; BD-080 · nearby.ts, cercanía; BD-081)
+│  │  ├─ stores/   (directory.ts, prepaint-script.ts; BD-080 · nearby.ts, cercanía; BD-081 · departamentos cercanos y helpers de tienda; BD-082)
 │  │  ├─ schools/ · distributors/ · contact/   (form-fields.ts, schema.ts, actions.ts; BD-076)
 │  │  ├─ content/  (queries.ts para hero, cifras, hitos, faqs, apariencia)
 │  │  ├─ admin/    (actions por entidad)

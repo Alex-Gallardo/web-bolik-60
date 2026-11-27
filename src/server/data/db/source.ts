@@ -254,6 +254,7 @@ const departmentSelect = {
   country: true,
   lat: true,
   lng: true,
+  intro: true,
   _count: { select: { stores: { where: { published: true } } } },
 } satisfies Prisma.DepartmentSelect;
 
@@ -266,6 +267,7 @@ function toDepartment(
     country: d.country as DepartmentView["country"],
     lat: Number(d.lat),
     lng: Number(d.lng),
+    intro: d.intro,
     href: `/donde-comprar/${d.slug}`,
     storeCount: d._count.stores,
   };
@@ -578,6 +580,7 @@ export const dbSource: DataSource = {
         select: {
           slug: true,
           country: true,
+          intro: true,
           stores: {
             where: { published: true },
             select: { updatedAt: true },
@@ -617,6 +620,7 @@ export const dbSource: DataSource = {
       departments: sortDepartments(departments).map((d) => ({
         slug: d.slug,
         updatedAt: maxDate(d.stores.map((s) => s.updatedAt)),
+        indexable: Boolean(d.intro?.trim()),
       })),
       contentUpdatedAt: maxDate([
         settings._max.updatedAt,

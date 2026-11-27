@@ -1,6 +1,9 @@
+import type { StoreInput } from "@/features/seo/jsonld";
 import { STORE_TYPES } from "@/lib/constants";
+import { isValidLatLng, type LatLng } from "@/lib/geo";
 import { safeSlug } from "@/lib/slug";
 import type { DepartmentView, StoreView } from "@/server/data/types";
+import type { MapStore } from "./nearby";
 
 /**
  * Lista de /donde-comprar (BD-080, docs/06 §3.7): las tiendas agrupadas por departamento y el
@@ -71,17 +74,75 @@ export function departmentFromHash(hash: string, allowed: readonly string[]): st
 /** Ruta de la lista de tiendas. */
 export const STORES_PATH = "/donde-comprar";
 
+/** Página de un departamento (BD-082). */
+export const departmentPath = (slug: string) => `${STORES_PATH}/${slug}`;
+
 /**
- * Adónde lleva /donde-comprar?departamento={slug}, el formulario GET de la home (BD-053), que la
- * página estática no puede leer: al grupo de ese departamento (#slug), con los demás parámetros
- * (utm_*). Un valor inválido o vacío, a la lista completa. null: no trae el parámetro. BD-082 lo
- * cambia por /donde-comprar/{slug}.
+ * Adónde lleva /donde-comprar?departamento={slug}, el formulario GET de la home (BD-053) y el de
+ * /donde-comprar sin JS, que la página estática no puede leer: a la página del departamento
+ * (BD-082), con los demás parámetros (utm_*). Un valor inválido o vacío, a la lista completa. null:
+ * no trae el parámetro. Un departamento sin página (sin tiendas, como Izabal desde la home) va a
+ * /donde-comprar#{slug}: la lista completa con su aviso (BD-080). `hasPage` lo decide (proxy.ts:
+ * la lista en memoria; si no cargó, se asume que la tiene).
  */
-export function storesDepartmentRedirect(params: URLSearchParams): string | null {
+export function storesDepartmentRedirect(
+  params: URLSearchParams,
+  hasPage: (slug: string) => boolean = () => true,
+): string | null {
+  return storesDepartmentTarget(params, hasPage)?.location ?? null;
+}
+
+/**
+ * Lo mismo, con si el destino es firme (`permanent`): la página del departamento existe. Un destino
+ * que depende de los datos (sin página, a #slug; sin lista, «no se sabe») no debe quedar guardado
+ * en el navegador.
+ */
+export function storesDepartmentTarget(
+  params: URLSearchParams,
+  hasPage: (slug: string) => boolean | null = () => true,
+): { location: string; permanent: boolean } | null {
   if (!params.has("departamento")) return null;
   const slug = safeSlug(params.get("departamento")?.trim().toLowerCase());
   const rest = new URLSearchParams(params);
   rest.delete("departamento");
   const query = rest.size > 0 ? `?${rest.toString()}` : "";
-  return `${STORES_PATH}${query}${slug ? `#${slug}` : ""}`;
+  if (!slug) return { location: `${STORES_PATH}${query}`, permanent: true };
+  const page = hasPage(slug);
+  if (page === false) return { location: `${STORES_PATH}${query}#${slug}`, permanent: false };
+  return { location: `${departmentPath(slug)}${query}`, permanent: page === true };
+}
+
+/** Solo https: la URL llega de los datos (y algún día del admin), nunca un javascript:. */
+export const isHttpsUrl = (url: string | null): url is string =>
+  Boolean(url?.startsWith("https://"));
+
+/** Las coordenadas de una tienda solo si Ventas la verificó y son válidas (mapa, cercanía, JSON-LD). */
+export function storePoint(store: StoreView): LatLng | null {
+  if (!store.isVerified || store.lat === null || store.lng === null) return null;
+  const point = { lat: store.lat, lng: store.lng };
+  return isValidLatLng(point) ? point : null;
+}
+
+/** Lo que la isla y el mapa necesitan de una tienda (BD-081). */
+export function toMapStore(store: StoreView): MapStore {
+  return {
+    slug: store.slug,
+    department: store.department.slug,
+    name: store.name,
+    point: storePoint(store),
+  };
+}
+
+/** Una tienda para el JSON-LD (BD-080): la calle y geo solo verificadas, sin inventar el país. */
+export function toStoreJsonLd(store: StoreView, country: string | null): StoreInput {
+  return {
+    name: store.name,
+    address: store.isVerified ? store.address : null,
+    municipality: store.municipality,
+    department: store.department.name,
+    country,
+    phone: store.phone,
+    geo: storePoint(store),
+    url: isHttpsUrl(store.onlineShopUrl) ? store.onlineShopUrl : null,
+  };
 }

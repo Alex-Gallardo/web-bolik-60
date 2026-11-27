@@ -29,7 +29,7 @@ describe("perfiles del seed (BD-031)", () => {
     expect(seedMode("prod")).toBe("create-only");
   });
 
-  it("prod no lleva productos, kits ni actividades de ejemplo", () => {
+  it("prod no lleva productos, kits, actividades ni tiendas de ejemplo", () => {
     const prod = dataForProfile(data, "prod");
     expect(prod.products.map((p) => p.slug)).toEqual(["bolik-ultra"]);
     expect(prod.products.some((p) => p.sample)).toBe(false);
@@ -37,7 +37,10 @@ describe("perfiles del seed (BD-031)", () => {
     expect(prod.content.activities.some((a) => a.sample)).toBe(false);
     // Lo demás va completo (las categorías, todas; sin publicar las vacías: prueba de abajo).
     expect(prod.categories.map((c) => c.slug)).toEqual(data.categories.map((c) => c.slug));
-    expect(prod.stores).toEqual(data.stores);
+    // Las tiendas, todas menos las de ejemplo de la demo (BD-082).
+    expect(prod.stores).toEqual(data.stores.filter((s) => !s.sample));
+    expect(prod.stores.length).toBeGreaterThan(0);
+    expect(data.stores.some((s) => s.sample)).toBe(true);
     expect(prod.content.milestones).toEqual(data.content.milestones);
     // Ni el número de prueba de WhatsApp ni las fotos provisionales (BD-062).
     expect(prod.settings).toEqual({ ...data.settings, sample_whatsapp_number: undefined });

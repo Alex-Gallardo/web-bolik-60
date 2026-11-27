@@ -85,6 +85,7 @@ export function dataForProfile(data: SeedData, profile: SeedProfile): SeedData {
       images: p.images.filter((image) => !sampleMedia.has(image.mediaKey)),
     })),
     settings: settingsForProfile(data.settings, profile),
+    stores: data.stores.filter((store) => !store.sample),
     faqs: data.faqs.filter((f) => !f.productSlug || productSlugs.has(f.productSlug)),
     content: {
       ...data.content,

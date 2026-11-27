@@ -15,8 +15,8 @@ import { isSearchableCode, normalizeCode } from "@/server/data/variant-code";
  *   como mucho `firstLoadTimeoutMs`; si la base no responde, se deja pasar todo (la página decide
  *   con su notFound()) y se reintenta en el siguiente ciclo;
  * - si una recarga falla, se sigue con la lista anterior;
- * - `invalidate()` lanza una carga nueva (el admin al publicar o despublicar una categoría o un
- *   producto).
+ * - `invalidate()` lanza una carga nueva (el admin al publicar o despublicar una categoría, un
+ *   producto o una tienda, BD-082).
  */
 
 /** A dónde lleva un código del QR (BD-065): la ficha y el color de esa variante. */
@@ -26,13 +26,15 @@ export type CodeResult =
   { status: "found"; target: CodeTarget } | { status: "missing" } | { status: "unavailable" };
 
 /**
- * Slugs publicados: categorías y fichas como «categoria/producto», y los códigos (SKU y código de
- * barras) de las variantes visibles con su ficha y su color.
+ * Slugs publicados: categorías y fichas como «categoria/producto», los códigos (SKU y código de
+ * barras) de las variantes visibles con su ficha y su color, y los departamentos con al menos una
+ * tienda publicada: los que tienen página en /donde-comprar/{slug} (BD-082).
  */
 export type CatalogRoutes = {
   categories: string[];
   products: string[];
   codes: [code: string, target: CodeTarget][];
+  departments: string[];
 };
 
 export type CatalogRouteStoreOptions = {
@@ -43,8 +45,16 @@ export type CatalogRouteStoreOptions = {
 };
 
 export type CatalogRouteStore = {
-  /** false solo si la ruta es una categoría o una ficha sin publicar; true en otro caso. */
+  /**
+   * false solo si la ruta es una categoría, una ficha o un departamento (/donde-comprar/{slug}) sin
+   * página; true en otro caso.
+   */
   exists(pathname: string): Promise<boolean>;
+  /**
+   * Los departamentos con página (BD-082), para el 308 de /donde-comprar?departamento=; null si la
+   * lista no cargó (no se sabe).
+   */
+  departmentPages(): Promise<ReadonlySet<string> | null>;
   /**
    * La ficha de un código de /p/{codigo} (BD-065), tal como llega en la URL. «missing» si no
    * existe o está mal escrito; «unavailable» si la lista no cargó (no se sabe).
@@ -55,6 +65,7 @@ export type CatalogRouteStore = {
 
 const CATEGORY_PATH = /^\/productos\/([^/]+)$/;
 const PRODUCT_PATH = /^\/productos\/([^/]+)\/([^/]+)$/;
+const DEPARTMENT_PATH = /^\/donde-comprar\/([^/]+)$/;
 
 /** El segmento de la URL como slug; null si está mal codificado o no es un slug válido. */
 function slugOf(segment: string): string | null {
@@ -75,6 +86,7 @@ export function createCatalogRouteStore({
     categories: Set<string>;
     products: Set<string>;
     codes: Map<string, CodeTarget>;
+    departments: Set<string>;
   } | null = null;
   let loadedAt = Number.NEGATIVE_INFINITY;
   let generation = 0;
@@ -99,6 +111,7 @@ export function createCatalogRouteStore({
             categories: new Set(data.categories),
             products: new Set(data.products),
             codes,
+            departments: new Set(data.departments),
           };
         }
       })
@@ -135,6 +148,13 @@ export function createCatalogRouteStore({
 
   return {
     async exists(pathname) {
+      const department = DEPARTMENT_PATH.exec(pathname);
+      if (department) {
+        const routes = await fresh();
+        if (!routes) return true;
+        const slug = slugOf(department[1]!);
+        return slug !== null && routes.departments.has(slug);
+      }
       const category = CATEGORY_PATH.exec(pathname);
       const product = category ? null : PRODUCT_PATH.exec(pathname);
       if (!category && !product) return true;
@@ -151,6 +171,9 @@ export function createCatalogRouteStore({
         productSlug !== null &&
         routes.products.has(`${categorySlug}/${productSlug}`)
       );
+    },
+    async departmentPages() {
+      return (await fresh())?.departments ?? null;
     },
     async resolveCode(segment) {
       let code: string;

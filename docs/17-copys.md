@@ -221,7 +221,8 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - Compra en línea, botones: Comprar en {tienda} (como en la ficha y la home)
 - Enlaces por departamento: Busca por departamento
 - Distribuidores (docs/06 §3.7): ¿Tienes una librería? Vende Bolik → `/mayoreo#distribuidor`
-- `/donde-comprar/[dep]` `h1`: Dónde comprar Bolik en {departamento}
+- `/donde-comprar/[dep]` `h1`: Dónde comprar Bolik en {departamento} (Guatemala: «Dónde comprar Bolik en el departamento de Guatemala», BD-082)
+- `/donde-comprar/[dep]` (BD-082, aprobado el 27 nov 2026): Departamentos cercanos · Ver todas las tiendas · ¿No hay tienda cerca? Sé distribuidor Bolik → `/mayoreo#distribuidor` · Conteo: {n} tiendas en {departamento}
 
 ### `/contacto`
 - `h1`: **Hablemos**

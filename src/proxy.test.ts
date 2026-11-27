@@ -17,10 +17,12 @@ const appEnv = vi.hoisted(() => ({
 vi.mock("@/env", () => ({ env: appEnv }));
 const exists = vi.fn();
 const resolveCode = vi.fn();
+const departmentPages = vi.fn();
 vi.mock("@/server/seo/catalog-routes", () => ({
   catalogRouteStore: {
     exists: (...args: unknown[]) => exists(...args),
     resolveCode: (...args: unknown[]) => resolveCode(...args),
+    departmentPages: () => departmentPages(),
   },
 }));
 
@@ -31,6 +33,8 @@ beforeEach(() => {
   exists.mockResolvedValue(true);
   resolveCode.mockReset();
   resolveCode.mockResolvedValue({ status: "missing" });
+  departmentPages.mockReset();
+  departmentPages.mockResolvedValue(new Set(["quetzaltenango", "solola"]));
   find.mockResolvedValue(null);
   appEnv.APP_ENV = "development";
 });
@@ -252,15 +256,32 @@ describe("proxy: /styleguide en producción (BD-026, BD-114)", () => {
   });
 });
 
-describe("proxy: /donde-comprar?departamento= del formulario de la home (BD-080)", () => {
-  it("307 al grupo del departamento (#slug) en la página estática", async () => {
+describe("proxy: /donde-comprar?departamento= del formulario de la home (BD-080, BD-082)", () => {
+  it("308 a la página del departamento", async () => {
     const response = await proxy(
       new NextRequest("http://127.0.0.1:3000/donde-comprar?departamento=quetzaltenango"),
     );
-    expect(response.status).toBe(307);
+    expect(response.status).toBe(308);
     expect(response.headers.get("location")).toBe(
-      "https://www.bolik66.com/donde-comprar#quetzaltenango",
+      "https://www.bolik66.com/donde-comprar/quetzaltenango",
     );
+    // El destino depende de los datos: no se guarda para siempre.
+    expect(response.headers.get("cache-control")).toBe("public, max-age=3600");
+  });
+
+  it("un departamento sin página (sin tiendas) va a la lista con su aviso; sin la lista, a su página", async () => {
+    const izabal = () =>
+      proxy(new NextRequest("http://127.0.0.1:3000/donde-comprar?departamento=izabal"));
+    const withoutPage = await izabal();
+    expect(withoutPage.status).toBe(307);
+    expect(withoutPage.headers.get("cache-control")).toBeNull();
+    expect(withoutPage.headers.get("location")).toBe(
+      "https://www.bolik66.com/donde-comprar#izabal",
+    );
+    departmentPages.mockResolvedValue(null);
+    const unknown = await izabal();
+    expect(unknown.status).toBe(307);
+    expect(unknown.headers.get("location")).toBe("https://www.bolik66.com/donde-comprar/izabal");
   });
 
   it("conserva las utm_*; un valor inválido o vacío va a la lista completa", async () => {
@@ -268,7 +289,7 @@ describe("proxy: /donde-comprar?departamento= del formulario de la home (BD-080)
       new NextRequest("http://127.0.0.1:3000/donde-comprar?utm_source=x&departamento=solola"),
     );
     expect(withUtm.headers.get("location")).toBe(
-      "https://www.bolik66.com/donde-comprar?utm_source=x#solola",
+      "https://www.bolik66.com/donde-comprar/solola?utm_source=x",
     );
     for (const value of ["", "<script>", "../admin", "//evil.com", "a\r\nSet-Cookie: x=1"]) {
       const response = await proxy(
@@ -276,6 +297,7 @@ describe("proxy: /donde-comprar?departamento= del formulario de la home (BD-080)
           `http://127.0.0.1:3000/donde-comprar?departamento=${encodeURIComponent(value)}`,
         ),
       );
+      expect(response.status).toBe(308);
       expect(response.headers.get("location")).toBe("https://www.bolik66.com/donde-comprar");
     }
   });

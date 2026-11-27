@@ -91,8 +91,7 @@ export const whereToBuy = {
   selectLabel: "Elige tu departamento",
   submit: "Ver tiendas",
   /**
-   * Formulario GET sin JS: proxy.ts lleva ?departamento=x a /donde-comprar#x con un 307 (BD-080);
-   * BD-082, a /donde-comprar/x.
+   * Formulario GET: proxy.ts lleva ?departamento=x a /donde-comprar/x con un 308 (BD-082).
    */
   action: "/donde-comprar",
   onlineLabel: "Compra en línea",
