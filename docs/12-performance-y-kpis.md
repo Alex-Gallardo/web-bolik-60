@@ -35,7 +35,7 @@ El JS propio de la home pesa poco (reproductor de video y contador: 3.8 KB; layo
 | Catálogo / categoría | ≤ 165 KB | ≤ 25 KB | ≤ 6 tarjetas × 25 KB | 2 familias | ≤ 25 |
 | Ficha | ≤ 165 KB | ≤ 25 KB | Imagen principal ≤ 90 KB | 2 familias | ≤ 27 (BD-071, BD-076) |
 | Mi cotización (`/cotizacion`) | ≤ 178 KB (BD-072, BD-047) | ≤ 25 KB | — | 2 familias | ≤ 25 |
-| Dónde comprar | ≤ 165 KB (+ mapa diferido ≤ 60 KB); BD-080: 160.8 KB | ≤ 25 KB (+ CSS de Leaflet diferido) | — | 2 familias | ≤ 25 (BD-080: 20) |
+| Dónde comprar | ≤ 165 KB (+ mapa diferido ≤ 60 KB); BD-080: 160.8 KB; BD-081: 163.0 KB (+ mapa 44.8 KB) | ≤ 25 KB (+ CSS de Leaflet diferido, 2.7 KB) | — | 2 familias | ≤ 25 (BD-080 y BD-081: 20) |
 | Escuelas | ≤ 165 KB | ≤ 25 KB | ≤ 150 KB | 3 familias (incluye Baloo 2) | ≤ 28 |
 
 **JS común más liviano (BD-047, 23 nov 2026).** Medido el JS de `/productos`: Next y React son ~134 KB comprimidos en 6 archivos; el layout entero (header, contador, buscador, menús, avisos, revelado, entrada de página) es un solo archivo de 9.5 KB, y 3.5 de ellos son `next/link`, que cualquier página con enlaces necesita. Lo que más pesaba eran las **cabeceras**: Next mandaba la CSP y las demás cabeceras de documento también en cada `.js` (~1.7 KB por archivo, ~0.8 KB de ellas inútiles en un script). Ahora la CSP, `Permissions-Policy`, `X-Frame-Options` y COOP van solo en documentos; `nosniff` y `Referrer-Policy`, en todo (`next.config.ts`, docs/15 §6). En producción IIS sirve `/_next/static` y `/media` sin pasar por Next (docs/15 §4): esas respuestas nunca las llevaron, así que la CI ahora mide lo mismo que recibe el visitante. Además, las islas del header importan sus textos de `content/header.ts` y no todo `content/ui`, y el contador no usa `cx` (clsx): −1 KB en el archivo del layout.
@@ -130,7 +130,7 @@ Nombres en `snake_case`. Implementación en `src/features/analytics/track.ts` co
 | `retailer_click` | Clic a Walmart/La Torre (**conversión secundaria**) | `retailer`, `sku` |
 | `maps_click` | "Cómo llegar" | `store`, `department` |
 | `store_filter` | Cambio de departamento | `department` |
-| `geolocation` | Usar mi ubicación | `granted` |
+| `store_locate` | Usar mi ubicación (BD-081; nunca la posición) | `result` (`ok`, `denegado`, `error`, `lejos`, `sin-soporte`), `department` (solo con `ok`) |
 | `pdf_download` | Ficha técnica PDF | `sku` |
 | `dimension_open` | Diagrama de medidas | `part` |
 | `splash_skip` | Saltar splash | — |

@@ -1,6 +1,16 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from "react";
+import { showToast, type ToastMessage } from "@/components/feedback/feedback-store";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Input } from "@/components/ui/input";
 import { PrepaintScript } from "@/components/ui/prepaint-script";
@@ -14,6 +24,36 @@ import {
   matchesStoreName,
   normalizeStoreSearch,
 } from "@/features/stores/directory";
+import type { MapDepartment, MapStore } from "@/features/stores/nearby";
+import type { LatLng } from "@/lib/geo";
+import type { StoreMapSheetProps } from "./store-map-sheet";
+import { StoreMapSlot } from "./store-map-slot";
+
+/**
+ * Lo que solo hace falta al usarlo (docs/12: la página está a ~1 KB de su tope): la cercanía
+ * (features/stores/nearby) al tocar «Usar mi ubicación» y la hoja del mapa (Radix Dialog y el mapa)
+ * al tocar «Ver mapa». import() directo y no next/dynamic: su código pesaría en la carga inicial.
+ */
+const loadNearby = () => import("@/features/stores/nearby");
+const loadSheet = () => import("./store-map-sheet").then((m) => m.default);
+
+/**
+ * Sin respuesta en este tiempo (Firefox no responde si se cierra el aviso del permiso sin elegir;
+ * el timeout de la geolocalización no cuenta la espera del permiso): se da por fallido.
+ */
+const LOCATE_WATCHDOG_MS = 20_000;
+
+/** Un punto con coordenadas usables (un departamento que no viene en la base llega con NaN). */
+const hasPoint = (d: MapDepartment) => Number.isFinite(d.lat) && Number.isFinite(d.lng);
+
+/** Un solo toast para «Buscando…» y su resultado (el segundo reemplaza al primero). */
+const LOCATE_TOAST = "store-locate";
+/** La posición puede tardar (GPS frío); una de hace 5 minutos sirve para elegir departamento. */
+const GEOLOCATION: PositionOptions = {
+  enableHighAccuracy: false,
+  timeout: 10_000,
+  maximumAge: 300_000,
+};
 
 /** El selector cambia el hash con replaceState: no dispara hashchange ni crea historial. */
 function writeHash(slug: string | undefined) {
@@ -24,12 +64,18 @@ function writeHash(slug: string | undefined) {
 type Department = { slug: string; name: string };
 
 type StoreFiltersProps = {
-  /** Departamentos con tiendas, en el orden de la lista (las opciones del selector). */
-  departments: Department[];
+  /**
+   * Departamentos con tiendas, en el orden de la lista (las opciones del selector), con su centro y
+   * su número de tiendas (los pines del mapa y la cercanía).
+   */
+  departments: MapDepartment[];
   /** Todos los departamentos: uno sin tiendas que llega en el hash (desde la home) tiene su aviso. */
   allDepartments: Department[];
-  /** Cada tienda (el data-store-item de su <li>) con su departamento y su nombre. */
-  stores: { slug: string; department: string; name: string }[];
+  /**
+   * Cada tienda (el data-store-item de su <li>) con su departamento, su nombre y, solo si Ventas las
+   * verificó, sus coordenadas.
+   */
+  stores: MapStore[];
   /** La lista del servidor: un [data-store-group] por departamento y un [data-store-item] por tienda. */
   children: ReactNode;
   /** features/stores/prepaint-script.ts: va justo después de la lista. */
@@ -46,6 +92,12 @@ type StoreFiltersProps = {
  * departamento y el formulario de la home. Solo un hash que es un departamento (o ninguno) cambia
  * el filtro: «Volver arriba» (#top) o «Saltar al contenido» no lo quitan. Un departamento sin
  * tiendas deja la lista completa con su aviso. El cambio en el selector registra `store_filter`.
+ *
+ * BD-081: el mapa (escritorio: al entrar en pantalla; móvil: «Ver mapa») comparte el departamento
+ * con el selector. «Usar mi ubicación» elige el departamento con tiendas más cercano (a 150 km o
+ * menos) y ordena sus tiendas verificadas por distancia; si se niega el permiso, falla o queda
+ * lejos, avisa y pasa el foco al selector. La posición nunca sale del navegador: `store_locate`
+ * solo dice el resultado y el departamento.
  */
 export function StoreFilters({
   departments,
@@ -56,7 +108,18 @@ export function StoreFilters({
 }: StoreFiltersProps) {
   const root = useRef<HTMLDivElement>(null);
   const counter = useRef<HTMLParagraphElement>(null);
+  const select = useRef<HTMLSelectElement>(null);
+  const mapButton = useRef<HTMLButtonElement>(null);
   const selectId = useId();
+  const [mapOpen, setMapOpen] = useState(false);
+  const [Sheet, setSheet] = useState<ComponentType<StoreMapSheetProps> | null>(null);
+  const [sheetLoading, setSheetLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
+  // Intento en curso: una respuesta de un intento viejo (tarde, tras el vigilante) se ignora.
+  const attempt = useRef(0);
+  const watchdog = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Orden original de los grupos que «Usar mi ubicación» reordenó por distancia.
+  const reordered = useRef(new Map<HTMLElement, HTMLElement[]>());
   const searchId = useId();
   const [query, setQuery] = useState("");
   // En el servidor y al hidratar, sin departamento (todos), como el HTML.
@@ -126,20 +189,161 @@ export function StoreFilters({
     });
   }, [matches]);
 
-  const choose = (value: string) => {
-    const next = departmentFromHash(value, slugs);
-    setSelected(next);
-    writeHash(next);
-    track("store_filter", { department: next ?? "todos" });
-  };
+  /** Devuelve a su orden original (el del servidor) los grupos ordenados por distancia. */
+  const restoreOrder = useCallback(() => {
+    for (const [list, items] of reordered.current) list.append(...items);
+    reordered.current.clear();
+  }, []);
+
+  const choose = useCallback(
+    (value: string) => {
+      restoreOrder();
+      const next = departmentFromHash(value, slugs);
+      setSelected(next);
+      writeHash(next);
+      track("store_filter", { department: next ?? "todos" });
+    },
+    [restoreOrder, slugs],
+  );
+  // Desde el mapa: el pin del departamento ya elegido no repite store_filter.
+  const chooseFromMap = useCallback(
+    (slug: string) => {
+      if (slug !== department) choose(slug);
+    },
+    [choose, department],
+  );
   // «Quitar filtros» desaparece al pulsarlo: el foco pasa al contador.
   const clear = () => {
+    restoreOrder();
     setQuery("");
     if (selected) {
       setSelected(undefined);
       writeHash(undefined);
     }
     counter.current?.focus();
+  };
+
+  /** Las tiendas verificadas con coordenadas, por distancia: se mueven los <li> de su grupo. */
+  const orderByDistance = (
+    slug: string,
+    here: LatLng,
+    sortByDistance: (here: LatLng, stores: readonly MapStore[]) => MapStore[],
+  ) => {
+    const list = document.getElementById(slug)?.querySelector("ul");
+    const inGroup = stores.filter((store) => store.department === slug);
+    if (!list || !inGroup.some((store) => store.point)) return;
+    const original = [...list.querySelectorAll<HTMLElement>("[data-store-item]")];
+    if (!reordered.current.has(list)) reordered.current.set(list, original);
+    const items = new Map(original.map((item) => [item.dataset.storeItem, item]));
+    for (const store of sortByDistance(here, inGroup)) {
+      const item = items.get(store.slug);
+      if (item) list.append(item);
+    }
+  };
+
+  // El aviso y el foco en el selector: elegir a mano es la salida (criterio de BD-081).
+  const locateFailed = (message: ToastMessage, result: string) => {
+    clearTimeout(watchdog.current);
+    attempt.current += 1;
+    setLocating(false);
+    void showToast(message, { id: LOCATE_TOAST });
+    track("store_locate", { result });
+    select.current?.focus();
+  };
+
+  const locate = () => {
+    // Con un ref y no con el estado: un doble clic llega antes de que el estado cambie.
+    if (watchdog.current !== undefined) return;
+    if (!("geolocation" in navigator)) {
+      locateFailed(feedback.stores.locationDenied, "sin-soporte");
+      return;
+    }
+    const current = ++attempt.current;
+    const finished = () => {
+      clearTimeout(watchdog.current);
+      watchdog.current = undefined;
+    };
+    watchdog.current = setTimeout(() => {
+      watchdog.current = undefined;
+      locateFailed(feedback.stores.locationDenied, "error");
+    }, LOCATE_WATCHDOG_MS);
+    setLocating(true);
+    void showToast(feedback.stores.locating, { id: LOCATE_TOAST, duration: Infinity });
+    // Se descarga mientras el navegador pide el permiso.
+    const nearby = loadNearby();
+    nearby.catch(() => {});
+    const located = async (here: LatLng) => {
+      if (current !== attempt.current) return;
+      finished();
+      let geo: Awaited<typeof nearby>;
+      try {
+        geo = await nearby;
+      } catch {
+        locateFailed(feedback.stores.locationDenied, "error");
+        return;
+      }
+      if (!geo.isValidLatLng(here)) {
+        locateFailed(feedback.stores.locationDenied, "error");
+        return;
+      }
+      const nearest = geo.nearestDepartment(here, departments, stores);
+      if (!nearest) {
+        locateFailed(feedback.stores.noneNearby, "lejos");
+        return;
+      }
+      if (current !== attempt.current) return;
+      setLocating(false);
+      setQuery("");
+      restoreOrder();
+      setSelected(nearest.slug);
+      writeHash(nearest.slug);
+      orderByDistance(nearest.slug, here, geo.sortByDistance);
+      const count = departments.find((d) => d.slug === nearest.slug)?.storeCount ?? 0;
+      void showToast(feedback.stores.located(count), { id: LOCATE_TOAST });
+      track("store_locate", { result: "ok", department: nearest.slug });
+    };
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => void located({ lat: coords.latitude, lng: coords.longitude }),
+      (error) => {
+        if (current !== attempt.current) return;
+        finished();
+        locateFailed(
+          feedback.stores.locationDenied,
+          error.code === error.PERMISSION_DENIED ? "denegado" : "error",
+        );
+      },
+      GEOLOCATION,
+    );
+  };
+
+  // La primera vez se descarga la hoja (el botón queda ocupado); si falla, el aviso del mapa.
+  const openMap = async () => {
+    if (Sheet) {
+      setMapOpen(true);
+      return;
+    }
+    if (sheetLoading) return;
+    setSheetLoading(true);
+    try {
+      const component = await loadSheet();
+      setSheet(() => component);
+      setMapOpen(true);
+    } catch {
+      void showToast(feedback.stores.mapFailed);
+    } finally {
+      setSheetLoading(false);
+    }
+  };
+
+  // Arreglos estables: con unos nuevos en cada render (cada letra de la búsqueda), el mapa volvería a
+  // encuadrar y a rehacer sus pines.
+  const mapDepartments = useMemo(() => departments.filter(hasPoint), [departments]);
+  const mapStores = useMemo(() => stores.filter((store) => store.point), [stores]);
+  const mapProps = {
+    departments: mapDepartments,
+    stores: mapStores,
+    selected: department,
+    onSelect: chooseFromMap,
   };
 
   const empty = feedback.stores.filtersEmpty;
@@ -159,6 +363,7 @@ export function StoreFilters({
             {storesPage.filters.department}
           </label>
           <Select
+            ref={select}
             id={selectId}
             name="departamento"
             value={department ?? ""}
@@ -192,6 +397,27 @@ export function StoreFilters({
         </button>
       </form>
 
+      {/* Solo con JS: la ubicación y el mapa lo necesitan. */}
+      <div className="js-only flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={locate}
+          aria-busy={locating || undefined}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          {storesPage.locate}
+        </button>
+        <button
+          ref={mapButton}
+          type="button"
+          onClick={() => void openMap()}
+          aria-busy={sheetLoading || undefined}
+          className={buttonVariants({ variant: "outline", className: "lg:hidden" })}
+        >
+          {storesPage.map.open}
+        </button>
+      </div>
+
       {/* Un solo aviso para el lector de pantalla: el conteo, el vacío o el departamento sin tiendas. */}
       <div role="status" className="flex flex-col gap-3">
         <p ref={counter} tabIndex={-1} className="text-sm font-bold text-muted">
@@ -217,8 +443,26 @@ export function StoreFilters({
         ) : null}
       </div>
 
-      {children}
+      {/* Con JS y desde lg, dos columnas: la lista y el mapa (fijo al bajar). Sin JS, solo la lista. */}
+      <div className="flex flex-col gap-8 lg:[html.js_&]:grid lg:[html.js_&]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        {children}
+        <section
+          aria-labelledby={`${selectId}-mapa`}
+          className="js-only hidden self-start lg:sticky lg:top-[calc(var(--header-h)+1rem)] lg:block"
+        >
+          <h2 id={`${selectId}-mapa`} className="sr-only">
+            {storesPage.map.title}
+          </h2>
+          <StoreMapSlot
+            {...mapProps}
+            className="h-[min(36rem,calc(100dvh-var(--header-h)-2rem))] overflow-hidden rounded-xl bg-soft"
+          />
+        </section>
+      </div>
       <PrepaintScript code={prepaintScript} />
+      {Sheet ? (
+        <Sheet {...mapProps} open={mapOpen} onOpenChange={setMapOpen} returnFocus={mapButton} />
+      ) : null}
     </div>
   );
 }

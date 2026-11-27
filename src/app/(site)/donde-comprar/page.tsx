@@ -12,6 +12,7 @@ import { JsonLd, storeListJsonLd } from "@/features/seo/jsonld";
 import { buildMetadata } from "@/features/seo/metadata";
 import { STORES_PATH, groupStoresByDepartment, sortStores } from "@/features/stores/directory";
 import { STORES_LIST_ID, storesPrepaintScript } from "@/features/stores/prepaint-script";
+import { isValidLatLng } from "@/lib/geo";
 import { listDepartments, listStores } from "@/server/data/stores";
 
 export const metadata = buildMetadata({
@@ -27,8 +28,8 @@ const isHttps = (url: string | null): url is string => Boolean(url?.startsWith("
  * Dónde comprar (docs/06 §3.7, BD-080): estática, con la lista completa en el HTML, agrupada por
  * departamento (cadenas primero). Los filtros son una isla que solo oculta y muestra; sin JS se ve
  * todo y el selector es un formulario GET (el proxy lo lleva al grupo, #slug). Los departamentos
- * enlazan a su grupo hasta que BD-082 cree sus páginas. El mapa y «Usar mi ubicación» llegan con
- * BD-081. JSON-LD: ItemList de Store y, en las migas, BreadcrumbList (docs/10 §4).
+ * enlazan a su grupo hasta que BD-082 cree sus páginas. El mapa y «Usar mi ubicación» (BD-081) son
+ * parte de la isla y el mapa se descarga aparte. JSON-LD: ItemList de Store y, en las migas, BreadcrumbList (docs/10 §4).
  */
 export default async function WhereToBuyPage() {
   const [departments, stores] = await Promise.all([listDepartments(), listStores()]);
@@ -44,6 +45,7 @@ export default async function WhereToBuyPage() {
     ).values(),
   ];
   const country = new Map(departments.map((d) => [d.slug, d.country]));
+  const center = new Map(departments.map((d) => [d.slug, { lat: d.lat, lng: d.lng }]));
   const crumbs = [breadcrumbsText.home, { name: storesPage.title, path: STORES_PATH }];
 
   return (
@@ -83,12 +85,23 @@ export default async function WhereToBuyPage() {
 
       <Section spacing="sm">
         <StoreFilters
-          departments={groups.map((group) => group.department)}
+          // El centro de cada departamento (pines y cercanía, BD-081); uno que no viene en la base
+          // queda sin pin (NaN: el mapa y la cercanía lo saltan).
+          departments={groups.map(({ department, stores: inDepartment }) => ({
+            ...department,
+            ...(center.get(department.slug) ?? { lat: Number.NaN, lng: Number.NaN }),
+            storeCount: inDepartment.length,
+          }))}
           allDepartments={departments.map(({ slug, name }) => ({ slug, name }))}
           stores={ordered.map((store) => ({
             slug: store.slug,
             department: store.department.slug,
             name: store.name,
+            // Solo coordenadas verificadas por Ventas (como el JSON-LD).
+            point:
+              store.isVerified && isValidLatLng({ lat: store.lat ?? NaN, lng: store.lng ?? NaN })
+                ? { lat: store.lat!, lng: store.lng! }
+                : null,
           }))}
           prepaintScript={storesPrepaintScript(groups.map((group) => group.department.slug))}
         >
@@ -109,7 +122,8 @@ export default async function WhereToBuyPage() {
                 >
                   {department.name}
                 </h2>
-                <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {/* Con JS, dos columnas: desde lg el mapa ocupa el resto. Sin JS, tres (sin mapa). */}
+                <ul className="grid gap-4 sm:grid-cols-2 lg:[html:not(.js)_&]:grid-cols-3">
                   {inDepartment.map((store) => (
                     <li key={store.slug} data-store-item={store.slug}>
                       <StoreCard store={store} headingLevel={3} />

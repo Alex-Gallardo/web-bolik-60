@@ -136,8 +136,19 @@ export const feedback = {
     locating: { tone: "info" as ToastTone, title: "Buscando tiendas cerca de ti…" },
     located: (n: number) => ({
       tone: "success" as ToastTone,
-      title: `Encontramos ${n} tiendas cerca`,
+      title: `Encontramos ${n} ${n === 1 ? "tienda" : "tiendas"} cerca`,
     }),
+    /** BD-081: el mapa (o su hoja en móvil) no se pudo descargar; la lista sigue. */
+    mapFailed: {
+      tone: "error" as ToastTone,
+      title: "No pudimos cargar el mapa. La lista de tiendas sigue disponible.",
+    },
+    /** BD-081: el departamento con tiendas más cercano queda a más de 150 km. */
+    noneNearby: {
+      tone: "info" as ToastTone,
+      title: "No encontramos tiendas cerca de ti",
+      description: "Elige tu departamento en la lista para ver las tiendas.",
+    },
     locationDenied: {
       tone: "info" as ToastTone,
       title: "No pasa nada",

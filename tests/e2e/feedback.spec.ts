@@ -8,10 +8,10 @@ test.describe("feedback", () => {
     await page.goto("/styleguide");
   });
 
-  test("las 28 filas de la matriz tienen ejemplo y la vitrina pasa axe", async ({ page }) => {
+  test("las 29 filas de la matriz tienen ejemplo y la vitrina pasa axe", async ({ page }) => {
     const errors = collectConsoleErrors(page);
     await page.reload();
-    await expect(page.locator("[data-row]")).toHaveCount(28);
+    await expect(page.locator("[data-row]")).toHaveCount(29);
     // sonner no se carga hasta el primer toast (docs/12 §2).
     await expect(page.locator("[data-sonner-toaster]")).toHaveCount(0);
     await expectNoA11yViolations(page);

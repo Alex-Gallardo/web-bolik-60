@@ -213,6 +213,9 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 - En línea: Compra en línea en Walmart Guatemala y La Torre.
 - Filtros (BD-080, aprobado el 26 nov 2026): Departamento · Todos los departamentos · Ver tiendas (solo sin JavaScript) · Buscar tienda por nombre
 - Conteo: {n} tiendas en {departamento} (1 tienda en {departamento}); con todos los departamentos, {n} tiendas
+- Mapa (BD-081, aprobado el 27 nov 2026): Ver mapa (móvil) · Mapa de tiendas (título; en escritorio solo para el lector de pantalla) · Cargando mapa… · Pin: «{departamento}: {n} tiendas» (1 tienda) · Zoom: Acercar · Alejar · Atribución: © OpenStreetMap
+- Mapa que no cargó: No pudimos cargar el mapa. La lista de tiendas sigue disponible.
+- Ubicación: Buscando tiendas cerca de ti… · Encontramos {n} tiendas cerca (1 tienda) · Permiso denegado o error: No pasa nada · Elige tu departamento en la lista para ver las tiendas. · A más de 150 km: No encontramos tiendas cerca de ti · Elige tu departamento en la lista para ver las tiendas.
 - Sin resultados: No encontramos tiendas con ese nombre. Prueba con otro o elige «Todos los departamentos». · Quitar filtros
 - Departamento sin tiendas (de §5): Aún no tenemos tiendas registradas en {departamento} · Escríbenos y te decimos dónde conseguir Bolik, o conviértete en distribuidor.
 - Compra en línea, botones: Comprar en {tienda} (como en la ficha y la home)

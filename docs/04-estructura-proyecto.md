@@ -91,7 +91,7 @@ bolik-digital/
 │  │  ├─ catalog/               # product-card (+ skeleton), category-card, filters, color-swatches, pack-selector, specs, dimensions
 │  │  ├─ home/                  # audience-card (tarjetas por público de la home)
 │  │  ├─ quote/                 # quote-drawer, quote-button, quote-line, quote-form
-│  │  ├─ stores/                # store-card, store-filters (BD-080), store-map (lazy, BD-081)
+│  │  ├─ stores/                # store-card, store-filters (BD-080); store-map (Leaflet, diferido), store-map-slot y store-map-sheet (BD-081)
 │  │  ├─ schools/               # activity-card, school-visit-form (BD-076), kids-decor
 │  │  ├─ forms/                 # use-request-form, honeypot-field, distributor-form, contact-form (BD-076)
 │  │  ├─ whatsapp/              # whatsapp-fab, whatsapp-sheet
@@ -100,7 +100,7 @@ bolik-digital/
 │  ├─ features/                 # lógica por dominio (sin JSX de presentación pesada)
 │  │  ├─ catalog/  (queries.ts, schemas.ts, search.ts, format.ts)
 │  │  ├─ quote/    (store.ts, lines.ts, storage-keys.ts, schemas.ts, actions.ts)
-│  │  ├─ stores/   (directory.ts, prepaint-script.ts; BD-080)
+│  │  ├─ stores/   (directory.ts, prepaint-script.ts; BD-080 · nearby.ts, cercanía; BD-081)
 │  │  ├─ schools/ · distributors/ · contact/   (form-fields.ts, schema.ts, actions.ts; BD-076)
 │  │  ├─ content/  (queries.ts para hero, cifras, hitos, faqs, apariencia)
 │  │  ├─ admin/    (actions por entidad)
@@ -125,6 +125,7 @@ bolik-digital/
 │  │  ├─ constants.ts           # estados, tipos, presets (reemplazan enums)
 │  │  ├─ cache-tags.ts · slug.ts · format.ts · cn.ts · image-loader.ts · contrast.ts
 │  │  ├─ redirect-path.ts       # rutas normalizadas y mapa de redirecciones (BD-046)
+│  │  ├─ geo.ts                 # distancia en km (haversine) y puntos válidos (BD-081)
 │  │  ├─ folio.ts               # formato, regex y año (hora de Guatemala) de los folios (BD-033)
 │  │  ├─ form-schemas.ts        # piezas de Zod compartidas (teléfono GT, correo, NIT, cantidad)
 │  │  ├─ form-schemas-mini.ts   # las mismas en zod/mini para los formularios públicos, más NIT, cantidad, opciones y fieldErrors (BD-072, BD-076)
@@ -279,7 +280,7 @@ Reglas:
 | `zustand` | Cotización del visitante | pequeño |
 | `react-hook-form`, `@hookform/resolvers`, `zod` | Formularios y validación | por formulario |
 | `fuse.js` | Búsqueda | diferida (al enfocar) |
-| `leaflet`, `react-leaflet` | Mapa de tiendas | diferida (al hacer visible) |
+| `leaflet`, `react-leaflet` | Mapa de tiendas (BD-081: 44.8 KB comprimidos con el componente, más 2.7 KB de CSS) | diferida: escritorio, al entrar en pantalla tras `load`; móvil, al tocar «Ver mapa» |
 | `@prisma/client`, `prisma` | BD | servidor |
 | `iron-session`, `bcryptjs` | Sesión y contraseñas del admin | servidor |
 | `sharp` | Imágenes | servidor |

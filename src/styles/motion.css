@@ -951,6 +951,50 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   }
 }
 
+/* ── Pines del mapa de tiendas (A-34, BD-081) ──
+   store-map.tsx: un divIcon de Leaflet. Leaflet mueve el contenedor (.store-pin) con transform,
+   así que se anima el círculo de adentro: cae 8 px escalonado (--i, hasta 8 pasos) y el activo
+   crece a 1.15. Cada pin mide 44 px: el objetivo táctil. */
+.store-pin {
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+}
+.store-pin__dot {
+  display: grid;
+  place-items: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding-inline: 0.5rem;
+  border: 2px solid var(--paper);
+  border-radius: 9999px;
+  background: var(--blue);
+  color: var(--paper);
+  font-weight: 700;
+  font-size: 0.875rem;
+  box-shadow: var(--shadow-sm);
+  animation: pin-drop var(--dur-base) var(--ease-spring) both;
+  animation-delay: calc(min(var(--i, 0), 7) * var(--stagger));
+  /* Solo transform: el color cambia al instante (docs/09: nada de transiciones de color). */
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+.store-pin:hover .store-pin__dot {
+  background: var(--blue-700);
+}
+.store-pin--active .store-pin__dot {
+  transform: scale(1.15);
+  background: var(--navy);
+}
+@keyframes pin-drop {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--rise-sm) * -1));
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* ── Movimiento reducido: sin desplazamientos, solo opacidad breve ── */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -1006,6 +1050,14 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   }
   .confetti {
     display: none;
+  }
+  /* Pines: aparecen sin caer y el activo no crece (cambia de color). */
+  .store-pin__dot {
+    animation-name: fade-in;
+    animation-delay: 0ms;
+  }
+  .store-pin--active .store-pin__dot {
+    transform: none;
   }
   /* Subrayado del h1 del hero (A-11): fijo al instante, sin esperar el retraso. */
   .ink-draw-late {
@@ -1094,6 +1146,13 @@ html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) 
 }
 [data-reduced-motion] .confetti {
   display: none;
+}
+[data-reduced-motion] .store-pin__dot {
+  animation-name: fade-in;
+  animation-delay: 0ms;
+}
+[data-reduced-motion] .store-pin--active .store-pin__dot {
+  transform: none;
 }
 [data-reduced-motion] .ink-draw-late {
   animation-delay: 0ms;

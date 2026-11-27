@@ -186,7 +186,14 @@ En `proxy.ts` (BD-065): busca la variante por `sku` o `barcode` (normalizados: s
   - Búsqueda por nombre, sin tildes.
 - **Sin JavaScript:** se ve todo y el selector es un formulario GET. `/donde-comprar?departamento={slug}` (también el de la home, BD-053) da un **307** a `/donde-comprar#{slug}`, porque la página es estática y no lee la query.
 - **Enlaces por departamento:** son anclas a su grupo.
-- **Pendiente:** BD-082 cambia el 307 por un 308 a `/donde-comprar/{slug}` y las anclas por sus páginas. El mapa y «Usar mi ubicación» llegan con BD-081.
+- **Pendiente:** BD-082 cambia el 307 por un 308 a `/donde-comprar/{slug}` y las anclas por sus páginas.
+
+**Implementado (BD-081, 27 nov 2026).**
+- **Mapa:** Leaflet con los mapas de OpenStreetMap (su atribución abajo). Ninguna tienda tiene todavía coordenadas verificadas, así que hay un pin por departamento con tiendas, en su centro, con el número de tiendas; una tienda verificada con coordenadas tendrá el suyo. Tocar un pin (o Enter y Espacio con el teclado) elige su departamento, como el selector; el pin elegido queda marcado (`aria-pressed`).
+- **Escritorio** (desde `lg`, solo con JS): la lista y el mapa en dos columnas; el mapa queda fijo al bajar. Se descarga cuando ya cargó la página y su lugar entra en pantalla.
+- **Móvil:** «Ver mapa» abre una hoja casi a pantalla completa («Mapa de tiendas»). Tocar un pin cierra la hoja con la lista filtrada y el foco vuelve al botón.
+- **«Usar mi ubicación»:** elige el departamento con tiendas más cercano (a 150 km o menos, medido a su centro o a su tienda verificada más cercana) y ordena por distancia sus tiendas verificadas. Si se niega el permiso, falla o queda lejos, avisa y pasa el foco al selector. La posición nunca sale del navegador.
+- **Sin JavaScript:** ni mapa ni ubicación: la lista ocupa todo el ancho.
 
 ### 3.8 `/donde-comprar/[departamento]`
 **Busca posicionar:** "útiles escolares en Quetzaltenango", "lapiceros Bolik Huehuetenango".

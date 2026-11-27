@@ -38,7 +38,7 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 | A-31 | Cambio de color | Ficha y spotlight | Crossfade de imagen (`opacity`) + anillo del swatch con `scale` | 240 ms in-out | Solo opacidad |
 | A-32 | Sheet de filtros | Catálogo móvil | = A-08 | 420 ms | Opacidad |
 | A-33 | Cota interactiva | Diagrama de medidas | Línea de cota con `stroke-dashoffset` y etiqueta `fade-in` (CSS con radios, sin JS; token `--dur-cota`, BD-063) | 320 ms out | Estático |
-| A-34 | Pines del mapa | Dónde comprar | Pines caen con `translateY(-8px) → 0` escalonado; pin activo con `scale(1.15)` | 240 ms spring | Estático |
+| A-34 | Pines del mapa | Dónde comprar | Pines caen con `translateY(-8px) → 0` escalonado (`--i × --stagger`, hasta 8 pasos); pin activo con `scale(1.15)` (CSS `.store-pin`, BD-081: se anima el círculo; Leaflet mueve el contenedor) | 240 ms spring | Solo opacidad; el activo cambia de color sin crecer |
 | A-35 | Acordeón | FAQs | `<details>` + `::details-content` (`block-size`)* y rotación del ícono + | 240 ms in-out | Instantáneo |
 | A-36 | Quitar línea | Cotización | CSS (`.quote-line-leave`, BD-071): `opacity` y `translateX` hacia la derecha; al terminar (`animationend`) se quita del store y las de abajo suben (sin animar la altura). La demo de `/styleguide` sigue con Motion `AnimatePresence` | 240 ms (`--dur-base`) | Solo opacidad |
 | A-40 | Tarjetas infantiles | Escuelas | Rotación ±1.5° en reposo; hover `rotate(0) scale(1.03)` | 240 ms spring | Sin rotación |
