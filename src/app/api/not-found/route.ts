@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MAX_PATH_LENGTH, normalizeStoredPath } from "@/lib/redirect-path";
+import { readBodyLimited } from "@/server/read-body";
 import { notFoundHits } from "@/server/seo/not-found-log";
 
 /**
@@ -21,26 +22,6 @@ const bodySchema = z.object({
 
 const noContent = () => new Response(null, { status: 204 });
 
-/** Lee el cuerpo como texto sin pasar del tope (aunque no venga Content-Length). */
-async function readLimited(request: Request): Promise<string | null> {
-  const declared = Number(request.headers.get("content-length") ?? 0);
-  if (declared > MAX_BODY_BYTES || !request.body) return null;
-  const reader = request.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > MAX_BODY_BYTES) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
-  }
-  return new TextDecoder().decode(Buffer.concat(chunks));
-}
-
 /** Solo origen y ruta de un referer http(s): sin query (puede traer búsquedas o datos personales). */
 function cleanReferer(value: string | undefined): string | null {
   if (!value) return null;
@@ -59,8 +40,8 @@ export async function POST(request: Request) {
   const site = request.headers.get("sec-fetch-site");
   if (site && site !== "same-origin") return noContent();
 
-  const text = await readLimited(request);
-  if (!text) return noContent();
+  const text = await readBodyLimited(request, MAX_BODY_BYTES);
+  if (!text || text === "too-large") return noContent();
   let json: unknown;
   try {
     json = JSON.parse(text);

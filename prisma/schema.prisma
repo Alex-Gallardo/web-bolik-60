@@ -287,6 +287,7 @@ model Department {
   quotes          QuoteRequest[]
   schoolRequests  SchoolVisitRequest[]
   distributorApps DistributorApplication[]
+  clicks          OutboundClick[]
 }
 
 model Store {
@@ -602,18 +603,24 @@ model NotFoundLog {
 }
 
 model OutboundClick {
-  id         BigInt          @id @default(autoincrement())
-  kind       String          @db.VarChar(20) // whatsapp | retailer | maps | phone | pdf
-  target     String?         @db.VarChar(60) // walmart | latorre | google_maps
-  variantId  Int?
-  variant    ProductVariant? @relation(fields: [variantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  storeId    Int?
-  store      Store?          @relation(fields: [storeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  path       String          @db.VarChar(300)
-  deviceType String?         @db.VarChar(10) // mobile | desktop
-  createdAt  DateTime        @default(now())
+  id           BigInt          @id @default(autoincrement())
+  kind         String          @db.VarChar(20) // whatsapp | retailer | maps | phone | pdf
+  target       String?         @db.VarChar(60) // walmart | latorre | google_maps
+  variantId    Int?
+  variant      ProductVariant? @relation(fields: [variantId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  storeId      Int?
+  store        Store?          @relation(fields: [storeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  // BD-083: el departamento de «Cómo llegar» (data-department).
+  departmentId Int?
+  department   Department?     @relation(fields: [departmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  path         String          @db.VarChar(300)
+  deviceType   String?         @db.VarChar(10) // mobile | desktop
+  createdAt    DateTime        @default(now())
 
   @@index([kind, createdAt])
+  @@index([variantId])
+  @@index([storeId])
+  @@index([departmentId])
 }
 
 model SyncRun {

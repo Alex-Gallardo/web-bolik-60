@@ -1965,8 +1965,24 @@ Medir cuántas personas van a una tienda o cadena.
 
 **Criterios de aceptación**
 
-- [ ] Un clic a Walmart crea una fila.
-- [ ] El endpoint rechaza cuerpos > 2 KB.
+- [x] Un clic a Walmart crea una fila.
+- [x] El endpoint rechaza cuerpos > 2 KB.
+
+**Implementado (BD-083)**
+
+Decisiones del usuario (27 nov 2026): script en línea y no una isla; `retailer_click`, `maps_click` y `whatsapp_open`; 413 con más de 2 KB y 204 en todo lo demás, con un límite por IP.
+
+- **Navegador** (`features/analytics/outbound-script.ts`, en línea en `app/(site)/layout.tsx`): escucha `click` y `auxclick` (clic medio) en toda la página; si es un `a[data-event]` saliente (`OUTBOUND_EVENTS` en `features/analytics/outbound.ts`) que sale del sitio, manda con `sendBeacon` (o `fetch` con `keepalive`) `{e, p, r?, s?, d?, k?, c?}`. No suma JS a ninguna página. Se instala una vez.
+- **Servidor** (`app/api/beacon/route.ts`): cuerpo con tope (`server/read-body.ts`, compartido con `/api/not-found`): más de 2 KB, **413**. Lo demás, **204**: de otro sitio (`Sec-Fetch-Site`), JSON inválido, esquema estricto de Zod (slugs, SKU, contexto y ruta sin query) o más de 60 por minuto por IP (hash, en memoria) no se guarda. `server/data/outbound-clicks.ts` busca tienda, departamento y variante (null si no existen) y crea la fila; un error se registra y no rompe nada.
+- **Base:** migración `clics_salientes`: `OutboundClick.departmentId` con su relación e índices en `variantId`, `storeId` y `departmentId` (revisión de BD-030).
+- **Revisor:** sin bloqueantes. Corregí: el folio de la cotización en `path` (ahora la plantilla de la ruta), destinos inventados (un aviso con un slug o SKU que no existe no se guarda), el límite por IP sin la IP del visitante, la ruta con caracteres raros, los contextos de WhatsApp en una constante, un clic en el texto del enlace y la contradicción de docs/12. Anotados en el script: el `<a>` de SVG, `preventDefault` y la llegada desde el admin con `<Link>`.
+- **Pruebas:** unitarias del esquema y el mapeo, del script en jsdom (externo sí; del sitio, sin `data-event` o con otro evento, no; clic medio; `fetch` de respaldo; una sola instalación) y de la ruta (413 con y sin Content-Length, otro sitio, inválido, límite, error de la base); integración contra `BolikDigital_Test` (Walmart crea su fila con tienda y variante; «Cómo llegar» con tienda y departamento; desconocidos en null; 413 sin fila); E2E `clics-salientes.spec.ts`.
+
+*Notas para BD-125 y BD-127:*
+- Estos tres clics todavía no van al `dataLayer`: el listener que registre los `data-event` en GA4 los suma.
+- El enlace del producto destacado de la home lleva `retailer_click` pero va a `/donde-comprar` (interno): no se registra aquí; conviene otro nombre de evento.
+- «Llamar» (`phone`) y el PDF (`pdf`) tienen tipo en `OutboundClick` pero no evento en doc 12 §4: se suman con su evento.
+- En la ficha, si la hoja de WhatsApp no carga, `window.open` abre WhatsApp sin un enlace marcado: ese clic no se registra (mandar el aviso a mano en ese `catch`).
 
 ### E8 · SEO técnico
 
