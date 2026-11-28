@@ -42,7 +42,7 @@ Objetivo: que el sitio se sienta **suave, fluido y vivo**, sin costar rendimient
 | A-35 | Acordeón | FAQs | `<details>` + `::details-content` (`block-size`)* y rotación del ícono + | 240 ms in-out | Instantáneo |
 | A-36 | Quitar línea | Cotización | CSS (`.quote-line-leave`, BD-071): `opacity` y `translateX` hacia la derecha; al terminar (`animationend`) se quita del store y las de abajo suben (sin animar la altura). La demo de `/styleguide` sigue con Motion `AnimatePresence` | 240 ms (`--dur-base`) | Solo opacidad |
 | A-40 | Tarjetas infantiles | Escuelas | Rotación ±1.5° en reposo; hover `rotate(0) scale(1.03)` | 240 ms spring | Sin rotación |
-| A-41 | Garabatos | Fondo de escuelas | SVG que se dibuja una vez al entrar + `float` lento de figuras | 1.2 s una vez; float 5 s loop | Estático |
+| A-41 | Garabatos | Fondo de escuelas | SVG que se dibuja una vez al entrar + `float` lento de figuras (BD-105: en el hero de `/escuelas` el garabato se dibuja al cargar con `.ink-draw` y las figuras flotan con `.kids-float`, `transform` y `--dur-float`; el trazo dura `--dur-slower`, 700 ms, el token más cercano a 1.2 s) | 1.2 s una vez; float 5 s loop | Estático |
 | A-50 | Línea de tiempo | Historia | Línea con `scaleX`/`scaleY` desde el origen + hitos con A-21 | 700 ms out | Estático |
 | A-60 | Éxito | Diálogo de envío | Check SVG que se dibuja + círculo con `scale` spring; escuelas y cotización enviada (BD-075, decisión del usuario): confeti ligero (12 piezas CSS) | 600 ms | Check estático |
 | A-70 | Skeleton | Carga en cliente | Brillo `translateX` | 1.2 s loop | Sin brillo |

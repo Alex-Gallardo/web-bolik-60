@@ -148,7 +148,8 @@ Etiqueta `@critico` = corre también en iPhone y bloquea el release.
 | `donde-comprar.spec.ts` @critico | Elegir departamento; buscar por nombre; enlaces por departamento; sin JavaScript (BD-080). Mapa en escritorio y en móvil; "Usar mi ubicación" con geolocalización simulada, con y sin permiso (BD-081) | lista filtrada con `store_filter`; 308 de `?departamento=` a la página del departamento (sin tiendas: 307 a `#slug`, BD-082); `maps_click` y `retailer_click` marcados; lista completa sin JS; Leaflet fuera del HTML y pedido después de `load` (escritorio) o al tocar «Ver mapa» (móvil); un pin filtra; con permiso, el departamento más cercano; denegado, aviso y foco en el selector. Los mapas de OpenStreetMap se responden con un PNG (sin red externa) |
 | `qr.spec.ts` | `/p/PT00058` | 301 a la ficha con `?color=azul` |
 | `redirecciones.spec.ts` | Todas las URL de Joomla del mapa | 301 y destino 200 |
-| `escuelas.spec.ts`, `mayoreo.spec.ts`, `contacto.spec.ts` | Envío de formularios | diálogo de éxito y registro en BD |
+| `escuelas.spec.ts` @critico (BD-105) | `/escuelas` | un `h1` en Baloo 2, migas, 4 pasos, actividades, FAQ con `FAQPage`, axe; el hero baja al formulario; envío con folio `ESC`; con movimiento reducido las figuras no flotan; enlace desde la home; 360 px; sin JS, el aviso del formulario |
+| `mayoreo.spec.ts`, `contacto.spec.ts` | Envío de formularios | diálogo de éxito y registro en BD |
 | `admin.spec.ts` | Login, crear producto, publicar, ver en sitio; cambiar estado de cotización | sesión; la ficha aparece sin redeploy (caché invalidada) |
 | `seo.spec.ts` | Cada ruta pública | un solo H1; `<title>` y `description` únicos; canonical; `robots` correcto; `sitemap.xml`, `robots.txt`, `llms.txt` responden 200 |
 | `sin-js.spec.ts` | `javaScriptEnabled: false` | home, catálogo y ficha muestran contenido completo; formularios muestran el mensaje "activa JavaScript o escríbenos por WhatsApp" |

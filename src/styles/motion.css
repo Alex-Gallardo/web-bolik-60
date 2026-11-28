@@ -13,6 +13,7 @@
   --dur-cota: 320ms; /* cota del diagrama de medidas (A-33, docs/09) */
   --dur-shimmer: 1200ms; /* brillo del skeleton (bucle) */
   --dur-spin: 800ms; /* una vuelta del spinner (bucle) */
+  --dur-float: 5000ms; /* flotación lenta de las figuras de /escuelas (A-41, bucle) */
 
   /* Curvas */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* entradas: rápido al inicio, suave al final */
@@ -342,6 +343,13 @@ html[data-reveal-ready] [data-reveal]:not([data-revealed]) .timeline-line {
 }
 html[data-reveal-ready] [data-reveal]:not([data-revealed]) .scribble path {
   stroke-dashoffset: 1;
+}
+
+/* Figuras del hero de /escuelas (A-41, BD-105): flotan lento (8 px, transform), cada una con su
+   retraso (--i). Decorativas (aria-hidden). Con movimiento reducido, quietas. */
+.kids-float {
+  animation: float var(--dur-float) var(--ease-in-out) infinite;
+  animation-delay: calc(var(--i, 0) * var(--dur-slow));
 }
 
 /* ── Skeleton ── */
@@ -1025,6 +1033,9 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   html[data-reveal-ready] [data-reveal]:not([data-revealed]) .scribble path {
     stroke-dashoffset: 0;
   }
+  .kids-float {
+    animation: none;
+  }
   .kids-tilt,
   .kids-tilt:hover {
     transform: none;
@@ -1124,6 +1135,9 @@ html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) 
 }
 html[data-reveal-ready][data-reduced-motion] [data-reveal]:not([data-revealed]) .scribble path {
   stroke-dashoffset: 0;
+}
+[data-reduced-motion] .kids-float {
+  animation: none;
 }
 [data-reduced-motion] .kids-tilt,
 [data-reduced-motion] .kids-tilt:hover {

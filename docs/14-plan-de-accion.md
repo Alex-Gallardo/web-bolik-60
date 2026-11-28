@@ -2092,6 +2092,8 @@ Ayuda a usuarios y buscadores a entender la jerarquía.
 
 #### BD-094 · Redirecciones desde el sitio Joomla
 
+*Decisión del usuario (27 nov 2026):* se hace después de las páginas de contenido (BD-105 a BD-112), para que cada redirección apunte a una página que ya existe y `check:redirects` quede en verde de verdad. El rastreo del sitio actual responde (Joomla con VirtueMart: `/index.php/{menú}`, `option=com_virtuemart` de categoría y producto, `/component/virtuemart/{producto}`). Para el criterio de tráfico hace falta el export de Search Console (Rendimiento → Páginas, 16 meses).
+
 **Sprint** S3 · **Días** 1 · **Prioridad** Must · **Pista** B · **Depende de** BD-046 · **Docs** 10 §6
 
 No perder el posicionamiento ganado por el sitio actual.
@@ -2267,8 +2269,23 @@ Página con estilo infantil y formulario de visita.
 
 **Criterios de aceptación**
 
-- [ ] Animaciones lúdicas (A-50…) solo con transform/opacity.
-- [ ] Lighthouse ≥ 95.
+- [x] Animaciones lúdicas (A-50…) solo con transform/opacity.
+- [ ] Lighthouse ≥ 95. *(En `lighthouse.config.cjs` con su propio bloque: rendimiento ≥ 0.95. Local: accesibilidad, SEO y buenas prácticas 1, CLS 0, 160.0 KB de JS; el rendimiento lo decide la CI, como en todas las páginas.)*
+
+**Implementado (BD-105)**
+
+Decisiones del usuario (27 nov 2026): publicar «Sin costo para la institución» y el paso 4 (validados); cifras de escuelas y galería ocultas hasta tener datos (`SCHOOL_STAT_KEYS` en `lib/constants.ts`, fuera de la franja de la home); el enlace a kits solo con `kits_enabled`; el formulario sigue en `/styleguide/formularios` como ejemplo.
+
+- **Página** (`app/(site)/escuelas/page.tsx`, estática): ver docs/06 §3.9. Textos en `content/schools.ts` (doc 17 §4).
+- **Compartido con la home:** `ActivityCards` (A-40) y `KidsScribble` (A-41) en `components/schools`; la sección de la home los usa.
+- **Formulario diferido** (`school-form-loader.tsx`): 167.2 → 160.0 KB de JS. `FormNoScript` (`components/forms`, textos en `content/forms.ts`) lo comparten `/escuelas` y `/cotizacion`; BD-106 y BD-111 lo suman.
+- **Animación:** `.kids-float` (solo `transform`, token `--dur-float` de 5 s de docs/09) con `animation: none` en los dos bloques de movimiento reducido.
+- **SEO:** `/escuelas` en `STATIC_PAGES` (fecha del contenido), migas con el `h1` (BD-093) y `BreadcrumbList`. Notas de BD-092 y BD-093, cumplidas.
+- **Pruebas:** E2E `escuelas.spec.ts` (h1 en Baloo 2, migas, pasos, actividades, JSON-LD, axe, botón del hero, formulario diferido, envío con folio `ESC`, movimiento reducido del sistema y del sitio, enlace desde la home, 360 px, sin JS); `sitemap.test.ts`.
+- **Revisor:** sin bloqueantes. Corregí: la pregunta duplicada (fuera: la home ya la marca), el formulario que pasaba la página de su tope (diferido), las figuras sobre el texto entre `sm` y `lg` (ahora desde `lg`), el orden de secciones de docs/06, el aviso sin JS copiado (componente compartido), el garabato duplicado, `isSchoolStatKey`, la etiqueta de kits, comentarios y pruebas del interruptor de movimiento reducido.
+- **Pendiente con el usuario:**
+  - La respuesta de «¿La visita tiene costo?» (doc 17 §7 la marca **(validar)**); con ella, la página tiene su pregunta y su `FAQPage`.
+  - La última miga repite el `h1` («¡Aprender a escribir es una aventura!»), como pide `seo.spec.ts`; el header y el pie la llaman «Escuelas».
 
 *Nota de BD-092:* al crear la página, agregar su ruta a `STATIC_PAGES` (`src/features/seo/sitemap.ts`, con de qué datos sale su fecha) para que entre al sitemap. La E2E de `seo.spec.ts` comprueba que cada URL del sitemap responda 200, con `index` y canónica propia.
 

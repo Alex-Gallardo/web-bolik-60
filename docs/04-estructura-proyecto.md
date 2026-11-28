@@ -92,8 +92,8 @@ bolik-digital/
 │  │  ├─ home/                  # audience-card (tarjetas por público de la home)
 │  │  ├─ quote/                 # quote-drawer, quote-button, quote-line, quote-form
 │  │  ├─ stores/                # store-card, store-filters (BD-080); store-map (Leaflet, diferido), store-map-slot y store-map-sheet (BD-081); store-map-layout (columna del mapa y «Ver mapa»), department-stores (BD-082)
-│  │  ├─ schools/               # activity-card, school-visit-form (BD-076), kids-decor
-│  │  ├─ forms/                 # use-request-form, honeypot-field, distributor-form, contact-form (BD-076)
+│  │  ├─ schools/               # activity-cards (A-40) y kids-decor (garabato y figuras, A-41), compartidos por la home y /escuelas; school-visit-form (BD-076) y school-form-loader (diferido, BD-105)
+│  │  ├─ forms/                 # use-request-form, honeypot-field, distributor-form, contact-form (BD-076) · form-noscript (aviso sin JS, BD-105)
 │  │  ├─ whatsapp/              # whatsapp-fab, whatsapp-sheet
 │  │  ├─ icons/                 # logo, íconos de beneficios
 │  │  └─ admin/                 # data-table, form-field, image-uploader, status-badge

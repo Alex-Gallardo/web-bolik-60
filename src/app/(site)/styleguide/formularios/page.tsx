@@ -8,8 +8,9 @@ import { getSiteSettings } from "@/server/data/content";
 import { listDepartments } from "@/server/data/stores";
 
 /**
- * Vitrina de los formularios de escuelas, distribuidores y contacto (BD-076) mientras no existen
- * sus páginas (BD-105, BD-106, BD-111): se envían de verdad (con DATA_SOURCE=fixtures, a memoria) y
+ * Vitrina de los formularios de escuelas, distribuidores y contacto (BD-076). El de escuelas ya
+ * está en /escuelas (BD-105) y queda aquí como ejemplo (decisión del usuario); los otros, hasta
+ * BD-106 y BD-111: se envían de verdad (con DATA_SOURCE=fixtures, a memoria) y
  * los correos quedan en /styleguide/correos. Como todo /styleguide, en producción solo con sesión
  * de admin.
  */

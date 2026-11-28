@@ -59,6 +59,19 @@ export const BACKGROUND_PRESETS = [
   "navy",
   "sun",
 ] as const;
+/**
+ * Cifras de /escuelas (BD-105, docs/06 §3.9): SiteStat con estas claves. Las publica Mercadeo desde
+ * el admin cuando estén validadas; no van en la franja de cifras de la home.
+ */
+export const SCHOOL_STAT_KEYS = [
+  "escuelas_visitadas",
+  "ninos_en_talleres",
+  "utiles_donados",
+] as const;
+
+export const isSchoolStatKey = (key: string): boolean =>
+  (SCHOOL_STAT_KEYS as readonly string[]).includes(key);
+
 export const FAQ_SCOPES = [
   "global",
   "home",

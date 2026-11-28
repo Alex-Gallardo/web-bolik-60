@@ -147,7 +147,7 @@ Tablas independientes (sin relaciones): `SiteStat`, `SiteSetting`, `SectionAppea
 | `ContactMessage` | Mensaje de contacto | `subject`, `message` | — |
 | `FolioSequence` | Correlativos por prefijo y año | PK (`prefix`, `year`), `lastValue` | Ver §4 |
 | `HeroChapter` | Capítulos del hero | `key`, textos, CTA, videos, póster | 4 registros |
-| `SiteStat` | Cifras de la franja | `value`, `suffix`, `label`, `sourceNote` | `sourceNote` documenta de dónde sale |
+| `SiteStat` | Cifras de la franja | `value`, `suffix`, `label`, `sourceNote` | `sourceNote` documenta de dónde sale. Las claves `SCHOOL_STAT_KEYS` (`escuelas_visitadas`, `ninos_en_talleres`, `utiles_donados`; BD-105) van en `/escuelas` y no en la franja de la home |
 | `HistoryMilestone` | Línea de tiempo | `key` UK, `year`, `title`, `isVerified` | Solo se publican verificados en producción |
 | `SchoolActivity` | Actividades de escuelas | `key` UK, `colorKey`, `iconKey`, `isSample` | — |
 | `SectionAppearance` | Fondo por sección | `sectionKey` PK, `backgroundPreset`, `tone` | Fondos configurables |

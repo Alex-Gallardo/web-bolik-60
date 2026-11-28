@@ -16,6 +16,12 @@ const common = {
   optional: "(opcional)",
 } as const;
 
+/** Aviso sin JavaScript de los formularios públicos (doc 17 §5): components/forms/form-noscript.tsx. */
+export const formNoScript = {
+  text: "Para enviar este formulario activa JavaScript",
+  whatsapp: "o escríbenos por WhatsApp al",
+} as const;
+
 type Option<T extends string> = { value: T; label: string };
 
 export const schoolLevelOptions = [

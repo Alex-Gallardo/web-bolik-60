@@ -165,8 +165,9 @@ Intros de categoría (2–3 frases, para SEO; el resto de cada intro lo completa
 
 ### `/escuelas`
 - `h1`: **¡Aprender a escribir es una aventura!**
-- Intro: Llevamos talleres de escritura, dibujo y creatividad a colegios y escuelas de Guatemala. Sin costo para la institución **(validar)**.
-- Cómo funciona: 1. Nos escribes · 2. Coordinamos la fecha · 3. Visitamos tu escuela · 4. Entregamos material para cada niño **(validar)**
+- Intro: Llevamos talleres de escritura, dibujo y creatividad a colegios y escuelas de Guatemala. Sin costo para la institución. *(validado por el usuario el 27 nov 2026, BD-105)*
+- Cómo funciona: 1. Nos escribes · 2. Coordinamos la fecha · 3. Visitamos tu escuela · 4. Entregamos material para cada niño *(validado por el usuario el 27 nov 2026, BD-105)*
+- Títulos de sección (BD-105): Cómo funciona · Actividades para escuelas · Preguntas frecuentes · Bolik en las escuelas (cifras, solo para el lector de pantalla) · Ver kits escolares (solo con kits activos, como en la home) · el botón del hero: Lleva Bolik a tu escuela
 - Formulario, título: **Lleva Bolik a tu escuela**
 - Campos: Nombre del colegio · Nivel (Preprimaria, Primaria, Básicos, Diversificado) · Alumnos aproximados · Departamento · Municipio · Tu nombre · Teléfono o correo · Mes preferido
 - Botón: Enviar solicitud

@@ -21,6 +21,9 @@ export const STATIC_PAGES: readonly StaticPage[] = [
   { path: "/productos", changesWith: ["catalog"] },
   // La lista de tiendas (BD-080): su fecha es la del departamento con la tienda más reciente.
   { path: "/donde-comprar", changesWith: ["stores"] },
+  // Bolik en tu escuela (BD-105): su fecha es la del contenido (ajustes, apariencia y FAQs; las
+  // actividades y las cifras no tienen fecha propia).
+  { path: "/escuelas", changesWith: ["content"] },
 ];
 
 /** La fecha más reciente; null si ninguna tiene fecha (la fuente de ejemplo no las tiene). */

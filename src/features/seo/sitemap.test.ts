@@ -31,6 +31,7 @@ describe("sitemap.xml (BD-092, docs/10 §5)", () => {
       "https://www.bolik66.com/",
       "https://www.bolik66.com/productos",
       "https://www.bolik66.com/donde-comprar",
+      "https://www.bolik66.com/escuelas",
       "https://www.bolik66.com/donde-comprar/guatemala",
       "https://www.bolik66.com/productos/boligrafos",
       "https://www.bolik66.com/productos/marcadores",
@@ -46,7 +47,12 @@ describe("sitemap.xml (BD-092, docs/10 §5)", () => {
       expect(pathname).not.toMatch(/^\/(buscar|cotizacion|styleguide|admin|api)/);
       if (pathname !== "/") expect(url.endsWith("/")).toBe(false);
     }
-    expect(STATIC_PAGES.map((p) => p.path)).toEqual(["/", "/productos", "/donde-comprar"]);
+    expect(STATIC_PAGES.map((p) => p.path)).toEqual([
+      "/",
+      "/productos",
+      "/donde-comprar",
+      "/escuelas",
+    ]);
   });
 
   it("/donde-comprar toma la fecha del departamento con la tienda más reciente (BD-080)", () => {

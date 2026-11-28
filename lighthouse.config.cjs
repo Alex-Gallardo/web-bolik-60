@@ -57,6 +57,8 @@ module.exports = {
         `${base}/donde-comprar`,
         // Un departamento (BD-082): sus tiendas con el mapa diferido.
         `${base}/donde-comprar/quetzaltenango`,
+        // Bolik en tu escuela (BD-105): estilo infantil, Baloo 2 y el formulario de visita.
+        `${base}/escuelas`,
         // Mi cotización (BD-072): el formulario más pesado del sitio (noindex).
         `${base}/cotizacion`,
         // Buscador (BD-066): la página de una búsqueda, con resultados (proxy.ts → /buscar/[q]).
@@ -97,10 +99,23 @@ module.exports = {
           // (Next, React y el layout) ocupa ~150 KB en cualquier página y /productos mide 158.3 KB
           // (BD-047; antes 170). Sin las fichas (abajo).
           matchingUrlPattern:
-            "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion(?:$|/))(?!buscar(?:$|\\?))(?!donde-comprar/[^/]+$).+",
+            "^https?://[^/]+/(?!productos/[^/]+/[^/]+$)(?!cotizacion(?:$|/))(?!buscar(?:$|\\?))(?!donde-comprar/[^/]+$)(?!escuelas$).+",
           assertions: {
             ...common,
             "categories:performance": ["error", { minScore: 0.9 }],
+            "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
+            "total-blocking-time": ["error", { maxNumericValue: 150 }],
+            "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
+          },
+        },
+        {
+          // Bolik en tu escuela (BD-105): como el resto, pero su criterio pide Lighthouse ≥ 95 en
+          // rendimiento. Tres familias de letra (Baloo 2 solo aquí, docs/12 §2) y el formulario
+          // diferido (school-form-loader.tsx): 160.0 KB de JS medidos.
+          matchingUrlPattern: "^https?://[^/]+/escuelas$",
+          assertions: {
+            ...common,
+            "categories:performance": ["error", { minScore: 0.95 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
             "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],
