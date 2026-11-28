@@ -1,5 +1,6 @@
-/** Contexto para la analítica (docs/12 §4): una cotización enviada (folio) cuenta como `quote`. */
-export type WhatsAppEventContext = "general" | "product" | "quote";
+/** Contextos para la analítica (docs/12 §4): una cotización enviada (folio) cuenta como `quote`. */
+export const WHATSAPP_CONTEXTS = ["general", "product", "quote"] as const;
+export type WhatsAppEventContext = (typeof WHATSAPP_CONTEXTS)[number];
 
 /**
  * Atributos del enlace para la analítica (docs/12 §4, BD-067): `whatsapp_open` con su contexto y,

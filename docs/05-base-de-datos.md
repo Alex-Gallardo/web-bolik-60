@@ -96,6 +96,7 @@ erDiagram
   MediaAsset |o--o{ SchoolActivity : ilustra
   ProductVariant |o--o{ OutboundClick : origen
   Store |o--o{ OutboundClick : destino
+  Department |o--o{ OutboundClick : departamento
 
   HeroChapter { int id PK
     string key UK
@@ -153,7 +154,7 @@ Tablas independientes (sin relaciones): `SiteStat`, `SiteSetting`, `SectionAppea
 | `SiteSetting` | Ajustes clave/valor | `key` PK, `value` | WhatsApp, teléfono, redes, correo de ventas, splash |
 | `Redirect` | Redirecciones 301 | `fromPath` UK, `toPath`, `hits` | Incluye mapa de Joomla |
 | `NotFoundLog` | Rutas que dieron 404 | `path` UK, `hits` | Para crear redirecciones |
-| `OutboundClick` | Clics a WhatsApp, tiendas, mapas, PDF | `kind`, `target`, `variantId?`, `storeId?` | KPI independiente de GA4 |
+| `OutboundClick` | Clics a WhatsApp, tiendas, mapas, PDF | `kind`, `target`, `variantId?`, `storeId?`, `departmentId?` (BD-083), `path` (sin query), `deviceType`; índices en `[kind, createdAt]`, `variantId`, `storeId` y `departmentId` | KPI independiente de GA4. Sin datos personales: ni IP ni query |
 | `SyncRun` | Ejecuciones de sincronización | `kind`, `status`, contadores, `errors` | Visible en admin |
 | `IndexNowSubmission` | Cola de URLs a notificar | `url`, `status` | Ver doc 11 |
 

@@ -78,7 +78,7 @@ bolik-digital/
 │  │  │  ├─ apariencia/ · ajustes/ · redirecciones/ · usuarios/ · auditoria/
 │  │  │  └─ sincronizacion/
 │  │  └─ api/
-│  │     ├─ beacon/route.ts               # clics salientes
+│  │     ├─ beacon/route.ts               # clics salientes → OutboundClick (BD-083; 413 con más de 2 KB)
 │  │     ├─ search-index/route.ts         # índice JSON del buscador
 │  │     ├─ public/catalog.json/route.ts  # catálogo público para IA
 │  │     └─ admin/media/route.ts          # subida de imágenes
@@ -104,7 +104,7 @@ bolik-digital/
 │  │  ├─ schools/ · distributors/ · contact/   (form-fields.ts, schema.ts, actions.ts; BD-076)
 │  │  ├─ content/  (queries.ts para hero, cifras, hitos, faqs, apariencia)
 │  │  ├─ admin/    (actions por entidad)
-│  │  ├─ analytics/(events.ts, track.ts)
+│  │  ├─ analytics/(events.ts, track.ts; outbound.ts y outbound-script.ts: clics salientes, BD-083)
 │  │  └─ seo/      (metadata.ts, jsonld.ts, indexnow.ts, llms.ts)
 │  ├─ server/                   # solo servidor ("server-only")
 │  │  ├─ db.ts · db-client.ts   # PrismaClient de la app (singleton) y la fábrica que comparte con el proxy
@@ -118,7 +118,7 @@ bolik-digital/
 │  │  ├─ mail/                  # transport.ts, layout.ts (marco común), quote-emails.ts, request-emails.ts y sus send-*.ts (BD-074, BD-076)
 │  │  ├─ auth/                  # session.ts (iron-session), password.ts, guards.ts (requireRole)
 │  │  ├─ media/                 # process-image.ts (sharp, BD-034); el registro en data/media.ts
-│  │  ├─ folio.ts · rate-limit.ts · audit.ts
+│  │  ├─ folio.ts · rate-limit.ts · audit.ts · read-body.ts (cuerpo con tope, BD-083)
 │  │  ├─ quote-receipts.ts      # cookie cifrada con los folios que envió el navegador (BD-075)
 │  │  ├─ form-submit.ts         # camino común de los formularios de BD-076: trampa, tiempo, Zod, límite por IP, éxito falso
 │  ├─ lib/                      # utilidades puras

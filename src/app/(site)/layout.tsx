@@ -8,6 +8,7 @@ import { PageEnter } from "@/components/motion/page-enter";
 import { RevealObserver } from "@/components/motion/reveal-observer";
 import type { NavGroup } from "@/components/layout/products-menu";
 import { feedback } from "@/content/feedback";
+import { OUTBOUND_SCRIPT } from "@/features/analytics/outbound-script";
 import { JsonLd, organizationJsonLd } from "@/features/seo/jsonld";
 import { LINE_GROUPS } from "@/lib/constants";
 import { formatPhone, toInternationalPhone } from "@/lib/format";
@@ -23,7 +24,8 @@ import { getSiteSettings } from "@/server/data/content";
  * el header (QuoteLink).
  * Los datos del header y del pie llegan como props: components/* no llama a server/* (solo
  * importa tipos). JSON-LD: el Organization de todas las páginas (BD-091, docs/10 §4), con los datos
- * del pie.
+ * del pie. Al final, el script en línea de los clics salientes (BD-083: tiendas en línea, «Cómo
+ * llegar» y WhatsApp a /api/beacon), sin JS de React.
  */
 export default async function SiteLayout({ children }: LayoutProps<"/">) {
   const [categories, settings] = await Promise.all([listCategories(), getSiteSettings()]);
@@ -73,6 +75,8 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       <FeedbackHost
         messages={{ offline: feedback.system.offline, online: feedback.system.online }}
       />
+      {/* En línea: no suma JS a la página (docs/12 §2). El layout no se vuelve a pintar al navegar. */}
+      <script dangerouslySetInnerHTML={{ __html: OUTBOUND_SCRIPT }} />
       <JsonLd
         data={organizationJsonLd({
           legalName: settings.legalName,
