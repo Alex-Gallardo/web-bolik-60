@@ -33,6 +33,8 @@ const shortDescriptionAllowed = (path: string) =>
   path === "/productos" ||
   // Descripción aprobada de doc 17 §6 (125 caracteres), BD-080.
   path === "/donde-comprar" ||
+  // La de cada departamento, de doc 17 §6 (125–140 según el nombre), BD-082.
+  path.startsWith("/donde-comprar/") ||
   path === "/productos/boligrafos/bolik-ultra" ||
   SAMPLE_PRODUCTS.has(path.split("/")[3] ?? "");
 
@@ -86,6 +88,8 @@ async function indexablePaths(request: APIRequestContext): Promise<string[]> {
     for (const href of links(html, /href="(\/productos\/[a-z0-9-]+\/[a-z0-9-]+)"/g))
       products.add(href);
   }
+  // Las páginas de departamento (BD-082) llevan noindex mientras no tengan su texto local (docs/10
+  // §9): las revisa donde-comprar-departamento.spec.ts.
   return ["/", "/productos", "/donde-comprar", ...categories, ...products];
 }
 
@@ -453,7 +457,8 @@ function jsonLdBlocks(html: string, path: string): JsonLdBlock[] {
 function expectedTypes(path: string): string[] {
   if (path === "/") return ["WebSite", "FAQPage"];
   if (path === "/productos") return ["CollectionPage", "BreadcrumbList"];
-  if (path === "/donde-comprar") return ["ItemList", "BreadcrumbList"];
+  if (path === "/donde-comprar" || path.startsWith("/donde-comprar/"))
+    return ["ItemList", "BreadcrumbList"];
   if (path.split("/").length === 3) return ["CollectionPage", "BreadcrumbList"];
   return ["ProductGroup", "BreadcrumbList"];
 }

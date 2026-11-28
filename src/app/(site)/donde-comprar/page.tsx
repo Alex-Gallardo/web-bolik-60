@@ -10,9 +10,16 @@ import { storesPage } from "@/content/stores";
 import { ui } from "@/content/ui";
 import { JsonLd, storeListJsonLd } from "@/features/seo/jsonld";
 import { buildMetadata } from "@/features/seo/metadata";
-import { STORES_PATH, groupStoresByDepartment, sortStores } from "@/features/stores/directory";
+import {
+  STORES_PATH,
+  departmentPath,
+  groupStoresByDepartment,
+  isHttpsUrl,
+  sortStores,
+  toMapStore,
+  toStoreJsonLd,
+} from "@/features/stores/directory";
 import { STORES_LIST_ID, storesPrepaintScript } from "@/features/stores/prepaint-script";
-import { isValidLatLng } from "@/lib/geo";
 import { listDepartments, listStores } from "@/server/data/stores";
 
 export const metadata = buildMetadata({
@@ -21,14 +28,11 @@ export const metadata = buildMetadata({
   path: STORES_PATH,
 });
 
-/** Solo https: la URL llega de los datos (y algún día del admin), nunca un javascript:. */
-const isHttps = (url: string | null): url is string => Boolean(url?.startsWith("https://"));
-
 /**
  * Dónde comprar (docs/06 §3.7, BD-080): estática, con la lista completa en el HTML, agrupada por
  * departamento (cadenas primero). Los filtros son una isla que solo oculta y muestra; sin JS se ve
- * todo y el selector es un formulario GET (el proxy lo lleva al grupo, #slug). Los departamentos
- * enlazan a su grupo hasta que BD-082 cree sus páginas. El mapa y «Usar mi ubicación» (BD-081) son
+ * todo y el selector es un formulario GET (el proxy lo lleva a la página del departamento). Los departamentos
+ * enlazan a sus páginas (BD-082). El mapa y «Usar mi ubicación» (BD-081) son
  * parte de la isla y el mapa se descarga aparte. JSON-LD: ItemList de Store y, en las migas, BreadcrumbList (docs/10 §4).
  */
 export default async function WhereToBuyPage() {
@@ -38,7 +42,7 @@ export default async function WhereToBuyPage() {
   // Una tienda en línea por URL: con la base, cada sucursal de una cadena es un punto de venta.
   const online = [
     ...new Map(
-      sortStores(stores.filter((store) => isHttps(store.onlineShopUrl))).map((store) => [
+      sortStores(stores.filter((store) => isHttpsUrl(store.onlineShopUrl))).map((store) => [
         store.onlineShopUrl!,
         store,
       ]),
@@ -93,16 +97,8 @@ export default async function WhereToBuyPage() {
             storeCount: inDepartment.length,
           }))}
           allDepartments={departments.map(({ slug, name }) => ({ slug, name }))}
-          stores={ordered.map((store) => ({
-            slug: store.slug,
-            department: store.department.slug,
-            name: store.name,
-            // Solo coordenadas verificadas por Ventas (como el JSON-LD).
-            point:
-              store.isVerified && isValidLatLng({ lat: store.lat ?? NaN, lng: store.lng ?? NaN })
-                ? { lat: store.lat!, lng: store.lng! }
-                : null,
-          }))}
+          // Solo coordenadas verificadas por Ventas (como el JSON-LD).
+          stores={ordered.map(toMapStore)}
           prepaintScript={storesPrepaintScript(groups.map((group) => group.department.slug))}
         >
           <div id={STORES_LIST_ID} className="flex flex-col gap-10">
@@ -138,22 +134,9 @@ export default async function WhereToBuyPage() {
           data={storeListJsonLd({
             name: storesPage.title,
             path: STORES_PATH,
-            stores: ordered.map((store) => {
-              const verified = store.isVerified;
-              return {
-                name: store.name,
-                address: verified ? store.address : null,
-                municipality: store.municipality,
-                department: store.department.name,
-                country: country.get(store.department.slug) ?? null,
-                phone: store.phone,
-                geo:
-                  verified && store.lat !== null && store.lng !== null
-                    ? { lat: store.lat, lng: store.lng }
-                    : null,
-                url: isHttps(store.onlineShopUrl) ? store.onlineShopUrl : null,
-              };
-            }),
+            stores: ordered.map((store) =>
+              toStoreJsonLd(store, country.get(store.department.slug) ?? null),
+            ),
           })}
         />
       </Section>
@@ -162,16 +145,17 @@ export default async function WhereToBuyPage() {
         <h2 id="tiendas-departamentos" className="text-[length:var(--fs-h3)]">
           {storesPage.departmentsTitle}
         </h2>
-        {/* Anclas a cada grupo (docs/10 §7); BD-082 las cambia por /donde-comprar/{slug}. */}
+        {/* La página de cada departamento con tiendas (docs/10 §7, BD-082). */}
         <ul className="mt-4 flex flex-wrap gap-3">
           {groups.map(({ department }) => (
             <li key={department.slug}>
-              <a
-                href={`#${department.slug}`}
+              <Link
+                href={departmentPath(department.slug) as Route}
+                prefetch={false}
                 className={buttonVariants({ variant: "outline", size: "sm" })}
               >
                 {department.name}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
@@ -179,7 +163,7 @@ export default async function WhereToBuyPage() {
           <Link
             href={storesPage.distributorCta.href as Route}
             prefetch={false}
-            className={buttonVariants({ variant: "link" })}
+            className={buttonVariants({ variant: "link", block: true })}
           >
             {storesPage.distributorCta.label}
           </Link>

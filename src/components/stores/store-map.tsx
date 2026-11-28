@@ -14,6 +14,11 @@ const TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const DEPARTMENT_ZOOM = 10;
 /** El escalonado de A-34 llega hasta 8 pasos (docs/09 §6), como el revelado. */
 const MAX_STAGGER = 7;
+/**
+ * Los pines de departamento van encima de los de tienda: una tienda en la cabecera cae justo en el
+ * centro del departamento y taparía su pin (el que elige el departamento).
+ */
+const DEPARTMENT_Z = 1000;
 
 const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -27,7 +32,7 @@ const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (c) => `&#${c.char
 function pinIcon(pin: string, label: string, count: number | null, index: number) {
   const dot = count === null ? "" : count.toLocaleString("es-GT");
   return L.divIcon({
-    className: "store-pin",
+    className: count === null ? "store-pin store-pin--store" : "store-pin",
     html: `<span class="store-pin__dot" data-pin="${escapeHtml(pin)}" style="--i:${Math.min(index, MAX_STAGGER)}" aria-hidden="true">${escapeHtml(dot)}</span><span class="sr-only">${escapeHtml(label)}</span>`,
     iconSize: [44, 44],
     iconAnchor: [22, 22],
@@ -56,23 +61,29 @@ export type StoreMapProps = {
   /** Tiendas con coordenadas verificadas por Ventas (hoy ninguna): un pin cada una. */
   stores: MapStore[];
   selected: string | undefined;
+  /** Zoom al departamento elegido: 10 en /donde-comprar; 9 en su página, para ver a sus vecinos. */
+  zoom?: number;
   /** Estable entre renders (useCallback): los pines no se vuelven a enganchar en cada uno. */
   onSelect: (slug: string) => void;
 };
 
 /** Centra el departamento elegido; sin elegir, encuadra todos los pines. */
-function FitView({ departments, selected }: Pick<StoreMapProps, "departments" | "selected">) {
+function FitView({
+  departments,
+  selected,
+  zoom,
+}: Pick<StoreMapProps, "departments" | "selected"> & { zoom: number }) {
   const map = useMap();
   useEffect(() => {
     const animate = !window.matchMedia(REDUCED_MOTION_QUERY).matches;
     const department = departments.find((d) => d.slug === selected);
-    if (department) map.setView([department.lat, department.lng], DEPARTMENT_ZOOM, { animate });
+    if (department) map.setView([department.lat, department.lng], zoom, { animate });
     else if (departments.length > 0)
       map.fitBounds(L.latLngBounds(departments.map((d) => [d.lat, d.lng])), {
         padding: [40, 40],
         animate,
       });
-  }, [map, departments, selected]);
+  }, [map, departments, selected, zoom]);
   return null;
 }
 
@@ -119,7 +130,13 @@ function MapSetup() {
  * sigue siendo la forma equivalente de elegir. La rueda no hace zoom (no atrapa el scroll de la
  * página); con movimiento reducido, sin animaciones de zoom ni de entrada.
  */
-export default function StoreMap({ departments, stores, selected, onSelect }: StoreMapProps) {
+export default function StoreMap({
+  departments,
+  stores,
+  selected,
+  onSelect,
+  zoom = DEPARTMENT_ZOOM,
+}: StoreMapProps) {
   const reduced = useMemo(() => window.matchMedia(REDUCED_MOTION_QUERY).matches, []);
   const icons = useMemo(
     () =>
@@ -170,12 +187,14 @@ export default function StoreMap({ departments, stores, selected, onSelect }: St
         zoomOutTitle={storesPage.map.zoomOut}
       />
       <MapSetup />
-      <FitView departments={departments} selected={selected} />
+      <FitView departments={departments} selected={selected} zoom={zoom} />
       {departments.map((department) => (
         <Marker
           key={department.slug}
           position={[department.lat, department.lng]}
           icon={icons.get(department.slug)!}
+          // El elegido, debajo: sus tiendas de la cabecera quedan a la vista y se pueden tocar.
+          zIndexOffset={department.slug === selected ? 0 : DEPARTMENT_Z}
           keyboard
           eventHandlers={events.get(department.slug)}
         />

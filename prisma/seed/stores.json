@@ -98,5 +98,77 @@
     "type": "libreria",
     "departmentSlug": "el-salvador",
     "municipality": "San Salvador"
+  },
+  {
+    "slug": "ejemplo-libreria-zona-1",
+    "name": "Librería Zona 1 (ejemplo)",
+    "type": "libreria",
+    "departmentSlug": "guatemala",
+    "municipality": "Guatemala",
+    "address": "Dirección de ejemplo (demo)",
+    "lat": 14.6425,
+    "lng": -90.5133,
+    "isVerified": true,
+    "sample": true
+  },
+  {
+    "slug": "ejemplo-libreria-mixco",
+    "name": "Librería Mixco (ejemplo)",
+    "type": "libreria",
+    "departmentSlug": "guatemala",
+    "municipality": "Mixco",
+    "address": "Dirección de ejemplo (demo)",
+    "lat": 14.6333,
+    "lng": -90.6064,
+    "isVerified": true,
+    "sample": true
+  },
+  {
+    "slug": "ejemplo-libreria-xela-centro",
+    "name": "Librería Xela Centro (ejemplo)",
+    "type": "libreria",
+    "departmentSlug": "quetzaltenango",
+    "municipality": "Quetzaltenango",
+    "address": "Dirección de ejemplo (demo)",
+    "lat": 14.8346,
+    "lng": -91.5183,
+    "isVerified": true,
+    "sample": true
+  },
+  {
+    "slug": "ejemplo-libreria-huehue-centro",
+    "name": "Librería Huehue Centro (ejemplo)",
+    "type": "libreria",
+    "departmentSlug": "huehuetenango",
+    "municipality": "Huehuetenango",
+    "address": "Dirección de ejemplo (demo)",
+    "lat": 15.3197,
+    "lng": -91.4709,
+    "isVerified": true,
+    "sample": true
+  },
+  {
+    "slug": "ejemplo-libreria-antigua",
+    "name": "Librería Antigua (ejemplo)",
+    "type": "libreria",
+    "departmentSlug": "sacatepequez",
+    "municipality": "Antigua Guatemala",
+    "address": "Dirección de ejemplo (demo)",
+    "lat": 14.5573,
+    "lng": -90.7337,
+    "isVerified": true,
+    "sample": true
+  },
+  {
+    "slug": "ejemplo-distribuidora-escuintla",
+    "name": "Distribuidora Escuintla (ejemplo)",
+    "type": "distribuidor",
+    "departmentSlug": "escuintla",
+    "municipality": "Escuintla",
+    "address": "Dirección de ejemplo (demo)",
+    "lat": 14.3009,
+    "lng": -90.7858,
+    "isVerified": true,
+    "sample": true
   }
 ]

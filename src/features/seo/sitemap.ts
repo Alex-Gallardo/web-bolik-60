@@ -58,6 +58,11 @@ export function buildSitemap(entries: SitemapEntriesView, siteUrl: string): Meta
     ...STATIC_PAGES.map((page) =>
       entry(page.path, latest(page.changesWith.map((source) => sourceDate[source]))),
     ),
+    // Los departamentos con tiendas publicadas y su texto local (BD-082, docs/10 §9): su fecha, la
+    // de su tienda más reciente. Sin texto, su página lleva noindex.
+    ...entries.departments
+      .filter((d) => d.indexable)
+      .map((d) => entry(`/donde-comprar/${d.slug}`, d.updatedAt)),
     ...entries.categories.map((c) => entry(`/productos/${c.slug}`, c.updatedAt)),
     ...entries.products.map((p) => {
       const page = entry(`/productos/${p.categorySlug}/${p.slug}`, p.updatedAt);

@@ -2,6 +2,7 @@ import "server-only";
 import { env } from "@/env";
 import seedCategories from "../../../prisma/seed/categories.json";
 import seedProducts from "../../../prisma/seed/products.json";
+import seedStores from "../../../prisma/seed/stores.json";
 import type { CatalogRoutes, CodeTarget } from "../seo/catalog-routes";
 import { proxyDb } from "./proxy-db";
 
@@ -28,8 +29,8 @@ function codesOf(variants: CodeVariant[]): [string, CodeTarget][] {
 }
 
 /**
- * Slugs de las categorías y fichas publicadas y los códigos de sus variantes, para la lista en
- * memoria de proxy.ts (BD-061, BD-062, BD-065). Una ficha se ve si está publicada, con algún color
+ * Slugs de las categorías y fichas publicadas, los códigos de sus variantes y los departamentos con
+ * alguna tienda publicada, para la lista en memoria de proxy.ts (BD-061, BD-062, BD-065, BD-082). Una ficha se ve si está publicada, con algún color
  * publicado y en una categoría publicada; va como «categoria/producto». Los códigos son los SKU y
  * los códigos de barras de las variantes publicadas de esas fichas, en su orden. Como
  * listActiveRedirects: no pasa por dataSource() (el proxy no necesita ni debe cargar la capa de
@@ -49,8 +50,14 @@ export async function listPublishedCatalogRoutes(): Promise<CatalogRoutes> {
         visible.has(p.categorySlug) &&
         p.variants.some((v) => v.published !== false),
     );
+    const departments = new Set(
+      (seedStores as { departmentSlug: string; published?: boolean }[])
+        .filter((s) => s.published !== false)
+        .map((s) => s.departmentSlug),
+    );
     return {
       categories,
+      departments: [...departments],
       products: published.map((p) => `${p.categorySlug}/${p.slug}`),
       // En el orden del JSON (la base usa sortOrder, que el seed toma del mismo orden).
       codes: codesOf(
@@ -62,8 +69,12 @@ export async function listPublishedCatalogRoutes(): Promise<CatalogRoutes> {
       ),
     };
   }
-  const [categories, products] = await Promise.all([
+  const [categories, departments, products] = await Promise.all([
     proxyDb().category.findMany({ where: { published: true }, select: { slug: true } }),
+    proxyDb().department.findMany({
+      where: { stores: { some: { published: true } } },
+      select: { slug: true },
+    }),
     proxyDb().product.findMany({
       where: {
         published: true,
@@ -84,6 +95,7 @@ export async function listPublishedCatalogRoutes(): Promise<CatalogRoutes> {
   ]);
   return {
     categories: categories.map((row) => row.slug),
+    departments: departments.map((row) => row.slug),
     products: products.map((row) => `${row.category.slug}/${row.slug}`),
     codes: codesOf(
       products.flatMap((row) =>

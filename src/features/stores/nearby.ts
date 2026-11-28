@@ -60,3 +60,22 @@ export function sortByDistance(here: LatLng, stores: readonly MapStore[]): MapSt
     .map(({ store }) => store);
   return [...located, ...stores.filter((store) => !store.point)];
 }
+
+/**
+ * Los `n` departamentos con tiendas más cercanos a `from` (BD-082, «departamentos cercanos» de su
+ * página: docs/10 §7), medidos entre centros, sin él mismo. No hay datos de vecindad: la distancia
+ * hace de vecino.
+ */
+export function nearestDepartments<T extends MapDepartment>(
+  from: MapDepartment,
+  departments: readonly T[],
+  n: number,
+): T[] {
+  if (!isValidLatLng(from)) return [];
+  return departments
+    .filter((d) => d.slug !== from.slug && d.storeCount > 0 && isValidLatLng(d))
+    .map((d) => ({ d, km: distanceKm(from, d) }))
+    .sort((a, b) => a.km - b.km)
+    .slice(0, n)
+    .map(({ d }) => d);
+}

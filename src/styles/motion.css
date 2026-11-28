@@ -978,6 +978,14 @@ html[data-splash]:not([data-splash="reduced"]) .splash__ink path {
   /* Solo transform: el color cambia al instante (docs/09: nada de transiciones de color). */
   transition: transform var(--dur-base) var(--ease-spring);
 }
+/* Pin de una tienda (sin número): más chico y claro, con el mismo objetivo táctil de 44 px. */
+.store-pin--store .store-pin__dot {
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding-inline: 0;
+  border: 3px solid var(--blue);
+  background: var(--paper);
+}
 .store-pin:hover .store-pin__dot {
   background: var(--blue-700);
 }

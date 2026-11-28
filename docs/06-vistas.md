@@ -184,9 +184,8 @@ En `proxy.ts` (BD-065): busca la variante por `sku` o `barcode` (normalizados: s
 - **Filtros:** una isla que solo oculta y muestra.
   - Departamento: su estado es el hash `#slug` y registra `store_filter`. Solo un hash que es un departamento (o ninguno) lo cambia: «Volver arriba» (`#top`) no quita el filtro. Un departamento sin tiendas deja la lista completa con el aviso `stores.noneInDepartment`.
   - Búsqueda por nombre, sin tildes.
-- **Sin JavaScript:** se ve todo y el selector es un formulario GET. `/donde-comprar?departamento={slug}` (también el de la home, BD-053) da un **307** a `/donde-comprar#{slug}`, porque la página es estática y no lee la query.
-- **Enlaces por departamento:** son anclas a su grupo.
-- **Pendiente:** BD-082 cambia el 307 por un 308 a `/donde-comprar/{slug}` y las anclas por sus páginas.
+- **Sin JavaScript:** se ve todo y el selector es un formulario GET. `/donde-comprar?departamento={slug}` (también el de la home, BD-053) da un **308** a `/donde-comprar/{slug}` (BD-082; con BD-080 era un 307 a `#slug`), con `Cache-Control` de 1 h porque el destino depende de los datos; la página es estática y no lee la query. Un departamento sin tiendas no tiene página: un **307** a `/donde-comprar#{slug}`, la lista completa con su aviso (y un 307 a su página si la lista en memoria no cargó).
+- **Enlaces por departamento:** a sus páginas (BD-082). Un enlace viejo a `#slug` sigue filtrando.
 
 **Implementado (BD-081, 27 nov 2026).**
 - **Mapa:** Leaflet con los mapas de OpenStreetMap (su atribución abajo). Ninguna tienda tiene todavía coordenadas verificadas, así que hay un pin por departamento con tiendas, en su centro, con el número de tiendas; una tienda verificada con coordenadas tendrá el suyo. Tocar un pin (o Enter y Espacio con el teclado) elige su departamento, como el selector; el pin elegido queda marcado (`aria-pressed`).
@@ -198,6 +197,13 @@ En `proxy.ts` (BD-065): busca la variante por `sku` o `barcode` (normalizados: s
 ### 3.8 `/donde-comprar/[departamento]`
 **Busca posicionar:** "útiles escolares en Quetzaltenango", "lapiceros Bolik Huehuetenango".
 Una página por departamento con tiendas (se generan solo los departamentos con al menos una tienda publicada; el resto no se indexa). Estructura: `h1` "Dónde comprar Bolik en {Departamento}" · texto local (`Department.intro`) · lista y mapa centrado en el departamento · departamentos cercanos · CTA de distribuidor ("¿No hay tienda cerca? Sé distribuidor Bolik").
+
+**Implementado (BD-082, 27 nov 2026).**
+- **Indexación (docs/10 §9):** con `noindex` y fuera del sitemap mientras no tenga su texto local (`Department.intro`, varios párrafos separados por una línea en blanco); se indexa sola cuando Mercadeo lo escriba (BD-120).
+- **Render:** estático (`generateStaticParams`, solo departamentos con tiendas). Con Cache Components no hay `dynamicParams`: `proxy.ts` responde un **404** real a los demás con la lista en memoria (`server/seo/catalog-routes.ts`, que ahora también tiene los departamentos con tiendas). **JSON-LD:** `ItemList` de `Store` y `BreadcrumbList`.
+- **Título y `h1`:** «Dónde comprar Bolik en {Departamento}»; el de Guatemala, «…en el departamento de Guatemala», para no repetir el de `/donde-comprar`. Migas: Inicio › Dónde comprar Bolik › el título.
+- **Contenido:** el texto local solo si existe; el conteo; sus tiendas (cadenas primero) con el mapa de BD-081 a zoom 9, centrado en él y con sus vecinos (otro pin lleva a su página; el suyo queda debajo de sus tiendas); los 3 departamentos con tiendas más cercanos (de centro a centro: no hay datos de vecindad); «Ver todas las tiendas» y el aviso a distribuidores.
+- **Sin JavaScript:** sus tiendas en tres columnas, sin mapa.
 
 ### 3.9 `/escuelas` Bolik en tu escuela (estilo infantil)
 **Busca posicionar:** "talleres de escritura para escuelas Guatemala", "actividades escolares Bolik".

@@ -18,7 +18,7 @@ const entries = (overrides: Partial<SitemapEntriesView> = {}): SitemapEntriesVie
     },
     { slug: "marcador-pizarra", categorySlug: "marcadores", updatedAt: null, images: [] },
   ],
-  departments: [{ slug: "guatemala", updatedAt: "2026-11-18T00:00:00.000Z" }],
+  departments: [{ slug: "guatemala", updatedAt: "2026-11-18T00:00:00.000Z", indexable: true }],
   contentUpdatedAt: "2026-11-12T00:00:00.000Z",
   ...overrides,
 });
@@ -26,11 +26,12 @@ const entries = (overrides: Partial<SitemapEntriesView> = {}): SitemapEntriesVie
 const urls = (sitemap: ReturnType<typeof buildSitemap>) => sitemap.map((e) => e.url);
 
 describe("sitemap.xml (BD-092, docs/10 §5)", () => {
-  it("lista la home, /productos, /donde-comprar, las categorías y las fichas con URL absoluta", () => {
+  it("lista la home, /productos, /donde-comprar, los departamentos, las categorías y las fichas", () => {
     expect(urls(buildSitemap(entries(), SITE_URL))).toEqual([
       "https://www.bolik66.com/",
       "https://www.bolik66.com/productos",
       "https://www.bolik66.com/donde-comprar",
+      "https://www.bolik66.com/donde-comprar/guatemala",
       "https://www.bolik66.com/productos/boligrafos",
       "https://www.bolik66.com/productos/marcadores",
       "https://www.bolik66.com/productos/boligrafos/bolik-ultra",
@@ -38,11 +39,11 @@ describe("sitemap.xml (BD-092, docs/10 §5)", () => {
     ]);
   });
 
-  it("sin utilidades, sin admin, sin barra final y sin páginas de departamento (llegan con BD-082)", () => {
+  it("sin utilidades, sin admin y sin barra final", () => {
     const list = urls(buildSitemap(entries(), SITE_URL));
     for (const url of list) {
       const { pathname } = new URL(url);
-      expect(pathname).not.toMatch(/^\/(buscar|cotizacion|styleguide|admin|api|donde-comprar\/)/);
+      expect(pathname).not.toMatch(/^\/(buscar|cotizacion|styleguide|admin|api)/);
       if (pathname !== "/") expect(url.endsWith("/")).toBe(false);
     }
     expect(STATIC_PAGES.map((p) => p.path)).toEqual(["/", "/productos", "/donde-comprar"]);
@@ -52,15 +53,39 @@ describe("sitemap.xml (BD-092, docs/10 §5)", () => {
     const sitemap = buildSitemap(
       entries({
         departments: [
-          { slug: "guatemala", updatedAt: "2026-11-18T00:00:00.000Z" },
-          { slug: "quetzaltenango", updatedAt: "2026-11-20T00:00:00.000Z" },
-          { slug: "solola", updatedAt: null },
+          { slug: "guatemala", updatedAt: "2026-11-18T00:00:00.000Z", indexable: true },
+          { slug: "quetzaltenango", updatedAt: "2026-11-20T00:00:00.000Z", indexable: true },
+          { slug: "solola", updatedAt: null, indexable: true },
         ],
       }),
       SITE_URL,
     );
     const stores = sitemap.find((e) => e.url.endsWith("/donde-comprar"))!;
     expect(stores.lastModified).toBe("2026-11-20T00:00:00.000Z");
+    // Cada departamento, con la suya (BD-082); sin fecha, sin lastModified.
+    const byUrl = new Map(sitemap.map((e) => [e.url, e]));
+    expect(byUrl.get("https://www.bolik66.com/donde-comprar/quetzaltenango")?.lastModified).toBe(
+      "2026-11-20T00:00:00.000Z",
+    );
+    expect(byUrl.get("https://www.bolik66.com/donde-comprar/solola")).toEqual({
+      url: "https://www.bolik66.com/donde-comprar/solola",
+    });
+  });
+
+  it("un departamento sin texto local no va al sitemap (noindex, docs/10 §9)", () => {
+    const list = urls(
+      buildSitemap(
+        entries({
+          departments: [
+            { slug: "guatemala", updatedAt: null, indexable: true },
+            { slug: "izabal", updatedAt: "2026-11-25T00:00:00.000Z", indexable: false },
+          ],
+        }),
+        SITE_URL,
+      ),
+    );
+    expect(list).toContain("https://www.bolik66.com/donde-comprar/guatemala");
+    expect(list).not.toContain("https://www.bolik66.com/donde-comprar/izabal");
   });
 
   it("lastModified es la fecha real: la home toma la más reciente entre contenido y catálogo", () => {
@@ -89,7 +114,7 @@ describe("sitemap.xml (BD-092, docs/10 §5)", () => {
         products: [
           { slug: "bolik-ultra", categorySlug: "boligrafos", updatedAt: null, images: [] },
         ],
-        departments: [{ slug: "guatemala", updatedAt: null }],
+        departments: [{ slug: "guatemala", updatedAt: null, indexable: true }],
         contentUpdatedAt: null,
       }),
       SITE_URL,

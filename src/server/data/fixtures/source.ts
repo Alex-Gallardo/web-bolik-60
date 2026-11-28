@@ -153,6 +153,7 @@ function toCategory(data: SeedData, category: SeedData["categories"][number]): C
 function toDepartment(data: SeedData, department: SeedData["departments"][number]): DepartmentView {
   return {
     ...department,
+    intro: department.intro ?? null,
     href: `/donde-comprar/${department.slug}`,
     storeCount: data.stores.filter((s) => s.published && s.departmentSlug === department.slug)
       .length,
@@ -370,7 +371,7 @@ export const fixturesSource: DataSource = {
         })),
       departments: data.departments
         .filter((d) => withStores.has(d.slug))
-        .map((d) => ({ slug: d.slug, updatedAt: null })),
+        .map((d) => ({ slug: d.slug, updatedAt: null, indexable: Boolean(d.intro) })),
       contentUpdatedAt: null,
     };
   },

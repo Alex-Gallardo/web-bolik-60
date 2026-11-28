@@ -16,7 +16,7 @@ Cada página apunta a **una intención principal**. No se repite la misma palabr
 | `/productos/crayones-de-cera` | crayones de cera | crayones jumbo | Crayones de cera para niños |
 | `/productos/boligrafos/bolik-ultra` | Bolik Ultra | bolígrafo hexagonal, lapicero Bolik azul, PT00058 | Bolik Ultra, bolígrafo hexagonal punta 1.0 mm |
 | `/donde-comprar` | dónde comprar Bolik | librerías Guatemala, útiles escolares cerca de mí | Dónde comprar Bolik en Guatemala |
-| `/donde-comprar/quetzaltenango` | útiles escolares Quetzaltenango | librerías Quetzaltenango | Dónde comprar Bolik en Quetzaltenango |
+| `/donde-comprar/quetzaltenango` | útiles escolares Quetzaltenango | librerías Quetzaltenango | Dónde comprar Bolik en Quetzaltenango (el departamento de Guatemala: «Dónde comprar Bolik en el departamento de Guatemala», BD-082) |
 | `/mayoreo` | lapiceros por mayor Guatemala | útiles escolares al por mayor, distribuidor de útiles | Lapiceros y útiles escolares por mayor |
 | `/empresas` | lapiceros personalizados Guatemala | bolígrafos con logo, artículos promocionales | Lapiceros personalizados con tu logo |
 | `/escuelas` | actividades escolares de escritura | talleres para escuelas, Bolik en tu escuela | Bolik en tu escuela: talleres y actividades |
@@ -166,7 +166,7 @@ Mapa inicial (completar con el rastreo):
 - Breadcrumbs en todas las páginas excepto el inicio.
 - Ficha → su categoría, productos relacionados, dónde comprar, mayoreo.
 - Categoría → todas sus fichas + categorías hermanas.
-- Dónde comprar → cada departamento; cada departamento → departamentos vecinos.
+- Dónde comprar → cada departamento; cada departamento → departamentos vecinos (BD-082: los 3 con tiendas más cercanos, de centro a centro).
 - Escuelas ↔ kits escolares; mayoreo ↔ empresas.
 - Textos de enlace descriptivos ("Ver marcadores de pizarra"), nunca "clic aquí".
 - Ninguna página pública a más de 3 clics de la home. Lo vigila `tests/e2e/seo.spec.ts` (BD-093): recorre el sitio desde la home y exige que cada URL del sitemap quede a 3 clics o menos, migas en todas las páginas salvo la home y ningún enlace genérico («clic aquí», «ver más»). Las páginas noindex (`/buscar`, `/cotizacion`) llevan migas visibles sin `BreadcrumbList`.
@@ -181,7 +181,7 @@ Mapa inicial (completar con el rastreo):
 ## 9. SEO local
 
 - **NAP idéntico** (nombre, dirección, teléfono) en el pie, en `/contacto` y en el JSON-LD `Organization`.
-- Páginas por departamento con texto propio (no plantillas idénticas): cuántas tiendas hay, municipios, y por qué comprar Bolik ahí. Mínimo 120 palabras únicas por página; si un departamento no tiene contenido propio ni tiendas, no se publica.
+- Páginas por departamento con texto propio (no plantillas idénticas): cuántas tiendas hay, municipios, y por qué comprar Bolik ahí. Mínimo 120 palabras únicas por página; si un departamento no tiene contenido propio ni tiendas, no se publica. BD-082: la página de un departamento con tiendas existe, pero lleva `noindex` y queda fuera del sitemap mientras no tenga su texto (`Department.intro`, lo escribe Mercadeo en BD-120).
 - La ficha de Google Business Profile de la planta la gestiona Mercadeo; el sitio solo debe coincidir con sus datos.
 
 ## 10. Velocidad como factor SEO

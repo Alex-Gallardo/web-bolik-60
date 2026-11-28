@@ -158,6 +158,8 @@ export const departmentSchema = z.object({
   country: z.enum(["GT", "SV"]),
   lat,
   lng,
+  /** Texto local de su página (BD-082); lo escribe Mercadeo en el admin (BD-120). */
+  intro: z.string().trim().min(1).optional(),
 });
 
 export const storeSchema = z
@@ -175,6 +177,8 @@ export const storeSchema = z
     lng: lng.optional(),
     isVerified: z.boolean().default(false), // dirección validada por Ventas
     published: z.boolean().default(true),
+    // Tienda de ejemplo para la demo (BD-082): ubicación en el parque central de su municipio.
+    sample,
   })
   .refine((s) => (s.lat === undefined) === (s.lng === undefined), "lat y lng van juntas");
 
@@ -422,6 +426,12 @@ export const seedDataSchema = z
     data.stores.forEach((s, i) => {
       if (!departments.has(s.departmentSlug))
         fail(["stores", i], `departamento ${s.departmentSlug} no existe`);
+      // Una tienda de ejemplo se reconoce también en la base (Store no tiene columna sample).
+      if (s.sample !== s.slug.startsWith("ejemplo-"))
+        fail(
+          ["stores", i],
+          "una tienda de ejemplo (sample) lleva el slug «ejemplo-…», y solo ella",
+        );
     });
     data.faqs.forEach((f, i) => {
       if (f.categorySlug && !categories.has(f.categorySlug))

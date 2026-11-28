@@ -26,6 +26,23 @@ export const storesPage = {
     return department ? `${stores} en ${department}` : stores;
   },
   departmentsTitle: "Busca por departamento",
+  /** Página de un departamento (BD-082, aprobado el 27 nov 2026; docs/17 §4 y §6, docs/10 §1). */
+  department: {
+    /**
+     * h1 y título. El departamento de Guatemala lleva «el departamento de»: si no, repetiría el de
+     * /donde-comprar («Dónde comprar Bolik en Guatemala», docs/10 §1).
+     */
+    title: (department: { slug: string; name: string }) =>
+      `Dónde comprar Bolik en ${department.slug === "guatemala" ? "el departamento de Guatemala" : department.name}`,
+    metaDescription: (name: string) =>
+      `Tiendas y librerías con productos Bolik en ${name}: direcciones, teléfonos y cómo llegar. Útiles escolares hechos en Guatemala.`,
+    nearbyTitle: "Departamentos cercanos",
+    allStores: { label: "Ver todas las tiendas", href: "/donde-comprar" },
+    distributorCta: {
+      label: "¿No hay tienda cerca? Sé distribuidor Bolik",
+      href: "/mayoreo#distribuidor",
+    },
+  },
   /** Mapa y «Usar mi ubicación» (BD-081, aprobado el 27 nov 2026; docs/17 §4). Avisos: feedback. */
   locate: "Usar mi ubicación",
   map: {
