@@ -162,14 +162,14 @@ export default async function DepartmentPage({
           <Link
             href={storesPage.department.allStores.href as Route}
             prefetch={false}
-            className={buttonVariants({ variant: "link" })}
+            className={buttonVariants({ variant: "link", block: true })}
           >
             {storesPage.department.allStores.label}
           </Link>
           <Link
             href={storesPage.department.distributorCta.href as Route}
             prefetch={false}
-            className={buttonVariants({ variant: "link" })}
+            className={buttonVariants({ variant: "link", block: true })}
           >
             {storesPage.department.distributorCta.label}
           </Link>

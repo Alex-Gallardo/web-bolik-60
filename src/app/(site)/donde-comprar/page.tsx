@@ -163,7 +163,7 @@ export default async function WhereToBuyPage() {
           <Link
             href={storesPage.distributorCta.href as Route}
             prefetch={false}
-            className={buttonVariants({ variant: "link" })}
+            className={buttonVariants({ variant: "link", block: true })}
           >
             {storesPage.distributorCta.label}
           </Link>

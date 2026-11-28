@@ -125,6 +125,16 @@ test.describe("página de un departamento (BD-082)", () => {
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
       expect(overflow).toBeLessThanOrEqual(0);
+      // Ni siquiera rozando el margen de 16 px: en la CI (Linux) el texto mide unos px más que en
+      // Windows y un enlace que no se parte desbordaba 3 px.
+      const tooWide = await page.evaluate(() => {
+        const limit = document.documentElement.clientWidth - 16 + 0.5;
+        return [...document.querySelectorAll<HTMLElement>("main a, main button")]
+          .filter((el) => el.offsetParent && !el.closest(".sr-only"))
+          .filter((el) => el.getBoundingClientRect().right > limit)
+          .map((el) => el.textContent?.trim());
+      });
+      expect(tooWide).toEqual([]);
       await page.getByRole("button", { name: "Ver mapa" }).click();
       const sheet = page.getByRole("dialog", { name: "Mapa de tiendas" });
       await expect(sheet.locator(".store-pin")).toHaveCount(MAP_PINS);
