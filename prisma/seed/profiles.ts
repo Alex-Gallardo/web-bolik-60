@@ -86,9 +86,10 @@ export function dataForProfile(data: SeedData, profile: SeedProfile): SeedData {
     })),
     settings: settingsForProfile(data.settings, profile),
     stores: data.stores.filter((store) => !store.sample),
-    faqs: data.faqs.filter((f) => !f.productSlug || productSlugs.has(f.productSlug)),
+    faqs: data.faqs.filter((f) => !f.sample && (!f.productSlug || productSlugs.has(f.productSlug))),
     content: {
       ...data.content,
+      stats: data.content.stats.filter((stat) => !stat.sample),
       activities: data.content.activities.filter((a) => !a.sample),
       heroChapters: data.content.heroChapters.map((h) =>
         h.sampleMedia
@@ -116,13 +117,21 @@ export function dataForProfile(data: SeedData, profile: SeedProfile): SeedData {
 /**
  * Los ajustes que van a SiteSetting. `sample_whatsapp_number` es el número de prueba de WhatsApp
  * (BD-062, el ejemplo de docs/17 §5): en dev, e2e y la fuente fixtures hace de `whatsapp_number`
- * mientras no haya uno real, para ver y probar los botones; prod nunca lo lleva.
+ * mientras no haya uno real, para ver y probar los botones. `sample_kits_enabled` (BD-105) activa
+ * ahí los kits de ejemplo. prod nunca lleva ninguno de los dos.
  */
 export function settingsForProfile(
   settings: SeedData["settings"],
   profile: SeedProfile,
 ): SeedData["settings"] {
-  const { sample_whatsapp_number: sampleNumber, ...real } = settings;
-  if (profile === "prod" || !sampleNumber || real.whatsapp_number) return real;
-  return { ...real, whatsapp_number: sampleNumber };
+  const {
+    sample_whatsapp_number: sampleNumber,
+    sample_kits_enabled: sampleKits,
+    ...real
+  } = settings;
+  if (profile === "prod") return real;
+  const withNumber =
+    sampleNumber && !real.whatsapp_number ? { ...real, whatsapp_number: sampleNumber } : real;
+  // Kits de ejemplo activos (BD-105) mientras Mercadeo arma los reales.
+  return sampleKits === "true" ? { ...withNumber, kits_enabled: "true" as const } : withNumber;
 }

@@ -23,7 +23,8 @@
         "description": "Borrador",
         "quantity": 1
       }
-    ]
+    ],
+    "published": true
   },
   {
     "slug": "kit-primaria-completa",
@@ -49,7 +50,8 @@
         "description": "Sacapuntas, borrador y regla de 30 cm",
         "quantity": 1
       }
-    ]
+    ],
+    "published": true
   },
   {
     "slug": "kit-tres-tintas",
@@ -75,6 +77,7 @@
         "description": "Estuche conmemorativo 60 años",
         "quantity": 1
       }
-    ]
+    ],
+    "published": true
   }
 ]

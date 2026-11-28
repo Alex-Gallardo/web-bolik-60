@@ -68,5 +68,32 @@
     "question": "¿Hacen lapiceros personalizados con logo?",
     "answer": "Sí. Personalizamos bolígrafos para empresas, universidades y eventos; el pedido mínimo es de {pedidoMinimo} unidades.",
     "published": false
+  },
+  {
+    "key": "escuelas-costo",
+    "scope": "escuelas",
+    "question": "¿La visita tiene costo?",
+    "answer": "No. La visita no tiene costo para la institución."
+  },
+  {
+    "key": "escuelas-niveles",
+    "scope": "escuelas",
+    "question": "¿Qué niveles pueden recibir la visita?",
+    "answer": "Preprimaria, primaria, básicos y diversificado. Adaptamos cada taller a la edad del grupo.",
+    "sample": true
+  },
+  {
+    "key": "escuelas-anticipacion",
+    "scope": "escuelas",
+    "question": "¿Con cuánta anticipación debo pedir la visita?",
+    "answer": "Escríbenos con al menos dos semanas de anticipación para coordinar la fecha que mejor le funcione a tu escuela.",
+    "sample": true
+  },
+  {
+    "key": "escuelas-duracion",
+    "scope": "escuelas",
+    "question": "¿Cuánto dura un taller?",
+    "answer": "Alrededor de una hora por grupo, según el nivel y la actividad que elijan.",
+    "sample": true
   }
 ]

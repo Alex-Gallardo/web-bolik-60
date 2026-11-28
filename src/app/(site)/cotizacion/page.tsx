@@ -1,10 +1,10 @@
+import { FormNoScript } from "@/components/forms/form-noscript";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Section } from "@/components/layout/section";
 import { QuotePageIsland } from "@/components/quote/quote-page-island";
 import { breadcrumbsText } from "@/content/breadcrumbs";
 import { quotePage } from "@/content/quote";
 import { buildMetadata } from "@/features/seo/metadata";
-import { formatPhone } from "@/lib/format";
 import { whatsappMessage, whatsappUrl } from "@/lib/whatsapp";
 import { getSiteSettings } from "@/server/data/content";
 import { listDepartments } from "@/server/data/stores";
@@ -40,21 +40,11 @@ export default async function QuotePage() {
         prefetch={false}
       />
       <h1 className="mt-4 text-[length:var(--fs-h1)]">{quotePage.title}</h1>
-      <noscript>
-        <p className="mt-4 rounded-lg border-2 border-s-4 border-line border-s-warning bg-paper px-4 py-3">
-          {quotePage.noScript}
-          {whatsapp ? (
-            <>
-              {" "}
-              {quotePage.noScriptWhatsApp}{" "}
-              <a href={whatsapp} target="_blank" rel="noopener noreferrer">
-                {formatPhone(settings.whatsappNumber!)}
-              </a>
-            </>
-          ) : null}
-          .
-        </p>
-      </noscript>
+      <FormNoScript
+        className="mt-4"
+        whatsappUrl={whatsapp}
+        whatsappNumber={settings.whatsappNumber}
+      />
       {/* Alto reservado: al hidratar, «Cargando…» pasa a la lista o al estado vacío sin empujar el
           pie (CLS ≤ 0.05; la lista vive en el navegador y el servidor no la conoce). */}
       <div className="mt-8 min-h-[60dvh]">

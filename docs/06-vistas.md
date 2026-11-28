@@ -217,6 +217,16 @@ Toda la página usa la sub-paleta kids y Baloo 2 en títulos.
 6. **Formulario "Lleva Bolik a tu escuela"**: colegio, nivel, número aproximado de alumnos, departamento, municipio, nombre, teléfono o correo, mes preferido. Éxito con diálogo festivo (A-60 confeti ligero). **Implementado (BD-076):** `components/schools/school-visit-form.tsx` con `submitSchoolVisit` (folio `ESC`); teléfono y correo son dos campos, al menos uno; alumnos y mes, opcionales. La página lo monta con BD-105; mientras tanto se ve en `/styleguide/formularios`.
 7. Kits escolares (enlace) y FAQ de escuelas.
 
+**Implementado (BD-105, 28 nov 2026).** Estática, en el orden de esta lista; envuelta en `baloo.variable` (Baloo 2 en los títulos con `font-kids`, la tercera familia, solo aquí y sin precarga: con `preload: true`, Next la precargaba en todas las páginas).
+- **Hero** sobre `sun`: migas, `h1`, garabato coral que se dibuja al cargar (`KidsScribble`, `.ink-draw`, A-41), la intro y «Lleva Bolik a tu escuela», que baja al formulario (`#solicitud`). Desde `lg`, cuatro figuras que flotan a la derecha del texto (`KidsFigures`, A-41, `.kids-float`, `--dur-float`), decorativas; con movimiento reducido, quietas.
+- **Cifras:** las de `SCHOOL_STAT_KEYS` publicadas (A-20). Por ahora, tres de ejemplo (`sample`, pedido del usuario): no llegan a producción, donde la sección no sale hasta que Mercadeo publique las reales.
+- **Cómo funciona:** los 4 pasos de doc 17 (validados por el usuario el 27 nov 2026).
+- **Actividades:** las de `SchoolActivity` (A-40, `components/schools/activity-cards.tsx`, compartida con la home); las de la demo son `sample`: en producción no salen hasta tener las reales.
+- **Galería:** espera fotos con permiso; no hay sección.
+- **Formulario** de BD-076, **diferido** (`school-form-loader.tsx`): se descarga cuando falta poco para verlo o al tocar el botón del hero, con su alto reservado (React Hook Form, la validación y el cliente de Server Actions pasaban la página de 165 KB). Si no llega, el aviso de error del sistema con «Intentar de nuevo» y WhatsApp. El aviso sin JavaScript de doc 17 §5 (`FormNoScript`, compartido con `/cotizacion`). La vitrina de `/styleguide/formularios` sigue como ejemplo.
+- **Kits escolares:** la sección de la home (`KitsSection`, título en Baloo 2) con los kits activos (`kits_enabled`). Por ahora, los 3 kits de ejemplo (pedido del usuario). Su botón y «Familias» del pie llevan a `/kits-escolares`, que llega con BD-108 (como el capítulo «Aula» del hero).
+- **Preguntas frecuentes:** las de alcance `escuelas`, en acordeón con su `FAQPage`: «¿La visita tiene costo?» (No, validada por el usuario) y tres de ejemplo (`sample`). «¿Bolik visita escuelas?» se queda en la home: marcarla en dos páginas repite el `FAQPage`.
+
 ### 3.10 `/mayoreo` Librerías y distribuidores
 **Busca posicionar:** "lapiceros por mayor Guatemala", "distribuidor de útiles escolares Guatemala".
 1. `h1` "Compra Bolik por mayor, directo de fábrica".

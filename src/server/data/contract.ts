@@ -161,13 +161,24 @@ export function describeDataSourceContract(name: string, getSource: () => DataSo
 
     it("solo muestra cifras publicadas e hitos verificados", async () => {
       const stats = await source().listSiteStats();
-      expect(stats.map((s) => s.key)).toEqual(["anios"]);
+      // Con las de ejemplo de escuelas (BD-105), publicadas en dev y e2e.
+      expect(stats.map((s) => s.key)).toEqual([
+        "anios",
+        "escuelas_visitadas",
+        "ninos_en_talleres",
+        "utiles_donados",
+      ]);
       const milestones = await source().listMilestones();
       expect(milestones.map((m) => m.year)).toEqual([1966, 2026]);
     });
 
-    it("ningún kit publicado todavía", async () => {
-      expect(await source().listKits()).toEqual([]);
+    it("los kits de ejemplo publicados (BD-105) mientras Mercadeo arma los reales", async () => {
+      expect((await source().listKits()).map((k) => k.slug)).toEqual([
+        "kit-mis-primeros-trazos",
+        "kit-primaria-completa",
+        "kit-tres-tintas",
+      ]);
+      expect((await source().getSiteSettings()).kitsEnabled).toBe(true);
     });
 
     it("una sección sin apariencia guardada usa la del código", async () => {

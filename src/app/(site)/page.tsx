@@ -13,6 +13,7 @@ import { WhereToBuySection } from "@/components/home/where-to-buy-section";
 import { WholesaleSection } from "@/components/home/wholesale-section";
 import { JsonLd, webSiteJsonLd } from "@/features/seo/jsonld";
 import { SITE, buildMetadata } from "@/features/seo/metadata";
+import { isSchoolStatKey } from "@/lib/constants";
 import { whatsappMessage, whatsappUrl } from "@/lib/whatsapp";
 import { getFeaturedProduct, listCategories } from "@/server/data/catalog";
 import {
@@ -76,7 +77,8 @@ export default async function HomePage() {
   return (
     <>
       <MainHero colors={featured?.variants.map((variant) => variant.color) ?? []} />
-      <StatsBand items={stats} />
+      {/* Las cifras de /escuelas (BD-105) no van en la franja de la home. */}
+      <StatsBand items={stats.filter((stat) => !isSchoolStatKey(stat.key))} />
       <VideoHero chapters={chapters} />
       <SolutionsSection />
       <CatalogSection categories={categories} productCount={productCount} />

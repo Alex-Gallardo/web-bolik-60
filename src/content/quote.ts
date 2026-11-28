@@ -37,8 +37,6 @@ export const quotePage = {
    * Sin JavaScript (doc 17 §5): la lista vive en el navegador y no hay nada que enviar. Con número
    * de WhatsApp en los ajustes, va como enlace (`whatsappLabel`).
    */
-  noScript: "Para enviar este formulario activa JavaScript",
-  noScriptWhatsApp: "o escríbenos por WhatsApp al",
   form: {
     customerType: "Tipo de cliente",
     customerOptions: [

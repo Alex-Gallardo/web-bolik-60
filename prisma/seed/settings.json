@@ -6,5 +6,6 @@
   "social_facebook": "https://www.facebook.com/universoBolik",
   "splash_enabled": "true",
   "kits_enabled": "false",
-  "sample_whatsapp_number": "55551234"
+  "sample_whatsapp_number": "55551234",
+  "sample_kits_enabled": "true"
 }

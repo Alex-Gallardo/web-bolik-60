@@ -191,6 +191,8 @@ export const faqSchema = z
     question: text(200),
     answer: z.string().trim().min(1),
     published: z.boolean().default(true),
+    // Pregunta de ejemplo para la demo (BD-105) mientras llegan las propias: nunca en producción.
+    sample,
   })
   .refine((f) => f.scope !== "product" || f.productSlug, "scope product requiere productSlug")
   .refine((f) => f.scope !== "category" || f.categorySlug, "scope category requiere categorySlug");
@@ -234,6 +236,8 @@ export const contentSchema = z.object({
       label: text(80),
       sourceNote: text(200).optional(),
       published: z.boolean().default(true),
+      // Cifra de ejemplo para la demo (BD-105, cifras de escuelas): nunca en producción.
+      sample,
     }),
   ),
   milestones: z.array(
@@ -305,6 +309,8 @@ export const settingsSchema = z
       .optional(),
     splash_enabled: z.enum(["true", "false"]),
     kits_enabled: z.enum(["true", "false"]),
+    /** Kits de ejemplo activos (BD-105): solo dev, e2e y fixtures; nunca prod (settingsForProfile). */
+    sample_kits_enabled: z.enum(["true", "false"]).optional(),
     show_kit_prices: z.enum(["true", "false"]).optional(),
     erp_enabled: z.enum(["true", "false"]).optional(),
     min_custom_order: z.string().regex(/^\d+$/).optional(),

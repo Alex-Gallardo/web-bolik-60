@@ -1,3 +1,4 @@
+import { cx } from "class-variance-authority";
 import type { Route } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
@@ -11,20 +12,45 @@ import type { KitView } from "@/server/data/types";
  * (kits_enabled, el mismo que decide «Familias» en el pie) y kits publicados; si no, no se dibuja.
  * Tres tarjetas con nivel, descripción y contenido; sin precio (lo muestra /kits-escolares cuando
  * Mercadeo lo apruebe). En móvil es un carrusel con scroll-snap (sin JS); desde md, 3 columnas.
+ * También va en /escuelas (BD-105), con su título en Baloo 2.
  */
-export function KitsSection({ kits, enabled }: { kits: KitView[]; enabled: boolean }) {
+type KitsSectionProps = {
+  kits: KitView[];
+  enabled: boolean;
+  /** Fondo guardado en SectionAppearance (la home); /escuelas usa el de la página. */
+  appearanceKey?: string;
+  /** Título con Baloo 2 (solo en /escuelas, que carga la fuente). */
+  kidsFont?: boolean;
+};
+
+export function KitsSection({
+  kits,
+  enabled,
+  appearanceKey = "home.kits",
+  kidsFont = false,
+}: KitsSectionProps) {
   if (!enabled || kits.length === 0) return null;
   const titleId = "kits-titulo";
   return (
-    <Section appearanceKey="home.kits" aria-labelledby={titleId}>
+    <Section appearanceKey={appearanceKey} aria-labelledby={titleId}>
       <div className="flex max-w-2xl flex-col gap-3">
-        <h2 id={titleId} className="font-display text-[length:var(--fs-h2)] font-extrabold">
+        <h2
+          id={titleId}
+          className={cx(
+            kidsFont ? "font-kids" : "font-display",
+            "text-[length:var(--fs-h2)] font-extrabold",
+          )}
+        >
           {text.title}
         </h2>
         <p className="text-[length:var(--fs-lead)] text-muted">{text.text}</p>
       </div>
       <ul
-        // Como el carrusel de soluciones: a todo el ancho en móvil, py-5 para el revelado.
+        // Como el carrusel de soluciones: a todo el ancho en móvil, py-5 para el revelado. Sus
+        // tarjetas no tienen nada enfocable: la lista recibe el foco para desplazarla con el teclado
+        // en móvil (axe: scrollable-region-focusable), nombrada por el título.
+        tabIndex={0}
+        aria-labelledby={titleId}
         className="-mx-[var(--gutter)] mt-6 flex snap-x snap-mandatory scroll-px-[var(--gutter)] gap-4 overflow-x-auto px-[var(--gutter)] py-5 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0"
       >
         {kits.slice(0, text.limit).map((kit, index) => (

@@ -90,6 +90,30 @@
       "label": "departamentos con Bolik",
       "sourceNote": "Por validar con Ventas (doc 17)",
       "published": false
+    },
+    {
+      "key": "escuelas_visitadas",
+      "value": 120,
+      "suffix": "+",
+      "label": "escuelas visitadas",
+      "sourceNote": "Ejemplo para la demo (BD-105): Mercadeo publica la real",
+      "sample": true
+    },
+    {
+      "key": "ninos_en_talleres",
+      "value": 8500,
+      "suffix": "+",
+      "label": "niños en nuestros talleres",
+      "sourceNote": "Ejemplo para la demo (BD-105): Mercadeo publica la real",
+      "sample": true
+    },
+    {
+      "key": "utiles_donados",
+      "value": 25000,
+      "suffix": "+",
+      "label": "útiles donados",
+      "sourceNote": "Ejemplo para la demo (BD-105): Mercadeo publica la real",
+      "sample": true
     }
   ],
   "milestones": [
