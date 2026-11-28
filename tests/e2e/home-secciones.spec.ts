@@ -262,7 +262,7 @@ test.describe("secciones de la home sin JavaScript (BD-053)", () => {
 test.describe("home: kits, FAQ y cierre (BD-054)", () => {
   test.use({ reducedMotion: "reduce" });
 
-  test("6 preguntas en acordeón con su FAQPage, CTA final y sin kits apagados", async ({
+  test("6 preguntas en acordeón con su FAQPage, CTA final y los kits de ejemplo", async ({
     page,
   }) => {
     const errors = collectConsoleErrors(page);
@@ -297,8 +297,10 @@ test.describe("home: kits, FAQ y cierre (BD-054)", () => {
       "href",
       /^https:\/\/wa\.me\/50255551234\?text=/,
     );
-    // kits_enabled = false en settings.json: la sección de kits no sale.
-    await expect(page.getByRole("region", { name: "Kits escolares 2027" })).toHaveCount(0);
+    // Kits de ejemplo activos en dev y e2e (sample_kits_enabled, BD-105): sus 3 tarjetas.
+    await expect(
+      page.getByRole("region", { name: "Kits escolares 2027" }).getByRole("article"),
+    ).toHaveCount(3);
     await expectNoA11yViolations(page);
     expect(errors, "errores en la consola").toEqual([]);
   });

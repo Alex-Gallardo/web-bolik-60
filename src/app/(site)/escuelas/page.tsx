@@ -1,7 +1,6 @@
-import type { Route } from "next";
-import Link from "next/link";
 import { baloo } from "@/app/fonts";
 import { FormNoScript } from "@/components/forms/form-noscript";
+import { KitsSection } from "@/components/home/kits-section";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Section } from "@/components/layout/section";
 import { CountUp } from "@/components/motion/count-up";
@@ -20,6 +19,7 @@ import { whatsappMessage, whatsappUrl } from "@/lib/whatsapp";
 import {
   getSiteSettings,
   listFaqs,
+  listKits,
   listSchoolActivities,
   listSiteStats,
 } from "@/server/data/content";
@@ -45,18 +45,19 @@ const kidsH2 = "font-kids text-[length:var(--fs-h2)] font-extrabold";
  * 1. Hero amarillo: migas, h1, garabato que se dibuja al cargar (A-41, KidsScribble) y figuras que
  *    flotan desde lg (A-41, KidsFigures). 2. Cifras de escuelas, si Mercadeo publicó alguna
  *    (SCHOOL_STAT_KEYS, A-20). 3. Actividades (A-40), si hay publicadas. 4. La galería espera
- *    fotos con permiso. 5. Cómo funciona. 6. El formulario de BD-076 (diferido: SchoolFormLoader) con su aviso sin
- *    JavaScript.
- * 7. Las preguntas de escuelas (si hay) y el enlace a los kits cuando estén activos (BD-108).
+ *    fotos con permiso. 5. Cómo funciona. 6. El formulario de BD-076 (diferido: SchoolFormLoader)
+ *    con su aviso sin JavaScript.
+ * 7. Los kits escolares con los kits activos (la sección de la home) y las preguntas de escuelas.
  * JSON-LD: BreadcrumbList y, con preguntas, FAQPage.
  */
 export default async function SchoolsPage() {
-  const [departments, settings, activities, stats, faqs] = await Promise.all([
+  const [departments, settings, activities, stats, faqs, kits] = await Promise.all([
     listDepartments(),
     getSiteSettings(),
     listSchoolActivities(),
     listSiteStats(),
     listFaqs({ scope: "escuelas" }),
+    listKits(),
   ]);
   const whatsapp = settings.whatsappNumber
     ? whatsappUrl(settings.whatsappNumber, whatsappMessage({ context: "general" }))
@@ -147,8 +148,11 @@ export default async function SchoolsPage() {
         </div>
       </Section>
 
+      {/* Kits escolares (docs/06 §3.9 punto 7): los de la home, con los kits activos. */}
+      <KitsSection kits={kits} enabled={settings.kitsEnabled} appearanceKey="" kidsFont />
+
       {faqs.length > 0 ? (
-        <Section aria-labelledby="escuelas-faq">
+        <Section background="soft" aria-labelledby="escuelas-faq">
           <div className="max-w-[860px]">
             <h2 id="escuelas-faq" className={kidsH2}>
               {schoolsPage.faqTitle}
@@ -164,17 +168,6 @@ export default async function SchoolsPage() {
             />
           </div>
           <JsonLd data={faqPageJsonLd(faqs)} />
-        </Section>
-      ) : null}
-
-      {settings.kitsEnabled ? (
-        <Section spacing="sm">
-          <Link
-            href={schoolsPage.kits.href as Route}
-            className={buttonVariants({ variant: "link", block: true })}
-          >
-            {schoolsPage.kits.label}
-          </Link>
         </Section>
       ) : null}
     </div>

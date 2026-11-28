@@ -2,7 +2,8 @@ import type { Page } from "@playwright/test";
 import { collectConsoleErrors, expect, expectNoA11yViolations, test } from "./helpers";
 
 // Bolik en tu escuela (BD-105, docs/06 §3.9). Con DATA_SOURCE=fixtures: las 4 actividades de la
-// demo (sample); sin preguntas de escuelas, cifras de escuelas publicadas ni kits.
+// demo (sample), las 3 cifras de escuelas de ejemplo, los 3 kits de ejemplo y 4 preguntas de escuelas
+// (una real: «¿La visita tiene costo?»; tres de ejemplo).
 
 const PATH = "/escuelas";
 
@@ -15,7 +16,7 @@ async function ownIp(page: Page) {
 const form = (page: Page) => page.getByRole("region", { name: "Lleva Bolik a tu escuela" });
 
 test.describe("Bolik en tu escuela (BD-105)", () => {
-  test("un h1, migas, pasos, actividades, JSON-LD y sin errores de axe @critico", async ({
+  test("un h1, migas, cifras, actividades, pasos, kits, FAQ con su JSON-LD y sin errores de axe @critico", async ({
     page,
   }) => {
     const errors = collectConsoleErrors(page);
@@ -41,13 +42,17 @@ test.describe("Bolik en tu escuela (BD-105)", () => {
     const types = await page
       .locator('script[type="application/ld+json"]')
       .evaluateAll((nodes) => nodes.map((n) => JSON.parse(n.textContent ?? "{}")["@type"]));
-    expect(types).toEqual(expect.arrayContaining(["BreadcrumbList"]));
-    // Sin preguntas de alcance escuelas (la de doc 17 §7 espera su respuesta): ni sección ni FAQPage.
-    expect(types).not.toContain("FAQPage");
-    await expect(page.getByRole("region", { name: "Preguntas frecuentes" })).toHaveCount(0);
-    // Sin cifras de escuelas publicadas ni kits activos: esas secciones no aparecen.
-    await expect(page.getByRole("region", { name: "Bolik en las escuelas" })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Ver kits escolares" })).toHaveCount(0);
+    expect(types).toEqual(expect.arrayContaining(["BreadcrumbList", "FAQPage"]));
+    const faq = page.getByRole("region", { name: "Preguntas frecuentes" });
+    await expect(faq.locator("details > summary")).toHaveCount(4);
+    await expect(faq.getByText("¿La visita tiene costo?")).toBeVisible();
+    // Las cifras de ejemplo (con su número final en el HTML) y los kits de ejemplo.
+    const stats = page.getByRole("region", { name: "Bolik en las escuelas" });
+    await expect(stats.getByRole("listitem")).toHaveCount(3);
+    await expect(stats).toContainText("escuelas visitadas");
+    await expect(
+      page.getByRole("region", { name: "Kits escolares 2027" }).getByRole("article"),
+    ).toHaveCount(3);
 
     await expectNoA11yViolations(page);
     expect(errors, "errores en la consola").toEqual([]);

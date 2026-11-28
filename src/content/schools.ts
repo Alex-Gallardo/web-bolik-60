@@ -26,6 +26,4 @@ export const schoolsPage = {
   activitiesTitle: "Actividades para escuelas",
   statsTitle: "Bolik en las escuelas",
   faqTitle: "Preguntas frecuentes",
-  /** Solo con el ajuste kits_enabled (BD-108). */
-  kits: { label: "Ver kits escolares", href: "/kits-escolares" },
 } as const;

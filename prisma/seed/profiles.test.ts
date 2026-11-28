@@ -43,7 +43,18 @@ describe("perfiles del seed (BD-031)", () => {
     expect(data.stores.some((s) => s.sample)).toBe(true);
     expect(prod.content.milestones).toEqual(data.content.milestones);
     // Ni el número de prueba de WhatsApp ni las fotos provisionales (BD-062).
-    expect(prod.settings).toEqual({ ...data.settings, sample_whatsapp_number: undefined });
+    // Ni los kits de ejemplo activos (BD-105).
+    const realSettings = Object.fromEntries(
+      Object.entries(data.settings).filter(([key]) => !key.startsWith("sample_")),
+    );
+    expect(prod.settings).toEqual(realSettings);
+    expect(prod.settings).not.toHaveProperty("sample_kits_enabled");
+    expect(prod.settings.kits_enabled).toBe("false");
+    // Ni las cifras ni las preguntas de ejemplo (BD-105).
+    expect(prod.content.stats.some((stat) => stat.sample)).toBe(false);
+    expect(prod.content.stats.length).toBeGreaterThan(0);
+    expect(prod.faqs.some((f) => f.sample)).toBe(false);
+    expect(prod.faqs.map((f) => f.key)).toContain("escuelas-costo");
     expect(prod.settings).not.toHaveProperty("sample_whatsapp_number");
     expect(prod.settings.whatsapp_number).toBeUndefined();
     expect(prod.products.flatMap((p) => p.images)).toEqual([]);

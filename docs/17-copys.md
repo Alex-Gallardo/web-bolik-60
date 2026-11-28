@@ -330,7 +330,8 @@ Primera oración = respuesta directa (doc 11 §5). Las marcadas **(validar)** no
 | Empresas | ¿Hacen lapiceros personalizados con logo? | Sí. Personalizamos bolígrafos para empresas, universidades y eventos; el pedido mínimo es de {pedidoMinimo} unidades. |
 | Empresas | ¿Cuánto tarda un pedido personalizado? | **(validar)** |
 | Escuelas | ¿Bolik visita escuelas? | Sí. Bolik en tu escuela lleva talleres de escritura y creatividad a colegios; solicita la visita desde la página Escuelas. |
-| Escuelas | ¿La visita tiene costo? | **(validar)** |
+| Escuelas | ¿La visita tiene costo? | No. La visita no tiene costo para la institución. *(validado por el usuario el 28 nov 2026, BD-105)* |
+| Escuelas (ejemplo, `sample`, BD-105) | ¿Qué niveles pueden recibir la visita? · ¿Con cuánta anticipación debo pedir la visita? · ¿Cuánto dura un taller? | Textos de ejemplo para la demo (`faqs.json`); no van a producción. Mercadeo escribe los propios. |
 | General | ¿Desde cuándo existe Bolik? | Desde junio de 1966, cuando nació en Guatemala la Fábrica de Bolígrafos K-66, hoy parte de Grupo K-66. |
 | General | ¿El sitio vende en línea? | No. En el sitio puedes ver el catálogo, encontrar dónde comprar y pedir cotizaciones por mayor; para comprar en línea, usa Walmart Guatemala o La Torre. |
 
