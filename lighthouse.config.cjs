@@ -109,13 +109,14 @@ module.exports = {
           },
         },
         {
-          // Bolik en tu escuela (BD-105): como el resto, pero su criterio pide Lighthouse ≥ 95 en
-          // rendimiento. Tres familias de letra (Baloo 2 solo aquí, docs/12 §2) y el formulario
+          // Bolik en tu escuela (BD-105): su criterio pedía ≥ 0.95 en rendimiento; la CI da 0.93 en
+          // las 3 corridas (la tercera familia, Baloo 2, en el h1, que no se puede precargar solo
+          // aquí). El usuario aceptó el tope del resto, 0.90 (28 nov 2026), como en BD-047. Formulario
           // diferido (school-form-loader.tsx): 160.0 KB de JS medidos.
           matchingUrlPattern: "^https?://[^/]+/escuelas$",
           assertions: {
             ...common,
-            "categories:performance": ["error", { minScore: 0.95 }],
+            "categories:performance": ["error", { minScore: 0.9 }],
             "largest-contentful-paint": ["error", { maxNumericValue: 3200 }],
             "total-blocking-time": ["error", { maxNumericValue: 150 }],
             "resource-summary:script:size": ["error", { maxNumericValue: 165 * KB }],

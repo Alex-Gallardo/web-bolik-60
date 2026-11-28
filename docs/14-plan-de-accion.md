@@ -2270,7 +2270,7 @@ Página con estilo infantil y formulario de visita.
 **Criterios de aceptación**
 
 - [x] Animaciones lúdicas (A-50…) solo con transform/opacity.
-- [ ] Lighthouse ≥ 95. *(En `lighthouse.config.cjs` con su propio bloque: rendimiento ≥ 0.95. Local: accesibilidad, SEO y buenas prácticas 1, CLS 0, 160.0 KB de JS; el rendimiento lo decide la CI, como en todas las páginas.)*
+- [ ] Lighthouse ≥ 95. **Desvío aceptado por el usuario (28 nov 2026):** la CI da 0.93 en rendimiento en las 3 corridas (la tercera familia, Baloo 2, en el `h1`, que es el LCP; precargarla solo aquí no se puede: Next la precargaba en todo el sitio). Queda con el tope del resto, 0.90, como en BD-047. Accesibilidad, SEO y buenas prácticas en 1, CLS 0 y 160.0 KB de JS.
 
 **Implementado (BD-105)**
 
